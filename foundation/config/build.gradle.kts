@@ -34,7 +34,7 @@ android {
 }
 
 // Load configuration from root-level foundation/config-config
-val configDir = File(rootDir, "foundation/config-config")
+val configDir = File(rootDir, "foundation/config")
 val configFile = File(configDir, "application.properties")
 val properties = Properties().apply {
     if (configFile.exists()) {

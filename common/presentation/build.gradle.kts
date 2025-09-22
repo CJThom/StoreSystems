@@ -11,7 +11,13 @@ kotlin {
     }
     jvm()
     sourceSets {
-        commonMain.dependencies { }
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kermit)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.androidx.navigation3.runtime)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }

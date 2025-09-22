@@ -13,7 +13,9 @@ kotlin {
     }
     jvm()
     sourceSets {
-        commonMain.dependencies { }
+        commonMain.dependencies {
+            implementation(libs.koin.core)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
