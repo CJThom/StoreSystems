@@ -3,13 +3,24 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
     jvm()
     sourceSets {
-        commonMain.dependencies { }
+        commonMain.dependencies {
+            implementation(projects.common.presentation)
+            implementation(projects.common.featureFlags)
+            implementation(projects.common.kotlin)
+            implementation(projects.feature.login.loginDomain)
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(compose.runtime)
+            implementation(compose.ui)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }

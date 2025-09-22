@@ -66,6 +66,7 @@ include(":feature:login:login-api")
 include(":feature:login:login-domain")
 include(":feature:login:login-data")
 include(":feature:login:login-presentation")
+include(":feature:login:login-impl")
 
 include(":feature:history:history-api")
 include(":feature:history:history-domain")
