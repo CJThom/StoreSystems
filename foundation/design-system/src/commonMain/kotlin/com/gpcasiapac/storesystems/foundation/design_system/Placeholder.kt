@@ -1,0 +1,3 @@
+package com.gpcasiapac.storesystems.foundation.design_system
+
+object Placeholder
