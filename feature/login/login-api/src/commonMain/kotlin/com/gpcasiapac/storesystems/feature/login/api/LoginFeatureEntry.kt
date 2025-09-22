@@ -9,6 +9,10 @@ interface LoginFeatureEntry {
     @Composable
     fun Login(modifier: Modifier, onLoggedIn: () -> Unit)
 
+    // Drop-in host for this feature. The implementation can use its own MVI VM and NavDisplay.
+    @Composable
+    fun Host()
+
     fun registerEntries(
         registrar: FeatureEntriesRegistrar,
         onLoggedIn: () -> Unit

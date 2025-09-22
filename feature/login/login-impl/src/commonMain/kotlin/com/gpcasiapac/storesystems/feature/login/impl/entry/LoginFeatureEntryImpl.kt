@@ -35,6 +35,11 @@ class LoginFeatureEntryImpl : LoginFeatureEntry, KoinComponent {
         )
     }
 
+    @Composable
+    override fun Host() {
+        Login(modifier = Modifier) {}
+    }
+
     override fun registerEntries(
         registrar: FeatureEntriesRegistrar,
         onLoggedIn: () -> Unit

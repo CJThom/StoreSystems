@@ -17,6 +17,9 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.androidx.compose)
+
+            implementation(libs.androidx.navigation3.ui)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -25,11 +28,26 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            
+            implementation(libs.androidx.navigation3.runtime)
+
             implementation(projects.foundation.config)
 
+            // Feature dependencies
+            implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.history.historyPresentation)
             implementation(projects.feature.collect.collectPresentation)
+
+            // Login/Identity implementation wiring for DI
+            implementation(projects.feature.login.loginImpl)
+            implementation(projects.feature.login.loginDomain)
+            implementation(projects.core.identity.identityImpl)
+            implementation(projects.core.identity.identityDomain)
+            implementation(projects.core.identity.identityData)
+
+            // Feature flags API used for simple default binding in app
+            implementation(projects.common.featureFlags)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
