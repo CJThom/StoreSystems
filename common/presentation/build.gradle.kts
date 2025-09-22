@@ -18,6 +18,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime)
             implementation(libs.androidx.navigation3.runtime)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.navigation3.ui)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
