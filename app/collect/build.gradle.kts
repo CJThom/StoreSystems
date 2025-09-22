@@ -25,6 +25,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(projects.foundation.config)
 
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.history.historyPresentation)

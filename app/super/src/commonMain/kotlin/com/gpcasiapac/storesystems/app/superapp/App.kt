@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.gpcasiapac.storesystems.foundation.config.BuildConfig
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -22,6 +23,9 @@ fun App() {
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text("Super App (KMP + Desktop/Android)")
+                Text("Env: ${BuildConfig.ENVIRONMENT}")
+                Text("Base URL: ${BuildConfig.API_BASE_URL}")
+                Text("Use Mock Data: ${BuildConfig.USE_MOCK_DATA}")
             }
         }
     }
