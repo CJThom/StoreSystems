@@ -1,5 +1,8 @@
-package com.gpcasiapac.storesystems.feature.login.domain.model
+package com.gpcasiapac.storesystems.core.identity.api.model
 
+/**
+ * Shared identity user model exposed to all layers via identity-api.
+ */
 data class User(
     val id: String,
     val username: String,
@@ -8,5 +11,5 @@ data class User(
     val lastName: String? = null,
     val isActive: Boolean = true,
     val createdAt: Long,
-    val lastLoginAt: Long? = null
+    val lastLoginAt: Long? = null,
 )

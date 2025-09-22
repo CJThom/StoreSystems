@@ -1,12 +1,12 @@
 package com.gpcasiapac.storesystems.feature.login.domain.usecase
 
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
-import com.gpcasiapac.storesystems.feature.login.domain.model.User
-import com.gpcasiapac.storesystems.feature.login.domain.model.Token
-import com.gpcasiapac.storesystems.feature.login.domain.repository.LoginRepository
+import com.gpcasiapac.storesystems.core.identity.api.IdentityService
+import com.gpcasiapac.storesystems.core.identity.api.model.Token
+import com.gpcasiapac.storesystems.core.identity.api.model.User
 
 class LoginUseCase(
-    private val loginRepository: LoginRepository
+    private val identityService: IdentityService
 ) {
     suspend operator fun invoke(username: String, password: String): UseCaseResult {
         val cleanUsername = username.trim()
@@ -29,7 +29,7 @@ class LoginUseCase(
             return UseCaseResult.Error.InvalidPassword
         }
         
-        return when (val result = loginRepository.login(cleanUsername, cleanPassword)) {
+        return when (val result = identityService.login(cleanUsername, cleanPassword)) {
             is DataResult.Success -> {
                 // Business logic validation
                 if (result.data.user.username.isBlank() || result.data.token.accessToken.isBlank()) {

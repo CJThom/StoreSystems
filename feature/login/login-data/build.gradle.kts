@@ -10,8 +10,9 @@ kotlin {
     jvm()
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginDomain)
+            implementation(projects.core.identity.identityApi)
+            implementation(projects.core.identity.identityDomain)
             implementation(projects.common.kotlin)
             implementation(projects.common.di)
             implementation(libs.kotlinx.coroutines.core)

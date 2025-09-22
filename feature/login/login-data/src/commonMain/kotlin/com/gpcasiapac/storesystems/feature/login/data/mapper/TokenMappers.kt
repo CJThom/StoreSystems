@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.login.data.mapper
 
 import com.gpcasiapac.storesystems.feature.login.data.network.dto.TokenDto
-import com.gpcasiapac.storesystems.feature.login.domain.model.Token
+import com.gpcasiapac.storesystems.core.identity.api.model.Token
 
 fun Token.toDto(): TokenDto {
     return TokenDto(

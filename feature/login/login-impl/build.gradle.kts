@@ -16,6 +16,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginDomain)
+            implementation(projects.core.identity.identityApi)
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.common.kotlin)
             implementation(projects.common.di)

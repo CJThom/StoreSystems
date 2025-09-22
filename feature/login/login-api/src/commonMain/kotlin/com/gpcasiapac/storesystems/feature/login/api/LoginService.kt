@@ -1,9 +1,9 @@
 package com.gpcasiapac.storesystems.feature.login.api
 
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
-import com.gpcasiapac.storesystems.feature.login.domain.model.User
+import com.gpcasiapac.storesystems.core.identity.api.model.User
 import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase
-import com.gpcasiapac.storesystems.feature.login.domain.usecase.LogoutUseCase
+import com.gpcasiapac.storesystems.core.identity.api.LogoutResult
 
 /**
  * Public, non-UI contract for Login feature. Other modules/apps can depend on this
@@ -11,7 +11,7 @@ import com.gpcasiapac.storesystems.feature.login.domain.usecase.LogoutUseCase
  */
 interface LoginService {
     suspend fun login(username: String, password: String): LoginUseCase.UseCaseResult
-    suspend fun logout(): LogoutUseCase.UseCaseResult
+    suspend fun logout(): LogoutResult
 
     /** Retrieve the current user if authenticated */
     suspend fun getCurrentUser(): DataResult<User>
