@@ -11,6 +11,13 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
     jvm()
     sourceSets {
+        androidMain.dependencies {
+          //  implementation(compose.preview)
+          //  implementation(libs.androidx.activity.compose)
+           // implementation(libs.koin.androidx.compose)
+
+            implementation(libs.androidx.navigation3.ui)
+        }
         commonMain.dependencies {
             // Compose UI
             implementation(compose.runtime)
@@ -37,6 +44,8 @@ kotlin {
 
             // Koin DI
             implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
+
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

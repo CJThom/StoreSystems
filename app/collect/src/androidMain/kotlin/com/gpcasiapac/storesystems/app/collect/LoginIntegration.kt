@@ -19,6 +19,7 @@ import com.gpcasiapac.storesystems.core.identity.data.di.identityDataModule
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule
+import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationAndroidModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -47,6 +48,7 @@ fun ComponentActivity.initCollectAppKoin() {
                 identityDataModule,
                 loginDomainModule,
                 loginPresentationModule,
+                loginPresentationAndroidModule,
                 collectPresentationModule,
                 appModule,
             )

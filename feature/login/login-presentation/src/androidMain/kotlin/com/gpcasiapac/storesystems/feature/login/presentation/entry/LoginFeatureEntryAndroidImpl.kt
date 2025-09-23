@@ -38,7 +38,7 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry, KoinComponent {
 
     @Composable
     override fun Host(onSuccess: () -> Unit) {
-        Login(onLoggedIn = onSuccess)
+        LoginHost(onSuccess = onSuccess)
     }
 
     override fun registerEntries(
@@ -47,7 +47,7 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry, KoinComponent {
     ) {
         registrar.builder.apply {
             entry<LoginFeatureDestination.Login> {
-                val viewModel = LoginViewModel(loginService, flags)
+                val viewModel: LoginViewModel = org.koin.compose.viewmodel.koinViewModel()
                 LoginDestination(
                     loginViewModel = viewModel,
                     onNavigationRequested = { nav ->
