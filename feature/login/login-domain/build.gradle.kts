@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.common.kotlin)
             implementation(projects.common.di)
             implementation(projects.core.identity.identityApi)
+            implementation(projects.feature.login.loginApi)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
         }

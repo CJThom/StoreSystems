@@ -41,12 +41,11 @@ kotlin {
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.history.historyPresentation)
             implementation(projects.feature.collect.collectApi)
-            implementation(projects.feature.collect.collectImpl)
+            implementation(projects.feature.collect.collectPresentation)
 
-            // Login/Identity implementation wiring for DI
-            implementation(projects.feature.login.loginImpl)
+            // Login/Identity wiring for DI provided from domain/presentation
+            implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.login.loginDomain)
-            implementation(projects.core.identity.identityImpl)
             implementation(projects.core.identity.identityDomain)
             implementation(projects.core.identity.identityData)
 

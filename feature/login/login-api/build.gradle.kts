@@ -16,7 +16,6 @@ kotlin {
             implementation(projects.common.presentation)
             implementation(projects.common.featureFlags)
             implementation(projects.common.kotlin)
-            implementation(projects.feature.login.loginDomain)
             implementation(projects.core.identity.identityApi)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)

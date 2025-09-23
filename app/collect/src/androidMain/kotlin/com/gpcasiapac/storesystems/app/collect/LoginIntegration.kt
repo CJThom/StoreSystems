@@ -16,11 +16,10 @@ import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
 import com.gpcasiapac.storesystems.core.identity.domain.di.identityDomainModule
 import com.gpcasiapac.storesystems.core.identity.data.di.identityDataModule
-import com.gpcasiapac.storesystems.core.identity.impl.di.identityImplModule
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
-import com.gpcasiapac.storesystems.feature.login.impl.di.loginImplModule
-import com.gpcasiapac.storesystems.feature.collect.impl.di.collectImplModule
+import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.koin.compose.koinInject
@@ -46,10 +45,9 @@ fun ComponentActivity.initCollectAppKoin() {
             modules(
                 identityDomainModule,
                 identityDataModule,
-                identityImplModule,
                 loginDomainModule,
-                loginImplModule,
-                collectImplModule,
+                loginPresentationModule,
+                collectPresentationModule,
                 appModule,
             )
         }

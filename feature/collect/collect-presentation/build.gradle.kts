@@ -22,6 +22,7 @@ kotlin {
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
+            implementation(projects.common.di)
             implementation(libs.androidx.navigation3.runtime)
 
             // Koin and coroutines

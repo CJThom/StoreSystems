@@ -21,13 +21,22 @@ kotlin {
             // MVI base and feature contracts
             implementation(projects.common.presentation)
             implementation(projects.common.featureFlags)
+            implementation(projects.common.kotlin)
+            implementation(projects.common.di)
             implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginDomain)
+            implementation(projects.core.identity.identityApi)
+
+            // Navigation3 runtime for NavKey/entry registrations
+            implementation(libs.androidx.navigation3.runtime)
 
             // Coroutines and Lifecycle
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
+
+            // Koin DI
+            implementation(libs.koin.core)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
