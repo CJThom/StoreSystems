@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -28,16 +29,19 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            
-            implementation(libs.androidx.navigation3.runtime)
 
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.kotlinx.serialization.json)
+
+            implementation(projects.common.presentation)
             implementation(projects.foundation.config)
 
             // Feature dependencies
             implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.history.historyPresentation)
-            implementation(projects.feature.collect.collectPresentation)
+            implementation(projects.feature.collect.collectApi)
+            implementation(projects.feature.collect.collectImpl)
 
             // Login/Identity implementation wiring for DI
             implementation(projects.feature.login.loginImpl)

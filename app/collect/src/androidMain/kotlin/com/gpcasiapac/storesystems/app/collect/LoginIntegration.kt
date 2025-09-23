@@ -20,6 +20,7 @@ import com.gpcasiapac.storesystems.core.identity.impl.di.identityImplModule
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
 import com.gpcasiapac.storesystems.feature.login.impl.di.loginImplModule
+import com.gpcasiapac.storesystems.feature.collect.impl.di.collectImplModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.koin.compose.koinInject
@@ -48,26 +49,9 @@ fun ComponentActivity.initCollectAppKoin() {
                 identityImplModule,
                 loginDomainModule,
                 loginImplModule,
+                collectImplModule,
                 appModule,
             )
-        }
-    }
-}
-
-@Composable
-fun LoginHostInCollectApp() {
-    // Resolve the feature entry via DI and render its Host()
-    val loginEntry: LoginFeatureEntry = koinInject()
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("Login Feature Host (Android)")
-                loginEntry.Host()
-            }
         }
     }
 }

@@ -27,7 +27,6 @@ kotlin {
 
             // Compose basics used by entry implementations
             implementation(compose.runtime)
-            implementation(compose.ui)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.feature.login.impl.entry
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.presentation.navigation.FeatureEntriesRegistrar
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
@@ -22,7 +21,7 @@ class LoginFeatureEntryImpl : LoginFeatureEntry, KoinComponent {
     private val flags: FeatureFlags by inject()
 
     @Composable
-    override fun Login(modifier: Modifier, onLoggedIn: () -> Unit) {
+    override fun Login(onLoggedIn: () -> Unit) {
         val viewModel = remember(loginService, flags) { LoginViewModel(loginService, flags) }
         LoginDestination(
             loginViewModel = viewModel,
@@ -36,8 +35,8 @@ class LoginFeatureEntryImpl : LoginFeatureEntry, KoinComponent {
     }
 
     @Composable
-    override fun Host() {
-        Login(modifier = Modifier) {}
+    override fun Host(onSuccess: () -> Unit) {
+        Login(onLoggedIn = onSuccess)
     }
 
     override fun registerEntries(
