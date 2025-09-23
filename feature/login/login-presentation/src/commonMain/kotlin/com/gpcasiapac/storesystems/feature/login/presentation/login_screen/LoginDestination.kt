@@ -7,12 +7,12 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun LoginDestination(
     loginViewModel: LoginViewModel = koinViewModel(),
-    onExternalOutcome: (outcome: LoginScreenContract.Effect.Outcome) -> Unit
+    onNavigationRequested: (navigation: LoginScreenContract.Effect.Navigation) -> Unit
 ) {
     LoginScreen(
         state = loginViewModel.viewState.collectAsState().value,
         onEventSent = { event -> loginViewModel.setEvent(event) },
         effectFlow = loginViewModel.effect,
-        onExternalOutcome = onExternalOutcome
+        onNavigationRequested = onNavigationRequested
     )
 }

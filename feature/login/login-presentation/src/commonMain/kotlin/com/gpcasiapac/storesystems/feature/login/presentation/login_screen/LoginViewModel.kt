@@ -45,7 +45,7 @@ class LoginViewModel(
                     performLogin(
                         onSuccess = {
                             setEffect { LoginScreenContract.Effect.ShowToast("Login successful!") }
-                            setEffect { LoginScreenContract.Effect.Outcome.AuthenticationSucceeded }
+                            setEffect { LoginScreenContract.Effect.Navigation.ToComplete }
                         },
                         onError = { errorMessage ->
                             setEffect { LoginScreenContract.Effect.ShowError(errorMessage) }
@@ -104,7 +104,7 @@ class LoginViewModel(
                 if (flags.isEnabled(LoginFlags.MfaRequired)) {
                     setEffect { LoginScreenContract.Effect.ShowToast("MFA required (demo)") }
                     val uid = viewState.value.username.ifBlank { "user" }
-                    setEffect { LoginScreenContract.Effect.Outcome.MfaVerificationRequired(uid) }
+                    setEffect { LoginScreenContract.Effect.Navigation.ToMfaVerification(uid) }
                 } else {
                     onSuccess()
                 }

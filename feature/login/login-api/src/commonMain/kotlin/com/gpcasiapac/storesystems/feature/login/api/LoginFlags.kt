@@ -17,4 +17,10 @@ object LoginFlags {
         override val name: String = "feature.login.mfa_required"
         override val default: Boolean = true
     }
+
+    object Mfa_V2 : FlagKey<Boolean> {
+        override val name: String = "feature.login.mfa_v2"
+        override val default: Boolean = true
+    }
+
 }

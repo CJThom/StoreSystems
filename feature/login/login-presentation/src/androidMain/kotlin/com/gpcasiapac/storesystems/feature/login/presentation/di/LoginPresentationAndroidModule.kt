@@ -3,7 +3,7 @@ package com.gpcasiapac.storesystems.feature.login.presentation.di
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.presentation.entry.LoginFeatureEntryAndroidImpl
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginViewModel
-import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavViewModel
+import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
@@ -15,7 +15,7 @@ import org.koin.dsl.module
  */
 val loginPresentationAndroidModule = module {
     viewModelOf(::LoginViewModel)
-    viewModelOf(::LoginNavViewModel)
+    viewModelOf(::LoginNavigationViewModel)
 
     // Bind Android-specific FeatureEntry
     singleOf(::LoginFeatureEntryAndroidImpl).bind<LoginFeatureEntry>()

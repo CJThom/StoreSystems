@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.presentation.navigation.FeatureKey
  */
 sealed interface LoginStep : FeatureKey {
     data object Login : LoginStep
-    data class Otp(val userId: String) : LoginStep
-    data object Success : LoginStep
+    data class Mfa(val userId: String) : LoginStep
+    data class Mfa_V2(val userId: String) : LoginStep
+    data object Complete : LoginStep
 }

@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.app.collect.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.entry
@@ -37,12 +38,12 @@ fun AndroidAppNavigation() {
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
         entryDecorators = listOf(
-            rememberSceneSetupNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+           // rememberSceneSetupNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
-            // Entry that renders the Login feature Host only; no registerEntries used
             entry<CollectAppDestination.LoginHost> {
-                loginEntry.Host(onSuccess = { backStack.add(CollectAppDestination.CollectHost) })
+                loginEntry.Host(onComplete = { backStack.add(CollectAppDestination.CollectHost) })
             }
 
             // Entry that renders the Collect feature Host

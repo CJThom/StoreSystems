@@ -11,7 +11,7 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 class LoginFeatureEntryImpl : LoginFeatureEntry {
 
     @Composable
-    override fun Host(onSuccess: () -> Unit) {
+    override fun Host(onComplete: () -> Unit) {
         /* no-op on non-Android targets for now */
     }
 

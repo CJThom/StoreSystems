@@ -5,7 +5,7 @@ import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewMod
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
 import org.koin.core.component.KoinComponent
 
-class LoginNavViewModel(
+class LoginNavigationViewModel(
     private val flags: FeatureFlags
 ) : BaseNavViewModel<LoginNavContract.Event, LoginStep>(), KoinComponent {
 
@@ -13,19 +13,17 @@ class LoginNavViewModel(
 
     override fun handleEvents(event: LoginNavContract.Event) {
         when (event) {
-            is LoginNavContract.Event.ProceedToOtp -> proceedToOtp(event)
-            LoginNavContract.Event.CompleteAuthentication -> replaceTop(LoginStep.Success)
+            is LoginNavContract.Event.ToMfa -> toMfa(event)
+            is LoginNavContract.Event.ToComplete -> replaceTop(LoginStep.Complete)
             is LoginNavContract.Event.PopBack -> pop(event.count)
         }
     }
 
-    private fun proceedToOtp(event: LoginNavContract.Event.ProceedToOtp) {
-        // Example policy: honor feature flag at nav layer too
-        if (flags.isEnabled(LoginFlags.MfaRequired)) {
-            push(LoginStep.Otp(event.userId))
+    private fun toMfa(event: LoginNavContract.Event.ToMfa) {
+        if (flags.isEnabled(LoginFlags.Mfa_V2)) {
+            push(LoginStep.Mfa_V2(event.userId))
         } else {
-            // Skip OTP step entirely and finish the flow
-            replaceTop(LoginStep.Success)
+            push(LoginStep.Mfa(event.userId))
         }
     }
 

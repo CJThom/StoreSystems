@@ -15,8 +15,8 @@ import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.OtpScre
 class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
 
     @Composable
-    override fun Host(onSuccess: () -> Unit) {
-        LoginHost(onSuccess = onSuccess)
+    override fun Host(onComplete: () -> Unit) {
+        LoginHost(onComplete = onComplete)
     }
 
     override fun registerEntries(
@@ -26,10 +26,10 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
         registrar.builder.apply {
             entry<LoginFeatureDestination.Login> {
                 LoginDestination(
-                    onExternalOutcome = { outcome ->
+                    onNavigationRequested = { outcome ->
                         when (outcome) {
-                            is LoginScreenContract.Effect.Outcome.AuthenticationSucceeded -> onLoggedIn()
-                            is LoginScreenContract.Effect.Outcome.MfaVerificationRequired -> {
+                            is LoginScreenContract.Effect.Navigation.ToComplete -> onLoggedIn()
+                            is LoginScreenContract.Effect.Navigation.ToMfaVerification -> {
                                 registrar.push(LoginFeatureDestination.Otp(outcome.userId))
                             }
                         }

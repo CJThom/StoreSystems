@@ -6,7 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.navigation.FeatureEntries
 interface LoginFeatureEntry {
 
     @Composable
-    fun Host(onSuccess: () -> Unit)
+    fun Host(onComplete: () -> Unit)
 
     fun registerEntries(
         registrar: FeatureEntriesRegistrar,
