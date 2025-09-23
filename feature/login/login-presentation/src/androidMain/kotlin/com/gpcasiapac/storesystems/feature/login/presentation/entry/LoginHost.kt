@@ -4,16 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
-import com.gpcasiapac.storesystems.common.presentation.navigation.NavEvent
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginDestination
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginScreenContract
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginViewModel
+import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavViewModel
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginStep
 import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.OtpScreen
@@ -31,7 +30,7 @@ fun LoginHost(
 
     NavDisplay(
         backStack = state.stack,
-        onBack = { count -> navVm.setEvent(NavEvent.Pop(count)) },
+        onBack = { count -> navVm.setEvent(LoginNavContract.Event.Pop(count)) },
         entryDecorators = listOf(
             rememberSceneSetupNavEntryDecorator(),
         ),
@@ -43,9 +42,9 @@ fun LoginHost(
                     onNavigationRequested = { nav ->
                         when (nav) {
                             is LoginScreenContract.Effect.Navigation.NavigateToHome ->
-                                navVm.setEvent(NavEvent.Replace(LoginStep.Success))
+                                navVm.setEvent(LoginNavContract.Event.SubmitOtpSuccess)
                             is LoginScreenContract.Effect.Navigation.NavigateToOtp ->
-                                navVm.setEvent(NavEvent.Push(LoginStep.Otp(nav.userId)))
+                                navVm.setEvent(LoginNavContract.Event.SubmitCredentials(nav.userId))
                         }
                     }
                 )
@@ -53,8 +52,8 @@ fun LoginHost(
             entry<LoginStep.Otp> { otp ->
                 OtpScreen(
                     userId = otp.userId,
-                    onBack = { navVm.setEvent(NavEvent.Pop()) },
-                    onOtpSuccess = { navVm.setEvent(NavEvent.Replace(LoginStep.Success)) },
+                    onBack = { navVm.setEvent(LoginNavContract.Event.Pop()) },
+                    onOtpSuccess = { navVm.setEvent(LoginNavContract.Event.SubmitOtpSuccess) },
                 )
             }
             entry<LoginStep.Success> {

@@ -11,8 +11,8 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
  * - Single source of truth lives in the ViewModel
  * - Backed by simple reducer helpers for predictable, testable behavior
  */
-abstract class BaseNavViewModel<K : FeatureKey> :
-    MVIViewModel<NavEvent<K>, NavState<K>, ViewSideEffect>() {
+abstract class BaseNavViewModel<Event : ViewEvent, K : FeatureKey> :
+    MVIViewModel<Event, NavState<K>, ViewSideEffect>() {
 
     /**
      * Provide the starting key shown as the root of the back stack.
@@ -24,11 +24,8 @@ abstract class BaseNavViewModel<K : FeatureKey> :
 
     override fun onStart() { /* no-op by default */ }
 
-    override fun handleEvents(event: NavEvent<K>) {
-        when (event) {
-            is NavEvent.Push -> setState { copy(stack = BackStackReducer.push(stack, event.key)) }
-            is NavEvent.Pop -> setState { copy(stack = BackStackReducer.pop(stack, event.count)) }
-            is NavEvent.Replace -> setState { copy(stack = BackStackReducer.replaceTop(stack, event.key)) }
-        }
-    }
+    // Protected helpers for subclasses to update the back stack from their handleEvents()
+    protected fun push(key: K) = setState { copy(stack = BackStackReducer.push(stack, key)) }
+    protected fun pop(count: Int = 1) = setState { copy(stack = BackStackReducer.pop(stack, count)) }
+    protected fun replaceTop(key: K) = setState { copy(stack = BackStackReducer.replaceTop(stack, key)) }
 }
