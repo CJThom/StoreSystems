@@ -14,10 +14,13 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 abstract class BaseNavViewModel<K : FeatureKey> :
     MVIViewModel<NavEvent<K>, NavState<K>, ViewSideEffect>() {
 
-    /** The starting key shown as the root of the back stack. */
-    protected abstract val startKey: K
+    /**
+     * Provide the starting key shown as the root of the back stack.
+     * Using a function avoids subclass property initialization order issues during base init.
+     */
+    protected abstract fun provideStartKey(): K
 
-    override fun setInitialState(): NavState<K> = NavState(stack = listOf(startKey))
+    override fun setInitialState(): NavState<K> = NavState(stack = listOf(provideStartKey()))
 
     override fun onStart() { /* no-op by default */ }
 

@@ -4,7 +4,7 @@ import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewMod
 import com.gpcasiapac.storesystems.common.presentation.navigation.NavEvent
 
 class LoginNavViewModel : BaseNavViewModel<LoginStep>() {
-    override val startKey: LoginStep = LoginStep.Login
+    override fun provideStartKey(): LoginStep = LoginStep.Login
 
     // Domain-level events mapping to NavEvent if you choose to expose them later
     fun onSubmitCredentials(userId: String) {

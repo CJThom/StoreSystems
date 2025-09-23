@@ -43,6 +43,7 @@ fun ComponentActivity.initCollectAppKoin() {
         }
         startKoin {
             // If you want Android context in Koin elsewhere, you could add androidContext(applicationContext) here
+            allowOverride(true)
             modules(
                 identityDomainModule,
                 identityDataModule,

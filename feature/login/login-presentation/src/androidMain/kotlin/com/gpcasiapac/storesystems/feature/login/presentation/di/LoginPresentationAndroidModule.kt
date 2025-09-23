@@ -5,6 +5,8 @@ import com.gpcasiapac.storesystems.feature.login.presentation.entry.LoginFeature
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginViewModel
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 /**
@@ -14,9 +16,9 @@ import org.koin.dsl.module
  */
 val loginPresentationAndroidModule = module {
     // ViewModels (retrieved via org.koin.compose.viewmodel.koinViewModel)
-
     viewModel { LoginViewModel(get(), get()) }
     viewModel { LoginNavViewModel() }
 
-    // We don't bind LoginFeatureEntry here to avoid overriding the common implementation.
+    // Bind Android-specific FeatureEntry; override is enabled at startKoin
+    singleOf(::LoginFeatureEntryAndroidImpl) { bind<LoginFeatureEntry>() }
 }
