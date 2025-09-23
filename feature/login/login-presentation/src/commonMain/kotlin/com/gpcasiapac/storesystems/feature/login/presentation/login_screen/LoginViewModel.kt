@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase
 import com.gpcasiapac.storesystems.feature.login.api.LoginService
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
@@ -41,12 +40,12 @@ class LoginViewModel(
         when (event) {
             is LoginScreenContract.Event.UpdateUsername -> updateUsername(event.username)
             is LoginScreenContract.Event.UpdatePassword -> updatePassword(event.password)
-            is LoginScreenContract.Event.Login -> {
+            is LoginScreenContract.Event.SubmitCredentials -> {
                 viewModelScope.launch {
                     performLogin(
                         onSuccess = {
                             setEffect { LoginScreenContract.Effect.ShowToast("Login successful!") }
-                            setEffect { LoginScreenContract.Effect.Navigation.NavigateToHome }
+                            setEffect { LoginScreenContract.Effect.Outcome.AuthenticationSucceeded }
                         },
                         onError = { errorMessage ->
                             setEffect { LoginScreenContract.Effect.ShowError(errorMessage) }
@@ -105,7 +104,7 @@ class LoginViewModel(
                 if (flags.isEnabled(LoginFlags.MfaRequired)) {
                     setEffect { LoginScreenContract.Effect.ShowToast("MFA required (demo)") }
                     val uid = viewState.value.username.ifBlank { "user" }
-                    setEffect { LoginScreenContract.Effect.Navigation.NavigateToOtp(uid) }
+                    setEffect { LoginScreenContract.Effect.Outcome.MfaVerificationRequired(uid) }
                 } else {
                     onSuccess()
                 }

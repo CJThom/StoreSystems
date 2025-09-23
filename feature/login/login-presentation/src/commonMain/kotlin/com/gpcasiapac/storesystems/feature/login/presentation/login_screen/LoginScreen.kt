@@ -17,10 +17,10 @@ fun LoginScreen(
     state: LoginScreenContract.State,
     onEventSent: (event: LoginScreenContract.Event) -> Unit,
     effectFlow: Flow<LoginScreenContract.Effect>,
-    onNavigationRequested: (navigationEffect: LoginScreenContract.Effect.Navigation) -> Unit
+    onExternalOutcome: (effect: LoginScreenContract.Effect.Outcome) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     // Handle side effects
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
@@ -31,19 +31,19 @@ fun LoginScreen(
                         duration = SnackbarDuration.Short
                     )
                 }
+
                 is LoginScreenContract.Effect.ShowError -> {
                     snackbarHostState.showSnackbar(
                         message = effect.error,
                         duration = SnackbarDuration.Long
                     )
                 }
-                is LoginScreenContract.Effect.Navigation -> {
-                    onNavigationRequested(effect)
-                }
+
+                is LoginScreenContract.Effect.Outcome -> onExternalOutcome(effect)
             }
         }
     }
-    
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -103,7 +103,7 @@ fun LoginScreen(
             }
 
             Button(
-                onClick = { onEventSent(LoginScreenContract.Event.Login) },
+                onClick = { onEventSent(LoginScreenContract.Event.SubmitCredentials) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isLoginEnabled && !state.isLoading
             ) {

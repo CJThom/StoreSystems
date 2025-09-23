@@ -4,8 +4,8 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 
 object LoginNavContract {
     sealed interface Event : ViewEvent {
-        data class SubmitCredentials(val userId: String) : Event
-        data object SubmitOtpSuccess : Event
-        data class Pop(val count: Int = 1) : Event
+        data class ProceedToOtp(val userId: String) : Event
+        data object CompleteAuthentication : Event
+        data class PopBack(val count: Int = 1) : Event
     }
 }

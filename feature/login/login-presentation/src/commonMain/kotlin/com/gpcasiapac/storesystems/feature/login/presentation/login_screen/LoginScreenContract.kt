@@ -19,7 +19,7 @@ object LoginScreenContract {
     sealed interface Event : ViewEvent {
         data class UpdateUsername(val username: String) : Event
         data class UpdatePassword(val password: String) : Event
-        data object Login : Event
+        data object SubmitCredentials : Event
         data object ClearError : Event
     }
     
@@ -27,9 +27,10 @@ object LoginScreenContract {
         data class ShowToast(val message: String) : Effect
         data class ShowError(val error: String) : Effect
         
-        sealed interface Navigation : Effect {
-            data object NavigateToHome : Navigation
-            data class NavigateToOtp(val userId: String) : Navigation
+        // Outcomes emitted to be handled by the feature host/navigation layer
+        sealed interface Outcome : Effect {
+            data object AuthenticationSucceeded : Outcome
+            data class MfaVerificationRequired(val userId: String) : Outcome
         }
     }
 }

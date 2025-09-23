@@ -11,15 +11,11 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginDestination
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginScreenContract
-import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginViewModel
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavViewModel
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginStep
 import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.OtpScreen
 import org.koin.compose.viewmodel.koinViewModel
-
-
-object Thing : NavKey
 
 @Composable
 fun LoginHost(
@@ -30,21 +26,22 @@ fun LoginHost(
 
     NavDisplay(
         backStack = state.stack,
-        onBack = { count -> navVm.setEvent(LoginNavContract.Event.Pop(count)) },
+        onBack = { count -> navVm.setEvent(LoginNavContract.Event.PopBack(count)) },
         entryDecorators = listOf(
             rememberSceneSetupNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
             entry<LoginStep.Login> {
-                val viewModel: LoginViewModel = koinViewModel()
                 LoginDestination(
-                    loginViewModel = viewModel,
-                    onNavigationRequested = { nav ->
-                        when (nav) {
-                            is LoginScreenContract.Effect.Navigation.NavigateToHome ->
-                                navVm.setEvent(LoginNavContract.Event.SubmitOtpSuccess)
-                            is LoginScreenContract.Effect.Navigation.NavigateToOtp ->
-                                navVm.setEvent(LoginNavContract.Event.SubmitCredentials(nav.userId))
+                    onExternalOutcome = { outcome ->
+                        when (outcome) {
+                            is LoginScreenContract.Effect.Outcome.AuthenticationSucceeded -> {
+                                navVm.setEvent(LoginNavContract.Event.CompleteAuthentication)
+                            }
+
+                            is LoginScreenContract.Effect.Outcome.MfaVerificationRequired -> {
+                                navVm.setEvent(LoginNavContract.Event.ProceedToOtp(outcome.userId))
+                            }
                         }
                     }
                 )
@@ -52,8 +49,8 @@ fun LoginHost(
             entry<LoginStep.Otp> { otp ->
                 OtpScreen(
                     userId = otp.userId,
-                    onBack = { navVm.setEvent(LoginNavContract.Event.Pop()) },
-                    onOtpSuccess = { navVm.setEvent(LoginNavContract.Event.SubmitOtpSuccess) },
+                    onBack = { navVm.setEvent(LoginNavContract.Event.PopBack()) },
+                    onOtpSuccess = { navVm.setEvent(LoginNavContract.Event.CompleteAuthentication) },
                 )
             }
             entry<LoginStep.Success> {
