@@ -18,17 +18,19 @@ import org.koin.compose.viewmodel.koinViewModel
  * all stack mutations to CollectGlobalNavigationViewModel.
  */
 @Composable
-fun AndroidAppNavigationGlobal(
-    appNavigationViewModel: CollectGlobalNavigationViewModel = koinViewModel(),
-) {
-    val state by appNavigationViewModel.viewState.collectAsState()
+fun AndroidAppNavigationGlobal() {
 
+    val appNavigationViewModel: CollectGlobalNavigationViewModel = koinViewModel()
     val loginEntry: LoginFeatureEntry = koinInject()
     val collectEntry: CollectOrdersFeatureEntry = koinInject()
 
+    val state by appNavigationViewModel.viewState.collectAsState()
+
     NavDisplay(
         backStack = state.stack,
-        onBack = { count -> appNavigationViewModel.setEvent(CollectGlobalNavContract.Event.PopBack(count)) },
+        onBack = { count ->
+            appNavigationViewModel.setEvent(CollectGlobalNavContract.Event.PopBack(count))
+        },
         entryDecorators = listOf(
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()

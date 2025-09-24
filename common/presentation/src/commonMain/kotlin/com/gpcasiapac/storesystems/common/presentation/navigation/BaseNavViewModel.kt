@@ -13,7 +13,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
  * - Backed by simple reducer helpers for predictable, testable behavior
  */
 abstract class BaseNavViewModel<Event : ViewEvent, K : NavKey> :
-    MVIViewModel<Event, NavState<K>, ViewSideEffect>() {
+    MVIViewModel<Event, NavState, ViewSideEffect>() {
 
     /**
      * Provide the starting key shown as the root of the back stack.
@@ -21,7 +21,7 @@ abstract class BaseNavViewModel<Event : ViewEvent, K : NavKey> :
      */
     protected abstract fun provideStartKey(): K
 
-    override fun setInitialState(): NavState<K> = NavState(stack = listOf(provideStartKey()))
+    override fun setInitialState(): NavState = NavState(stack = listOf(provideStartKey()))
 
     override fun onStart() { /* no-op by default */ }
 

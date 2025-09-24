@@ -40,16 +40,20 @@ fun AndroidAppNavigation(
 
     NavDisplay(
         backStack = state.stack,
-        onBack = { count -> appNavigationViewModel.setEvent(CollectAppNavContract.Event.PopBack(count)) },
+        onBack = { count ->
+            appNavigationViewModel.setEvent(CollectAppNavContract.Event.PopBack(count))
+        },
         entryDecorators = listOf(
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
             entry<CollectAppDestination.LoginHost> {
-                loginEntry.Host(onComplete = {
-                    appNavigationViewModel.setEvent(CollectAppNavContract.Event.ToCollectHost)
-                })
+                loginEntry.Host(
+                    onComplete = {
+                        appNavigationViewModel.setEvent(CollectAppNavContract.Event.ToCollectHost)
+                    }
+                )
             }
 
             // Entry that renders the Collect feature Host

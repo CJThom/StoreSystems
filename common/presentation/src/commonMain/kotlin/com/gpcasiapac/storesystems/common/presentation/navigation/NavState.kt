@@ -6,4 +6,4 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 /**
  * Simple navigation state holding the stack of keys.
  */
-data class NavState<K : NavKey>(val stack: List<K>) : ViewState
+data class NavState(val stack: List<NavKey>) : ViewState

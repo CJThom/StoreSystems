@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.feature.collect.api
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
 interface CollectOrdersFeatureEntry {
 

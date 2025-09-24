@@ -1,17 +1,25 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
+import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
 class CollectNavigationViewModel :
-    BaseNavViewModel<CollectNavContract.Event, CollectStep>() {
+    BaseNavViewModel<CollectNavContract.Event, CollectFeatureDestination>() {
 
-    override fun provideStartKey(): CollectStep = CollectStep.Orders
+    override fun provideStartKey(): CollectFeatureDestination = CollectFeatureDestination.Orders
 
     override fun handleEvents(event: CollectNavContract.Event) {
         when (event) {
-            is CollectNavContract.Event.OrderSelected -> push(CollectStep.OrderDetails(event.orderId))
+            is CollectNavContract.Event.Outcome -> handleOutcome(event.outcome)
             is CollectNavContract.Event.PopBack -> pop(event.count)
         }
     }
 
+    private fun handleOutcome(outcome: CollectOutcome) {
+        when (outcome) {
+            is CollectOutcome.OrderSelected -> push(CollectFeatureDestination.OrderDetails(outcome.orderId))
+            is CollectOutcome.Back -> pop()
+        }
+    }
 }

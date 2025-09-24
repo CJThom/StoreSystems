@@ -3,8 +3,10 @@ package com.gpcasiapac.storesystems.app.collect.navigation
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
+import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavContract
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
+import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavContract
 
 /**
@@ -28,21 +30,27 @@ class CollectGlobalNavigationViewModel :
         }
     }
 
-    private fun handleLoginOutcome(outcome: com.gpcasiapac.storesystems.feature.login.api.LoginOutcome) {
+    private fun handleLoginOutcome(outcome: LoginOutcome) {
         when (outcome) {
-            is com.gpcasiapac.storesystems.feature.login.api.LoginOutcome.MfaRequired ->
+            is LoginOutcome.MfaRequired -> {
                 push(LoginFeatureDestination.Otp(outcome.userId))
-            is com.gpcasiapac.storesystems.feature.login.api.LoginOutcome.LoginCompleted ->
+            }
+
+            is LoginOutcome.LoginCompleted -> {
                 replaceTop(CollectFeatureDestination.Orders)
-            is com.gpcasiapac.storesystems.feature.login.api.LoginOutcome.Back -> pop()
+            }
+
+            is LoginOutcome.Back -> pop()
         }
     }
 
-    private fun handleCollectOutcome(outcome: com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome) {
+    private fun handleCollectOutcome(outcome: CollectOutcome) {
         when (outcome) {
-            is com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome.OrderSelected ->
+            is CollectOutcome.OrderSelected -> {
                 push(CollectFeatureDestination.OrderDetails(outcome.orderId))
-            is com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome.Back -> pop()
+            }
+
+            is CollectOutcome.Back -> pop()
         }
     }
 }
