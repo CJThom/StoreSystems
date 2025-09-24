@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.common.presentation.navigation
 
+import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
@@ -11,7 +12,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
  * - Single source of truth lives in the ViewModel
  * - Backed by simple reducer helpers for predictable, testable behavior
  */
-abstract class BaseNavViewModel<Event : ViewEvent, K : FeatureKey> :
+abstract class BaseNavViewModel<Event : ViewEvent, K : NavKey> :
     MVIViewModel<Event, NavState<K>, ViewSideEffect>() {
 
     /**

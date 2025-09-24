@@ -2,16 +2,17 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.orders
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun OrdersDestination(
-    viewModel: OrdersViewModel,
+    ordersViewModel: OrdersViewModel = koinViewModel(),
     onNavigationRequested: (navigationEffect: OrdersScreenContract.Effect.Navigation) -> Unit = {}
 ) {
     OrdersScreen(
-        state = viewModel.viewState.collectAsState().value,
-        onEventSent = { event -> viewModel.setEvent(event) },
-        effectFlow = viewModel.effect,
+        state = ordersViewModel.viewState.collectAsState().value,
+        onEventSent = { event -> ordersViewModel.setEvent(event) },
+        effectFlow = ordersViewModel.effect,
         onNavigationRequested = onNavigationRequested,
     )
 }

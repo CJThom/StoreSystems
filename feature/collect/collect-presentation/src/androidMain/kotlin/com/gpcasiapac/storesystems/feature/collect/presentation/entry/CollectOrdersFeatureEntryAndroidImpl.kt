@@ -20,42 +20,17 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
 
     @Composable
     override fun Host() {
-        // Internal Navigation3 NavDisplay for Collect feature
-        val backStack = rememberNavBackStack<NavKey>(CollectFeatureDestination.Orders)
-
-        NavDisplay(
-            backStack = backStack,
-            onBack = { backStack.removeLastOrNull() },
-            entryDecorators = listOf(rememberSceneSetupNavEntryDecorator()),
-            entryProvider = entryProvider {
-                entry<CollectFeatureDestination.Orders> {
-                    val vm = remember { OrdersViewModel() }
-                    OrdersDestination(viewModel = vm) { nav ->
-                        when (nav) {
-                            is OrdersScreenContract.Effect.Navigation.NavigateToOrderDetails ->
-                                backStack.add(CollectFeatureDestination.OrderDetails(nav.orderId))
-                        }
-                    }
-                }
-
-                entry<CollectFeatureDestination.OrderDetails> { details ->
-                    OrderDetailsScreen(
-                        orderId = details.orderId,
-                        onBack = { backStack.removeLastOrNull() },
-                    )
-                }
-            }
-        )
+        // Delegate to the feature's VM-driven host
+        CollectHost()
     }
 
     override fun registerEntries(registrar: FeatureEntriesRegistrar) {
         registrar.builder.apply {
             entry<CollectFeatureDestination.Orders> {
-                val vm = OrdersViewModel()
-                OrdersDestination(viewModel = vm) { nav ->
-                    when (nav) {
+                OrdersDestination { navigationEffect ->
+                    when (navigationEffect) {
                         is OrdersScreenContract.Effect.Navigation.NavigateToOrderDetails ->
-                            registrar.push(CollectFeatureDestination.OrderDetails(nav.orderId))
+                            registrar.push(CollectFeatureDestination.OrderDetails(navigationEffect.orderId))
                     }
                 }
             }

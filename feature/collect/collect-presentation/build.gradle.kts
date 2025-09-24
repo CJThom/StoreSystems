@@ -13,6 +13,11 @@ kotlin {
     }
     jvm()
     sourceSets {
+        androidMain.dependencies {
+            // Navigation3 UI on Android only
+            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+        }
         commonMain.dependencies {
             // Compose UI
             implementation(compose.runtime)
@@ -27,20 +32,19 @@ kotlin {
 
             // Koin and coroutines
             implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.coroutines.core)
 
             // Lifecycle for ViewModel + viewModelScope
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
 
+
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
-        androidMain.dependencies {
-            // Navigation3 UI on Android only
-            implementation(libs.androidx.navigation3.ui)
-        }
+
     }
 }
 
