@@ -38,6 +38,9 @@ kotlin {
             implementation(projects.common.presentation)
             implementation(projects.foundation.config)
 
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
+
             // Feature dependencies
             implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginPresentation)

@@ -17,6 +17,9 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.androidx.compose)
+            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -25,17 +28,43 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(projects.foundation.config)
 
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.kotlinx.serialization.json)
+
+            // Bring Lifecycle KMP into this module explicitly so commonMain VMs resolve ViewModel
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime)
+
+            implementation(projects.common.presentation)
+            implementation(projects.foundation.config)
+            implementation(projects.common.featureFlags)
+
+            // Koin core for common expect declarations
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
+
+            // Feature APIs and Presentations
+            implementation(projects.feature.login.loginApi)
             implementation(projects.feature.login.loginPresentation)
+
+            implementation(projects.feature.collect.collectApi)
+            implementation(projects.feature.collect.collectPresentation)
+
+            // Optional placeholders (presentations only)
             implementation(projects.feature.history.historyPresentation)
             implementation(projects.feature.picking.pickingPresentation)
-            implementation(projects.feature.collect.collectPresentation)
+
+            // Domain/data DI for login/identity
+            implementation(projects.feature.login.loginDomain)
+            implementation(projects.core.identity.identityDomain)
+            implementation(projects.core.identity.identityData)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.koin.core)
         }
     }
 }

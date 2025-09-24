@@ -9,7 +9,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
  * Base ViewModel that manages a navigation back stack as immutable list in state.
  *
  * - Compose-free and UI-agnostic
- * - Single source of truth lives in the ViewModel
+ * - Single source of truth lives in the ViewModelx
  * - Backed by simple reducer helpers for predictable, testable behavior
  */
 abstract class BaseNavViewModel<Event : ViewEvent, K : NavKey> :

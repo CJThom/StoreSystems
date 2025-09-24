@@ -1,26 +1,24 @@
-package com.gpcasiapac.storesystems.app.collect
+package com.gpcasiapac.storesystems.app.superapp
 
 import androidx.activity.ComponentActivity
-import com.gpcasiapac.storesystems.app.collect.di.collectAppNavigationModule
+import com.gpcasiapac.storesystems.app.superapp.di.superGlobalNavigationModule
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
 import com.gpcasiapac.storesystems.core.identity.data.di.identityDataModule
 import com.gpcasiapac.storesystems.core.identity.domain.di.identityDomainModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationAndroidModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
-/**
- * Start Koin once for the Collect app (Android). Safe to call multiple times.
- */
-fun ComponentActivity.initCollectAppKoin() {
+/** Start Koin once for the Super app (Android). Safe to call multiple times. */
+fun ComponentActivity.initSuperAppKoin() {
     if (GlobalContext.getOrNull() == null) {
         val appModule = module {
             single<FeatureFlags> {
@@ -31,7 +29,6 @@ fun ComponentActivity.initCollectAppKoin() {
             }
         }
         startKoin {
-            // If you want Android context in Koin elsewhere, you could add androidContext(applicationContext) here
             allowOverride(true)
             modules(
                 identityDomainModule,
@@ -41,7 +38,7 @@ fun ComponentActivity.initCollectAppKoin() {
                 loginPresentationAndroidModule,
                 collectPresentationModule,
                 collectPresentationAndroidModule,
-                collectAppNavigationModule,
+                superGlobalNavigationModule,
                 appModule,
             )
         }

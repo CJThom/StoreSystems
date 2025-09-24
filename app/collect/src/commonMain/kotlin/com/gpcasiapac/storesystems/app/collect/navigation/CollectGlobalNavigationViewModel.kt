@@ -4,10 +4,8 @@ import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
-import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavContract
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
-import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavContract
 
 /**
  * Single back stack ViewModel for the Collect app that directly handles navigation across
