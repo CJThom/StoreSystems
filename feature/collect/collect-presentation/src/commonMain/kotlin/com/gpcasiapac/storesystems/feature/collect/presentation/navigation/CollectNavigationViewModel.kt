@@ -9,7 +9,7 @@ class CollectNavigationViewModel :
 
     override fun handleEvents(event: CollectNavContract.Event) {
         when (event) {
-            is CollectNavContract.Event.ToOrderDetails -> push(CollectStep.OrderDetails(event.orderId))
+            is CollectNavContract.Event.OrderSelected -> push(CollectStep.OrderDetails(event.orderId))
             is CollectNavContract.Event.PopBack -> pop(event.count)
         }
     }

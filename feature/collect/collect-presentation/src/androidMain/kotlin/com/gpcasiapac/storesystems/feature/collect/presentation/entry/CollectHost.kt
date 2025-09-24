@@ -33,12 +33,12 @@ fun CollectHost(
             entry<CollectStep.Orders> {
                 // Orders screen destination
                 OrdersDestination(
-                    viewModel = koinViewModel(),
+                    ordersViewModel = koinViewModel(),
                     onNavigationRequested = { nav ->
                         when (nav) {
-                            is OrdersScreenContract.Effect.Navigation.NavigateToOrderDetails ->
+                            is OrdersScreenContract.Effect.Navigation.OrderSelected ->
                                 collectNavigationViewModel.setEvent(
-                                    CollectNavContract.Event.ToOrderDetails(nav.orderId)
+                                    CollectNavContract.Event.OrderSelected(nav.orderId)
                                 )
                         }
                     }

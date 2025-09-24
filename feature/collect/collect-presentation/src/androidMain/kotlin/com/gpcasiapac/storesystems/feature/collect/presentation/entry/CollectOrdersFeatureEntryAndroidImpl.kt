@@ -24,13 +24,17 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
         CollectHost()
     }
 
-    override fun registerEntries(registrar: FeatureEntriesRegistrar) {
-        registrar.builder.apply {
+    override fun registerEntries(
+        builder: androidx.navigation3.runtime.EntryProviderBuilder<androidx.navigation3.runtime.NavKey>,
+        onOutcome: (com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome) -> Unit,
+    ) {
+        builder.apply {
             entry<CollectFeatureDestination.Orders> {
                 OrdersDestination { navigationEffect ->
                     when (navigationEffect) {
-                        is OrdersScreenContract.Effect.Navigation.NavigateToOrderDetails ->
-                            registrar.push(CollectFeatureDestination.OrderDetails(navigationEffect.orderId))
+                        is OrdersScreenContract.Effect.Navigation.OrderSelected -> onOutcome(
+                            com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome.OrderSelected(navigationEffect.orderId)
+                        )
                     }
                 }
             }
@@ -38,7 +42,7 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
             entry<CollectFeatureDestination.OrderDetails> { d ->
                 OrderDetailsScreen(
                     orderId = d.orderId,
-                    onBack = { registrar.pop() },
+                    onBack = { onOutcome(com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome.Back) },
                 )
             }
         }

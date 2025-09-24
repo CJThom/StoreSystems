@@ -37,16 +37,16 @@ fun LoginHost(
                 LoginDestination(
                     onNavigationRequested = { outcome ->
                         when (outcome) {
-                            is LoginScreenContract.Effect.Navigation.ToMfaVerification -> {
+                            is LoginScreenContract.Effect.Navigation.MfaRequired -> {
                                 loginNavigationViewModel.setEvent(
-                                    LoginNavContract.Event.ToMfa(
+                                    LoginNavContract.Event.MfaRequired(
                                         outcome.userId
                                     )
                                 )
                             }
 
-                            is LoginScreenContract.Effect.Navigation.ToComplete -> {
-                                loginNavigationViewModel.setEvent(LoginNavContract.Event.ToComplete)
+                            is LoginScreenContract.Effect.Navigation.LoginCompleted -> {
+                                loginNavigationViewModel.setEvent(LoginNavContract.Event.LoginCompleted)
                             }
                         }
                     }
@@ -56,14 +56,14 @@ fun LoginHost(
                 OtpScreen(
                     userId = otp.userId,
                     onBack = { loginNavigationViewModel.setEvent(LoginNavContract.Event.PopBack()) },
-                    onOtpSuccess = { loginNavigationViewModel.setEvent(LoginNavContract.Event.ToComplete) },
+                    onOtpSuccess = { loginNavigationViewModel.setEvent(LoginNavContract.Event.LoginCompleted) },
                 )
             }
             entry<LoginStep.Mfa_V2> { otp ->
                 OtpScreen(
                     userId = otp.userId,
                     onBack = { loginNavigationViewModel.setEvent(LoginNavContract.Event.PopBack()) },
-                    onOtpSuccess = { loginNavigationViewModel.setEvent(LoginNavContract.Event.ToComplete) },
+                    onOtpSuccess = { loginNavigationViewModel.setEvent(LoginNavContract.Event.LoginCompleted) },
                 )
             }
             entry<LoginStep.Complete> {

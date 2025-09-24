@@ -1,10 +1,12 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.entry
 
 import androidx.compose.runtime.Composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
-import com.gpcasiapac.storesystems.common.presentation.navigation.FeatureEntriesRegistrar
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
+import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginDestination
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginScreenContract
 import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.OtpScreen
@@ -20,18 +22,20 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
     }
 
     override fun registerEntries(
-        registrar: FeatureEntriesRegistrar,
-        onLoggedIn: () -> Unit
+        builder: EntryProviderBuilder<NavKey>,
+        onOutcome: (LoginOutcome) -> Unit,
     ) {
-        registrar.builder.apply {
+        builder.apply {
             entry<LoginFeatureDestination.Login> {
                 LoginDestination(
                     onNavigationRequested = { outcome ->
                         when (outcome) {
-                            is LoginScreenContract.Effect.Navigation.ToComplete -> onLoggedIn()
-                            is LoginScreenContract.Effect.Navigation.ToMfaVerification -> {
-                                registrar.push(LoginFeatureDestination.Otp(outcome.userId))
-                            }
+                            is LoginScreenContract.Effect.Navigation.LoginCompleted -> onOutcome(
+                                LoginOutcome.LoginCompleted
+                            )
+                            is LoginScreenContract.Effect.Navigation.MfaRequired -> onOutcome(
+                                LoginOutcome.MfaRequired(outcome.userId)
+                            )
                         }
                     }
                 )
@@ -40,8 +44,8 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
             entry<LoginFeatureDestination.Otp> { otp ->
                 OtpScreen(
                     userId = otp.userId,
-                    onBack = { registrar.pop() },
-                    onOtpSuccess = { onLoggedIn() }
+                    onBack = { onOutcome(LoginOutcome.Back) },
+                    onOtpSuccess = { onOutcome(LoginOutcome.LoginCompleted) }
                 )
             }
         }

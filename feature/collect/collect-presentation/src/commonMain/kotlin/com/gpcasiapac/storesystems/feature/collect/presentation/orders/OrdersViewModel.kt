@@ -43,7 +43,7 @@ class OrdersViewModel : MVIViewModel<OrdersScreenContract.Event, OrdersScreenCon
     }
 
     private fun openOrder(orderId: String) {
-        setEffect { OrdersScreenContract.Effect.Navigation.NavigateToOrderDetails(orderId) }
+        setEffect { OrdersScreenContract.Effect.Navigation.OrderSelected(orderId) }
     }
 
     private fun clearError() {

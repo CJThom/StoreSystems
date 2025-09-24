@@ -13,13 +13,13 @@ class LoginNavigationViewModel(
 
     override fun handleEvents(event: LoginNavContract.Event) {
         when (event) {
-            is LoginNavContract.Event.ToMfa -> toMfa(event)
-            is LoginNavContract.Event.ToComplete -> replaceTop(LoginStep.Complete)
+            is LoginNavContract.Event.MfaRequired -> onMfaRequired(event)
+            is LoginNavContract.Event.LoginCompleted -> replaceTop(LoginStep.Complete)
             is LoginNavContract.Event.PopBack -> pop(event.count)
         }
     }
 
-    private fun toMfa(event: LoginNavContract.Event.ToMfa) {
+    private fun onMfaRequired(event: LoginNavContract.Event.MfaRequired) {
         if (flags.isEnabled(LoginFlags.Mfa_V2)) {
             push(LoginStep.Mfa_V2(event.userId))
         } else {

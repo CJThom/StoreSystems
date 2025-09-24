@@ -41,6 +41,7 @@ fun ComponentActivity.initCollectAppKoin() {
                 collectPresentationModule,
                 com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule,
                 com.gpcasiapac.storesystems.app.collect.di.collectAppNavigationModule,
+                com.gpcasiapac.storesystems.app.collect.di.collectGlobalNavigationModule,
                 appModule,
             )
         }

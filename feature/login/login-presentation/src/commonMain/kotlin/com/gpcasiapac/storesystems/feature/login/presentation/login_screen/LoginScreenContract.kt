@@ -29,8 +29,8 @@ object LoginScreenContract {
         
         // Outcomes emitted to be handled by the feature host/navigation layer
         sealed interface Navigation : Effect {
-            data object ToComplete : Navigation
-            data class ToMfaVerification(val userId: String) : Navigation
+            data object LoginCompleted : Navigation
+            data class MfaRequired(val userId: String) : Navigation
         }
     }
 }

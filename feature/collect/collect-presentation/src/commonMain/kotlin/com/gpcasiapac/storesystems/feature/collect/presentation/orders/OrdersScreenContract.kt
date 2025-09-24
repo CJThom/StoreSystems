@@ -32,7 +32,7 @@ object OrdersScreenContract {
         data class ShowError(val error: String) : Effect
 
         sealed interface Navigation : Effect {
-            data class NavigateToOrderDetails(val orderId: String) : Navigation
+            data class OrderSelected(val orderId: String) : Navigation
         }
     }
 }
