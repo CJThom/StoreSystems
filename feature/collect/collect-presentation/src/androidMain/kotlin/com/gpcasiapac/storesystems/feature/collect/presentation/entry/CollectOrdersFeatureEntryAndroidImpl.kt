@@ -18,8 +18,8 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.details.OrderDetailsScreen
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
-import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersDestination
-import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -73,9 +73,9 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
     ) {
         builder.apply {
             entry<CollectFeatureDestination.Orders> {
-                OrdersDestination { outcome ->
+                OrderListScreenDestination { outcome ->
                     when (outcome) {
-                        is OrdersScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
+                        is OrderListScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
                             CollectOutcome.OrderSelected(outcome.orderId)
                         )
                     }

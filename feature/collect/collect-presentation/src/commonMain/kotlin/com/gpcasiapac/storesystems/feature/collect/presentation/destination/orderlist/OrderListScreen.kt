@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.orders
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,27 +27,27 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun OrdersScreen(
-    state: OrdersScreenContract.State,
-    onEventSent: (event: OrdersScreenContract.Event) -> Unit,
-    effectFlow: Flow<OrdersScreenContract.Effect>,
-    onOutcome: (outcome: OrdersScreenContract.Effect.Outcome) -> Unit,
+fun OrderListScreen(
+    state: OrderListScreenContract.State,
+    onEventSent: (event: OrderListScreenContract.Event) -> Unit,
+    effectFlow: Flow<OrderListScreenContract.Effect>,
+    onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
             when (effect) {
-                is OrdersScreenContract.Effect.ShowToast ->
+                is OrderListScreenContract.Effect.ShowToast ->
                     snackbarHostState.showSnackbar(
                         effect.message,
                         duration = SnackbarDuration.Short
                     )
 
-                is OrdersScreenContract.Effect.ShowError ->
+                is OrderListScreenContract.Effect.ShowError ->
                     snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
 
-                is OrdersScreenContract.Effect.Outcome -> onOutcome(effect)
+                is OrderListScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }
@@ -82,7 +82,7 @@ fun OrdersScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clickable { onEventSent(OrdersScreenContract.Event.OpenOrder(order.id)) },
+                                .clickable { onEventSent(OrderListScreenContract.Event.OpenOrder(order.id)) },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             Text(order.title, modifier = Modifier)

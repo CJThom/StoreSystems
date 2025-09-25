@@ -1,17 +1,12 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.orders
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.presentation.model.Order
 
-object OrdersScreenContract {
-
-    @Immutable
-    data class Order(
-        val id: String,
-        val title: String,
-    )
+object OrderListScreenContract {
 
     @Immutable
     data class State(
@@ -31,7 +26,8 @@ object OrdersScreenContract {
         data class ShowToast(val message: String) : Effect
         data class ShowError(val error: String) : Effect
 
-        sealed interface Outcome : Effect {
+        sealed interface Outcome :
+            Effect {
             data class OrderSelected(val orderId: String) : Outcome
         }
     }

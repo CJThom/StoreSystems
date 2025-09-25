@@ -1,14 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.entry
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
-import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersDestination
-import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersViewModel
 
 /**
  * Common implementation of CollectOrdersFeatureEntry.
