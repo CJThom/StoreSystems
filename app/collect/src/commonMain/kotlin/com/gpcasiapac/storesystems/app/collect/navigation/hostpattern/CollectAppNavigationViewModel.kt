@@ -1,8 +1,10 @@
-package com.gpcasiapac.storesystems.app.collect.navigation
+package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
 
+import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppDestination
+import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
-import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
+import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 
 class CollectAppNavigationViewModel :
     BaseNavViewModel<CollectAppNavContract.Event, CollectAppDestination>() {

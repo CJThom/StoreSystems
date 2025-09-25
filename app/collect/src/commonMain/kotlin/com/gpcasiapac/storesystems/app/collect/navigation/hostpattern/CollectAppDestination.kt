@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.navigation
+package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
 
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
