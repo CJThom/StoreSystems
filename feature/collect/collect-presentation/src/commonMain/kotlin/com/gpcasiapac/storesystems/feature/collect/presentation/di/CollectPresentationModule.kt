@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectOrdersFeatureEntryImpl
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenViewModel
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -13,6 +14,7 @@ import org.koin.dsl.module
 
 val collectPresentationModule = module {
     viewModelOf(::OrderListScreenViewModel)
+    viewModelOf(::OrderDetailScreenViewModel)
     viewModelOf(::CollectNavigationViewModel)
 
     singleOf(::CollectOrdersFeatureEntryImpl) { bind<CollectOrdersFeatureEntry>() }

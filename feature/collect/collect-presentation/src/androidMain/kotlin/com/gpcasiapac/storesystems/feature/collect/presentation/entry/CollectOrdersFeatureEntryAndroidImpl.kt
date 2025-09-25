@@ -15,7 +15,8 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
-import com.gpcasiapac.storesystems.feature.collect.presentation.details.OrderDetailsScreen
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenDestination
@@ -83,10 +84,13 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
             }
 
             entry<CollectFeatureDestination.OrderDetails> { d ->
-                OrderDetailsScreen(
+                OrderDetailScreenDestination(
                     orderId = d.orderId,
-                    onBack = { onOutcome(CollectOutcome.Back) },
-                )
+                ) { effect ->
+                    when (effect) {
+                        is OrderDetailScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                    }
+                }
             }
         }
     }
