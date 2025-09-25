@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 
-interface CollectOrdersFeatureEntry {
+interface CollectFeatureEntry {
 
     fun registerEntries(
         builder: EntryProviderBuilder<NavKey>,

@@ -13,7 +13,7 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenContract
@@ -21,17 +21,19 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.Colle
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
+class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
 
     @Composable
     override fun Host(
         onExternalOutcome: (CollectExternalOutcome) -> Unit,
     ) {
         val collectNavigationViewModel: CollectNavigationViewModel = koinViewModel()
-        val collectEntry: CollectOrdersFeatureEntry = koinInject()
+        val collectEntry: CollectFeatureEntry = koinInject()
 
         val state by collectNavigationViewModel.viewState.collectAsState()
 
@@ -87,6 +89,14 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
                 OrderDetailScreenDestination { effect ->
                     when (effect) {
                         is OrderDetailScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                    }
+                }
+            }
+
+            entry<CollectFeatureDestination.Signature> {
+                SignatureScreenDestination { outcome ->
+                    when (outcome) {
+                        is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                     }
                 }
             }

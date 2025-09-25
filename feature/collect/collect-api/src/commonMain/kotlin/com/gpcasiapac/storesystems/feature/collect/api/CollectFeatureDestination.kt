@@ -10,4 +10,7 @@ sealed interface CollectFeatureDestination : NavKey {
 
     @Serializable
     data class OrderDetails(val orderId: String) : CollectFeatureDestination
+
+    @Serializable
+    data object Signature : CollectFeatureDestination
 }

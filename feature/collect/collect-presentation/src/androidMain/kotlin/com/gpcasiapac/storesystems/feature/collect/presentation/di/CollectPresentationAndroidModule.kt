@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.di
 
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
-import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectOrdersFeatureEntryAndroidImpl
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
+import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectFeatureEntryAndroidImpl
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -13,5 +13,5 @@ import org.koin.dsl.module
  */
 val collectPresentationAndroidModule = module {
     // Bind Android-specific FeatureEntry (overrides common CollectOrdersFeatureEntryImpl)
-    singleOf(::CollectOrdersFeatureEntryAndroidImpl).bind<CollectOrdersFeatureEntry>()
+    singleOf(::CollectFeatureEntryAndroidImpl).bind<CollectFeatureEntry>()
 }

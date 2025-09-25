@@ -21,7 +21,7 @@ import com.gpcasiapac.storesystems.app.superapp.navigation.SuperGlobalNavContrac
 import com.gpcasiapac.storesystems.app.superapp.navigation.SuperGlobalNavigationViewModel
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabsNavigationBar
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -32,7 +32,7 @@ fun SuperAppGlobalNavigation() {
     val state by superNavigationViewModel.viewState.collectAsState()
 
     val loginEntry: LoginFeatureEntry = koinInject()
-    val collectEntry: CollectOrdersFeatureEntry = koinInject()
+    val collectEntry: CollectFeatureEntry = koinInject()
 
     // Outer shell NavDisplay controls Login flow (via registerEntries) -> TabsHost
     NavDisplay(
