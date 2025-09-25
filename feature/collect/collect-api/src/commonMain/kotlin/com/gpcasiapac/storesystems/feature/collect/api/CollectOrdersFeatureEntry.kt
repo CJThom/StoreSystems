@@ -13,5 +13,7 @@ interface CollectOrdersFeatureEntry {
 
     // Drop-in host for this feature. The implementation can use its own MVI VM and NavDisplay.
     @Composable
-    fun Host()
+    fun Host(
+        onExternalOutcome: (CollectExternalOutcome) -> Unit,
+    )
 }

@@ -14,7 +14,7 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * App-level Navigation3 host that starts at Login Host and navigates to Collect Host on success.
+ * App-level Navigation3 host that starts at Login Host and navigates to Collect Host based on outcomes.
  */
 @Composable
 fun AndroidAppNavigation(
@@ -37,15 +37,23 @@ fun AndroidAppNavigation(
         entryProvider = entryProvider {
             entry<CollectAppDestination.LoginHost> {
                 loginEntry.Host(
-                    onComplete = {
-                        appNavigationViewModel.setEvent(CollectAppNavContract.Event.ToCollectHost)
-                    }
+                    onExternalOutcome = { externalOutcome ->
+                        appNavigationViewModel.setEvent(
+                            CollectAppNavContract.Event.FromLogin(externalOutcome)
+                        )
+                    },
                 )
             }
 
             // Entry that renders the Collect feature Host
             entry<CollectAppDestination.CollectHost> {
-                collectEntry.Host()
+                collectEntry.Host(
+                    onExternalOutcome = { externalOutcome ->
+                        appNavigationViewModel.setEvent(
+                            CollectAppNavContract.Event.FromCollect(externalOutcome)
+                        )
+                    },
+                )
             }
         }
     )

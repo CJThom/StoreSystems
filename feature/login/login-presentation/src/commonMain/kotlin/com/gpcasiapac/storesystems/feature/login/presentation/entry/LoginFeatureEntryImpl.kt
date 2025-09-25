@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
+import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 
 /**
  * Common implementation of LoginFeatureEntry for non-Android targets.
@@ -13,7 +14,7 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 class LoginFeatureEntryImpl : LoginFeatureEntry {
 
     @Composable
-    override fun Host(onComplete: () -> Unit) {
+    override fun Host(onOutcome: (LoginExternalOutcome) -> Unit) {
         /* no-op on non-Android targets for now */
     }
 

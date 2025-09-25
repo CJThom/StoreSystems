@@ -6,6 +6,7 @@ import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
+import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersViewModel
 
@@ -16,9 +17,10 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersVie
 class CollectOrdersFeatureEntryImpl : CollectOrdersFeatureEntry {
 
     @Composable
-    override fun Host() {
-        val vm = remember { OrdersViewModel() }
-        OrdersDestination(ordersViewModel = vm) { /* no-op in common host */ }
+    override fun Host(
+        onExternalOutcome: (CollectExternalOutcome) -> Unit,
+    ) {
+        // no-op on non-Android targets by default
     }
 
     override fun registerEntries(

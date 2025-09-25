@@ -12,8 +12,8 @@ class MainActivity : ComponentActivity() {
         // Initialize Koin for feature entries and services
         initCollectAppKoin()
         setContent {
-            AndroidAppNavigationGlobal()
-           // AndroidAppNavigation()
+           // AndroidAppNavigationGlobal()
+            AndroidAppNavigation()
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.gpcasiapac.storesystems.app.collect.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
+import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
+import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 
 class CollectAppNavigationViewModel :
     BaseNavViewModel<CollectAppNavContract.Event, CollectAppDestination>() {
@@ -9,8 +11,19 @@ class CollectAppNavigationViewModel :
 
     override fun handleEvents(event: CollectAppNavContract.Event) {
         when (event) {
-            is CollectAppNavContract.Event.ToCollectHost -> push(CollectAppDestination.CollectHost)
+            is CollectAppNavContract.Event.FromLogin -> handleLoginExternalOutcome(event.outcome)
+            is CollectAppNavContract.Event.FromCollect -> handleExternalCollectOutcome(event.outcome)
             is CollectAppNavContract.Event.PopBack -> pop(event.count)
         }
+    }
+
+    private fun handleLoginExternalOutcome(externalOutcome: LoginExternalOutcome) {
+        when (externalOutcome) {
+            is LoginExternalOutcome.LoginCompleted -> replaceTop(CollectAppDestination.CollectHost)
+        }
+    }
+
+    private fun handleExternalCollectOutcome(externalOutcome: CollectExternalOutcome) {
+        // No app-level collect external outcomes for now
     }
 }

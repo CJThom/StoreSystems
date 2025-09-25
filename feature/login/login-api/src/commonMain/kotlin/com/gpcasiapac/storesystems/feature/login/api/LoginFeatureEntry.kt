@@ -7,7 +7,7 @@ import androidx.navigation3.runtime.NavKey
 interface LoginFeatureEntry {
 
     @Composable
-    fun Host(onComplete: () -> Unit)
+    fun Host(onExternalOutcome: (LoginExternalOutcome) -> Unit)
 
     fun registerEntries(
         builder: EntryProviderBuilder<NavKey>,

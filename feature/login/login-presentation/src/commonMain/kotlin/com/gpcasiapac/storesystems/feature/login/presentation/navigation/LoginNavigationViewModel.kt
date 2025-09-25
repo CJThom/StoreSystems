@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewMod
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
+import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import org.koin.core.component.KoinComponent
 
 class LoginNavigationViewModel(
@@ -21,9 +22,15 @@ class LoginNavigationViewModel(
     }
 
     private fun handleOutcome(outcome: LoginOutcome) {
+        // Drive internal navigation changes first
         when (outcome) {
             is LoginOutcome.MfaRequired -> onMfaRequired(outcome.userId)
-            is LoginOutcome.LoginCompleted -> replaceTop(LoginFeatureDestination.Login)
+            is LoginOutcome.LoginCompleted -> {
+                setEffect {
+                    LoginNavContract.Effect.ExternalOutcome(LoginExternalOutcome.LoginCompleted)
+                }
+            }
+
             is LoginOutcome.Back -> pop()
         }
     }

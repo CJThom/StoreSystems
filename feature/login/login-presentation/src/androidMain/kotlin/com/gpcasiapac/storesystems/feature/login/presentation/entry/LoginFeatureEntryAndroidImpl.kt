@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.entry
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -10,6 +11,7 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -59,13 +61,21 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
 
     @Composable
     override fun Host(
-        onComplete: () -> Unit
+        onExternalOutcome: (LoginExternalOutcome) -> Unit,
     ) {
 
         val loginNavigationViewModel: LoginNavigationViewModel = koinViewModel()
         val state by loginNavigationViewModel.viewState.collectAsState()
 
         val loginEntry: LoginFeatureEntry = koinInject()
+
+        LaunchedEffect(Unit) {
+            loginNavigationViewModel.effect.collect { effect ->
+                when (effect) {
+                    is LoginNavContract.Effect.ExternalOutcome -> onExternalOutcome(effect.outcome)
+                }
+            }
+        }
 
         NavDisplay(
             backStack = state.stack,
@@ -82,24 +92,9 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
                 loginEntry.registerEntries(
                     builder = this,
                     onOutcome = { outcome ->
-                        when (outcome) {
-                            is LoginOutcome.MfaRequired -> {
-                                loginNavigationViewModel.setEvent(
-                                    LoginNavContract.Event.Outcome(outcome)
-                                )
-                            }
-
-                            is LoginOutcome.LoginCompleted -> {
-                                onComplete()
-                            }
-
-                            is LoginOutcome.Back -> {
-                                loginNavigationViewModel.setEvent(
-                                    LoginNavContract.Event.Outcome(outcome)
-                                )
-                            }
-
-                        }
+                        loginNavigationViewModel.setEvent(
+                            LoginNavContract.Event.Outcome(outcome)
+                        )
                     }
                 )
             }
