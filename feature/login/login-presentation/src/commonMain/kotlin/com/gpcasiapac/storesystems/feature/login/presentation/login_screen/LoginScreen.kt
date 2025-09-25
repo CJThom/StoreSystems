@@ -17,7 +17,7 @@ fun LoginScreen(
     state: LoginScreenContract.State,
     onEventSent: (event: LoginScreenContract.Event) -> Unit,
     effectFlow: Flow<LoginScreenContract.Effect>,
-    onNavigationRequested: (effect: LoginScreenContract.Effect.Navigation) -> Unit
+    onOutcome: (outcome: LoginScreenContract.Effect.Outcome) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -39,7 +39,7 @@ fun LoginScreen(
                     )
                 }
 
-                is LoginScreenContract.Effect.Navigation -> onNavigationRequested(effect)
+                is LoginScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }

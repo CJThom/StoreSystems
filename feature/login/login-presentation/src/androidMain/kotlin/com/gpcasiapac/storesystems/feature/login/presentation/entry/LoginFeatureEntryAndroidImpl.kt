@@ -17,9 +17,9 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginDestination
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginScreenContract
-import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavContract
+import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationViewModel
-import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.MfaScreen
+import com.gpcasiapac.storesystems.feature.login.presentation.mfa_screen.MfaScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -35,13 +35,13 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
         builder.apply {
             entry<LoginFeatureDestination.Login> {
                 LoginDestination(
-                    onNavigationRequested = { outcome ->
+                    onOutcome = { outcome ->
                         when (outcome) {
-                            is LoginScreenContract.Effect.Navigation.LoginCompleted -> {
+                            is LoginScreenContract.Effect.Outcome.LoginCompleted -> {
                                 onOutcome(LoginOutcome.LoginCompleted)
                             }
 
-                            is LoginScreenContract.Effect.Navigation.MfaRequired -> {
+                            is LoginScreenContract.Effect.Outcome.MfaRequired -> {
                                 onOutcome(LoginOutcome.MfaRequired(outcome.userId))
                             }
                         }
@@ -72,7 +72,7 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
         LaunchedEffect(Unit) {
             loginNavigationViewModel.effect.collect { effect ->
                 when (effect) {
-                    is LoginNavContract.Effect.ExternalOutcome -> onExternalOutcome(effect.outcome)
+                    is LoginNavigationContract.Effect.ExternalOutcome -> onExternalOutcome(effect.outcome)
                 }
             }
         }
@@ -81,7 +81,7 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
             backStack = state.stack,
             onBack = { count ->
                 loginNavigationViewModel.setEvent(
-                    LoginNavContract.Event.PopBack(count)
+                    LoginNavigationContract.Event.PopBack(count)
                 )
             },
             entryDecorators = listOf(
@@ -93,7 +93,7 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
                     builder = this,
                     onOutcome = { outcome ->
                         loginNavigationViewModel.setEvent(
-                            LoginNavContract.Event.Outcome(outcome)
+                            LoginNavigationContract.Event.Outcome(outcome)
                         )
                     }
                 )

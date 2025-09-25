@@ -31,8 +31,8 @@ object OrdersScreenContract {
         data class ShowToast(val message: String) : Effect
         data class ShowError(val error: String) : Effect
 
-        sealed interface Navigation : Effect {
-            data class OrderSelected(val orderId: String) : Navigation
+        sealed interface Outcome : Effect {
+            data class OrderSelected(val orderId: String) : Outcome
         }
     }
 }

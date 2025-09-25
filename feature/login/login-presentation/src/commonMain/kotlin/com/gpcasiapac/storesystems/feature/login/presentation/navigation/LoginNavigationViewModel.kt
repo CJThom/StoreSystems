@@ -10,14 +10,14 @@ import org.koin.core.component.KoinComponent
 
 class LoginNavigationViewModel(
     private val flags: FeatureFlags
-) : BaseNavViewModel<LoginNavContract.Event, LoginFeatureDestination>(), KoinComponent {
+) : BaseNavViewModel<LoginNavigationContract.Event, LoginFeatureDestination>(), KoinComponent {
 
     override fun provideStartKey(): LoginFeatureDestination = LoginFeatureDestination.Login
 
-    override fun handleEvents(event: LoginNavContract.Event) {
+    override fun handleEvents(event: LoginNavigationContract.Event) {
         when (event) {
-            is LoginNavContract.Event.Outcome -> handleOutcome(event.outcome)
-            is LoginNavContract.Event.PopBack -> pop(event.count)
+            is LoginNavigationContract.Event.Outcome -> handleOutcome(event.outcome)
+            is LoginNavigationContract.Event.PopBack -> pop(event.count)
         }
     }
 
@@ -27,7 +27,7 @@ class LoginNavigationViewModel(
             is LoginOutcome.MfaRequired -> onMfaRequired(outcome.userId)
             is LoginOutcome.LoginCompleted -> {
                 setEffect {
-                    LoginNavContract.Effect.ExternalOutcome(LoginExternalOutcome.LoginCompleted)
+                    LoginNavigationContract.Effect.ExternalOutcome(LoginExternalOutcome.LoginCompleted)
                 }
             }
 

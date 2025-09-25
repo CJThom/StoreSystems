@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -30,7 +31,7 @@ fun OrdersScreen(
     state: OrdersScreenContract.State,
     onEventSent: (event: OrdersScreenContract.Event) -> Unit,
     effectFlow: Flow<OrdersScreenContract.Effect>,
-    onNavigationRequested: (navigationEffect: OrdersScreenContract.Effect.Navigation) -> Unit,
+    onOutcome: (outcome: OrdersScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -38,17 +39,27 @@ fun OrdersScreen(
         effectFlow.collectLatest { effect ->
             when (effect) {
                 is OrdersScreenContract.Effect.ShowToast ->
-                    snackbarHostState.showSnackbar(effect.message, duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+
                 is OrdersScreenContract.Effect.ShowError ->
                     snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
-                is OrdersScreenContract.Effect.Navigation -> onNavigationRequested(effect)
+
+                is OrdersScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
+                .padding(padding)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top

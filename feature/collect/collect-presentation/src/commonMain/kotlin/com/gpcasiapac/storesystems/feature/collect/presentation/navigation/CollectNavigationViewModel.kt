@@ -5,14 +5,14 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
 class CollectNavigationViewModel :
-    BaseNavViewModel<CollectNavContract.Event, CollectFeatureDestination>() {
+    BaseNavViewModel<CollectNavigationContract.Event, CollectFeatureDestination>() {
 
     override fun provideStartKey(): CollectFeatureDestination = CollectFeatureDestination.Orders
 
-    override fun handleEvents(event: CollectNavContract.Event) {
+    override fun handleEvents(event: CollectNavigationContract.Event) {
         when (event) {
-            is CollectNavContract.Event.Outcome -> handleOutcome(event.outcome)
-            is CollectNavContract.Event.PopBack -> pop(event.count)
+            is CollectNavigationContract.Event.Outcome -> handleOutcome(event.outcome)
+            is CollectNavigationContract.Event.PopBack -> pop(event.count)
         }
     }
 

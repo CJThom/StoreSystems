@@ -14,7 +14,7 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 class LoginFeatureEntryImpl : LoginFeatureEntry {
 
     @Composable
-    override fun Host(onOutcome: (LoginExternalOutcome) -> Unit) {
+    override fun Host(onExternalOutcome: (LoginExternalOutcome) -> Unit) {
         /* no-op on non-Android targets for now */
     }
 

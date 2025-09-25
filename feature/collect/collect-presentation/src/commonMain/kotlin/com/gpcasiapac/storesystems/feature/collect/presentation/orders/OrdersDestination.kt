@@ -7,12 +7,12 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun OrdersDestination(
     ordersViewModel: OrdersViewModel = koinViewModel(),
-    onNavigationRequested: (navigationEffect: OrdersScreenContract.Effect.Navigation) -> Unit = {}
+    onOutcome: (outcome: OrdersScreenContract.Effect.Outcome) -> Unit
 ) {
     OrdersScreen(
         state = ordersViewModel.viewState.collectAsState().value,
         onEventSent = { event -> ordersViewModel.setEvent(event) },
         effectFlow = ordersViewModel.effect,
-        onNavigationRequested = onNavigationRequested,
+        onOutcome = onOutcome
     )
 }

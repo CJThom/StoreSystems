@@ -1,6 +1,11 @@
 <manifest package="com.gpcasiapac.storesystems.app.picking" xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="PickingApp">
+        android:allowBackup="true"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:label="PickingApp"
+        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

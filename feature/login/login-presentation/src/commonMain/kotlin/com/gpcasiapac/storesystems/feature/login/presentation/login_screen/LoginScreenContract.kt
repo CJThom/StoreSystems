@@ -28,9 +28,9 @@ object LoginScreenContract {
         data class ShowError(val error: String) : Effect
         
         // Outcomes emitted to be handled by the feature host/navigation layer
-        sealed interface Navigation : Effect {
-            data object LoginCompleted : Navigation
-            data class MfaRequired(val userId: String) : Navigation
+        sealed interface Outcome : Effect {
+            data object LoginCompleted : Outcome
+            data class MfaRequired(val userId: String) : Outcome
         }
     }
 }

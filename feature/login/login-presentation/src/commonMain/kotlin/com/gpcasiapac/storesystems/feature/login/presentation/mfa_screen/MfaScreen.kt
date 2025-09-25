@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.login.presentation.otp_screen
+package com.gpcasiapac.storesystems.feature.login.presentation.mfa_screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

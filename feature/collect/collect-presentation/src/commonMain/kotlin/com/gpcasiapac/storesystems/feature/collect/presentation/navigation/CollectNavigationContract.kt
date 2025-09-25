@@ -8,13 +8,13 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 /**
  * Feature-scoped navigation contract for the Collect host (Outcome-driven).
  */
-object CollectNavContract {
+object CollectNavigationContract {
     sealed interface Event : ViewEvent {
         data class Outcome(val outcome: CollectOutcome) : Event
         data class PopBack(val count: Int = 1) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
-        data class ExternalOutcome(val outcome: CollectExternalOutcome) : Effect
+        data class ExternalOutcome(val externalOutcome: CollectExternalOutcome) : Effect
     }
 }

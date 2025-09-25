@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.login.api.LoginService
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
+import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
 
 class LoginViewModel(
@@ -45,7 +46,7 @@ class LoginViewModel(
                     performLogin(
                         onSuccess = {
                             setEffect { LoginScreenContract.Effect.ShowToast("Login successful!") }
-                            setEffect { LoginScreenContract.Effect.Navigation.LoginCompleted }
+                            setEffect { LoginScreenContract.Effect.Outcome.LoginCompleted }
                         },
                         onError = { errorMessage ->
                             setEffect { LoginScreenContract.Effect.ShowError(errorMessage) }
@@ -93,7 +94,7 @@ class LoginViewModel(
             viewState.value.username,
             viewState.value.password
         )) {
-            is com.gpcasiapac.storesystems.common.kotlin.DataResult.Success -> {
+            is DataResult.Success -> {
                 setState {
                     copy(
                         isLoading = false,
@@ -104,7 +105,7 @@ class LoginViewModel(
                 if (flags.isEnabled(LoginFlags.MfaRequired)) {
                     setEffect { LoginScreenContract.Effect.ShowToast("MFA required (demo)") }
                     val uid = viewState.value.username.ifBlank { "user" }
-                    setEffect { LoginScreenContract.Effect.Navigation.MfaRequired(uid) }
+                    setEffect { LoginScreenContract.Effect.Outcome.MfaRequired(uid) }
                 } else {
                     onSuccess()
                 }

@@ -16,7 +16,7 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.details.OrderDetailsScreen
-import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.orders.OrdersScreenContract
@@ -37,7 +37,7 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
         LaunchedEffect(Unit) {
             collectNavigationViewModel.effect.collect { effect ->
                 when (effect) {
-                    is CollectNavContract.Effect.ExternalOutcome -> onExternalOutcome(effect.outcome)
+                    is CollectNavigationContract.Effect.ExternalOutcome -> onExternalOutcome(effect.externalOutcome)
                 }
             }
         }
@@ -46,7 +46,7 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
             backStack = state.stack,
             onBack = { count ->
                 collectNavigationViewModel.setEvent(
-                    CollectNavContract.Event.PopBack(
+                    CollectNavigationContract.Event.PopBack(
                         count
                     )
                 )
@@ -60,7 +60,7 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
                 collectEntry.registerEntries(
                     builder = this,
                     onOutcome = { outcome ->
-                        collectNavigationViewModel.setEvent(CollectNavContract.Event.Outcome(outcome))
+                        collectNavigationViewModel.setEvent(CollectNavigationContract.Event.Outcome(outcome))
                     }
                 )
             }
@@ -73,10 +73,10 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
     ) {
         builder.apply {
             entry<CollectFeatureDestination.Orders> {
-                OrdersDestination { navigationEffect ->
-                    when (navigationEffect) {
-                        is OrdersScreenContract.Effect.Navigation.OrderSelected -> onOutcome(
-                            CollectOutcome.OrderSelected(navigationEffect.orderId)
+                OrdersDestination { outcome ->
+                    when (outcome) {
+                        is OrdersScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
+                            CollectOutcome.OrderSelected(outcome.orderId)
                         )
                     }
                 }

@@ -8,7 +8,7 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 /**
  * Feature-scoped navigation contract for the Login host (Outcome-driven).
  */
-object LoginNavContract {
+object LoginNavigationContract {
     sealed interface Event : ViewEvent {
         data class Outcome(val outcome: LoginOutcome) : Event
         data class PopBack(val count: Int = 1) : Event
