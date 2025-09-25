@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
@@ -26,7 +27,7 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
 
     @Composable
     override fun Host(
-        onExternalOutcome: (com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome) -> Unit,
+        onExternalOutcome: (CollectExternalOutcome) -> Unit,
     ) {
         val collectNavigationViewModel: CollectNavigationViewModel = koinViewModel()
         val collectEntry: CollectOrdersFeatureEntry = koinInject()

@@ -31,7 +31,7 @@ class CollectGlobalNavigationViewModel :
     private fun handleLoginOutcome(outcome: LoginOutcome) {
         when (outcome) {
             is LoginOutcome.MfaRequired -> {
-                push(LoginFeatureDestination.Otp(outcome.userId))
+                push(LoginFeatureDestination.Mfa(outcome.userId))
             }
 
             is LoginOutcome.LoginCompleted -> {

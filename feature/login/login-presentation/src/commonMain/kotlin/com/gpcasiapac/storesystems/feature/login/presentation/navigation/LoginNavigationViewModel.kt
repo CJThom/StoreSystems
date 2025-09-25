@@ -37,9 +37,9 @@ class LoginNavigationViewModel(
 
     private fun onMfaRequired(userId: String) {
         if (flags.isEnabled(LoginFlags.Mfa_V2)) {
-            push(LoginFeatureDestination.Otp(userId))
+            push(LoginFeatureDestination.Mfa(userId))
         } else {
-            push(LoginFeatureDestination.Otp(userId))
+            push(LoginFeatureDestination.Mfa(userId))
         }
     }
 }

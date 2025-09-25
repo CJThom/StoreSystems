@@ -19,7 +19,7 @@ import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.Login
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginScreenContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationViewModel
-import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.OtpScreen
+import com.gpcasiapac.storesystems.feature.login.presentation.otp_screen.MfaScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -49,8 +49,8 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
                 )
             }
 
-            entry<LoginFeatureDestination.Otp> { otp ->
-                OtpScreen(
+            entry<LoginFeatureDestination.Mfa> { otp ->
+                MfaScreen(
                     userId = otp.userId,
                     onBack = { onOutcome(LoginOutcome.Back) },
                     onOtpSuccess = { onOutcome(LoginOutcome.LoginCompleted) }

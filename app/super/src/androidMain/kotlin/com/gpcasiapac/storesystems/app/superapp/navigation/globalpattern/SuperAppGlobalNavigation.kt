@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation
+package com.gpcasiapac.storesystems.app.superapp.navigation.globalpattern
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -14,13 +14,20 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
+import com.gpcasiapac.storesystems.app.superapp.navigation.AppShellKey
+import com.gpcasiapac.storesystems.app.superapp.navigation.HistoryFeatureDestination
+import com.gpcasiapac.storesystems.app.superapp.navigation.PickingFeatureDestination
+import com.gpcasiapac.storesystems.app.superapp.navigation.SuperGlobalNavContract
+import com.gpcasiapac.storesystems.app.superapp.navigation.SuperGlobalNavigationViewModel
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabsNavigationBar
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SuperAppNavigation() {
+fun SuperAppGlobalNavigation() {
     val superNavigationViewModel: SuperGlobalNavigationViewModel = koinViewModel()
     val state by superNavigationViewModel.viewState.collectAsState()
 

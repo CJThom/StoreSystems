@@ -39,6 +39,7 @@ fun ComponentActivity.initSuperAppKoin() {
                 collectPresentationModule,
                 collectPresentationAndroidModule,
                 superGlobalNavigationModule,
+                com.gpcasiapac.storesystems.app.superapp.di.superAppHostModule,
                 appModule,
             )
         }

@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun OtpScreen(
+fun MfaScreen(
     userId: String,
     modifier: Modifier = Modifier,
     onBack: () -> Unit,

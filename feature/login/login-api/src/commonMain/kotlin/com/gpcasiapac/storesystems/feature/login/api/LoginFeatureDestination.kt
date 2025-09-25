@@ -9,5 +9,5 @@ sealed interface LoginFeatureDestination : NavKey {
     data object Login : LoginFeatureDestination
 
     @Serializable
-    data class Otp(val userId: String) : LoginFeatureDestination
+    data class Mfa(val userId: String) : LoginFeatureDestination
 }

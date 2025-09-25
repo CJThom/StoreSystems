@@ -5,5 +5,6 @@ package com.gpcasiapac.storesystems.feature.collect.api
  * Keep this minimal; add items only when the app needs to react.
  */
 sealed interface CollectExternalOutcome {
-    // No external outcomes for Collect for now. Add when app-level needs arise.
+    /** Example placeholder: ask the app/tabs host to open a scanner UI */
+    data object OpenScanner : CollectExternalOutcome
 }
