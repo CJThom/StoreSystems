@@ -6,14 +6,20 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.model.Order
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class OrderDetailScreenViewModel : MVIViewModel<OrderDetailScreenContract.Event, OrderDetailScreenContract.State, OrderDetailScreenContract.Effect>() {
+class OrderDetailScreenViewModel(
 
-    override fun setInitialState(): OrderDetailScreenContract.State = OrderDetailScreenContract.State(
-        orderId = null,
-        order = null,
-        isLoading = false,
-        error = null,
-    )
+) : MVIViewModel<
+        OrderDetailScreenContract.Event,
+        OrderDetailScreenContract.State,
+        OrderDetailScreenContract.Effect>() {
+
+    override fun setInitialState(): OrderDetailScreenContract.State =
+        OrderDetailScreenContract.State(
+            orderId = "1", // TODO: get from usecase
+            order = null,
+            isLoading = false,
+            error = null,
+        )
 
     override suspend fun awaitReadiness(): Boolean {
         // This placeholder screen has no special readiness requirement
@@ -36,15 +42,6 @@ class OrderDetailScreenViewModel : MVIViewModel<OrderDetailScreenContract.Event,
                 )
             }
         }
-    }
-
-    /**
-     * Provide navigation arguments before the first viewState collection so onStart can act on them.
-     * Idempotent: setting the same id multiple times will be ignored.
-     */
-    fun setArgs(orderId: String) {
-        if (viewState.value.orderId == orderId) return
-        setState { copy(orderId = orderId) }
     }
 
     // TABLE OF CONTENTS - All possible events handled here

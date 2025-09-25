@@ -84,9 +84,7 @@ class CollectOrdersFeatureEntryAndroidImpl : CollectOrdersFeatureEntry {
             }
 
             entry<CollectFeatureDestination.OrderDetails> { d ->
-                OrderDetailScreenDestination(
-                    orderId = d.orderId,
-                ) { effect ->
+                OrderDetailScreenDestination { effect ->
                     when (effect) {
                         is OrderDetailScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                     }
