@@ -18,10 +18,12 @@ class SuperGlobalNavigationViewModel :
             pickingStack = listOf(PickingFeatureDestination.Root),
             collectStack = listOf(CollectFeatureDestination.Orders),
             historyStack = listOf(HistoryFeatureDestination.Root),
-            selectedTab = null,
+            tabList = listOf(TabItem.Picking(), TabItem.Collect(), TabItem.History()),
+            selectedTab = TabItem.Picking(),
         )
 
-    override fun onStart() { /* no-op */ }
+    override fun onStart() { /* no-op */
+    }
 
     override fun handleEvents(event: SuperGlobalNavContract.Event) {
         when (event) {
@@ -43,7 +45,12 @@ class SuperGlobalNavigationViewModel :
 
     // --- Shell ---
     private fun enterTabsHost() {
-        setState { copy(appShellStack = listOf(AppShellKey.TabsHost), selectedTab = TabHostKey.Collect) }
+        setState {
+            copy(
+                appShellStack = listOf(AppShellKey.TabsHost), // TODO: Maybe dont reset backstack (ie. remove Login items)
+                selectedTab = TabItem.Picking()
+            )
+        }
     }
 
     private fun handleLogin(outcome: LoginOutcome) {
@@ -56,29 +63,51 @@ class SuperGlobalNavigationViewModel :
 
     private fun popBack(count: Int) {
         setState {
-            val atTabs = appShellStack.lastOrNull() == AppShellKey.TabsHost && selectedTab != null
+            val atTabs = appShellStack.lastOrNull() == AppShellKey.TabsHost
             if (!atTabs) {
                 copy(appShellStack = BackStackReducer.pop(appShellStack, count))
             } else {
                 when (selectedTab) {
-                    TabHostKey.Picking -> copy(pickingStack = BackStackReducer.pop(pickingStack, count))
-                    TabHostKey.Collect -> copy(collectStack = BackStackReducer.pop(collectStack, count))
-                    TabHostKey.History -> copy(historyStack = BackStackReducer.pop(historyStack, count))
+                    is TabItem.Picking -> copy(
+                        pickingStack = BackStackReducer.pop(
+                            pickingStack,
+                            count
+                        )
+                    )
+
+                    is TabItem.Collect -> copy(
+                        collectStack = BackStackReducer.pop(
+                            collectStack,
+                            count
+                        )
+                    )
+
+                    is TabItem.History -> copy(
+                        historyStack = BackStackReducer.pop(
+                            historyStack,
+                            count
+                        )
+                    )
+
                     null -> this
                 }
             }
         }
     }
 
-    private fun selectTab(tab: TabHostKey) {
+    private fun selectTab(tab: TabItem) {
         setState { copy(selectedTab = tab) }
     }
 
     // --- Tabs/Features ---
     private fun handleCollect(outcome: CollectOutcome) {
         when (outcome) {
-            is CollectOutcome.OrderSelected -> pushInTab(TabHostKey.Collect, CollectFeatureDestination.OrderDetails(outcome.orderId))
-            is CollectOutcome.Back -> popBackInTab(TabHostKey.Collect, 1)
+            is CollectOutcome.OrderSelected -> pushInTab(
+                TabItem.Collect(),
+                CollectFeatureDestination.OrderDetails(outcome.orderId)
+            )
+
+            is CollectOutcome.Back -> popBackInTab(TabItem.Collect(), 1)
         }
     }
 
@@ -86,21 +115,21 @@ class SuperGlobalNavigationViewModel :
     private fun pushInShell(key: NavKey) =
         setState { copy(appShellStack = BackStackReducer.push(appShellStack, key)) }
 
-    private fun pushInTab(tab: TabHostKey, key: NavKey) =
+    private fun pushInTab(tab: TabItem, key: NavKey) =
         setState {
             when (tab) {
-                TabHostKey.Picking -> copy(pickingStack = BackStackReducer.push(pickingStack, key))
-                TabHostKey.Collect -> copy(collectStack = BackStackReducer.push(collectStack, key))
-                TabHostKey.History -> copy(historyStack = BackStackReducer.push(historyStack, key))
+                is TabItem.Picking -> copy(pickingStack = BackStackReducer.push(pickingStack, key))
+                is TabItem.Collect -> copy(collectStack = BackStackReducer.push(collectStack, key))
+                is TabItem.History -> copy(historyStack = BackStackReducer.push(historyStack, key))
             }
         }
 
-    private fun popBackInTab(tab: TabHostKey, count: Int = 1) =
+    private fun popBackInTab(tab: TabItem, count: Int = 1) =
         setState {
             when (tab) {
-                TabHostKey.Picking -> copy(pickingStack = BackStackReducer.pop(pickingStack, count))
-                TabHostKey.Collect -> copy(collectStack = BackStackReducer.pop(collectStack, count))
-                TabHostKey.History -> copy(historyStack = BackStackReducer.pop(historyStack, count))
+                is TabItem.Picking -> copy(pickingStack = BackStackReducer.pop(pickingStack, count))
+                is TabItem.Collect -> copy(collectStack = BackStackReducer.pop(collectStack, count))
+                is TabItem.History -> copy(historyStack = BackStackReducer.pop(historyStack, count))
             }
         }
 }

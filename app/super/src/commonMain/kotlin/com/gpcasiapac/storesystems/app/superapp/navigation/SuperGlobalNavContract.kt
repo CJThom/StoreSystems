@@ -8,16 +8,6 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface TabHostKey : NavKey {
-    @Serializable
-    data object Picking : TabHostKey
-    @Serializable
-    data object Collect : TabHostKey
-    @Serializable
-    data object History : TabHostKey
-}
-
-@Serializable
 sealed interface AppShellKey : NavKey {
     @Serializable
     data object TabsHost : AppShellKey
@@ -34,11 +24,12 @@ object SuperGlobalNavContract {
 
         // Tabs host domain (inside TabsHost)
         sealed interface TabsHost : Event {
-            data class SelectTab(val tab: TabHostKey) : TabsHost
+            data class SelectTab(val tab: TabItem) : TabsHost
             data class FromCollect(val outcome: CollectOutcome) : TabsHost
+
             // data class FromPicking(val outcome: PickingOutcome) : TabsHost
             // data class FromHistory(val outcome: HistoryOutcome) : TabsHost
-            data class Pop(val tab: TabHostKey, val count: Int = 1) : TabsHost
+            data class Pop(val tab: TabItem, val count: Int = 1) : TabsHost
         }
 
     }
@@ -48,6 +39,7 @@ object SuperGlobalNavContract {
         val pickingStack: List<NavKey>,
         val collectStack: List<NavKey>,
         val historyStack: List<NavKey>,
-        val selectedTab: TabHostKey? = null,
+        val tabList: List<TabItem>,
+        val selectedTab: TabItem,
     ) : ViewState
 }

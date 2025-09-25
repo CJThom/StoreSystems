@@ -28,6 +28,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(compose.materialIconsExtended)
 
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
