@@ -2,9 +2,11 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.presentation.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class OrderDetailScreenViewModel(
 
@@ -80,7 +82,11 @@ class OrderDetailScreenViewModel(
             delay(300)
             val order = Order(
                 id = orderId,
-                title = "Order Details for ${'$'}orderId",
+                customerType = CustomerType.B2C,
+                customerName = "Demo Customer",
+                invoiceNumber = "INV-$orderId",
+                webOrderNumber = null,
+                pickedAt = Clock.System.now(),
             )
             setState { copy(order = order, isLoading = false, error = null) }
             onSuccess()

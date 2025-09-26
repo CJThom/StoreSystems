@@ -13,6 +13,9 @@ kotlin {
     }
     jvm()
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+        }
         androidMain.dependencies {
             // Navigation3 UI on Android only
             implementation(libs.androidx.navigation3.ui)
@@ -24,6 +27,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(compose.materialIconsExtended)
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
@@ -39,9 +43,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
 
-
-            // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
+            implementation(projects.feature.collect.collectDomain)
+            
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
 

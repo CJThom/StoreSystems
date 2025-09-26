@@ -2,9 +2,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.presentation.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 
 class OrderListScreenViewModel : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
@@ -52,6 +55,7 @@ class OrderListScreenViewModel : MVIViewModel<OrderListScreenContract.Event, Ord
 
             is OrderListScreenContract.Event.OpenOrder -> openOrder(event.orderId)
             is OrderListScreenContract.Event.ClearError -> clearError()
+            else -> Unit // Other events are not yet implemented in this placeholder VM
         }
     }
 
@@ -63,10 +67,15 @@ class OrderListScreenViewModel : MVIViewModel<OrderListScreenContract.Event, Ord
         try {
             // Simulate network delay and produce demo orders
             delay(500)
+            val now = Clock.System.now()
             val demo = (1..10).map { idx ->
                 Order(
                     id = "ORD-$idx",
-                    title = "Order #$idx",
+                    customerType = if (idx % 2 == 0) CustomerType.B2B else CustomerType.B2C,
+                    customerName = if (idx % 2 == 0) "Acme Corp #$idx" else "John Smith #$idx",
+                    invoiceNumber = "INV-${1000 + idx}",
+                    webOrderNumber = "WEB-${2000 + idx}",
+                    pickedAt = now - idx.hours, // demo: picked idx hours ago
                 )
             }
             setState { copy(orderList = demo, isLoading = false, error = null) }

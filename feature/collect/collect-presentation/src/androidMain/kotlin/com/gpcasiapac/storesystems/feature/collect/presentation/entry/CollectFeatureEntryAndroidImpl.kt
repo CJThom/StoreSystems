@@ -81,6 +81,15 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                         is OrderListScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
                             CollectOutcome.OrderSelected(outcome.orderId)
                         )
+                        is OrderListScreenContract.Effect.Outcome.OrdersSelected -> {
+                            // For now, just navigate to the first selected order or ignore
+                            outcome.orderIds.firstOrNull()?.let { id ->
+                                onOutcome(CollectOutcome.OrderSelected(id))
+                            } ?: run {
+                                // No selection; no-op
+                            }
+                        }
+                        is OrderListScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                     }
                 }
             }

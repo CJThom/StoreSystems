@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 
 @Composable
 fun OrderDetailScreen(
@@ -79,7 +80,7 @@ private fun Content(
             }
 
             else -> {
-                val title = state.order?.title ?: "Order ${'$'}{state.orderId}"
+                val title = state.order?.displayName ?: "Order ${'$'}{state.orderId}"
                 Text(title, style = MaterialTheme.typography.headlineSmall)
                 Button(onClick = { onEventSent(OrderDetailScreenContract.Event.Back) }, modifier = Modifier.padding(top = 16.dp)) {
                     Text("Back")
