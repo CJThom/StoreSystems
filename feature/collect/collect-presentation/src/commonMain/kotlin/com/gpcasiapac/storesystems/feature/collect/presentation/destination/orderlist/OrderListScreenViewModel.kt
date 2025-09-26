@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 class OrderListScreenViewModel : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State = OrderListScreenContract.State(
-        orders = emptyList(),
+        orderList = emptyList(),
         isLoading = true,
         error = null,
     )
@@ -69,7 +69,7 @@ class OrderListScreenViewModel : MVIViewModel<OrderListScreenContract.Event, Ord
                     title = "Order #$idx",
                 )
             }
-            setState { copy(orders = demo, isLoading = false, error = null) }
+            setState { copy(orderList = demo, isLoading = false, error = null) }
             onSuccess()
         } catch (t: Throwable) {
             val message = t.message ?: "Failed to load orders. Please try again."

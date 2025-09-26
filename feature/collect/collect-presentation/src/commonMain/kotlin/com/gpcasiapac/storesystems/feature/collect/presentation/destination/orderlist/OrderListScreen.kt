@@ -78,7 +78,7 @@ fun OrderListScreen(
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                    items(state.orders) { order ->
+                    items(state.orderList) { order ->
                         Card(
                             modifier = Modifier
                                 .fillMaxSize()

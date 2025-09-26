@@ -10,8 +10,17 @@ object OrderListScreenContract {
 
     @Immutable
     data class State(
-        val orders: List<Order>,
+        val orderList: List<Order>,
+        val isMultiSelectionEnabled: Boolean,
+        val selectedOrderIdList: Set<String>,
+        val orderCount: Int,
+        val isSelectAllChecked: Boolean,
+        val searchText: String,
+        val searchHintResultList: List<Order>,
+        val filteredOrderList: List<Order>,
         val isLoading: Boolean,
+        val isRefreshing: Boolean,
+        val submittedOrder: Order?,
         val error: String?,
     ) : ViewState
 
@@ -26,8 +35,7 @@ object OrderListScreenContract {
         data class ShowToast(val message: String) : Effect
         data class ShowError(val error: String) : Effect
 
-        sealed interface Outcome :
-            Effect {
+        sealed interface Outcome : Effect {
             data class OrderSelected(val orderId: String) : Outcome
         }
     }
