@@ -26,6 +26,13 @@ object Dimens {
         val contentSpacing: Dp = Space.medium       // 16dp
     }
 
+    object Stroke {
+        val veryThin: Dp = 0.5.dp
+        val thin: Dp = 1.dp
+        val normal: Dp = 2.dp
+        val thick: Dp = 3.dp
+    }
+
     // Component sizes
     object Size {
         val iconSmall: Dp = 16.dp

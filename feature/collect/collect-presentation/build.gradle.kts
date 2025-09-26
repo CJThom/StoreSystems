@@ -24,6 +24,10 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(compose.uiTooling)
+            implementation(compose.materialIconsExtended)
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
@@ -42,6 +46,10 @@ kotlin {
 
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
+
+            //Foundation
+            implementation(project(":foundation:design-system"))
+            implementation(project(":foundation:component"))
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
 

@@ -10,11 +10,16 @@ object OrdersScreenContract {
     @Immutable
     data class Order(
         val id: String,
-        val title: String,
+        val customerName: String,
+        val orderNumber: String,
+        val phoneNumber: String,
+        val deliveryTime: String,
+        val isBusiness: Boolean,
     )
 
     @Immutable
     data class State(
+        val isMultiSelectionEnabled: Boolean = false,
         val orders: List<Order>,
         val isLoading: Boolean,
         val error: String?,
@@ -25,6 +30,8 @@ object OrdersScreenContract {
         data object Refresh : Event
         data class OpenOrder(val orderId: String) : Event
         data object ClearError : Event
+
+        data class MultiSelectionChanged(val isEnabled: Boolean) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
