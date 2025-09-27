@@ -31,7 +31,7 @@ class IdentityServiceImpl(
 
     override suspend fun isLoggedIn(): Boolean = isLoggedInUseCase()
 
-    override suspend fun logout(): LogoutResult = when (val r = logoutUseCase()) {
+    override suspend fun logout(): LogoutResult = when (logoutUseCase()) {
         is LogoutUseCase.UseCaseResult.Success -> LogoutResult.Success
         is LogoutUseCase.UseCaseResult.Error.NetworkError -> LogoutResult.Error.NetworkError
         is LogoutUseCase.UseCaseResult.Error.ServiceUnavailable -> LogoutResult.Error.ServiceUnavailable
