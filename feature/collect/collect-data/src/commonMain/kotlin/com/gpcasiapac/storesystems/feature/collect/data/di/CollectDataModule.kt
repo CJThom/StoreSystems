@@ -11,10 +11,10 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val collectDataModule = module {
-    // Network data source (mock for now)
+    // Common mock network data source loads JSON from commonMain/resources
     singleOf(::MockOrderNetworkDataSource) { bind<OrderNetworkDataSource>() }
 
-    // Repository binding (real implementation backed by DB + network)
+    // Repository binding (real implementation backed by DB + network).
     singleOf(::OrderRepositoryImpl) { bind<OrderRepository>() }
 }
 

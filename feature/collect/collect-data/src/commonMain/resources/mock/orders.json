@@ -1,0 +1,82 @@
+[
+  {
+    "id": "ORD-1",
+    "customer_type": "B2C",
+    "customer_name": "John Smith #1",
+    "invoice_number": "INV-1001",
+    "web_order_number": null,
+    "picked_at_epoch_ms": 1696118400000
+  },
+  {
+    "id": "ORD-2",
+    "customer_type": "B2B",
+    "customer_name": "Acme Corp #2",
+    "invoice_number": "INV-1002",
+    "web_order_number": "WEB-2002",
+    "picked_at_epoch_ms": 1696204800000
+  },
+  {
+    "id": "ORD-3",
+    "customer_type": "B2C",
+    "customer_name": "Jane Doe #3",
+    "invoice_number": "INV-1003",
+    "web_order_number": null,
+    "picked_at_epoch_ms": 1696291200000
+  },
+  {
+    "id": "ORD-4",
+    "customer_type": "B2B",
+    "customer_name": "Globex Ltd #4",
+    "invoice_number": "INV-1004",
+    "web_order_number": "WEB-2004",
+    "picked_at_epoch_ms": 1696377600000
+  },
+  {
+    "id": "ORD-5",
+    "customer_type": "B2C",
+    "customer_name": "Alice Johnson #5",
+    "invoice_number": "INV-1005",
+    "web_order_number": null,
+    "picked_at_epoch_ms": 1696464000000
+  },
+  {
+    "id": "ORD-6",
+    "customer_type": "B2B",
+    "customer_name": "Stark Industries #6",
+    "invoice_number": "INV-1006",
+    "web_order_number": "WEB-2006",
+    "picked_at_epoch_ms": 1696550400000
+  },
+  {
+    "id": "ORD-7",
+    "customer_type": "B2C",
+    "customer_name": "Bob Lee #7",
+    "invoice_number": "INV-1007",
+    "web_order_number": null,
+    "picked_at_epoch_ms": 1696636800000
+  },
+  {
+    "id": "ORD-8",
+    "customer_type": "B2B",
+    "customer_name": "Wayne Enterprises #8",
+    "invoice_number": "INV-1008",
+    "web_order_number": "WEB-2008",
+    "picked_at_epoch_ms": 1696723200000
+  },
+  {
+    "id": "ORD-9",
+    "customer_type": "B2C",
+    "customer_name": "Charlie Brown #9",
+    "invoice_number": "INV-1009",
+    "web_order_number": null,
+    "picked_at_epoch_ms": 1696809600000
+  },
+  {
+    "id": "ORD-10",
+    "customer_type": "B2B",
+    "customer_name": "Oscorp #10",
+    "invoice_number": "INV-1010",
+    "web_order_number": "WEB-2010",
+    "picked_at_epoch_ms": 1696896000000
+  }
+]

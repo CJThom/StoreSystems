@@ -53,4 +53,12 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
+
+    // TODO: Hopefully remove if kmp supports resources better
+    // Package commonMain/resources into Android assets so ResourceReader can load them
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/commonMain/resources")
+        }
+    }
 }
