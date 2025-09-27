@@ -18,16 +18,22 @@ import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -81,6 +87,7 @@ fun OrderListScreen(
     }
 
     Scaffold(
+        topBar = { OrderListTopBar(state = state, onEventSent = onEventSent) },
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         }
@@ -92,8 +99,6 @@ fun OrderListScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Text("Collect Orders", style = MaterialTheme.typography.headlineSmall)
-
             if (state.isLoading) {
                 CircularProgressIndicator()
             } else if (state.error != null) {
@@ -121,6 +126,40 @@ fun OrderListScreen(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun OrderListTopBar(
+    state: OrderListScreenContract.State,
+    onEventSent: (event: OrderListScreenContract.Event) -> Unit,
+) {
+    Column {
+        TopAppBar(
+            title = { Text("Collect Orders") },
+            actions = {
+                IconButton(onClick = { onEventSent(OrderListScreenContract.Event.Refresh) }) {
+                    Icon(Icons.Outlined.Refresh, contentDescription = "Refresh")
+                }
+            }
+        )
+        OutlinedTextField(
+            value = state.searchText,
+            onValueChange = { onEventSent(OrderListScreenContract.Event.SearchTextChanged(it)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+            trailingIcon = {
+                if (state.searchText.isNotEmpty()) {
+                    IconButton(onClick = { onEventSent(OrderListScreenContract.Event.SearchTextChanged("")) }) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Clear search")
+                    }
+                }
+            },
+            placeholder = { Text("Search orders…") }
+        )
+    }
+}
 
 @Composable
 private fun OrderCard(
