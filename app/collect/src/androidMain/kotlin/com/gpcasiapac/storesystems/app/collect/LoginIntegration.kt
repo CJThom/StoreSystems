@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
 import com.gpcasiapac.storesystems.core.identity.data.di.identityDataModule
 import com.gpcasiapac.storesystems.core.identity.domain.di.identityDomainModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.domain.di.collectDomainModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationAndroidModule
@@ -41,6 +42,7 @@ fun ComponentActivity.initCollectAppKoin() {
                 loginPresentationAndroidModule,
                 collectPresentationModule,
                 collectPresentationAndroidModule,
+                collectDomainModule,
                 collectAppNavigationModule,
                 appModule,
             )

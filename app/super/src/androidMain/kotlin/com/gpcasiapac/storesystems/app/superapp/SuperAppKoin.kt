@@ -11,6 +11,7 @@ import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentati
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.domain.di.collectDomainModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.koin.core.context.GlobalContext
@@ -38,6 +39,7 @@ fun ComponentActivity.initSuperAppKoin() {
                 loginPresentationAndroidModule,
                 collectPresentationModule,
                 collectPresentationAndroidModule,
+                collectDomainModule,
                 superGlobalNavigationModule,
                 com.gpcasiapac.storesystems.app.superapp.di.superAppHostModule,
                 appModule,

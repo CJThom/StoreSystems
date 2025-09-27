@@ -51,6 +51,7 @@ kotlin {
 
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectPresentation)
+            implementation(projects.feature.collect.collectDomain)
 
             // Optional placeholders (presentations only)
             implementation(projects.feature.history.historyPresentation)

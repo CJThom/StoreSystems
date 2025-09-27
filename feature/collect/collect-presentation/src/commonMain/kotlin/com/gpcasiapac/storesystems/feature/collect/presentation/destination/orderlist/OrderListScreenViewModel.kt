@@ -36,7 +36,7 @@ class OrderListScreenViewModel(
     override fun onStart() {
         // Start long-lived observation of the order list based on the current query
         viewModelScope.launch {
-            observeOrders()
+            observeOrderList()
         }
 
         // Trigger initial refresh to seed data
@@ -96,11 +96,11 @@ class OrderListScreenViewModel(
 
     }
 
-    private suspend fun observeOrders() {
+    private suspend fun observeOrderList() {
 
         val queryFlow: Flow<OrderQuery> = QueryFlow.build(
-            input = viewState.map {
-                OrderQuery(it.searchText)
+            input = viewState.map { viewState ->
+                OrderQuery(viewState.searchText)
             },
             debounce = SearchDebounce(millis = 150),
             keySelector = { query ->
