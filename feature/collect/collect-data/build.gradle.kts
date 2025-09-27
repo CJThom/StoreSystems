@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -14,8 +15,13 @@ kotlin {
             languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
             languageSettings.optIn("kotlinx.coroutines.FlowPreview")
         }
-        commonMain.dependencies { }
-        commonTest.dependencies { implementation(libs.kotlin.test) }
+        commonMain.dependencies {
+            implementation(libs.kotlinx.serialization.json)
+            implementation(projects.feature.collect.collectDomain)
+            implementation(projects.feature.collect.collectApi)
+
+            implementation(libs.androidx.room.runtime)
+        }
     }
 }
 

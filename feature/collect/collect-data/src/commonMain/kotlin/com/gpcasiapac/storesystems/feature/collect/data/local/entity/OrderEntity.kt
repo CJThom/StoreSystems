@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import kotlin.time.Instant
 
 @Entity(tableName = "orders")
 data class OrderEntity(
@@ -24,7 +25,7 @@ data class OrderEntity(
     @ColumnInfo(name = "web_order_number")
     val webOrderNumber: String?,
 
-    @ColumnInfo(name = "picked_at_epoch_ms")
-    val pickedAtEpochMillis: Long,
+    @ColumnInfo(name = "picked_at")
+    val pickedAt: Instant,
 
 )

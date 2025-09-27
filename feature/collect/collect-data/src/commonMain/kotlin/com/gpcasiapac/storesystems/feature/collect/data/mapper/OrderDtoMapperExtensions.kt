@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.data.mapper
 import com.gpcasiapac.storesystems.feature.collect.data.local.entity.OrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import kotlin.time.Instant
 
 fun OrderDto.toEntity(): OrderEntity {
     return OrderEntity(
@@ -11,7 +12,7 @@ fun OrderDto.toEntity(): OrderEntity {
         customerName = this.customerName,
         invoiceNumber = this.invoiceNumber,
         webOrderNumber = this.webOrderNumber,
-        pickedAtEpochMillis = this.pickedAtEpochMillis,
+        pickedAt = Instant.fromEpochMilliseconds(this.pickedAtEpochMillis),
     )
 }
 

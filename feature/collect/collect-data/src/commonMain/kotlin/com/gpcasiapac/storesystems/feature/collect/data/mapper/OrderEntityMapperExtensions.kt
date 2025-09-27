@@ -3,17 +3,17 @@ package com.gpcasiapac.storesystems.feature.collect.data.mapper
 import com.gpcasiapac.storesystems.feature.collect.data.local.entity.OrderEntity
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 
-fun Order.toEntity(): OrderEntity {
-    return OrderEntity(
+fun OrderEntity.toDomain(): Order {
+    return Order(
         id = this.id,
         customerType = this.customerType,
         customerName = this.customerName,
         invoiceNumber = this.invoiceNumber,
         webOrderNumber = this.webOrderNumber,
-        pickedAtEpochMillis = this.pickedAt.toEpochMilliseconds(),
+        pickedAt = this.pickedAt,
     )
 }
 
-fun List<Order>.toEntity(): List<OrderEntity> {
-    return this.map { it.toEntity() }
+fun List<OrderEntity>.toDomain(): List<Order> {
+    return this.map { it.toDomain() }
 }

@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -19,15 +18,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.common.di)
             implementation(libs.koin.core)
-            implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
-        val androidMain by getting {
-            dependencies {
-                // Room annotations for @Entity/@PrimaryKey/@ColumnInfo
-                implementation("androidx.room:room-common:2.6.1")
-            }
-        }
     }
 }
 
