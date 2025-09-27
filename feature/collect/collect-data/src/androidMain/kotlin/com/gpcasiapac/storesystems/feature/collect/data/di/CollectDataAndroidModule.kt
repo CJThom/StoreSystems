@@ -1,6 +1,5 @@
 package com.gpcasiapac.storesystems.feature.collect.data.di
 
-import com.gpcasiapac.storesystems.common.networking.resources.ResourceReader
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.getDatabaseBuilder
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.getRoomDatabase

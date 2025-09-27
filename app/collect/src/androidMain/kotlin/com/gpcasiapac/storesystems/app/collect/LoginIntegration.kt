@@ -7,11 +7,11 @@ import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
 import com.gpcasiapac.storesystems.core.identity.data.di.identityDataModule
 import com.gpcasiapac.storesystems.core.identity.domain.di.identityDomainModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
-import com.gpcasiapac.storesystems.feature.collect.domain.di.collectDomainModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
-import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataModule
 import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataModule
+import com.gpcasiapac.storesystems.feature.collect.domain.di.collectDomainModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationAndroidModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule

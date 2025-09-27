@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.common.networking.resources
 import android.content.Context
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.getValue
 
 actual object ResourceReader : KoinComponent {
     private val context: Context by inject()

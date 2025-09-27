@@ -6,10 +6,10 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 
 @Immutable
 data class FilterChip(

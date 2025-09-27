@@ -16,9 +16,9 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginDestination
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginScreenContract
+import com.gpcasiapac.storesystems.feature.login.presentation.mfa_screen.MfaScreen
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationViewModel
-import com.gpcasiapac.storesystems.feature.login.presentation.mfa_screen.MfaScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 

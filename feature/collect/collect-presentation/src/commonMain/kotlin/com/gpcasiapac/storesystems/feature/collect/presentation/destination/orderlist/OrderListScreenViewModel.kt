@@ -4,15 +4,15 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(

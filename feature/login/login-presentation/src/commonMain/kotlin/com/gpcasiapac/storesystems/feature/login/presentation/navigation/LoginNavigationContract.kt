@@ -2,8 +2,8 @@ package com.gpcasiapac.storesystems.feature.login.presentation.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
-import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
+import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 
 /**
  * Feature-scoped navigation contract for the Login host (Outcome-driven).

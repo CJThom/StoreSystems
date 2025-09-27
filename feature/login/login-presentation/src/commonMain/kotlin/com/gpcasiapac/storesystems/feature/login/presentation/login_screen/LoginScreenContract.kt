@@ -1,9 +1,9 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 
 import androidx.compose.runtime.Immutable
-import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
+import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 
 object LoginScreenContract {
 

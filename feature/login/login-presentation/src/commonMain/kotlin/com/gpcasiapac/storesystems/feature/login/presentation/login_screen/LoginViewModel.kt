@@ -1,12 +1,12 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.login.api.LoginService
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
+import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
+import com.gpcasiapac.storesystems.feature.login.api.LoginService
+import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val loginService: LoginService,

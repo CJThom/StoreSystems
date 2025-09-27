@@ -5,10 +5,10 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.CustomerTypeConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.TimeConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.OrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
 
 @Database(
     entities = [OrderEntity::class],

@@ -19,9 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
-import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 
 @Composable
 fun OrderDetailScreen(
