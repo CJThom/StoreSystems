@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.data.local.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
 import kotlinx.coroutines.flow.Flow
@@ -9,10 +10,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface OrderDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(order: OrderEntity)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(orders: List<OrderEntity>)
 
     @Query("SELECT COUNT(*) FROM orders")
