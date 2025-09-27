@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
-import com.gpcasiapac.storesystems.feature.collect.data.local.entity.OrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import kotlin.time.Instant

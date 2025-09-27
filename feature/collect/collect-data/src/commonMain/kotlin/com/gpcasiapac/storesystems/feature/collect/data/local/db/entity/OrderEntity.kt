@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.data.local.entity
+package com.gpcasiapac.storesystems.feature.collect.data.local.db.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

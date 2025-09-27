@@ -48,6 +48,7 @@ kotlin {
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectPresentation)
             implementation(projects.feature.collect.collectDomain)
+            implementation(projects.feature.collect.collectData)
 
             // Login/Identity wiring for DI provided from domain/presentation
             implementation(projects.feature.login.loginPresentation)

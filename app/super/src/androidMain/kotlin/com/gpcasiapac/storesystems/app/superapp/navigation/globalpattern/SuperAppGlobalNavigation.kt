@@ -9,11 +9,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.gpcasiapac.storesystems.app.superapp.navigation.AppShellKey
 import com.gpcasiapac.storesystems.app.superapp.navigation.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.app.superapp.navigation.PickingFeatureDestination
