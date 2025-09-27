@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.hours
 class FakeOrderRepository : OrderRepository {
     private val state = MutableStateFlow<List<Order>>(emptyList())
 
-    override fun observeOrders(query: OrderQuery): Flow<List<Order>> =
+    override fun getOrderListFlow(query: OrderQuery): Flow<List<Order>> =
         state.asStateFlow()
             .map { all ->
                 val q = query.searchText.trim().lowercase()

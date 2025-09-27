@@ -15,7 +15,7 @@ interface OrderRepository {
     /**
      * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
      */
-    fun observeOrders(query: OrderQuery): Flow<List<Order>>
+    fun getOrderListFlow(query: OrderQuery): Flow<List<Order>>
 
     /**
      * Trigger a refresh/sync. In fake repo this seeds demo data.

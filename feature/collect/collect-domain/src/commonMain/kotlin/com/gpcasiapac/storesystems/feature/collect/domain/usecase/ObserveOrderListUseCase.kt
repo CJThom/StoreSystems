@@ -10,7 +10,7 @@ class ObserveOrderListUseCase(
 ) {
 
     operator fun invoke(query: OrderQuery): Flow<List<Order>> {
-        return repository.observeOrders(query)
+        return repository.getOrderListFlow(query)
     }
 
 }
