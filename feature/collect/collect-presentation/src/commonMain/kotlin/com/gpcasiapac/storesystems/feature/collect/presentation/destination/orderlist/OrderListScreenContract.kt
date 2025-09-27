@@ -64,8 +64,7 @@ object OrderListScreenContract {
     ) : ViewState
 
     sealed interface Event : ViewEvent {
-        // Lifecycle
-        data object Load : Event
+        // User-driven refresh (initial load happens in onStart)
         data object Refresh : Event
 
         // Navigation

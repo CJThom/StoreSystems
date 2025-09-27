@@ -6,16 +6,16 @@ import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.RefreshOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
     private val observeOrderListUseCase: ObserveOrderListUseCase,
-    private val refreshOrders: RefreshOrdersUseCase,
+    private val fetchOrderListUseCase: FetchOrderListUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State = OrderListScreenContract.State(
@@ -34,53 +34,54 @@ class OrderListScreenViewModel(
     }
 
     override fun onStart() {
-
-        QueryFlow.build(
-            input = viewState.map {
-                OrderQuery(it.searchText)
-            },
-            debounce = SearchDebounce(millis = 150),
-            keySelector = { query ->
-                query.searchText
-            }
-        ).flatMapLatest { query ->
-            observeOrderListUseCase(query)
-        }.onEach { orders ->
-            setState {
-                copy(
-                    orderList = orders,
-                    orderCount = orders.size,
-                    isLoading = false,
-                    error = null
-                )
-            }
-        }.launchIn(viewModelScope)
+        // Start long-lived observation of the order list based on the current query
+        viewModelScope.launch {
+            observeOrders()
+        }
 
         // Trigger initial refresh to seed data
-        viewModelScope.launch { doRefresh(successToast = "Orders loaded") }
+        viewModelScope.launch {
+            fetchOrderList(successToast = "Orders loaded")
+        }
+
     }
 
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: OrderListScreenContract.Event) {
         when (event) {
-            is OrderListScreenContract.Event.Load -> viewModelScope.launch { doRefresh(successToast = "Orders loaded") }
-            is OrderListScreenContract.Event.Refresh -> viewModelScope.launch {
-                doRefresh(
-                    successToast = "Orders refreshed"
-                )
+            is OrderListScreenContract.Event.Refresh -> {
+                viewModelScope.launch {
+                    fetchOrderList(successToast = "Orders refreshed")
+                }
             }
 
-            is OrderListScreenContract.Event.SearchTextChanged -> setState { copy(searchText = event.text) }
+            is OrderListScreenContract.Event.SearchTextChanged -> {
+                setState { copy(searchText = event.text) }
+            }
 
-            is OrderListScreenContract.Event.OpenOrder -> openOrder(event.orderId)
-            is OrderListScreenContract.Event.ClearError -> clearError()
+            is OrderListScreenContract.Event.OpenOrder -> {
+                openOrder(event.orderId)
+            }
+
+            is OrderListScreenContract.Event.ClearError -> {
+                clearError()
+            }
+
             else -> Unit // Other events are not yet implemented in this placeholder VM
         }
     }
 
-    private suspend fun doRefresh(successToast: String) {
-        setState { copy(isLoading = true, error = null) }
-        val result = refreshOrders()
+    private suspend fun fetchOrderList(successToast: String) {
+
+        setState {
+            copy(
+                isLoading = true,
+                error = null
+            )
+        }
+
+        val result = fetchOrderListUseCase()
+
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
@@ -92,6 +93,34 @@ class OrderListScreenViewModel(
                 setEffect { OrderListScreenContract.Effect.ShowError(msg) }
             }
         )
+
+    }
+
+    private suspend fun observeOrders() {
+
+        val queryFlow: Flow<OrderQuery> = QueryFlow.build(
+            input = viewState.map {
+                OrderQuery(it.searchText)
+            },
+            debounce = SearchDebounce(millis = 150),
+            keySelector = { query ->
+                query.searchText
+            }
+        )
+
+        queryFlow.flatMapLatest { query ->
+            observeOrderListUseCase(query)
+        }.collectLatest { orders ->
+            setState {
+                copy(
+                    orderList = orders,
+                    orderCount = orders.size,
+                    isLoading = false,
+                    error = null
+                )
+            }
+        }
+
     }
 
     private fun openOrder(orderId: String) {
@@ -101,4 +130,5 @@ class OrderListScreenViewModel(
     private fun clearError() {
         setState { copy(error = null) }
     }
+
 }

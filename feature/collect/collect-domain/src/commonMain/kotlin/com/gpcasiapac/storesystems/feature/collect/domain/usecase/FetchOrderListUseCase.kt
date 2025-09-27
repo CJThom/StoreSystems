@@ -2,7 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase
 
 import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderRepository
 
-class RefreshOrdersUseCase(
+class FetchOrderListUseCase(
     private val repository: OrderRepository,
 ) {
 
