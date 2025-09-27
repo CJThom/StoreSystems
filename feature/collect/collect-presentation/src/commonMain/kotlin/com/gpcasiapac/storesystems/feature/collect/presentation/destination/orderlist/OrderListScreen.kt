@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,14 +47,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.time.Clock
 import kotlin.time.Instant
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListScreen(
     state: OrderListScreenContract.State,
@@ -97,36 +103,158 @@ fun OrderListScreen(
             SnackbarHost(snackbarHostState)
         }
     ) { padding ->
-        Column(
+        // Overlay layout: search bar floats above the list (like a dropdown)
+        Box(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .fillMaxSize()
         ) {
-            if (state.isLoading) {
-                CircularProgressIndicator()
-            } else if (state.error != null) {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
-                    Text(
-                        text = state.error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+            // Main content behind the search bar
+            when {
+                state.isLoading -> {
+                    Column(
                         modifier = Modifier
-                    )
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else {
-                LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                    items(state.orderList) { order ->
-                        OrderCard(
-                            order = order,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onEventSent(OrderListScreenContract.Event.OpenOrder(order.id)) }
-                                .padding(vertical = 6.dp)
+                state.error != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                            Text(
+                                text = state.error,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            top = SearchBarDefaults.InputFieldHeight + 16.dp,
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp
+                        )
+                    ) {
+                        items(state.orderList) { order ->
+                            OrderCard(
+                                order = order,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onEventSent(OrderListScreenContract.Event.OpenOrder(order.id)) }
+                                    .padding(vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // DockedSearchBar overlaid on top of the list
+            val onActiveChange: (Boolean) -> Unit = { active ->
+                onEventSent(OrderListScreenContract.Event.SearchActiveChanged(active))
+            }
+            val colors1 = SearchBarDefaults.colors()
+
+
+            // Track focus of the input field and collapse search when focus is lost
+            val inputInteraction = remember { MutableInteractionSource() }
+            val isFocused = inputInteraction.collectIsFocusedAsState().value
+            LaunchedEffect(isFocused, state.isSearchActive) {
+                if (!isFocused && state.isSearchActive) {
+                    onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false))
+                }
+            }
+
+            // Show suggestions only when there are results
+            val hasSuggestions = state.searchSuggestions.isNotEmpty()
+            val expanded = state.isSearchActive && hasSuggestions
+
+            // Click outside to collapse: transparent scrim that sits above the list
+            if (expanded) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(0.5f)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false))
+                        }
+                )
+            }
+
+            // Use built-in DockedSearchBar expansion and its content slot for suggestions
+            DockedSearchBar(
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        query = state.searchText,
+                        onQueryChange = { onEventSent(OrderListScreenContract.Event.SearchTextChanged(it)) },
+                        onSearch = { onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false)) },
+                        expanded = state.isSearchActive,
+                        onExpandedChange = onActiveChange,
+                        placeholder = { Text("Search orders…") },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (state.searchText.isNotEmpty()) {
+                                IconButton(onClick = { onEventSent(OrderListScreenContract.Event.ClearSearch) }) {
+                                    Icon(Icons.Outlined.Close, contentDescription = "Clear search")
+                                }
+                            }
+                        },
+                        colors = colors1.inputFieldColors,
+                        interactionSource = inputInteraction,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                expanded = expanded,
+                onExpandedChange = onActiveChange,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .zIndex(1f),
+                shape = SearchBarDefaults.dockedShape,
+                colors = colors1,
+                tonalElevation = SearchBarDefaults.TonalElevation,
+                shadowElevation = SearchBarDefaults.ShadowElevation,
+            ) {
+                // Built-in suggestions/results table
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(state.searchSuggestions.take(4)) { s ->
+                        SuggestionRow(
+                            text = s.text,
+                            type = s.type,
+                            onClick = {
+                                onEventSent(
+                                    OrderListScreenContract.Event.SearchSuggestionClicked(
+                                        suggestion = s.text,
+                                        type = s.type
+                                    )
+                                )
+                            },
+                            onFilterClick = {
+                                onEventSent(
+                                    OrderListScreenContract.Event.SearchSuggestionClicked(
+                                        suggestion = s.text,
+                                        type = s.type
+                                    )
+                                )
+                            }
                         )
                     }
                 }
             }
+
         }
     }
 }
@@ -137,83 +265,20 @@ private fun OrderListTopBar(
     state: OrderListScreenContract.State,
     onEventSent: (event: OrderListScreenContract.Event) -> Unit,
 ) {
-    Column {
-        TopAppBar(
-            title = { Text("Collect Orders") },
-            actions = {
-                IconButton(onClick = { onEventSent(OrderListScreenContract.Event.Refresh) }) {
-                    Icon(Icons.Outlined.Refresh, contentDescription = "Refresh")
-                }
-            }
-        )
-        val onActiveChange: (Boolean) -> Unit = { active ->
-            onEventSent(OrderListScreenContract.Event.SearchActiveChanged(active))
-        }
-
-
-        val colors1 = SearchBarDefaults.colors()
-        DockedSearchBar(
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = state.searchText,
-                    onQueryChange = { onEventSent(OrderListScreenContract.Event.SearchTextChanged(it)) },
-                    onSearch = { onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false)) },
-                    expanded = state.isSearchActive,
-                    onExpandedChange = onActiveChange,
-                    placeholder = { Text("Search orders…") },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (state.searchText.isNotEmpty()) {
-                            IconButton(onClick = { onEventSent(OrderListScreenContract.Event.ClearSearch) }) {
-                                Icon(Icons.Outlined.Close, contentDescription = "Clear search")
-                            }
-                        }
-                    },
-                    colors = colors1.inputFieldColors,
-                )
-            },
-            expanded = state.isSearchActive,
-            onExpandedChange = onActiveChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            shape = SearchBarDefaults.dockedShape,
-            colors = colors1,
-            tonalElevation = SearchBarDefaults.TonalElevation,
-            shadowElevation = SearchBarDefaults.ShadowElevation,
-        ) {
-            LazyColumn {
-                items(state.searchSuggestions) { s ->
-                    SuggestionRow(
-                        text = s.text,
-                        type = s.type,
-                        onClick = {
-                            onEventSent(
-                                OrderListScreenContract.Event.SearchSuggestionClicked(
-                                    suggestion = s.text,
-                                    type = s.type
-                                )
-                            )
-                        },
-                        onFilterClick = {
-                            onEventSent(
-                                OrderListScreenContract.Event.SearchSuggestionClicked(
-                                    suggestion = s.text,
-                                    type = s.type
-                                )
-                            )
-                        }
-                    )
-                }
+    TopAppBar(
+        title = { Text("Collect Orders") },
+        actions = {
+            IconButton(onClick = { onEventSent(OrderListScreenContract.Event.Refresh) }) {
+                Icon(Icons.Outlined.Refresh, contentDescription = "Refresh")
             }
         }
-    }
+    )
 }
 
 @Composable
 private fun SuggestionRow(
     text: String,
-    type: com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType,
+    type: SearchSuggestionType,
     onClick: () -> Unit,
     onFilterClick: () -> Unit,
 ) {
@@ -225,9 +290,9 @@ private fun SuggestionRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val leading = when (type) {
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType.PHONE -> Icons.Outlined.Phone
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType.ORDER_NUMBER -> Icons.Outlined.ReceiptLong
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType.NAME -> Icons.Outlined.Public
+            SearchSuggestionType.PHONE -> Icons.Outlined.Phone
+            SearchSuggestionType.ORDER_NUMBER -> Icons.Outlined.ReceiptLong
+            SearchSuggestionType.NAME -> Icons.Outlined.Public
         }
         Icon(leading, contentDescription = null)
         Spacer(Modifier.size(12.dp))
