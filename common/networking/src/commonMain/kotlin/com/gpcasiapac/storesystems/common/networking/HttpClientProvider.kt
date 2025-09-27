@@ -16,7 +16,6 @@ object HttpClientProvider {
     fun createHttpClient(engine: HttpClientEngine): HttpClient =
         HttpClient(engine) {
             install(Resources)
-            install(WebSockets)
             install(ContentNegotiation) { json(JsonConfig.json) }
             install(Logging) {
                 logger = CustomLogger

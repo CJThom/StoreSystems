@@ -25,6 +25,10 @@ kotlin {
             implementation(projects.common.di)
             implementation(libs.koin.core)
 
+            // Shared utilities
+            implementation(projects.common.networking)
+            implementation(projects.common.persistence)
+
             // Room KMP runtime and bundled SQLite driver
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
@@ -34,6 +38,10 @@ kotlin {
             implementation(libs.androidx.room.sqlite.wrapper)
             // Use OS-provided SQLite on Android via AndroidSQLiteDriver
           //  implementation(libs.androidx.sqlite.android)
+        }
+        val jvmMain by getting {
+            // Ensure commonMain/resources are on the JVM classpath for this module
+            resources.srcDirs("src/commonMain/resources")
         }
     }
 }
