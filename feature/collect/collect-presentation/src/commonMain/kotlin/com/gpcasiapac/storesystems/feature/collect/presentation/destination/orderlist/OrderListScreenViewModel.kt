@@ -1,16 +1,21 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
+import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import kotlinx.coroutines.flow.distinctUntilChanged
+import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.RefreshOrdersUseCase
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
-    private val observeOrdersBySearch: com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrdersBySearchUseCase,
-    private val refreshOrders: com.gpcasiapac.storesystems.feature.collect.domain.usecase.RefreshOrdersUseCase,
+    private val observeOrderListUseCase: ObserveOrderListUseCase,
+    private val refreshOrders: RefreshOrdersUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State = OrderListScreenContract.State(
@@ -29,16 +34,27 @@ class OrderListScreenViewModel(
     }
 
     override fun onStart() {
-        // Observe orders filtered by search text from state
-        val searchTextFlow = viewState
-            .map { it.searchText }
-            .distinctUntilChanged()
 
-        observeOrdersBySearch(searchTextFlow)
-            .onEach { orders ->
-                setState { copy(orderList = orders, orderCount = orders.size, isLoading = false, error = null) }
+        QueryFlow.build(
+            input = viewState.map {
+                OrderQuery(it.searchText)
+            },
+            debounce = SearchDebounce(millis = 150),
+            keySelector = { query ->
+                query.searchText
             }
-            .launchIn(viewModelScope)
+        ).flatMapLatest { query ->
+            observeOrderListUseCase(query)
+        }.onEach { orders ->
+            setState {
+                copy(
+                    orderList = orders,
+                    orderCount = orders.size,
+                    isLoading = false,
+                    error = null
+                )
+            }
+        }.launchIn(viewModelScope)
 
         // Trigger initial refresh to seed data
         viewModelScope.launch { doRefresh(successToast = "Orders loaded") }
@@ -48,7 +64,11 @@ class OrderListScreenViewModel(
     override fun handleEvents(event: OrderListScreenContract.Event) {
         when (event) {
             is OrderListScreenContract.Event.Load -> viewModelScope.launch { doRefresh(successToast = "Orders loaded") }
-            is OrderListScreenContract.Event.Refresh -> viewModelScope.launch { doRefresh(successToast = "Orders refreshed") }
+            is OrderListScreenContract.Event.Refresh -> viewModelScope.launch {
+                doRefresh(
+                    successToast = "Orders refreshed"
+                )
+            }
 
             is OrderListScreenContract.Event.SearchTextChanged -> setState { copy(searchText = event.text) }
 

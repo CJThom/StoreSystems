@@ -3,7 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.di
 import com.gpcasiapac.storesystems.common.di.ModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repo.fake.FakeOrderRepository
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrdersBySearchUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.RefreshOrdersUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -16,7 +16,7 @@ val collectDomainModule = module {
     singleOf(::FakeOrderRepository) { bind<OrderRepository>() }
 
     // Use cases
-    factoryOf(::ObserveOrdersBySearchUseCase)
+    factoryOf(::ObserveOrderListUseCase)
     factoryOf(::RefreshOrdersUseCase)
 }
 
