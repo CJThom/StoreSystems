@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,14 +22,18 @@ import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -141,22 +146,96 @@ private fun OrderListTopBar(
                 }
             }
         )
-        OutlinedTextField(
-            value = state.searchText,
-            onValueChange = { onEventSent(OrderListScreenContract.Event.SearchTextChanged(it)) },
+        val onActiveChange: (Boolean) -> Unit = { active ->
+            onEventSent(OrderListScreenContract.Event.SearchActiveChanged(active))
+        }
+
+
+        val colors1 = SearchBarDefaults.colors()
+        DockedSearchBar(
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = state.searchText,
+                    onQueryChange = { onEventSent(OrderListScreenContract.Event.SearchTextChanged(it)) },
+                    onSearch = { onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false)) },
+                    expanded = state.isSearchActive,
+                    onExpandedChange = onActiveChange,
+                    placeholder = { Text("Search orders…") },
+                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (state.searchText.isNotEmpty()) {
+                            IconButton(onClick = { onEventSent(OrderListScreenContract.Event.ClearSearch) }) {
+                                Icon(Icons.Outlined.Close, contentDescription = "Clear search")
+                            }
+                        }
+                    },
+                    colors = colors1.inputFieldColors,
+                )
+            },
+            expanded = state.isSearchActive,
+            onExpandedChange = onActiveChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-            trailingIcon = {
-                if (state.searchText.isNotEmpty()) {
-                    IconButton(onClick = { onEventSent(OrderListScreenContract.Event.SearchTextChanged("")) }) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Clear search")
-                    }
+            shape = SearchBarDefaults.dockedShape,
+            colors = colors1,
+            tonalElevation = SearchBarDefaults.TonalElevation,
+            shadowElevation = SearchBarDefaults.ShadowElevation,
+        ) {
+            LazyColumn {
+                items(state.searchSuggestions) { s ->
+                    SuggestionRow(
+                        text = s.text,
+                        type = s.type,
+                        onClick = {
+                            onEventSent(
+                                OrderListScreenContract.Event.SearchSuggestionClicked(
+                                    suggestion = s.text,
+                                    type = s.type
+                                )
+                            )
+                        },
+                        onFilterClick = {
+                            onEventSent(
+                                OrderListScreenContract.Event.SearchSuggestionClicked(
+                                    suggestion = s.text,
+                                    type = s.type
+                                )
+                            )
+                        }
+                    )
                 }
-            },
-            placeholder = { Text("Search orders…") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionRow(
+    text: String,
+    type: com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType,
+    onClick: () -> Unit,
+    onFilterClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val leading = when (type) {
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType.PHONE -> Icons.Outlined.Phone
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType.ORDER_NUMBER -> Icons.Outlined.ReceiptLong
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType.NAME -> Icons.Outlined.Public
+        }
+        Icon(leading, contentDescription = null)
+        Spacer(Modifier.size(12.dp))
+        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        androidx.compose.material3.AssistChip(
+            onClick = onFilterClick,
+            label = { Text("FILTER") },
+            leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) }
         )
     }
 }

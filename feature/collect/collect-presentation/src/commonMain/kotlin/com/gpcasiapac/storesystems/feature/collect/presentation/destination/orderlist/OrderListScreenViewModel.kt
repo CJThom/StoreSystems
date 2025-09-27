@@ -7,6 +7,8 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -56,7 +58,26 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SearchTextChanged -> {
-                setState { copy(searchText = event.text) }
+                val newText = event.text
+                setState {
+                    copy(
+                        searchText = newText,
+                        // Update suggestions based on text; keep simple demo logic
+                        searchSuggestions = generateSuggestions(newText)
+                    )
+                }
+            }
+
+            is OrderListScreenContract.Event.SearchActiveChanged -> {
+                setState { copy(isSearchActive = event.active) }
+            }
+
+            is OrderListScreenContract.Event.ClearSearch -> {
+                setState { copy(searchText = "", searchSuggestions = emptyList()) }
+            }
+
+            is OrderListScreenContract.Event.SearchSuggestionClicked -> {
+                setState { copy(searchText = event.suggestion, isSearchActive = false, searchSuggestions = emptyList()) }
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
@@ -129,6 +150,24 @@ class OrderListScreenViewModel(
 
     private fun clearError() {
         setState { copy(error = null) }
+    }
+
+    private fun generateSuggestions(text: String): List<SearchSuggestion> {
+        val t = text.trim()
+        if (t.isEmpty()) return emptyList()
+        val out = mutableListOf<SearchSuggestion>()
+        val hasDigits = t.any { it.isDigit() }
+        val hasLetters = t.any { it.isLetter() }
+        if (hasDigits) {
+            out += SearchSuggestion(t, SearchSuggestionType.ORDER_NUMBER)
+            if (t.length >= 6) {
+                out += SearchSuggestion(t, SearchSuggestionType.PHONE)
+            }
+        }
+        if (hasLetters) {
+            out += SearchSuggestion(t, SearchSuggestionType.NAME)
+        }
+        return out.distinctBy { it.type }
     }
 
 }
