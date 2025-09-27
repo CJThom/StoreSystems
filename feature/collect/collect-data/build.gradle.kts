@@ -19,6 +19,8 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.feature.collect.collectDomain)
             implementation(projects.feature.collect.collectApi)
+            implementation(projects.common.di)
+            implementation(libs.koin.core)
 
             implementation(libs.androidx.room.runtime)
         }
