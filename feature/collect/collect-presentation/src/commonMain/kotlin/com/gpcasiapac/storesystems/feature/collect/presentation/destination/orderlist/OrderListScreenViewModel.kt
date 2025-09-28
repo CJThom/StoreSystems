@@ -85,92 +85,248 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SearchTextChanged -> {
-                setState {
-                    copy(
-                        searchText = event.text,
-                        // Let suggestions pipeline update; clear immediately if blank
-                        orderSearchSuggestions = if (event.text.isBlank()) emptyList() else orderSearchSuggestions
-                    )
-                }
+                handleSearchTextChanged(event.text)
             }
 
             is OrderListScreenContract.Event.SearchActiveChanged -> {
-                setState {
-                    copy(
-                        isSearchActive = event.active,
-                        orderSearchSuggestions = if (event.active) orderSearchSuggestions else emptyList()
-                    )
-                }
+                handleSearchActiveChanged(event.active)
             }
 
             is OrderListScreenContract.Event.ClearSearch -> {
-                setState {
-                    copy(
-                        searchText = "",
-                        orderSearchSuggestions = emptyList()
-                    )
-                }
+                handleClearSearch()
             }
 
             is OrderListScreenContract.Event.SearchSuggestionClicked -> {
-                setState {
-                    copy(
-                        searchText = event.suggestion,
-                        isSearchActive = false,
-                        orderSearchSuggestions = emptyList()
-                    )
-                }
+                handleSearchSuggestionClicked(event.suggestion)
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
-                openOrder(event.orderId)
+                setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
             }
 
             is OrderListScreenContract.Event.ClearError -> {
-                clearError()
+                setState { copy(error = null) }
             }
 
             is OrderListScreenContract.Event.ToggleCustomerType -> {
-                setState {
-                    val updated =
-                        if (event.checked) customerTypeFilters + event.type else customerTypeFilters - event.type
-                    val newState = copy(customerTypeFilters = updated)
-                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
-                }
+                handleToggleCustomerType(event.type, event.checked)
             }
 
             is OrderListScreenContract.Event.ApplyFilters -> {
-                setState {
-                    val merged =
-                        (appliedFilterChips + event.chips).distinctBy { it.type to it.value }
-                    val newState = copy(appliedFilterChips = merged)
-                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
-                }
+                handleApplyFilters(event.chips)
             }
 
             is OrderListScreenContract.Event.RemoveFilterChip -> {
-                setState {
-                    val newList =
-                        appliedFilterChips.filterNot { it.type == event.chip.type && it.value == event.chip.value }
-                    val newState = copy(appliedFilterChips = newList)
-                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
-                }
+                handleRemoveFilterChip(event.chip)
             }
 
             is OrderListScreenContract.Event.ResetFilters -> {
-                setState {
-                    val newState = copy(appliedFilterChips = emptyList())
-                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
-                }
+                handleResetFilters()
             }
 
             is OrderListScreenContract.Event.SortChanged -> {
                 setState { copy(sortOption = event.option) }
             }
 
-            else -> Unit
+            is OrderListScreenContract.Event.Back -> {
+                setEffect { OrderListScreenContract.Effect.Outcome.Back }
+            }
+
+            is OrderListScreenContract.Event.CancelSelection -> {
+                handleCancelSelection()
+            }
+
+            is OrderListScreenContract.Event.CloseFilterSheet -> {
+                setState { copy(isFilterSheetOpen = false) }
+            }
+
+            is OrderListScreenContract.Event.ConfirmSelection -> {
+                handleConfirmSelection()
+            }
+
+            is OrderListScreenContract.Event.DismissSnackbar -> {
+
+            }
+
+            is OrderListScreenContract.Event.OpenFilterSheet -> {
+                setState { copy(isFilterSheetOpen = true) }
+            }
+
+            is OrderListScreenContract.Event.OrderChecked -> {
+                handleOrderChecked(event.orderId, event.checked)
+            }
+
+            is OrderListScreenContract.Event.SelectAll -> {
+                handleSelectAll(event.checked)
+            }
+
+            is OrderListScreenContract.Event.SubmitOrder -> {
+                setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+            }
+
+            is OrderListScreenContract.Event.SubmitSelectedOrders -> {
+                handleSubmitSelectedOrders()
+            }
+
+            is OrderListScreenContract.Event.ToggleSelectionMode -> {
+                handleToggleSelectionMode(event.enabled)
+            }
         }
     }
+
+    private fun handleSearchTextChanged(text: String) {
+        setState {
+            copy(
+                searchText = text,
+                // Let suggestions pipeline update; clear immediately if blank
+                orderSearchSuggestions = if (text.isBlank()) emptyList() else orderSearchSuggestions
+            )
+        }
+    }
+
+    private fun handleSearchActiveChanged(active: Boolean) {
+        setState {
+            copy(
+                isSearchActive = active,
+                orderSearchSuggestions = if (active) orderSearchSuggestions else emptyList()
+            )
+        }
+    }
+
+    private fun handleClearSearch() {
+        setState {
+            copy(
+                searchText = "",
+                orderSearchSuggestions = emptyList()
+            )
+        }
+    }
+
+    private fun handleSearchSuggestionClicked(suggestion: String) {
+        setState {
+            copy(
+                searchText = suggestion,
+                isSearchActive = false,
+                orderSearchSuggestions = emptyList()
+            )
+        }
+    }
+
+    private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
+        setState {
+            val updated = customerTypeFilters.toMutableSet().apply {
+                if (checked) add(type) else remove(type)
+            }
+            val base = copy(customerTypeFilters = updated)
+            val filtered = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filtered)
+        }
+    }
+
+    private fun handleApplyFilters(chips: List<FilterChip>) {
+        setState {
+            val newChips = (appliedFilterChips + chips).distinctBy { it.type to it.value }
+            val base = copy(
+                appliedFilterChips = newChips,
+                isFilterSheetOpen = false
+            )
+            val filtered = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filtered)
+        }
+    }
+
+    private fun handleRemoveFilterChip(chip: FilterChip) {
+        setState {
+            val newChips = appliedFilterChips.filterNot { it == chip }
+            val base = copy(appliedFilterChips = newChips)
+            val filtered = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filtered)
+        }
+    }
+
+    private fun handleResetFilters() {
+        setState {
+            val base = copy(appliedFilterChips = emptyList())
+            val filtered = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filtered)
+        }
+    }
+
+    private fun handleCancelSelection() {
+        setState {
+            copy(
+                isMultiSelectionEnabled = false,
+                selectedOrderIdList = emptySet(),
+                isSelectAllChecked = false
+            )
+        }
+    }
+
+    private fun handleConfirmSelection() {
+        val selected = viewState.value.selectedOrderIdList.toList()
+        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selected) }
+        setState {
+            copy(
+                isMultiSelectionEnabled = false,
+                selectedOrderIdList = emptySet(),
+                isSelectAllChecked = false
+            )
+        }
+    }
+
+    private fun handleOrderChecked(orderId: String, checked: Boolean) {
+        setState {
+            val newSet = selectedOrderIdList.toMutableSet().apply {
+                if (checked) add(orderId) else remove(orderId)
+            }
+            val visibleIds = filteredOrderList.map { it.id }.toSet()
+            val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in newSet }
+            copy(
+                selectedOrderIdList = newSet,
+                isSelectAllChecked = allSelected
+            )
+        }
+    }
+
+    private fun handleSelectAll(checked: Boolean) {
+        setState {
+            val visibleIds = filteredOrderList.map { it.id }
+            val newSet =
+                if (checked) selectedOrderIdList + visibleIds else selectedOrderIdList - visibleIds.toSet()
+            copy(
+                selectedOrderIdList = newSet.toSet(),
+                isSelectAllChecked = checked
+            )
+        }
+    }
+
+    private fun handleSubmitSelectedOrders() {
+        val selected = viewState.value.selectedOrderIdList.toList()
+        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selected) }
+        setState {
+            copy(
+                isMultiSelectionEnabled = false,
+                selectedOrderIdList = emptySet(),
+                isSelectAllChecked = false
+            )
+        }
+    }
+
+    private fun handleToggleSelectionMode(enabled: Boolean) {
+        setState {
+            if (enabled) copy(
+                isMultiSelectionEnabled = true,
+                selectedOrderIdList = emptySet(),
+                isSelectAllChecked = false
+            )
+            else copy(
+                isMultiSelectionEnabled = false,
+                selectedOrderIdList = emptySet(),
+                isSelectAllChecked = false
+            )
+        }
+    }
+    // endregion
 
     private suspend fun fetchOrderList(successToast: String) {
 
@@ -220,7 +376,17 @@ class OrderListScreenViewModel(
                     error = null,
                 )
                 val filtered = applyFiltersTo(orders, newStateBase)
-                newStateBase.copy(filteredOrderList = filtered)
+                // Maintain selection consistency when list changes
+                val filteredIds = filtered.map { it.id }.toSet()
+                val newSelected =
+                    if (isMultiSelectionEnabled) selectedOrderIdList.intersect(filteredIds) else emptySet()
+                val allSelected =
+                    isMultiSelectionEnabled && filteredIds.isNotEmpty() && filteredIds.size == newSelected.size
+                newStateBase.copy(
+                    filteredOrderList = filtered,
+                    selectedOrderIdList = newSelected,
+                    isSelectAllChecked = allSelected
+                )
             }
         }
 
@@ -248,14 +414,6 @@ class OrderListScreenViewModel(
             setState { copy(orderSearchSuggestions = suggestions) }
         }
 
-    }
-
-    private fun openOrder(orderId: String) {
-        setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(orderId) }
-    }
-
-    private fun clearError() {
-        setState { copy(error = null) }
     }
 
     private fun applyFiltersTo(

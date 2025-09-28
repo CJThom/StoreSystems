@@ -19,6 +19,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.BackHand
@@ -33,6 +38,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.FilterChip
@@ -110,6 +116,17 @@ fun OrderListScreen(
         topBar = { OrderListTopBar(state = state, onEventSent = onEventSent) },
         snackbarHost = {
             SnackbarHost(snackbarHostState)
+        },
+        bottomBar = {
+            if (state.isMultiSelectionEnabled) {
+                SelectionBottomBar(
+                    checked = state.isSelectAllChecked,
+                    onCheckedChange = { checked -> onEventSent(OrderListScreenContract.Event.SelectAll(checked)) },
+                    selectedCount = state.selectedOrderIdList.size,
+                    onCancel = { onEventSent(OrderListScreenContract.Event.CancelSelection) },
+                    onConfirm = { onEventSent(OrderListScreenContract.Event.ConfirmSelection) }
+                )
+            }
         }
     ) { padding ->
         // Overlay layout: search bar floats above the list (like a dropdown)
@@ -162,16 +179,28 @@ fun OrderListScreen(
                             FilterBar(state = state, onEventSent = onEventSent)
                         }
                         items(state.filteredOrderList) { order ->
+                            val isChecked = state.selectedOrderIdList.contains(order.id)
                             OrderCard(
                                 order = order,
+                                showCheckbox = state.isMultiSelectionEnabled,
+                                checked = isChecked,
+                                onCheckedChange = { checked ->
+                                    onEventSent(
+                                        OrderListScreenContract.Event.OrderChecked(order.id, checked)
+                                    )
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        onEventSent(
-                                            OrderListScreenContract.Event.OpenOrder(
-                                                order.id
+                                        if (state.isMultiSelectionEnabled) {
+                                            onEventSent(
+                                                OrderListScreenContract.Event.OrderChecked(order.id, !isChecked)
                                             )
-                                        )
+                                        } else {
+                                            onEventSent(
+                                                OrderListScreenContract.Event.OpenOrder(order.id)
+                                            )
+                                        }
                                     }
                                     .padding(vertical = 6.dp)
                             )
@@ -341,50 +370,67 @@ private fun SuggestionRow(
 private fun OrderCard(
     order: Order,
     modifier: Modifier = Modifier,
+    showCheckbox: Boolean = false,
+    checked: Boolean = false,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(8.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            // Header: customer type icon + customer/business name
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val icon = when (order.customerType) {
-                    CustomerType.B2B -> Icons.Outlined.Business
-                    CustomerType.B2C -> Icons.Outlined.Person
+            if (showCheckbox) {
+                Checkbox(
+                    checked = checked,
+                    onCheckedChange = { onCheckedChange?.invoke(it) }
+                )
+                Spacer(Modifier.size(4.dp))
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Header: customer type icon + customer/business name
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val icon = when (order.customerType) {
+                        CustomerType.B2B -> Icons.Outlined.Business
+                        CustomerType.B2C -> Icons.Outlined.Person
+                    }
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        text = order.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.size(8.dp))
-                Text(
-                    text = order.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+
+                // Second row: invoice number and web order number
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.ReceiptLong, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text(text = order.invoiceNumber ?: "—", style = MaterialTheme.typography.bodyMedium)
+
+                    Spacer(Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Public, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text(
+                        text = order.webOrderNumber ?: "—",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                // Time since picked chip
+                TimeSincePickedChip(order.pickedAt)
             }
-
-            // Second row: invoice number and web order number
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.ReceiptLong, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text(text = order.invoiceNumber ?: "—", style = MaterialTheme.typography.bodyMedium)
-
-                Spacer(Modifier.size(16.dp))
-                Icon(Icons.Outlined.Public, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text(
-                    text = order.webOrderNumber ?: "—",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            // Time since picked chip
-            TimeSincePickedChip(order.pickedAt)
         }
     }
 }
@@ -423,11 +469,6 @@ private fun FilterBar(
     state: OrderListScreenContract.State,
     onEventSent: (event: OrderListScreenContract.Event) -> Unit,
 ) {
-    if (state.appliedFilterChips.isEmpty() && state.customerTypeFilters.size == 2) {
-        // Nothing to show if no chips and both customer types enabled
-        return
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -488,6 +529,45 @@ private fun FilterBar(
                 label = { Text("Clear") },
                 leadingIcon = { Icon(Icons.Outlined.Close, contentDescription = null) }
             )
+        }
+
+        Spacer(Modifier.size(8.dp))
+        if (!state.isMultiSelectionEnabled) {
+            AssistChip(
+                onClick = { onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(true)) },
+                label = { Text("SELECT") },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SelectionBottomBar(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    selectedCount: Int,
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    androidx.compose.material3.Surface(shadowElevation = 6.dp) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                )
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            androidx.compose.material3.Checkbox(checked = checked, onCheckedChange = onCheckedChange)
+            Spacer(Modifier.size(8.dp))
+            Text("SELECT ALL", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.weight(1f))
+            androidx.compose.material3.TextButton(onClick = onCancel) { Text("CANCEL") }
+            Spacer(Modifier.size(8.dp))
+            androidx.compose.material3.Button(onClick = onConfirm, enabled = selectedCount > 0) {
+                Text("SELECT $selectedCount")
+            }
         }
     }
 }

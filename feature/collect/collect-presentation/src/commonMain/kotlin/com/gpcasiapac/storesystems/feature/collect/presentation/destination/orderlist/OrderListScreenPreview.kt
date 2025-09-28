@@ -83,7 +83,19 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             val loading = base.copy(isLoading = true, orderList = emptyList(), filteredOrderList = emptyList())
             val error = base.copy(error = "Failed to load orders")
 
-            return sequenceOf(base, withFilters, loading, error)
+            val multiSelect = base.copy(
+                isMultiSelectionEnabled = true,
+                selectedOrderIdList = setOf(orders[0].id, orders[2].id),
+                isSelectAllChecked = false
+            )
+
+            val multiSelectAll = base.copy(
+                isMultiSelectionEnabled = true,
+                selectedOrderIdList = orders.map { it.id }.toSet(),
+                isSelectAllChecked = true
+            )
+
+            return sequenceOf(base, withFilters, multiSelect, multiSelectAll, loading, error)
         }
 }
 

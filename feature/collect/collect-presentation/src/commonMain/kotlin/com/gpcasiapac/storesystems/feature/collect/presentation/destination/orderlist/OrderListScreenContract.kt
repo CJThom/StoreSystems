@@ -75,7 +75,7 @@ object OrderListScreenContract {
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event
         data object OpenFilterSheet : Event
         data object CloseFilterSheet : Event
-        data class ApplyFilters(val chips: List<FilterChip>) : Event
+        data class ApplyFilters(val chips: List<FilterChip>) : Event // add chip from search suggestion?
         data class RemoveFilterChip(val chip: FilterChip) : Event
         data object ResetFilters : Event
         data class SortChanged(val option: SortOption) : Event
