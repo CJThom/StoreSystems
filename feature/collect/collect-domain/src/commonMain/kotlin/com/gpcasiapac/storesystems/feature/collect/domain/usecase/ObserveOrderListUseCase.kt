@@ -9,8 +9,8 @@ class ObserveOrderListUseCase(
     private val orderRepository: OrderRepository,
 ) {
 
-    operator fun invoke(query: OrderQuery): Flow<List<Order>> {
-        return orderRepository.getOrderListFlow(query)
+    operator fun invoke(orderQuery: OrderQuery): Flow<List<Order>> {
+        return orderRepository.getOrderListFlow(orderQuery)
     }
 
 }

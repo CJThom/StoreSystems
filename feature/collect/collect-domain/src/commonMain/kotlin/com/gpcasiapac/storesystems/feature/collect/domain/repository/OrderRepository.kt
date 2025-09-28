@@ -16,7 +16,7 @@ interface OrderRepository {
     /**
      * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
      */
-    fun getOrderListFlow(query: OrderQuery): Flow<List<Order>>
+    fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<Order>>
 
     /**
      * Lightweight, indexed search suggestions from the DB.

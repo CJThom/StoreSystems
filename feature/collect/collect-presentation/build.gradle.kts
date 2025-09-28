@@ -22,6 +22,9 @@ kotlin {
             // Navigation3 UI on Android only
             implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+            // Compose preview tooling (Android only)
+            implementation(compose.preview)
         }
         commonMain.dependencies {
             // Compose UI
@@ -30,6 +33,9 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.materialIconsExtended)
+            implementation(compose.preview)
+            implementation(compose.components.uiToolingPreview)
+
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
@@ -47,11 +53,17 @@ kotlin {
 
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectDomain)
+            implementation(projects.foundation.designSystem)
             
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
 
     }
+}
+
+dependencies {
+    debugImplementation(platform(libs.androidx.compose.bom))
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 android {

@@ -29,6 +29,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(compose.preview)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
 
@@ -58,6 +59,9 @@ kotlin {
 
             // Feature flags API used for simple default binding in app
             implementation(projects.common.featureFlags)
+            
+            // Design system theme
+            implementation(projects.foundation.designSystem)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
@@ -83,7 +87,10 @@ android {
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
 }
 
-dependencies { debugImplementation(compose.uiTooling) }
+dependencies {
+    debugImplementation(platform(libs.androidx.compose.bom))
+    debugImplementation(libs.androidx.compose.ui.tooling)
+}
 
 compose.desktop {
     application {

@@ -19,10 +19,10 @@ class OrderRepositoryImpl(
 ) : OrderRepository {
 
     // TODO: In Progress: Improve this with Dao query
-    override fun getOrderListFlow(query: OrderQuery): Flow<List<Order>> {
+    override fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<Order>> {
         return orderDao.getAllAsFlow().map { orderEntityList ->
             val orderList: List<Order> = orderEntityList.toDomain()
-            val query = query.searchText.trim().lowercase()
+            val query = orderQuery.searchText.trim().lowercase()
             if (query.isEmpty()) orderList else orderList.filter { o ->
                 o.customerName.lowercase().contains(query) ||
                         o.invoiceNumber.lowercase().contains(query) ||

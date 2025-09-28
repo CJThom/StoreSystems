@@ -5,11 +5,14 @@ import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
@@ -82,12 +85,11 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SearchTextChanged -> {
-                val newText = event.text
                 setState {
                     copy(
-                        searchText = newText,
+                        searchText = event.text,
                         // Let suggestions pipeline update; clear immediately if blank
-                        orderSearchSuggestions = if (newText.isBlank()) emptyList() else orderSearchSuggestions
+                        orderSearchSuggestions = if (event.text.isBlank()) emptyList() else orderSearchSuggestions
                     )
                 }
             }
@@ -128,7 +130,45 @@ class OrderListScreenViewModel(
                 clearError()
             }
 
-            else -> Unit // Other events are not yet implemented in this placeholder VM
+            is OrderListScreenContract.Event.ToggleCustomerType -> {
+                setState {
+                    val updated =
+                        if (event.checked) customerTypeFilters + event.type else customerTypeFilters - event.type
+                    val newState = copy(customerTypeFilters = updated)
+                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
+                }
+            }
+
+            is OrderListScreenContract.Event.ApplyFilters -> {
+                setState {
+                    val merged =
+                        (appliedFilterChips + event.chips).distinctBy { it.type to it.value }
+                    val newState = copy(appliedFilterChips = merged)
+                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
+                }
+            }
+
+            is OrderListScreenContract.Event.RemoveFilterChip -> {
+                setState {
+                    val newList =
+                        appliedFilterChips.filterNot { it.type == event.chip.type && it.value == event.chip.value }
+                    val newState = copy(appliedFilterChips = newList)
+                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
+                }
+            }
+
+            is OrderListScreenContract.Event.ResetFilters -> {
+                setState {
+                    val newState = copy(appliedFilterChips = emptyList())
+                    newState.copy(filteredOrderList = applyFiltersTo(orderList, newState))
+                }
+            }
+
+            is OrderListScreenContract.Event.SortChanged -> {
+                setState { copy(sortOption = event.option) }
+            }
+
+            else -> Unit
         }
     }
 
@@ -173,12 +213,14 @@ class OrderListScreenViewModel(
             observeOrderListUseCase(query)
         }.collectLatest { orders ->
             setState {
-                copy(
+                val newStateBase = copy(
                     orderList = orders,
                     orderCount = orders.size,
                     isLoading = false,
                     error = null,
                 )
+                val filtered = applyFiltersTo(orders, newStateBase)
+                newStateBase.copy(filteredOrderList = filtered)
             }
         }
 
@@ -216,5 +258,37 @@ class OrderListScreenViewModel(
         setState { copy(error = null) }
     }
 
+    private fun applyFiltersTo(
+        orders: List<Order>,
+        state: OrderListScreenContract.State,
+    ): List<Order> {
+        // Base: customer type filter
+        var result = orders.filter { it.customerType in state.customerTypeFilters }
+
+        // Apply chips as AND conditions
+        val chips = state.appliedFilterChips
+        if (chips.isNotEmpty()) {
+            result = result.filter { order ->
+                chips.all { chip ->
+                    when (chip.type) {
+                        OrderSearchSuggestionType.NAME ->
+                            order.customerName.contains(chip.value, ignoreCase = true)
+
+                        OrderSearchSuggestionType.ORDER_NUMBER ->
+                            order.invoiceNumber.contains(chip.value, ignoreCase = true) ||
+                                    (order.webOrderNumber?.contains(
+                                        chip.value,
+                                        ignoreCase = true
+                                    ) == true)
+
+                        // No phone field on Order yet; keep as no-op so it doesn't exclude everything
+                        OrderSearchSuggestionType.PHONE -> true
+                    }
+                }
+            }
+        }
+
+        return result
+    }
 
 }

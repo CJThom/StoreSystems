@@ -1,6 +1,9 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.BackHand
@@ -26,10 +30,12 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DockedSearchBar
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,10 +56,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip as UiFilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -62,13 +73,13 @@ import kotlin.time.Instant
 fun OrderListScreen(
     state: OrderListScreenContract.State,
     onEventSent: (event: OrderListScreenContract.Event) -> Unit,
-    effectFlow: Flow<OrderListScreenContract.Effect>,
+    effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(effectFlow) {
-        effectFlow.collectLatest { effect ->
+        effectFlow?.collectLatest { effect ->
             when (effect) {
                 is OrderListScreenContract.Effect.ShowToast ->
                     snackbarHostState.showSnackbar(
@@ -119,6 +130,7 @@ fun OrderListScreen(
                         CircularProgressIndicator()
                     }
                 }
+
                 state.error != null -> {
                     Column(
                         modifier = Modifier
@@ -135,6 +147,7 @@ fun OrderListScreen(
                         }
                     }
                 }
+
                 else -> {
                     LazyColumn(
                         contentPadding = PaddingValues(
@@ -144,12 +157,22 @@ fun OrderListScreen(
                             bottom = 16.dp
                         )
                     ) {
-                        items(state.orderList) { order ->
+                        // Filter bar as the first row
+                        item {
+                            FilterBar(state = state, onEventSent = onEventSent)
+                        }
+                        items(state.filteredOrderList) { order ->
                             OrderCard(
                                 order = order,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onEventSent(OrderListScreenContract.Event.OpenOrder(order.id)) }
+                                    .clickable {
+                                        onEventSent(
+                                            OrderListScreenContract.Event.OpenOrder(
+                                                order.id
+                                            )
+                                        )
+                                    }
                                     .padding(vertical = 6.dp)
                             )
                         }
@@ -197,8 +220,20 @@ fun OrderListScreen(
                 inputField = {
                     SearchBarDefaults.InputField(
                         query = state.searchText,
-                        onQueryChange = { onEventSent(OrderListScreenContract.Event.SearchTextChanged(it)) },
-                        onSearch = { onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false)) },
+                        onQueryChange = {
+                            onEventSent(
+                                OrderListScreenContract.Event.SearchTextChanged(
+                                    it
+                                )
+                            )
+                        },
+                        onSearch = {
+                            onEventSent(
+                                OrderListScreenContract.Event.SearchActiveChanged(
+                                    false
+                                )
+                            )
+                        },
                         expanded = state.isSearchActive,
                         onExpandedChange = onActiveChange,
                         placeholder = { Text("Search orders…") },
@@ -242,9 +277,8 @@ fun OrderListScreen(
                             },
                             onFilterClick = {
                                 onEventSent(
-                                    OrderListScreenContract.Event.SearchSuggestionClicked(
-                                        suggestion = s.text,
-                                        type = s.type
+                                    OrderListScreenContract.Event.ApplyFilters(
+                                        chips = listOf(UiFilterChip(label = s.text, type = s.type))
                                     )
                                 )
                             }
@@ -343,7 +377,10 @@ private fun OrderCard(
                 Spacer(Modifier.size(16.dp))
                 Icon(Icons.Outlined.Public, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
-                Text(text = order.webOrderNumber ?: "—", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = order.webOrderNumber ?: "—",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             // Time since picked chip
@@ -377,5 +414,95 @@ private fun formatElapsedLabel(pickedAt: Instant?): String {
         minutes < 60 -> "$minutes minutes"
         minutes < 24 * 60 -> "${minutes / 60} hours"
         else -> "${minutes / (24 * 60)} days"
+    }
+}
+
+
+@Composable
+private fun FilterBar(
+    state: OrderListScreenContract.State,
+    onEventSent: (event: OrderListScreenContract.Event) -> Unit,
+) {
+    if (state.appliedFilterChips.isEmpty() && state.customerTypeFilters.size == 2) {
+        // Nothing to show if no chips and both customer types enabled
+        return
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp)
+            .horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Customer type toggles
+        val b2bSelected = CustomerType.B2B in state.customerTypeFilters
+        val b2cSelected = CustomerType.B2C in state.customerTypeFilters
+        FilterChip(
+            selected = b2bSelected,
+            onClick = {
+                onEventSent(
+                    OrderListScreenContract.Event.ToggleCustomerType(
+                        type = CustomerType.B2B,
+                        checked = !b2bSelected
+                    )
+                )
+            },
+            label = { Text("B2B") },
+            leadingIcon = { Icon(Icons.Outlined.Business, contentDescription = null) }
+        )
+        Spacer(Modifier.size(8.dp))
+        FilterChip(
+            selected = b2cSelected,
+            onClick = {
+                onEventSent(
+                    OrderListScreenContract.Event.ToggleCustomerType(
+                        type = CustomerType.B2C,
+                        checked = !b2cSelected
+                    )
+                )
+            },
+            label = { Text("B2C") },
+            leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) }
+        )
+
+        // Applied filter chips
+        state.appliedFilterChips.forEach { chip ->
+            Spacer(Modifier.size(8.dp))
+            val icon = when (chip.type) {
+                OrderSearchSuggestionType.PHONE -> Icons.Outlined.Phone
+                OrderSearchSuggestionType.ORDER_NUMBER -> Icons.Outlined.ReceiptLong
+                OrderSearchSuggestionType.NAME -> Icons.Outlined.Public
+            }
+            AssistChip(
+                onClick = { onEventSent(OrderListScreenContract.Event.RemoveFilterChip(chip)) },
+                label = { Text(chip.label) },
+                leadingIcon = { Icon(icon, contentDescription = null) }
+            )
+        }
+
+        if (state.appliedFilterChips.isNotEmpty()) {
+            Spacer(Modifier.size(8.dp))
+            AssistChip(
+                onClick = { onEventSent(OrderListScreenContract.Event.ResetFilters) },
+                label = { Text("Clear") },
+                leadingIcon = { Icon(Icons.Outlined.Close, contentDescription = null) }
+            )
+        }
+    }
+}
+
+@Preview(name = "Order list", showBackground = true, backgroundColor = 0xFFF5F5F5L, widthDp = 360, heightDp = 720)
+@Composable
+private fun OrderListScreenPreview(
+    @PreviewParameter(OrderListScreenStateProvider::class) state: OrderListScreenContract.State
+) {
+    GPCTheme {
+        OrderListScreen(
+            state = state,
+            onEventSent = {},
+            effectFlow = null,
+            onOutcome = {}
+        )
     }
 }
