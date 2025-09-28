@@ -19,37 +19,37 @@ object OrderListScreenContract {
         // Data
         val orderList: List<Order>,                                   // full dataset observed
         val filteredOrderList: List<Order>,                           // single list rendered (optional if DB-side)
-        
+
         // Loading / refreshing
         val isLoading: Boolean,
         val isRefreshing: Boolean,
-        
+
         // Search
         val searchText: String,
         val isSearchActive: Boolean,                                        // search bar expanded with suggestions
         val orderSearchSuggestionList: List<OrderSearchSuggestion>,                // the overlay list items
-        
+
         // Filter chips & toggles
         val customerTypeFilterList: Set<CustomerType>,
         val appliedFilterChipList: List<FilterChip>,                     // e.g., phone chip from screenshots
         val isFilterSheetOpen: Boolean,
         val sortOption: SortOption,
-        
+
         // Selection mode
         val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
         val selectedOrderIdList: Set<String>,
         val isSelectAllChecked: Boolean,
-        
+
         // Derived / info
         val orderCount: Int,                                                    // number of orders ready to collect (from DB or filtered list)
-        
+
         // Submission / transient UI
         val isSubmitting: Boolean,                                          // e.g., "Submitting order..." snackbar
         val submittedOrder: Order?,
-        
+
         // Suggestions from old shape (kept for compatibility if used elsewhere)
         val searchHintResultList: List<Order>,
-        
+
         // Error
         val error: String?,
     ) : ViewState
@@ -75,10 +75,10 @@ object OrderListScreenContract {
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event
         data object OpenFilterSheet : Event
         data object CloseFilterSheet : Event
-        data class ApplyFilters(val chips: List<FilterChip>) : Event // add chip from search suggestion?
-        data class RemoveFilterChip(val chip: FilterChip) : Event
+        data class ApplyFilters(val filterChipList: List<FilterChip>) : Event // add chip from search suggestion?
+        data class RemoveFilterChip(val filterChipList: FilterChip) : Event
         data object ResetFilters : Event
-        data class SortChanged(val option: SortOption) : Event
+        data class SortChanged(val sortOption: SortOption) : Event
 
         // Selection mode & actions
         data class ToggleSelectionMode(val enabled: Boolean) : Event

@@ -113,11 +113,11 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.ApplyFilters -> {
-                handleApplyFilters(event.chips)
+                handleApplyFilters(event.filterChipList)
             }
 
             is OrderListScreenContract.Event.RemoveFilterChip -> {
-                handleRemoveFilterChip(event.chip)
+                handleRemoveFilterChip(event.filterChipList)
             }
 
             is OrderListScreenContract.Event.ResetFilters -> {
@@ -125,7 +125,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SortChanged -> {
-                setState { copy(sortOption = event.option) }
+                setState { copy(sortOption = event.sortOption) }
             }
 
             is OrderListScreenContract.Event.Back -> {

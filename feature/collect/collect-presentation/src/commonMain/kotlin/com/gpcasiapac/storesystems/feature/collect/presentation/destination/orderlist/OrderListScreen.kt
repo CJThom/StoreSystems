@@ -305,7 +305,7 @@ fun OrderListScreen(
                             onFilterClick = {
                                 onEventSent(
                                     OrderListScreenContract.Event.ApplyFilters(
-                                        chips = listOf(UiFilterChip(label = s.text, type = s.type))
+                                        filterChipList = listOf(UiFilterChip(label = s.text, type = s.type))
                                     )
                                 )
                             }
