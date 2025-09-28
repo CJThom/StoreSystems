@@ -4,6 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
@@ -21,11 +23,29 @@ class OrderListScreenViewModel(
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
-    override fun setInitialState(): OrderListScreenContract.State = OrderListScreenContract.State(
-        orderList = emptyList(),
-        isLoading = true,
-        error = null,
-    )
+    override fun setInitialState(): OrderListScreenContract.State {
+        return OrderListScreenContract.State(
+            orderList = emptyList(),
+            filteredOrderList = emptyList(),
+            isLoading = true,
+            isRefreshing = false,
+            searchText = "",
+            isSearchActive = false,
+            orderSearchSuggestions = emptyList(),
+            customerTypeFilters = setOf(CustomerType.B2B, CustomerType.B2C),
+            appliedFilterChips = emptyList(),
+            isFilterSheetOpen = false,
+            sortOption = SortOption.TIME_WAITING_DESC,
+            isMultiSelectionEnabled = false,
+            selectedOrderIdList = emptySet(),
+            isSelectAllChecked = false,
+            orderCount = 0,
+            isSubmitting = false,
+            submittedOrder = null,
+            searchHintResultList = emptyList(),
+            error = null,
+        )
+    }
 
     override suspend fun awaitReadiness(): Boolean {
         // Order list screen doesn't require session readiness for this placeholder
@@ -37,12 +57,11 @@ class OrderListScreenViewModel(
     }
 
     override fun onStart() {
-        // Start long-lived observation of the order list based on the current query
+
         viewModelScope.launch {
             observeOrderList()
         }
 
-        // Trigger initial refresh to seed data
         viewModelScope.launch {
             fetchOrderList(successToast = "Orders loaded")
         }

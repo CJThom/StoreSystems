@@ -17,41 +17,41 @@ object OrderListScreenContract {
     @Immutable
     data class State(
         // Data
-        val orderList: List<Order> = emptyList(),                                   // full dataset observed
-        val filteredOrderList: List<Order> = emptyList(),                           // single list rendered (optional if DB-side)
-
+        val orderList: List<Order>,                                   // full dataset observed
+        val filteredOrderList: List<Order>,                           // single list rendered (optional if DB-side)
+        
         // Loading / refreshing
-        val isLoading: Boolean = false,
-        val isRefreshing: Boolean = false,
-
+        val isLoading: Boolean,
+        val isRefreshing: Boolean,
+        
         // Search
-        val searchText: String = "",
-        val isSearchActive: Boolean = false,                                        // search bar expanded with suggestions
-        val orderSearchSuggestions: List<OrderSearchSuggestion> = emptyList(),                // the overlay list items
-
+        val searchText: String,
+        val isSearchActive: Boolean,                                        // search bar expanded with suggestions
+        val orderSearchSuggestions: List<OrderSearchSuggestion>,                // the overlay list items
+        
         // Filter chips & toggles
-        val customerTypeFilters: Set<CustomerType> = setOf(CustomerType.B2B, CustomerType.B2C),
-        val appliedFilterChips: List<FilterChip> = emptyList(),                     // e.g., phone chip from screenshots
-        val isFilterSheetOpen: Boolean = false,
-        val sortOption: SortOption = SortOption.TIME_WAITING_DESC,
-
+        val customerTypeFilters: Set<CustomerType>,
+        val appliedFilterChips: List<FilterChip>,                     // e.g., phone chip from screenshots
+        val isFilterSheetOpen: Boolean,
+        val sortOption: SortOption,
+        
         // Selection mode
-        val isMultiSelectionEnabled: Boolean = false,                               // selection mode enabled (checkboxes visible)
-        val selectedOrderIdList: Set<String> = emptySet(),
-        val isSelectAllChecked: Boolean = false,
-
+        val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
+        val selectedOrderIdList: Set<String>,
+        val isSelectAllChecked: Boolean,
+        
         // Derived / info
-        val orderCount: Int = 0,                                                    // number of orders ready to collect (from DB or filtered list)
-
+        val orderCount: Int,                                                    // number of orders ready to collect (from DB or filtered list)
+        
         // Submission / transient UI
-        val isSubmitting: Boolean = false,                                          // e.g., "Submitting order..." snackbar
-        val submittedOrder: Order? = null,
-
+        val isSubmitting: Boolean,                                          // e.g., "Submitting order..." snackbar
+        val submittedOrder: Order?,
+        
         // Suggestions from old shape (kept for compatibility if used elsewhere)
-        val searchHintResultList: List<Order> = emptyList(),
-
+        val searchHintResultList: List<Order>,
+        
         // Error
-        val error: String? = null,
+        val error: String?,
     ) : ViewState
 
     sealed interface Event : ViewEvent {
