@@ -1,13 +1,13 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase
 
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
 class FetchOrderListUseCase(
-    private val repository: OrderRepository,
+    private val orderRepository: OrderRepository,
 ) {
 
     suspend operator fun invoke(): Result<Unit> {
-        return repository.refreshOrders()
+        return orderRepository.refreshOrders()
     }
 
 }

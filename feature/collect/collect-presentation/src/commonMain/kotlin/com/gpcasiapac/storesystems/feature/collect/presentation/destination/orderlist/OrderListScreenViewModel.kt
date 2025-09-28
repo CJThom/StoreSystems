@@ -4,20 +4,20 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
     private val observeOrderListUseCase: ObserveOrderListUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
+    private val getOrderSuggestionsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSuggestionsUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State = OrderListScreenContract.State(
@@ -46,6 +46,25 @@ class OrderListScreenViewModel(
             fetchOrderList(successToast = "Orders loaded")
         }
 
+        // Suggestions pipeline: debounce user input and fetch lightweight suggestions from repository
+        viewModelScope.launch {
+            val activeTextFlow: Flow<Pair<String, Boolean>> = viewState.map { it.searchText to it.isSearchActive }
+            QueryFlow.build(
+                input = activeTextFlow,
+                debounce = SearchDebounce(millis = 100),
+                keySelector = { pair ->
+                    val (text, active) = pair
+                    if (active) text else ""
+                }
+            )
+                .mapLatest { pair ->
+                    val (text, active) = pair
+                    if (!active || text.isBlank()) emptyList() else getOrderSuggestionsUseCase(text)
+                }
+                .collectLatest { suggestions ->
+                    setState { copy(searchSuggestions = suggestions) }
+                }
+        }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -62,14 +81,14 @@ class OrderListScreenViewModel(
                 setState {
                     copy(
                         searchText = newText,
-                        // Update suggestions based on text; keep simple demo logic
-                        searchSuggestions = generateSuggestions(newText)
+                        // Let suggestions pipeline update; clear immediately if blank
+                        searchSuggestions = if (newText.isBlank()) emptyList() else searchSuggestions
                     )
                 }
             }
 
             is OrderListScreenContract.Event.SearchActiveChanged -> {
-                setState { copy(isSearchActive = event.active) }
+                setState { copy(isSearchActive = event.active, searchSuggestions = if (event.active) searchSuggestions else emptyList()) }
             }
 
             is OrderListScreenContract.Event.ClearSearch -> {
@@ -137,7 +156,7 @@ class OrderListScreenViewModel(
                     orderList = orders,
                     orderCount = orders.size,
                     isLoading = false,
-                    error = null
+                    error = null,
                 )
             }
         }
@@ -152,22 +171,5 @@ class OrderListScreenViewModel(
         setState { copy(error = null) }
     }
 
-    private fun generateSuggestions(text: String): List<SearchSuggestion> {
-        val t = text.trim()
-        if (t.isEmpty()) return emptyList()
-        val out = mutableListOf<SearchSuggestion>()
-        val hasDigits = t.any { it.isDigit() }
-        val hasLetters = t.any { it.isLetter() }
-        if (hasDigits) {
-            out += SearchSuggestion(t, SearchSuggestionType.ORDER_NUMBER)
-            if (t.length >= 6) {
-                out += SearchSuggestion(t, SearchSuggestionType.PHONE)
-            }
-        }
-        if (hasLetters) {
-            out += SearchSuggestion(t, SearchSuggestionType.NAME)
-        }
-        return out.distinctBy { it.type }
-    }
 
 }

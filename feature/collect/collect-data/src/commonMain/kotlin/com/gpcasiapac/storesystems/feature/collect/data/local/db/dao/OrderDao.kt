@@ -11,14 +11,43 @@ import kotlinx.coroutines.flow.Flow
 interface OrderDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(order: OrderEntity)
+    suspend fun insertOrReplaceOrderEntity(orderEntity: OrderEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(orders: List<OrderEntity>)
+    suspend fun insertOrReplaceOrderEntity(orderEntityList: List<OrderEntity>)
 
     @Query("SELECT COUNT(*) FROM orders")
-    suspend fun count(): Int
+    suspend fun getCount(): Int
 
     @Query("SELECT * FROM orders ORDER BY picked_at DESC")
     fun getAllAsFlow(): Flow<List<OrderEntity>>
+
+    // Lightweight suggestion queries (prefix match) returning only needed columns, limited per type
+    @Query(
+        """
+        SELECT customer_name FROM orders
+        WHERE customer_name LIKE :prefix ESCAPE '\' COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    suspend fun getNameSuggestionsPrefix(prefix: String, limit: Int): List<String>
+
+    @Query(
+        """
+        SELECT invoice_number FROM orders
+        WHERE invoice_number LIKE :prefix ESCAPE '\' COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    suspend fun getInvoiceSuggestionsPrefix(prefix: String, limit: Int): List<String>
+
+    @Query(
+        """
+        SELECT web_order_number FROM orders
+        WHERE web_order_number IS NOT NULL
+          AND web_order_number LIKE :prefix ESCAPE '\' COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    suspend fun getWebOrderSuggestionsPrefix(prefix: String, limit: Int): List<String>
 }

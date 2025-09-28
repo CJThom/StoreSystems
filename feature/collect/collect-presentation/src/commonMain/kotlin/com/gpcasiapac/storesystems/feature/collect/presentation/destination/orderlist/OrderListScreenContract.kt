@@ -20,9 +20,6 @@ data class FilterChip(
 
 
 object OrderListScreenContract {
-
-
-
     @Immutable
     data class State(
         // Data

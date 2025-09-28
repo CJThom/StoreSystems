@@ -1,16 +1,16 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
 class ObserveOrderListUseCase(
-    private val repository: OrderRepository,
+    private val orderRepository: OrderRepository,
 ) {
 
     operator fun invoke(query: OrderQuery): Flow<List<Order>> {
-        return repository.getOrderListFlow(query)
+        return orderRepository.getOrderListFlow(query)
     }
 
 }

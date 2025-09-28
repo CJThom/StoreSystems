@@ -3,44 +3,92 @@ package com.gpcasiapac.storesystems.feature.collect.data.repository
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.OrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
+import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderQuery
-import com.gpcasiapac.storesystems.feature.collect.domain.repo.OrderRepository
-import kotlinx.coroutines.Dispatchers
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 class OrderRepositoryImpl(
     private val orderDao: OrderDao,
-    private val network: OrderNetworkDataSource,
+    private val orderNetworkDataSource: OrderNetworkDataSource,
 ) : OrderRepository {
 
+    // TODO: In Progress: Improve this with Dao query
     override fun getOrderListFlow(query: OrderQuery): Flow<List<Order>> {
-        return orderDao
-            .getAllAsFlow()
-            .map { entities ->
-                val domain = entities.toDomain()
-                val q = query.searchText.trim().lowercase()
-                if (q.isEmpty()) domain else domain.filter { o ->
-                    o.customerName.lowercase().contains(q) ||
-                        o.invoiceNumber.lowercase().contains(q) ||
-                        ((o.webOrderNumber ?: "").lowercase().contains(q))
-                }
+        return orderDao.getAllAsFlow().map { orderEntityList ->
+            val orderList: List<Order> = orderEntityList.toDomain()
+            val query = query.searchText.trim().lowercase()
+            if (query.isEmpty()) orderList else orderList.filter { o ->
+                o.customerName.lowercase().contains(query) ||
+                        o.invoiceNumber.lowercase().contains(query) ||
+                        ((o.webOrderNumber ?: "").lowercase().contains(query))
             }
+        }
     }
 
     override suspend fun refreshOrders(): Result<Unit> = runCatching {
-        // Fetch from network, map to entities, and persist into DB
-        val dtos = network.fetchOrders()
-        val entities = dtos.toEntity()
-        // For simplicity, replace existing rows with the same primary key
-        // by relying on DAO's onConflict strategy (should be REPLACE). If not,
-        // consider adding a clearAll() or update strategy.
-        withContext(Dispatchers.IO) {
-            orderDao.insertAll(entities)
-        }
+        val orderDtoList: List<OrderDto> = orderNetworkDataSource.fetchOrders()
+        val orderEntityList = orderDtoList.toEntity()
+
+        orderDao.insertOrReplaceOrderEntity(orderEntityList)
+
     }
+
+    // TODO: In Progress: Improve this with Dao query
+    override suspend fun getSearchSuggestions(text: String): List<SearchSuggestion> {
+        val q = text.trim()
+        if (q.isEmpty()) return emptyList()
+
+        fun escapeLike(input: String): String {
+            if (input.isEmpty()) return input
+            val sb = StringBuilder(input.length)
+            for (c in input) {
+                when (c) {
+                    '%', '_' -> sb.append('\\').append(c)
+                    else -> sb.append(c)
+                }
+            }
+            return sb.toString()
+        }
+
+        val prefix = escapeLike(q) + "%"
+        val nameLimit = 5
+        val numberLimit = 5
+        val totalLimit = 8
+
+        val names = orderDao.getNameSuggestionsPrefix(prefix, nameLimit)
+        val invoices = orderDao.getInvoiceSuggestionsPrefix(prefix, numberLimit)
+        val webs = orderDao.getWebOrderSuggestionsPrefix(prefix, numberLimit)
+
+        val suggestions = buildList<SearchSuggestion> {
+            names.forEach { add(SearchSuggestion(it, SearchSuggestionType.NAME)) }
+            invoices.forEach { add(SearchSuggestion(it, SearchSuggestionType.ORDER_NUMBER)) }
+            webs.forEach { add(SearchSuggestion(it, SearchSuggestionType.ORDER_NUMBER)) }
+        }
+            .distinctBy { it.type to it.text }
+            .take(totalLimit)
+            .toMutableList()
+
+        // Optional PHONE suggestion heuristic: only if looks like a real phone number and not duplicating an order number
+        val digits = q.filter { it.isDigit() }
+        val looksLikePhone = digits.length in 8..15 && (q.all { it.isDigit() || it in "+ -()" })
+        val clashesWithOrderNumber = suggestions.any {
+            it.type == SearchSuggestionType.ORDER_NUMBER && it.text.equals(
+                q,
+                ignoreCase = true
+            )
+        }
+        if (looksLikePhone && !clashesWithOrderNumber) {
+            suggestions += SearchSuggestion(q, SearchSuggestionType.PHONE)
+        }
+
+        return suggestions
+    }
+
 
 }
