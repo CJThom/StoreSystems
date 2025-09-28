@@ -6,8 +6,8 @@ import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
@@ -40,7 +40,7 @@ class OrderRepositoryImpl(
     }
 
     // TODO: In Progress: Improve this with Dao query
-    override suspend fun getSearchSuggestions(text: String): List<SearchSuggestion> {
+    override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> { // TODO: Should this return a flow?
         val q = text.trim()
         if (q.isEmpty()) return emptyList()
 
@@ -65,10 +65,10 @@ class OrderRepositoryImpl(
         val invoices = orderDao.getInvoiceSuggestionsPrefix(prefix, numberLimit)
         val webs = orderDao.getWebOrderSuggestionsPrefix(prefix, numberLimit)
 
-        val suggestions = buildList<SearchSuggestion> {
-            names.forEach { add(SearchSuggestion(it, SearchSuggestionType.NAME)) }
-            invoices.forEach { add(SearchSuggestion(it, SearchSuggestionType.ORDER_NUMBER)) }
-            webs.forEach { add(SearchSuggestion(it, SearchSuggestionType.ORDER_NUMBER)) }
+        val suggestions = buildList<OrderSearchSuggestion> {
+            names.forEach { add(OrderSearchSuggestion(it, OrderSearchSuggestionType.NAME)) }
+            invoices.forEach { add(OrderSearchSuggestion(it, OrderSearchSuggestionType.ORDER_NUMBER)) }
+            webs.forEach { add(OrderSearchSuggestion(it, OrderSearchSuggestionType.ORDER_NUMBER)) }
         }
             .distinctBy { it.type to it.text }
             .take(totalLimit)
@@ -78,13 +78,13 @@ class OrderRepositoryImpl(
         val digits = q.filter { it.isDigit() }
         val looksLikePhone = digits.length in 8..15 && (q.all { it.isDigit() || it in "+ -()" })
         val clashesWithOrderNumber = suggestions.any {
-            it.type == SearchSuggestionType.ORDER_NUMBER && it.text.equals(
+            it.type == OrderSearchSuggestionType.ORDER_NUMBER && it.text.equals(
                 q,
                 ignoreCase = true
             )
         }
         if (looksLikePhone && !clashesWithOrderNumber) {
-            suggestions += SearchSuggestion(q, SearchSuggestionType.PHONE)
+            suggestions += OrderSearchSuggestion(q, OrderSearchSuggestionType.PHONE)
         }
 
         return suggestions

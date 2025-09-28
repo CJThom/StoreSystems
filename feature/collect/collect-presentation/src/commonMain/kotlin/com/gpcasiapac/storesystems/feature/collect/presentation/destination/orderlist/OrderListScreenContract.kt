@@ -7,16 +7,10 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-
-@Immutable
-data class FilterChip(
-    val label: String,
-    val type: SearchSuggestionType, // what the chip represents
-    val value: String = label,
-)
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 
 
 object OrderListScreenContract {
@@ -33,7 +27,7 @@ object OrderListScreenContract {
         // Search
         val searchText: String = "",
         val isSearchActive: Boolean = false,                                        // search bar expanded with suggestions
-        val searchSuggestions: List<SearchSuggestion> = emptyList(),                // the overlay list items
+        val orderSearchSuggestions: List<OrderSearchSuggestion> = emptyList(),                // the overlay list items
 
         // Filter chips & toggles
         val customerTypeFilters: Set<CustomerType> = setOf(CustomerType.B2B, CustomerType.B2C),
@@ -75,7 +69,7 @@ object OrderListScreenContract {
         data class SearchTextChanged(val text: String) : Event
         data class SearchActiveChanged(val active: Boolean) : Event
         data object ClearSearch : Event
-        data class SearchSuggestionClicked(val suggestion: String, val type: SearchSuggestionType) : Event
+        data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
 
         // Filters & sort
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event

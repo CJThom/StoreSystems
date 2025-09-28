@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -174,7 +174,7 @@ fun OrderListScreen(
             }
 
             // Show suggestions only when there are results
-            val hasSuggestions = state.searchSuggestions.isNotEmpty()
+            val hasSuggestions = state.orderSearchSuggestions.isNotEmpty()
             val expanded = state.isSearchActive && hasSuggestions
 
             // Click outside to collapse: transparent scrim that sits above the list
@@ -228,7 +228,7 @@ fun OrderListScreen(
             ) {
                 // Built-in suggestions/results table
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(state.searchSuggestions.take(4)) { s ->
+                    items(state.orderSearchSuggestions.take(4)) { s ->
                         SuggestionRow(
                             text = s.text,
                             type = s.type,
@@ -276,7 +276,7 @@ private fun OrderListTopBar(
 @Composable
 private fun SuggestionRow(
     text: String,
-    type: SearchSuggestionType,
+    type: OrderSearchSuggestionType,
     onClick: () -> Unit,
     onFilterClick: () -> Unit,
 ) {
@@ -288,9 +288,9 @@ private fun SuggestionRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val leading = when (type) {
-            SearchSuggestionType.PHONE -> Icons.Outlined.Phone
-            SearchSuggestionType.ORDER_NUMBER -> Icons.Outlined.ReceiptLong
-            SearchSuggestionType.NAME -> Icons.Outlined.Public
+            OrderSearchSuggestionType.PHONE -> Icons.Outlined.Phone
+            OrderSearchSuggestionType.ORDER_NUMBER -> Icons.Outlined.ReceiptLong
+            OrderSearchSuggestionType.NAME -> Icons.Outlined.Public
         }
         Icon(leading, contentDescription = null)
         Spacer(Modifier.size(12.dp))

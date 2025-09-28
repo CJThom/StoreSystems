@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.repository
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -21,7 +21,7 @@ interface OrderRepository {
     /**
      * Lightweight, indexed search suggestions from the DB.
      */
-    suspend fun getSearchSuggestions(text: String): List<SearchSuggestion>
+    suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion>
 
     /**
      * Trigger a refresh/sync. In fake repo this seeds demo data.

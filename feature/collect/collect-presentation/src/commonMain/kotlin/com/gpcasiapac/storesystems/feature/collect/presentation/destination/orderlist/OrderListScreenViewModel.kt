@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 class OrderListScreenViewModel(
     private val observeOrderListUseCase: ObserveOrderListUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val getOrderSuggestionsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSuggestionsUseCase,
+    private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State = OrderListScreenContract.State(
@@ -46,25 +47,10 @@ class OrderListScreenViewModel(
             fetchOrderList(successToast = "Orders loaded")
         }
 
-        // Suggestions pipeline: debounce user input and fetch lightweight suggestions from repository
         viewModelScope.launch {
-            val activeTextFlow: Flow<Pair<String, Boolean>> = viewState.map { it.searchText to it.isSearchActive }
-            QueryFlow.build(
-                input = activeTextFlow,
-                debounce = SearchDebounce(millis = 100),
-                keySelector = { pair ->
-                    val (text, active) = pair
-                    if (active) text else ""
-                }
-            )
-                .mapLatest { pair ->
-                    val (text, active) = pair
-                    if (!active || text.isBlank()) emptyList() else getOrderSuggestionsUseCase(text)
-                }
-                .collectLatest { suggestions ->
-                    setState { copy(searchSuggestions = suggestions) }
-                }
+            getOrderSearchSuggestionList()
         }
+
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -82,21 +68,37 @@ class OrderListScreenViewModel(
                     copy(
                         searchText = newText,
                         // Let suggestions pipeline update; clear immediately if blank
-                        searchSuggestions = if (newText.isBlank()) emptyList() else searchSuggestions
+                        orderSearchSuggestions = if (newText.isBlank()) emptyList() else orderSearchSuggestions
                     )
                 }
             }
 
             is OrderListScreenContract.Event.SearchActiveChanged -> {
-                setState { copy(isSearchActive = event.active, searchSuggestions = if (event.active) searchSuggestions else emptyList()) }
+                setState {
+                    copy(
+                        isSearchActive = event.active,
+                        orderSearchSuggestions = if (event.active) orderSearchSuggestions else emptyList()
+                    )
+                }
             }
 
             is OrderListScreenContract.Event.ClearSearch -> {
-                setState { copy(searchText = "", searchSuggestions = emptyList()) }
+                setState {
+                    copy(
+                        searchText = "",
+                        orderSearchSuggestions = emptyList()
+                    )
+                }
             }
 
             is OrderListScreenContract.Event.SearchSuggestionClicked -> {
-                setState { copy(searchText = event.suggestion, isSearchActive = false, searchSuggestions = emptyList()) }
+                setState {
+                    copy(
+                        searchText = event.suggestion,
+                        isSearchActive = false,
+                        orderSearchSuggestions = emptyList()
+                    )
+                }
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
@@ -159,6 +161,30 @@ class OrderListScreenViewModel(
                     error = null,
                 )
             }
+        }
+
+    }
+
+    // Suggestions pipeline: debounce user input and fetch lightweight suggestions from repository
+    private suspend fun getOrderSearchSuggestionList() {
+
+        val activeTextFlow: Flow<Pair<String, Boolean>> =
+            viewState.map { it.searchText to it.isSearchActive }
+
+        QueryFlow.build(
+            input = activeTextFlow,
+            debounce = SearchDebounce(millis = 100),
+            keySelector = { pair ->
+                val (text, active) = pair
+                if (active) text else ""
+            }
+        ).mapLatest { pair ->
+            val (text, active) = pair
+            if (!active || text.isBlank()) emptyList() else getOrderSearchSuggestionListUseCase(
+                text
+            )
+        }.collectLatest { suggestions ->
+            setState { copy(orderSearchSuggestions = suggestions) }
         }
 
     }
