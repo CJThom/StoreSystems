@@ -52,13 +52,13 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 isRefreshing = false,
                 searchText = "",
                 isSearchActive = false,
-                orderSearchSuggestions = listOf(
+                orderSearchSuggestionList = listOf(
                     OrderSearchSuggestion(text = "Jane", type = OrderSearchSuggestionType.NAME),
                     OrderSearchSuggestion(text = "INV-100", type = OrderSearchSuggestionType.ORDER_NUMBER),
                     OrderSearchSuggestion(text = "+6512345678", type = OrderSearchSuggestionType.PHONE),
                 ),
-                customerTypeFilters = setOf(CustomerType.B2B, CustomerType.B2C),
-                appliedFilterChips = emptyList(),
+                customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
+                appliedFilterChipList = emptyList(),
                 isFilterSheetOpen = false,
                 sortOption = SortOption.TIME_WAITING_DESC,
                 isMultiSelectionEnabled = false,
@@ -72,11 +72,11 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             )
 
             val withFilters = base.copy(
-                appliedFilterChips = listOf(
+                appliedFilterChipList = listOf(
                     FilterChip(label = "INV-100", type = OrderSearchSuggestionType.ORDER_NUMBER),
                     FilterChip(label = "Jane", type = OrderSearchSuggestionType.NAME),
                 ),
-                customerTypeFilters = setOf(CustomerType.B2C),
+                customerTypeFilterList = setOf(CustomerType.B2C),
                 filteredOrderList = orders.filter { it.customerType == CustomerType.B2C }
             )
 

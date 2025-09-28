@@ -27,11 +27,11 @@ object OrderListScreenContract {
         // Search
         val searchText: String,
         val isSearchActive: Boolean,                                        // search bar expanded with suggestions
-        val orderSearchSuggestions: List<OrderSearchSuggestion>,                // the overlay list items
+        val orderSearchSuggestionList: List<OrderSearchSuggestion>,                // the overlay list items
         
         // Filter chips & toggles
-        val customerTypeFilters: Set<CustomerType>,
-        val appliedFilterChips: List<FilterChip>,                     // e.g., phone chip from screenshots
+        val customerTypeFilterList: Set<CustomerType>,
+        val appliedFilterChipList: List<FilterChip>,                     // e.g., phone chip from screenshots
         val isFilterSheetOpen: Boolean,
         val sortOption: SortOption,
         

@@ -62,9 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip as UiFilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -226,7 +224,7 @@ fun OrderListScreen(
             }
 
             // Show suggestions only when there are results
-            val hasSuggestions = state.orderSearchSuggestions.isNotEmpty()
+            val hasSuggestions = state.orderSearchSuggestionList.isNotEmpty()
             val expanded = state.isSearchActive && hasSuggestions
 
             // Click outside to collapse: transparent scrim that sits above the list
@@ -292,7 +290,7 @@ fun OrderListScreen(
             ) {
                 // Built-in suggestions/results table
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(state.orderSearchSuggestions.take(4)) { s ->
+                    items(state.orderSearchSuggestionList.take(4)) { s ->
                         SuggestionRow(
                             text = s.text,
                             type = s.type,
@@ -477,8 +475,8 @@ private fun FilterBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Customer type toggles
-        val b2bSelected = CustomerType.B2B in state.customerTypeFilters
-        val b2cSelected = CustomerType.B2C in state.customerTypeFilters
+        val b2bSelected = CustomerType.B2B in state.customerTypeFilterList
+        val b2cSelected = CustomerType.B2C in state.customerTypeFilterList
         FilterChip(
             selected = b2bSelected,
             onClick = {
@@ -508,7 +506,7 @@ private fun FilterBar(
         )
 
         // Applied filter chips
-        state.appliedFilterChips.forEach { chip ->
+        state.appliedFilterChipList.forEach { chip ->
             Spacer(Modifier.size(8.dp))
             val icon = when (chip.type) {
                 OrderSearchSuggestionType.PHONE -> Icons.Outlined.Phone
@@ -522,7 +520,7 @@ private fun FilterBar(
             )
         }
 
-        if (state.appliedFilterChips.isNotEmpty()) {
+        if (state.appliedFilterChipList.isNotEmpty()) {
             Spacer(Modifier.size(8.dp))
             AssistChip(
                 onClick = { onEventSent(OrderListScreenContract.Event.ResetFilters) },

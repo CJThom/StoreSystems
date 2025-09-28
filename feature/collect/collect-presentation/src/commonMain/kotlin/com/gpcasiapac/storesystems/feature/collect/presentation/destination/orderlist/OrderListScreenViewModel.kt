@@ -34,9 +34,9 @@ class OrderListScreenViewModel(
             isRefreshing = false,
             searchText = "",
             isSearchActive = false,
-            orderSearchSuggestions = emptyList(),
-            customerTypeFilters = setOf(CustomerType.B2B, CustomerType.B2C),
-            appliedFilterChips = emptyList(),
+            orderSearchSuggestionList = emptyList(),
+            customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
+            appliedFilterChipList = emptyList(),
             isFilterSheetOpen = false,
             sortOption = SortOption.TIME_WAITING_DESC,
             isMultiSelectionEnabled = false,
@@ -179,7 +179,7 @@ class OrderListScreenViewModel(
             copy(
                 searchText = text,
                 // Let suggestions pipeline update; clear immediately if blank
-                orderSearchSuggestions = if (text.isBlank()) emptyList() else orderSearchSuggestions
+                orderSearchSuggestionList = if (text.isBlank()) emptyList() else orderSearchSuggestionList
             )
         }
     }
@@ -188,7 +188,7 @@ class OrderListScreenViewModel(
         setState {
             copy(
                 isSearchActive = active,
-                orderSearchSuggestions = if (active) orderSearchSuggestions else emptyList()
+                orderSearchSuggestionList = if (active) orderSearchSuggestionList else emptyList()
             )
         }
     }
@@ -197,7 +197,7 @@ class OrderListScreenViewModel(
         setState {
             copy(
                 searchText = "",
-                orderSearchSuggestions = emptyList()
+                orderSearchSuggestionList = emptyList()
             )
         }
     }
@@ -207,48 +207,54 @@ class OrderListScreenViewModel(
             copy(
                 searchText = suggestion,
                 isSearchActive = false,
-                orderSearchSuggestions = emptyList()
+                orderSearchSuggestionList = emptyList()
             )
         }
     }
 
     private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
         setState {
-            val updated = customerTypeFilters.toMutableSet().apply {
-                if (checked) add(type) else remove(type)
+            val updated = customerTypeFilterList.toMutableSet().apply {
+                if (checked) {
+                    add(type)
+                } else {
+                    remove(type)
+                }
             }
-            val base = copy(customerTypeFilters = updated)
+            val base = copy(customerTypeFilterList = updated)
             val filtered = applyFiltersTo(orderList, base)
             base.copy(filteredOrderList = filtered)
         }
     }
 
-    private fun handleApplyFilters(chips: List<FilterChip>) {
+    private fun handleApplyFilters(filterChipList: List<FilterChip>) {
         setState {
-            val newChips = (appliedFilterChips + chips).distinctBy { it.type to it.value }
+            val newFilterChipList: List<FilterChip> =
+                (appliedFilterChipList + filterChipList).distinctBy { it.type to it.value }
             val base = copy(
-                appliedFilterChips = newChips,
+                appliedFilterChipList = newFilterChipList,
                 isFilterSheetOpen = false
             )
-            val filtered = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filtered)
+            val filteredOrderList: List<Order> = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filteredOrderList)
         }
     }
 
-    private fun handleRemoveFilterChip(chip: FilterChip) {
+    private fun handleRemoveFilterChip(filterChip: FilterChip) {
         setState {
-            val newChips = appliedFilterChips.filterNot { it == chip }
-            val base = copy(appliedFilterChips = newChips)
-            val filtered = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filtered)
+            val newFilterChipList: List<FilterChip> =
+                appliedFilterChipList.filterNot { it == filterChip }
+            val base = copy(appliedFilterChipList = newFilterChipList)
+            val filteredOrderList: List<Order> = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filteredOrderList)
         }
     }
 
     private fun handleResetFilters() {
         setState {
-            val base = copy(appliedFilterChips = emptyList())
-            val filtered = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filtered)
+            val base = copy(appliedFilterChipList = emptyList())
+            val filteredOrderList: List<Order> = applyFiltersTo(orderList, base)
+            base.copy(filteredOrderList = filteredOrderList)
         }
     }
 
@@ -277,22 +283,29 @@ class OrderListScreenViewModel(
     private fun handleOrderChecked(orderId: String, checked: Boolean) {
         setState {
             val newSet = selectedOrderIdList.toMutableSet().apply {
-                if (checked) add(orderId) else remove(orderId)
+                if (checked) {
+                    add(orderId)
+                } else {
+                    remove(orderId)
+                }
             }
-            val visibleIds = filteredOrderList.map { it.id }.toSet()
-            val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in newSet }
+            val visibleIdList = filteredOrderList.map { it.id }.toSet()
+            val isAllSelected = visibleIdList.isNotEmpty() && visibleIdList.all { it in newSet }
             copy(
                 selectedOrderIdList = newSet,
-                isSelectAllChecked = allSelected
+                isSelectAllChecked = isAllSelected
             )
         }
     }
 
     private fun handleSelectAll(checked: Boolean) {
         setState {
-            val visibleIds = filteredOrderList.map { it.id }
-            val newSet =
-                if (checked) selectedOrderIdList + visibleIds else selectedOrderIdList - visibleIds.toSet()
+            val visibleIdList = filteredOrderList.map { it.id }
+            val newSet = if (checked) {
+                selectedOrderIdList + visibleIdList
+            } else {
+                selectedOrderIdList - visibleIdList.toSet()
+            }
             copy(
                 selectedOrderIdList = newSet.toSet(),
                 isSelectAllChecked = checked
@@ -301,8 +314,8 @@ class OrderListScreenViewModel(
     }
 
     private fun handleSubmitSelectedOrders() {
-        val selected = viewState.value.selectedOrderIdList.toList()
-        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selected) }
+        val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
+        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selectedOrderIdList) }
         setState {
             copy(
                 isMultiSelectionEnabled = false,
@@ -314,16 +327,19 @@ class OrderListScreenViewModel(
 
     private fun handleToggleSelectionMode(enabled: Boolean) {
         setState {
-            if (enabled) copy(
-                isMultiSelectionEnabled = true,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false
-            )
-            else copy(
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false
-            )
+            if (enabled) {
+                copy(
+                    isMultiSelectionEnabled = true,
+                    selectedOrderIdList = emptySet(),
+                    isSelectAllChecked = false
+                )
+            } else {
+                copy(
+                    isMultiSelectionEnabled = false,
+                    selectedOrderIdList = emptySet(),
+                    isSelectAllChecked = false
+                )
+            }
         }
     }
     // endregion
@@ -407,24 +423,27 @@ class OrderListScreenViewModel(
             }
         ).mapLatest { pair ->
             val (text, active) = pair
-            if (!active || text.isBlank()) emptyList() else getOrderSearchSuggestionListUseCase(
-                text
-            )
+            if (!active || text.isBlank()) {
+                emptyList()
+            } else {
+                getOrderSearchSuggestionListUseCase(text)
+            }
         }.collectLatest { suggestions ->
-            setState { copy(orderSearchSuggestions = suggestions) }
+            setState { copy(orderSearchSuggestionList = suggestions) }
         }
 
     }
 
+    // TODO: Fix AI slop?
     private fun applyFiltersTo(
         orders: List<Order>,
         state: OrderListScreenContract.State,
     ): List<Order> {
         // Base: customer type filter
-        var result = orders.filter { it.customerType in state.customerTypeFilters }
+        var result = orders.filter { it.customerType in state.customerTypeFilterList }
 
         // Apply chips as AND conditions
-        val chips = state.appliedFilterChips
+        val chips = state.appliedFilterChipList
         if (chips.isNotEmpty()) {
             result = result.filter { order ->
                 chips.all { chip ->
