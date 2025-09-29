@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Web
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,15 +28,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
-import au.com.gpcasiapac.compose.collectappui.ui.components.FilterBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CheckboxOrderCard
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSection
@@ -63,13 +58,7 @@ fun OrderListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val lazyListState = rememberLazyListState()
-    val isSticky by remember {
-        derivedStateOf {
-            val firstVisible = lazyListState.layoutInfo.visibleItemsInfo.firstOrNull()
-            // sticky header is considered "stuck" when it's not the first visible item
-            firstVisible?.index != 1
-        }
-    }
+    val filterBarScrollBehavior = FilterBarDefaults.liftOnScrollBehavior(lazyListState, stickyHeaderIndex = 1)
 
 
     LaunchedEffect(effectFlow) {
@@ -194,8 +183,9 @@ fun OrderListScreen(
                 }
                 stickyHeader {
                     FilterBar(
+                        scrollBehavior = filterBarScrollBehavior,
                         selectedFilters = state.customerTypeFilterList.map { it.name },
-                        phoneNumber = state.appliedFilterChipList.find { it.type.name == "PHONE" }?.value,
+                        additionalFilters = state.appliedFilterChipList,
                         onFilterToggle = { filter ->
                             val customerType = when (filter) {
                                 "B2B" -> CustomerType.B2B
@@ -205,11 +195,8 @@ fun OrderListScreen(
                             val isCurrentlySelected = state.customerTypeFilterList.contains(customerType)
                             onEventSent(OrderListScreenContract.Event.ToggleCustomerType(customerType, !isCurrentlySelected))
                         },
-                        onPhoneNumberClear = {
-                            val phoneChip = state.appliedFilterChipList.find { it.type.name == "PHONE" }
-                            phoneChip?.let {
-                                onEventSent(OrderListScreenContract.Event.RemoveFilterChip(it))
-                            }
+                        onAdditionalFilterRemove = { filterChip ->
+                            onEventSent(OrderListScreenContract.Event.RemoveFilterChip(filterChip))
                         },
                         onSelectAction = {
                             onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(enabled = !state.isMultiSelectionEnabled))
@@ -218,22 +205,6 @@ fun OrderListScreen(
                             horizontal = Dimens.Space.medium,
                             vertical = Dimens.Space.small
                         ),
-                        modifier = Modifier
-                            .then(
-                                if (isSticky) {
-                                    Modifier
-                                } else {
-                                    Modifier
-                                        .background(
-                                            MaterialTheme.colorScheme.surfaceContainerLow,
-                                        )
-                                        .border(
-                                            width = Dimens.Stroke.thin,
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            shape = MaterialTheme.shapes.small
-                                        )
-                                }
-                            )
                     )
 
                 }
