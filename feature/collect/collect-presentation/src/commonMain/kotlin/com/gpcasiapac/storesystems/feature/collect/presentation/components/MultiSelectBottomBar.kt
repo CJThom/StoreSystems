@@ -45,7 +45,7 @@ fun MultiSelectBottomBar(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shadowElevation = 8.dp
+        shadowElevation = 16.dp
     ) {
         Column {
             // Top border

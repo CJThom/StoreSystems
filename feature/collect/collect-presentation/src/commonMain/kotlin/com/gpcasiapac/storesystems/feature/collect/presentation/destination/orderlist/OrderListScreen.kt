@@ -43,6 +43,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CheckboxOrderCard
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.OrderDetailRow
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -97,6 +98,23 @@ fun OrderListScreen(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
+        bottomBar = {
+            if (state.isMultiSelectionEnabled) {
+                MultiSelectBottomBar(
+                    selectedCount = state.selectedOrderIdList.size,
+                    isSelectAllChecked = state.isSelectAllChecked,
+                    onSelectAllToggle = { checked ->
+                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                    },
+                    onCancelClick = {
+                        onEventSent(OrderListScreenContract.Event.CancelSelection)
+                    },
+                    onSelectClick = {
+                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                    }
+                )
+            }
+        },
         topBar = {
             MBoltAppBar(
                 scrollBehavior = scrollBehavior,
@@ -138,9 +156,12 @@ fun OrderListScreen(
                             )
                     ) {
                         MBoltSearchBar(
-                            textFieldState = rememberTextFieldState(),
-                            onSearch = {},
-                            searchResults = listOf()
+                            textFieldState = rememberTextFieldState(initialText = state.searchText),
+                            onSearch = { query ->
+                                onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
+                                onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false))
+                            },
+                            searchResults = state.orderSearchSuggestionList.map { it.text }
                         )
 
                     }
@@ -170,18 +191,24 @@ fun OrderListScreen(
                     )
                 }
                 stickyHeader {
-                    //TODO Refactor to use view model contracts and events.
                     FilterBar(
-                        selectedFilters = listOf(),
-                        phoneNumber = null,
+                        selectedFilters = state.customerTypeFilterList.map { it.name },
+                        phoneNumber = state.appliedFilterChipList.find { it.type.name == "PHONE" }?.value,
                         onFilterToggle = { filter ->
-//                            selectedFilters = if (selectedFilters.contains(filter)) {
-//                                selectedFilters - filter
-//                            } else {
-//                                selectedFilters + filter
-//                            }
+                            val customerType = when (filter) {
+                                "B2B" -> CustomerType.B2B
+                                "B2C" -> CustomerType.B2C
+                                else -> return@FilterBar
+                            }
+                            val isCurrentlySelected = state.customerTypeFilterList.contains(customerType)
+                            onEventSent(OrderListScreenContract.Event.ToggleCustomerType(customerType, !isCurrentlySelected))
                         },
-                        onPhoneNumberClear = { },
+                        onPhoneNumberClear = {
+                            val phoneChip = state.appliedFilterChipList.find { it.type.name == "PHONE" }
+                            phoneChip?.let {
+                                onEventSent(OrderListScreenContract.Event.RemoveFilterChip(it))
+                            }
+                        },
                         onSelectAction = {
                             onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(enabled = !state.isMultiSelectionEnabled))
                         },
@@ -233,14 +260,11 @@ fun OrderListScreen(
                         deliveryTime = order.pickedAt.toString(),
                         isSelected = state.selectedOrderIdList.contains(order.id),
                         onSelectionChanged = { isSelected ->
-                            //TODO Use filter chips.
-                            onEventSent(OrderListScreenContract.Event.ApplyFilters(listOf()))
+                            onEventSent(OrderListScreenContract.Event.OrderChecked(order.id, isSelected))
                         }
                     )
                 }
             }
-
-
         }
     }
 }
