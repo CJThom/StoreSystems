@@ -37,6 +37,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import au.com.gpcasiapac.compose.collectappui.ui.components.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
@@ -179,6 +180,7 @@ fun OrderListScreen(
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
                 contentPadding = PaddingValues(vertical = Dimens.Space.medium)
