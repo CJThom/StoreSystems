@@ -74,7 +74,9 @@ fun SignatureScreen(
                     TopBarTitle("Signature")
                 },
                 navigationIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { 
+                        onEventSent(SignatureScreenContract.Event.Back)
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -117,8 +119,10 @@ fun SignatureScreen(
 
                 // Confirm Button
                 Button(
-                    onClick = {},
-                    enabled = false,
+                    onClick = {
+                        onEventSent(SignatureScreenContract.Event.StartCapture)
+                    },
+                    enabled = !state.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(Dimens.Size.buttonHeight),
@@ -130,11 +134,17 @@ fun SignatureScreen(
                     ),
                     shape = MaterialTheme.shapes.small
                 ) {
-                    Text(
-                        text = "CONFIRM",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(
+                            text = if (state.isSigned) "RETAKE" else "CONFIRM",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }

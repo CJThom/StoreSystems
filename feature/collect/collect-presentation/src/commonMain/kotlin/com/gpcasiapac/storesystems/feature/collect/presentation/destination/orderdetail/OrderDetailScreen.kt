@@ -74,7 +74,9 @@ fun OrderDetailScreen(
                     TopBarTitle("Order Confirmation")
                 },
                 navigationIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { 
+                        onEventSent(OrderDetailScreenContract.Event.Back)
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -110,13 +112,13 @@ fun OrderDetailScreen(
                         DetailItem(
                             modifier = Modifier.weight(1f),
                             label = "Sales Order Number",
-                            value = "10341882849",
+                            value = state.order?.invoiceNumber.orEmpty(),
                             icon = Icons.Outlined.Receipt
                         )
                         DetailItem(
                             modifier = Modifier.weight(1f),
                             label = "Web Order Number",
-                            value = "80817729912",
+                            value = state.order?.webOrderNumber.orEmpty(),
                             icon = MBoltIcons.Globe
                         )
                     }
@@ -133,7 +135,7 @@ fun OrderDetailScreen(
                         DetailItem(
                             modifier = Modifier.weight(1f),
                             label = "Picked",
-                            value = "11:25AM 15/08/2025",
+                            value = state.order?.pickedAt?.toString().orEmpty(),
                             icon = Icons.Outlined.BackHand
                         )
                     }
@@ -176,8 +178,8 @@ fun OrderDetailScreen(
             // Collection Type Section
             item {
                 CollectionTypeSection(
-                    onValueChange = {
-
+                    onValueChange = { collectionType ->
+                        onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
                     },
                     modifier = Modifier.padding(horizontal = Dimens.Space.medium)
                 )
@@ -191,7 +193,7 @@ fun OrderDetailScreen(
                 SignatureSection(
                     modifier = Modifier.padding(horizontal = Dimens.Space.medium),
                     onSignClick = {
-
+                        onEventSent(OrderDetailScreenContract.Event.Sign)
                     },
                 )
             }
@@ -204,17 +206,23 @@ fun OrderDetailScreen(
                     CorrespondenceItemRow(
                         "Email",
                         "Send email to customer",
-                        onEdit = {},
+                        isEnabled = state.emailChecked,
+                        onEdit = {
+                            onEventSent(OrderDetailScreenContract.Event.EditEmail)
+                        },
                         onCheckChange = {
-
+                            onEventSent(OrderDetailScreenContract.Event.ToggleEmail(!state.emailChecked))
                         }
                     )
                     CorrespondenceItemRow(
                         "Print",
                         "Send invoice to printer",
-                        onEdit = {},
+                        isEnabled = state.printChecked,
+                        onEdit = {
+                            onEventSent(OrderDetailScreenContract.Event.EditPrinter)
+                        },
                         onCheckChange = {
-
+                            onEventSent(OrderDetailScreenContract.Event.TogglePrint(!state.printChecked))
                         }
                     )
                 }
@@ -229,7 +237,9 @@ fun OrderDetailScreen(
                             text = "Confirm",
                         )
                     },
-                    onClick = {},
+                    onClick = {
+                        onEventSent(OrderDetailScreenContract.Event.Confirm)
+                    },
                 )
             }
         }
