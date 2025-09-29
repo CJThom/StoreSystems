@@ -97,6 +97,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                 OrderDetailScreenDestination { effect ->
                     when (effect) {
                         is OrderDetailScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is OrderDetailScreenContract.Effect.Outcome.Confirmed -> onOutcome(CollectOutcome.Back) // TODO: Swap for Submit?
                     }
                 }
             }

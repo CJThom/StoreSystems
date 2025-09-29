@@ -2,8 +2,10 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -19,8 +21,21 @@ class OrderDetailScreenViewModel(
         OrderDetailScreenContract.State(
             orderId = "1", // TODO: get from usecase
             order = null,
+            orderList = emptyList(),
             isLoading = false,
             error = null,
+            collectingType = CollectingType.STANDARD,
+            representativeSearchText = "",
+            recentRepresentativeList = listOf(
+                Representative("rep-1", "John Doe", "#9288180049912"),
+                Representative("rep-2", "Custa Ma", "#9288180049912"),
+                Representative("rep-3", "Alice Smith", "#9288180049912"),
+            ),
+            selectedRepresentativeIdList = emptySet(),
+            courierName = "",
+            isSigned = false,
+            emailChecked = true,
+            printChecked = true,
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -49,13 +64,6 @@ class OrderDetailScreenViewModel(
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: OrderDetailScreenContract.Event) {
         when (event) {
-            is OrderDetailScreenContract.Event.LoadOrder -> viewModelScope.launch {
-                loadOrder(
-                    orderId = event.orderId,
-                    onSuccess = { setEffect { OrderDetailScreenContract.Effect.ShowToast("Order ${'$'}{event.orderId} loaded") } },
-                    onError = { msg -> setEffect { OrderDetailScreenContract.Effect.ShowError(msg) } }
-                )
-            }
 
             is OrderDetailScreenContract.Event.Refresh -> viewModelScope.launch {
                 val id = viewState.value.orderId ?: return@launch
@@ -68,6 +76,9 @@ class OrderDetailScreenViewModel(
 
             is OrderDetailScreenContract.Event.ClearError -> clearError()
             is OrderDetailScreenContract.Event.Back -> setEffect { OrderDetailScreenContract.Effect.Outcome.Back }
+
+            // The rest of the events are intentionally no-op for this placeholder VM.
+            else -> Unit
         }
     }
 
