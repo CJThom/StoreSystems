@@ -7,17 +7,17 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.theme.BorderStrokes
 import com.gpcasiapac.storesystems.common.presentation.theme.BorderWidths
-import com.gpcasiapac.storesystems.common.presentation.theme.ComponentBorders
-import com.gpcasiapac.storesystems.common.presentation.theme.LocalComponentBorders
+import com.gpcasiapac.storesystems.common.presentation.theme.ComponentBorderStrokes
+import com.gpcasiapac.storesystems.common.presentation.theme.LocalComponentBorderStrokes
 
-val MaterialTheme.borders: ComponentBorders
+val MaterialTheme.borderStrokes: ComponentBorderStrokes
     @Composable
     @ReadOnlyComposable
-    get() = LocalComponentBorders.current
+    get() = LocalComponentBorderStrokes.current
 
 @Composable
-internal fun ProvideComponentBorders(
-    borders: ComponentBorders? = null,
+internal fun ProvideComponentBorderStrokes(
+    borders: ComponentBorderStrokes? = null,
     content: @Composable () -> Unit
 ) {
 
@@ -27,7 +27,7 @@ internal fun ProvideComponentBorders(
         large = 3.dp,
     )
 
-    val provided = borders ?: ComponentBorders(
+    val provided: ComponentBorderStrokes = borders ?: ComponentBorderStrokes(
         outline = BorderStrokes(
             widths = widths,
             defaultColor = MaterialTheme.colorScheme.outlineVariant
@@ -39,7 +39,7 @@ internal fun ProvideComponentBorders(
     )
 
     CompositionLocalProvider(
-        LocalComponentBorders provides provided,
+        value = LocalComponentBorderStrokes provides provided,
         content = content
     )
 }

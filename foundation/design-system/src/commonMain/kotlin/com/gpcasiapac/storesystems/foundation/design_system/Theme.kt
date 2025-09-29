@@ -24,7 +24,7 @@ fun GPCTheme(
         shapes = GPCShapes,
     ) {
         // Provide borders SSOT to the subtree
-        ProvideComponentBorders {
+        ProvideComponentBorderStrokes {
             content()
         }
     }

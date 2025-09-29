@@ -31,20 +31,20 @@ data class BorderStrokes(
 }
 
 @Stable
-data class ComponentBorders(
+data class ComponentBorderStrokes(
     val outline: BorderStrokes,
     val divider: BorderStrokes,
     // Add more components as needed
 )
 
 // Preview-safe, neutral defaults. These are NOT brand values.
-val LocalComponentBorders = staticCompositionLocalOf {
+val LocalComponentBorderStrokes = staticCompositionLocalOf {
     val widths = BorderWidths(
         small = 1.dp,
         medium = 2.dp,
         large = 3.dp,
     )
-    ComponentBorders(
+    ComponentBorderStrokes(
         outline = BorderStrokes(widths, defaultColor = Color.Gray),
         divider = BorderStrokes(widths, defaultColor = Color.Gray),
     )

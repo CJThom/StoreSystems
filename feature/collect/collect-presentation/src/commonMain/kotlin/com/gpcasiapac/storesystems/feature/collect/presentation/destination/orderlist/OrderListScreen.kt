@@ -46,7 +46,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Order
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
-import com.gpcasiapac.storesystems.foundation.design_system.borders
+import com.gpcasiapac.storesystems.foundation.design_system.borderStrokes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -227,7 +227,7 @@ fun OrderListScreen(
                                             MaterialTheme.colorScheme.surfaceContainerLow,
                                         )
                                         .border(
-                                            border = MaterialTheme.borders.outline.default(),
+                                            border = MaterialTheme.borderStrokes.outline.default(),
                                             shape = MaterialTheme.shapes.small
                                         )
                                 }
