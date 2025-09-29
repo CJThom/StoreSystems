@@ -53,6 +53,7 @@ kotlin {
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectDomain)
             implementation(projects.foundation.designSystem)
+            implementation(projects.foundation.component)
 
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
