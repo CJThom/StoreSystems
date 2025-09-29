@@ -25,8 +25,9 @@ interface OrderDao {
     // Lightweight suggestion queries (prefix match) returning only needed columns, limited per type
     @Query(
         """
-        SELECT customer_name FROM orders
-        WHERE customer_name LIKE :prefix ESCAPE '\' COLLATE NOCASE
+        SELECT COALESCE(account_name, TRIM((COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')))) AS display_name
+        FROM orders
+        WHERE COALESCE(account_name, TRIM((COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')))) LIKE :prefix ESCAPE '\\' COLLATE NOCASE
         LIMIT :limit
         """
     )

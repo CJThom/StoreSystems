@@ -17,26 +17,50 @@ private val now get() = Clock.System.now()
     Order(
         id = "1",
         customerType = CustomerType.B2C,
-        customerName = "Jane Doe",
+        accountName = null,
         invoiceNumber = "INV-1001",
         webOrderNumber = "WEB-7771",
-        pickedAt = now - 12.minutes
+        pickedAt = now - 12.minutes,
+        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+            customerNumber = "CUST-0001",
+            customerType = CustomerType.B2C,
+            accountName = null,
+            firstName = "Jane",
+            lastName = "Doe",
+            phone = "+65 8123 4567",
+        )
     ),
     Order(
         id = "2",
         customerType = CustomerType.B2B,
-        customerName = "Acme Corp",
+        accountName = "Acme Corp",
         invoiceNumber = "INV-1002",
         webOrderNumber = null,
-        pickedAt = now - 2.hours
+        pickedAt = now - 2.hours,
+        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+            customerNumber = "ACC-0002",
+            customerType = CustomerType.B2B,
+            accountName = "Acme Corp",
+            firstName = null,
+            lastName = null,
+            phone = "+65 8000 0002",
+        )
     ),
     Order(
         id = "3",
         customerType = CustomerType.B2C,
-        customerName = "John Smith",
+        accountName = null,
         invoiceNumber = "INV-1003",
         webOrderNumber = "WEB-7773",
-        pickedAt = now - 1.hours
+        pickedAt = now - 1.hours,
+        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+            customerNumber = "CUST-0003",
+            customerType = CustomerType.B2C,
+            accountName = null,
+            firstName = "John",
+            lastName = "Smith",
+            phone = "+65 8123 0003",
+        )
     ),
 )
 

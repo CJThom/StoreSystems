@@ -94,10 +94,18 @@ class OrderDetailScreenViewModel(
             val order = Order(
                 id = orderId,
                 customerType = CustomerType.B2C,
-                customerName = "Demo Customer",
+                accountName = null,
                 invoiceNumber = "INV-$orderId",
                 webOrderNumber = null,
                 pickedAt = Clock.System.now(),
+                customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+                    customerNumber = "CUST-DEMO",
+                    customerType = CustomerType.B2C,
+                    accountName = null,
+                    firstName = "Demo Customer",
+                    lastName = null,
+                    phone = null,
+                )
             )
             setState { copy(order = order, isLoading = false, error = null) }
             onSuccess()

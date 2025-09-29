@@ -448,8 +448,10 @@ class OrderListScreenViewModel(
             result = result.filter { order ->
                 chips.all { chip ->
                     when (chip.type) {
-                        OrderSearchSuggestionType.NAME ->
-                            order.customerName.contains(chip.value, ignoreCase = true)
+                        OrderSearchSuggestionType.NAME -> {
+                            val name = if (order.customerType == CustomerType.B2B) order.accountName.orEmpty() else order.customer.fullName
+                            name.contains(chip.value, ignoreCase = true)
+                        }
 
                         OrderSearchSuggestionType.ORDER_NUMBER ->
                             order.invoiceNumber.contains(chip.value, ignoreCase = true) ||

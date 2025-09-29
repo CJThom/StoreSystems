@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
@@ -24,7 +25,10 @@ class OrderRepositoryImpl(
             val orderList: List<Order> = orderEntityList.toDomain()
             val query = orderQuery.searchText.trim().lowercase()
             if (query.isEmpty()) orderList else orderList.filter { o ->
-                o.customerName.lowercase().contains(query) ||
+                val name = if (o.customerType == CustomerType.B2B) {
+                    o.accountName.orEmpty()
+                } else o.customer.fullName
+                name.lowercase().contains(query) ||
                         o.invoiceNumber.lowercase().contains(query) ||
                         ((o.webOrderNumber ?: "").lowercase().contains(query))
             }
