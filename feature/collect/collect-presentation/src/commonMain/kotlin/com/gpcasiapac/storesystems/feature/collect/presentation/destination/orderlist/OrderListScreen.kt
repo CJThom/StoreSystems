@@ -17,8 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Web
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -39,7 +36,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
 import au.com.gpcasiapac.compose.collectappui.ui.components.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CheckboxOrderCard
@@ -50,6 +46,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Order
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.borders
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -230,8 +227,7 @@ fun OrderListScreen(
                                             MaterialTheme.colorScheme.surfaceContainerLow,
                                         )
                                         .border(
-                                            width = Dimens.Stroke.thin,
-                                            color = MaterialTheme.colorScheme.outlineVariant,
+                                            border = MaterialTheme.borders.outline.default(),
                                             shape = MaterialTheme.shapes.small
                                         )
                                 }

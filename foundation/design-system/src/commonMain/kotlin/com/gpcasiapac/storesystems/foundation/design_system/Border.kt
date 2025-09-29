@@ -10,7 +10,7 @@ import com.gpcasiapac.storesystems.common.presentation.theme.BorderWidths
 import com.gpcasiapac.storesystems.common.presentation.theme.ComponentBorders
 import com.gpcasiapac.storesystems.common.presentation.theme.LocalComponentBorders
 
-val MaterialTheme.componentBorders: ComponentBorders
+val MaterialTheme.borders: ComponentBorders
     @Composable
     @ReadOnlyComposable
     get() = LocalComponentBorders.current
@@ -20,16 +20,22 @@ internal fun ProvideComponentBorders(
     borders: ComponentBorders? = null,
     content: @Composable () -> Unit
 ) {
+
     val widths = BorderWidths(
         small = 1.dp,
         medium = 2.dp,
         large = 3.dp,
     )
-    val defaultColor = MaterialTheme.colorScheme.outlineVariant
-    val common = BorderStrokes(widths, defaultColor)
+
     val provided = borders ?: ComponentBorders(
-        card = common,
-        divider = common,
+        outline = BorderStrokes(
+            widths = widths,
+            defaultColor = MaterialTheme.colorScheme.outlineVariant
+        ),
+        divider = BorderStrokes(
+            widths = widths,
+            defaultColor = MaterialTheme.colorScheme.outline
+        )
     )
 
     CompositionLocalProvider(

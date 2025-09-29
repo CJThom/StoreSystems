@@ -1,8 +1,6 @@
 package com.gpcasiapac.storesystems.common.presentation.theme
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -23,16 +21,18 @@ data class BorderWidths(
 @Stable
 data class BorderStrokes(
     val widths: BorderWidths,
-    val defaultColor: Color,
+    val defaultColor: Color = Color.Unspecified,
 ) {
     fun small(color: Color = defaultColor): BorderStroke = BorderStroke(widths.small, color)
     fun medium(color: Color = defaultColor): BorderStroke = BorderStroke(widths.medium, color)
     fun large(color: Color = defaultColor): BorderStroke = BorderStroke(widths.large, color)
+    /** Default stroke for general usage; aliases to small width. */
+    fun default(color: Color = defaultColor): BorderStroke = small(color)
 }
 
 @Stable
 data class ComponentBorders(
-    val card: BorderStrokes,
+    val outline: BorderStrokes,
     val divider: BorderStrokes,
     // Add more components as needed
 )
@@ -45,7 +45,7 @@ val LocalComponentBorders = staticCompositionLocalOf {
         large = 3.dp,
     )
     ComponentBorders(
-        card = BorderStrokes(widths, defaultColor = Color.Gray),
+        outline = BorderStrokes(widths, defaultColor = Color.Gray),
         divider = BorderStrokes(widths, defaultColor = Color.Gray),
     )
 }
