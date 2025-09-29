@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -72,6 +75,7 @@ private fun Content(
         modifier = Modifier
             .padding(padding)
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
@@ -96,16 +100,28 @@ private fun Content(
             }
 
             else -> {
-                // Order list or single title
+                // Order list or single title and details
                 if (state.orderList.isNotEmpty()) {
                     Text("Order list", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
                     state.orderList.forEach { order ->
-                        Text("• ${'$'}{order.displayName}", style = MaterialTheme.typography.bodyLarge)
+                        com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderCard(order = order, onClick = {})
+                        Spacer(Modifier.height(8.dp))
                     }
                 } else {
-                    val title = state.order?.displayName ?: "Order ${'$'}{state.orderId}"
+                    val order = state.order
+                    val title = order?.displayName ?: "Order ${state.orderId}"
                     Text(title, style = MaterialTheme.typography.titleLarge)
+                    if (order != null) {
+                        Spacer(Modifier.height(12.dp))
+                        InvoiceHeader(invoiceNumber = order.invoiceNumber)
+                        Spacer(Modifier.height(12.dp))
+                        OrderMetaGrid(order)
+                        Spacer(Modifier.height(16.dp))
+                        CustomerBlock(order)
+                        Spacer(Modifier.height(16.dp))
+                        ProductListPlaceholder(onViewMore = { /* TODO: navigate to items */ })
+                    }
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -212,5 +228,90 @@ private fun OrderDetailScreenPreview(
             effectFlow = null,
             onOutcome = {}
         )
+    }
+}
+
+
+@Composable
+private fun InvoiceHeader(invoiceNumber: String) {
+    Text(
+        text = "Invoice: #$invoiceNumber",
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(text, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+}
+
+@Composable
+private fun LabeledRow(label: String, value: String?) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value?.takeIf { it.isNotBlank() } ?: "–", style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable
+private fun OrderMetaGrid(order: com.gpcasiapac.storesystems.feature.collect.domain.model.Order) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        LabeledRow(label = "Sales Order Number", value = order.invoiceNumber)
+        LabeledRow(label = "Web Order Number", value = order.webOrderNumber)
+        LabeledRow(label = "Picked", value = formatPickedRelative(order.pickedAt))
+    }
+}
+
+@Composable
+private fun CustomerBlock(order: com.gpcasiapac.storesystems.feature.collect.domain.model.Order) {
+    SectionTitle("Customer details")
+    Spacer(Modifier.height(8.dp))
+    val isB2B = order.customerType == com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2B
+    if (isB2B) {
+        LabeledRow(label = "Account", value = order.accountName)
+    } else {
+        val name = order.customer.fullName.ifBlank { null }
+        LabeledRow(label = "Name", value = name)
+    }
+    LabeledRow(label = "Customer Number", value = order.customer.customerNumber)
+    LabeledRow(label = "Phone", value = order.customer.phone)
+}
+
+@Composable
+private fun ProductListPlaceholder(onViewMore: () -> Unit) {
+    SectionTitle("Product list")
+    Spacer(Modifier.height(8.dp))
+    PlaceholderItemRow(title = "Dupli-Color Vinyl & Fabric Paint Gloss Black", sku = "A9442910", qty = 2)
+    PlaceholderItemRow(title = "Montana Gold Spray Paint Black", sku = "B4567890", qty = 5)
+    Spacer(Modifier.height(8.dp))
+    OutlinedButton(onClick = onViewMore) {
+        Text("VIEW MORE")
+    }
+}
+
+@Composable
+private fun PlaceholderItemRow(title: String, sku: String, qty: Int) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium)
+            Text(sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.width(12.dp))
+        Text("x$qty", style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+private fun formatPickedRelative(pickedAt: kotlin.time.Instant): String {
+    val now = kotlin.time.Clock.System.now()
+    val duration = now - pickedAt
+    val minutes = duration.inWholeMinutes
+    return when {
+        minutes < 1 -> "Just now"
+        minutes < 60 -> "${minutes}m ago"
+        minutes < 60 * 24 -> "${minutes / 60}h ago"
+        else -> "${minutes / (60 * 24)}d ago"
     }
 }
