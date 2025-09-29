@@ -226,7 +226,7 @@ fun OrderListScreen(
                                             MaterialTheme.colorScheme.surfaceContainerLow,
                                         )
                                         .border(
-                                            width = 1.dp,
+                                            width = Dimens.Stroke.thin,
                                             color = MaterialTheme.colorScheme.outlineVariant,
                                             shape = MaterialTheme.shapes.small
                                         )
@@ -261,6 +261,9 @@ fun OrderListScreen(
                         isSelected = state.selectedOrderIdList.contains(order.id),
                         onSelectionChanged = { isSelected ->
                             onEventSent(OrderListScreenContract.Event.OrderChecked(order.id, isSelected))
+                        },
+                        onClick = {
+                            onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))
                         }
                     )
                 }

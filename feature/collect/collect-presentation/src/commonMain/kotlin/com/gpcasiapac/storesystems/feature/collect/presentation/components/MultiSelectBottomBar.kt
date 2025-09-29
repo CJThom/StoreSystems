@@ -3,8 +3,13 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -56,6 +61,9 @@ fun MultiSelectBottomBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .windowInsetsPadding(
+                        WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                    )
                     .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically

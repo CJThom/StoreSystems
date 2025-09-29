@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Phone
@@ -56,6 +57,7 @@ fun CheckboxOrderCard(
     deliveryTime: String,
     isSelected: Boolean,
     onSelectionChanged: (Boolean) -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
 
@@ -66,11 +68,13 @@ fun CheckboxOrderCard(
                 border = BorderStroke(Dimens.Stroke.thin, MaterialTheme.colorScheme.outlineVariant),
                 shape = MaterialTheme.shapes.small,
             )
-            .toggleable(
-                value = isSelected,
-                onValueChange = onSelectionChanged,
-                role = Role.Checkbox
-            ),
+            .clickable {
+                if (isSelectable) {
+                    onSelectionChanged(!isSelected)
+                } else {
+                    onClick()
+                }
+            },
         shape = MaterialTheme.shapes.small,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

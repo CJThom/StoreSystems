@@ -30,7 +30,7 @@ fun DeliveryTimeChip(
             imageVector = Icons.Outlined.BackHand,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onTertiaryContainer,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(Dimens.Size.iconSmall)
         )
 
         Text(
