@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.feature.login.domain.service
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.core.identity.api.LogoutResult
 import com.gpcasiapac.storesystems.core.identity.api.model.AuthSession
-import com.gpcasiapac.storesystems.core.identity.api.model.Token
 import com.gpcasiapac.storesystems.core.identity.api.model.User
 import com.gpcasiapac.storesystems.feature.login.api.LoginService
 import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase

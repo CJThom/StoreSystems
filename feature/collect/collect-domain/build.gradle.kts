@@ -9,7 +9,16 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
     jvm()
     sourceSets {
-        commonMain.dependencies { }
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlinx.coroutines.FlowPreview")
+        }
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(projects.common.di)
+            implementation(libs.koin.core)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }

@@ -9,14 +9,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabsNavigationBar
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -28,7 +27,7 @@ fun SuperAppNavigation() {
     val shellState by shellViewModel.viewState.collectAsState()
 
     val loginEntry: LoginFeatureEntry = koinInject()
-    val collectEntry: CollectOrdersFeatureEntry = koinInject()
+    val collectEntry: CollectFeatureEntry = koinInject()
 
     // Outer shell NavDisplay controls LoginHost -> MainHost
     NavDisplay(
@@ -61,7 +60,7 @@ fun SuperAppNavigation() {
 
 @Composable
 private fun TabsHostScreen(
-    collectEntry: CollectOrdersFeatureEntry,
+    collectEntry: CollectFeatureEntry,
 ) {
     val tabsVM: TabsHostViewModel = koinViewModel()
     val tabsState by tabsVM.viewState.collectAsState()

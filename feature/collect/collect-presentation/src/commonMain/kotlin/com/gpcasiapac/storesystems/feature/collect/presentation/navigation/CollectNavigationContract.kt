@@ -2,8 +2,8 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
+import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
 /**
  * Feature-scoped navigation contract for the Collect host (Outcome-driven).

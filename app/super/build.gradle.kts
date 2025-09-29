@@ -26,6 +26,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(compose.preview)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.materialIconsExtended)
@@ -51,6 +52,8 @@ kotlin {
 
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectPresentation)
+            implementation(projects.feature.collect.collectDomain)
+            implementation(projects.feature.collect.collectData)
 
             // Optional placeholders (presentations only)
             implementation(projects.feature.history.historyPresentation)
@@ -60,6 +63,9 @@ kotlin {
             implementation(projects.feature.login.loginDomain)
             implementation(projects.core.identity.identityDomain)
             implementation(projects.core.identity.identityData)
+            
+            // Design system theme
+            implementation(projects.foundation.designSystem)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
@@ -86,7 +92,10 @@ android {
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
 }
 
-dependencies { debugImplementation(compose.uiTooling) }
+dependencies {
+    debugImplementation(platform(libs.androidx.compose.bom))
+    debugImplementation(libs.androidx.compose.ui.tooling)
+}
 
 compose.desktop {
     application {

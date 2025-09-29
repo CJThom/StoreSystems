@@ -1,8 +1,8 @@
 package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
 
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
-import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 
 object TabsHostContract {

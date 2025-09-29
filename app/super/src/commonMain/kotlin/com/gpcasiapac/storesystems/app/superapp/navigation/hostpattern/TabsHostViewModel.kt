@@ -1,6 +1,5 @@
 package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
 
-import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome

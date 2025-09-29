@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.gpcasiapac.storesystems.app.collect.navigation.AndroidAppNavigation
-import com.gpcasiapac.storesystems.app.collect.navigation.AndroidAppNavigationGlobal
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,8 +16,10 @@ class MainActivity : ComponentActivity() {
         initCollectAppKoin()
 
         setContent {
-           // AndroidAppNavigationGlobal()
-            AndroidAppNavigation()
+            GPCTheme {
+                // AndroidAppNavigationGlobal()
+                AndroidAppNavigation()
+            }
         }
     }
 }

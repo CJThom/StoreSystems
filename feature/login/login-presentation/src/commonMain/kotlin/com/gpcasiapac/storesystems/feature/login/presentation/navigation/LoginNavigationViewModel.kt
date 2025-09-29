@@ -2,10 +2,10 @@ package com.gpcasiapac.storesystems.feature.login.presentation.navigation
 
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
+import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
-import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import org.koin.core.component.KoinComponent
 
 class LoginNavigationViewModel(

@@ -8,9 +8,9 @@ import com.gpcasiapac.storesystems.core.identity.api.model.Token
 import com.gpcasiapac.storesystems.core.identity.api.model.User
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.GetCurrentUserUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.IsLoggedInUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.LoginUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.LogoutUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.RefreshTokenUseCase
-import com.gpcasiapac.storesystems.core.identity.domain.usecase.LoginUseCase
 
 /**
  * IdentityService implementation now lives in identity-domain to keep impl separate from API
@@ -31,7 +31,7 @@ class IdentityServiceImpl(
 
     override suspend fun isLoggedIn(): Boolean = isLoggedInUseCase()
 
-    override suspend fun logout(): LogoutResult = when (val r = logoutUseCase()) {
+    override suspend fun logout(): LogoutResult = when (logoutUseCase()) {
         is LogoutUseCase.UseCaseResult.Success -> LogoutResult.Success
         is LogoutUseCase.UseCaseResult.Error.NetworkError -> LogoutResult.Error.NetworkError
         is LogoutUseCase.UseCaseResult.Error.ServiceUnavailable -> LogoutResult.Error.ServiceUnavailable

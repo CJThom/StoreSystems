@@ -4,14 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppDestination
 import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
 import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavigationViewModel
-import com.gpcasiapac.storesystems.feature.collect.api.CollectOrdersFeatureEntry
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -26,7 +25,7 @@ fun AndroidAppNavigation(
     val state by appNavigationViewModel.viewState.collectAsState()
 
     val loginEntry: LoginFeatureEntry = koinInject()
-    val collectEntry: CollectOrdersFeatureEntry = koinInject()
+    val collectEntry: CollectFeatureEntry = koinInject()
 
     NavDisplay(
         backStack = state.stack,

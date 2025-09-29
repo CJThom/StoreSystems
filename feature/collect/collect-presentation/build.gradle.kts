@@ -13,6 +13,11 @@ kotlin {
     }
     jvm()
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlinx.coroutines.FlowPreview")
+        }
         androidMain.dependencies {
             // Navigation3 UI on Android only
             implementation(libs.androidx.navigation3.ui)
@@ -46,14 +51,18 @@ kotlin {
 
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
+            implementation(projects.feature.collect.collectDomain)
+            implementation(projects.foundation.designSystem)
 
-            //Foundation
-            implementation(project(":foundation:design-system"))
-            implementation(project(":foundation:component"))
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
 
     }
+}
+
+dependencies {
+    debugImplementation(platform(libs.androidx.compose.bom))
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 android {

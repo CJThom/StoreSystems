@@ -1,16 +1,20 @@
 package com.gpcasiapac.storesystems.app.superapp
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import com.gpcasiapac.storesystems.app.superapp.di.superGlobalNavigationModule
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
 import com.gpcasiapac.storesystems.core.identity.data.di.identityDataModule
 import com.gpcasiapac.storesystems.core.identity.domain.di.identityDomainModule
+import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataModule
+import com.gpcasiapac.storesystems.feature.collect.domain.di.collectDomainModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationAndroidModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.koin.core.context.GlobalContext
@@ -27,6 +31,8 @@ fun ComponentActivity.initSuperAppKoin() {
                     override fun <T> observe(key: FlagKey<T>): Flow<T> = flowOf(key.default)
                 }
             }
+            // Expose Android application context for modules that need it (e.g., Room builder)
+            single<Context> { applicationContext }
         }
         startKoin {
             allowOverride(true)
@@ -38,6 +44,9 @@ fun ComponentActivity.initSuperAppKoin() {
                 loginPresentationAndroidModule,
                 collectPresentationModule,
                 collectPresentationAndroidModule,
+                collectDomainModule,
+                collectDataModule,
+                collectDataAndroidModule,
                 superGlobalNavigationModule,
                 com.gpcasiapac.storesystems.app.superapp.di.superAppHostModule,
                 appModule,
