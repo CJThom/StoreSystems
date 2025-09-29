@@ -6,12 +6,15 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import kotlinx.coroutines.delay
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetDefaultOrderUseCase
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.time.Clock
 
 class OrderDetailScreenViewModel(
-
+    private val fetchOrderListUseCase: FetchOrderListUseCase,
+    private val getDefaultOrderUseCase: GetDefaultOrderUseCase,
 ) : MVIViewModel<
         OrderDetailScreenContract.Event,
         OrderDetailScreenContract.State,
@@ -19,7 +22,7 @@ class OrderDetailScreenViewModel(
 
     override fun setInitialState(): OrderDetailScreenContract.State =
         OrderDetailScreenContract.State(
-            orderId = "1", // TODO: get from usecase
+            orderId = null,
             order = null,
             orderList = emptyList(),
             isLoading = false,
@@ -48,16 +51,13 @@ class OrderDetailScreenViewModel(
     }
 
     override fun onStart() {
-        // Trigger initial load when viewState is first collected (per MVIViewModel contract)
-        val id = viewState.value.orderId
-        if (id != null) {
-            viewModelScope.launch {
-                loadOrder(
-                    orderId = id,
-                    onSuccess = { setEffect { OrderDetailScreenContract.Effect.ShowToast("Order $id loaded") } },
-                    onError = { msg -> setEffect { OrderDetailScreenContract.Effect.ShowError(msg) } }
-                )
-            }
+        // Start observing the default order (first in the list)
+        viewModelScope.launch {
+            observeDefaultOrder()
+        }
+        // Kick off an initial fetch to populate data
+        viewModelScope.launch {
+            fetchOrders(successToast = "Orders loaded")
         }
     }
 
@@ -66,57 +66,176 @@ class OrderDetailScreenViewModel(
         when (event) {
 
             is OrderDetailScreenContract.Event.Refresh -> viewModelScope.launch {
-                val id = viewState.value.orderId ?: return@launch
-                loadOrder(
-                    orderId = id,
-                    onSuccess = { setEffect { OrderDetailScreenContract.Effect.ShowToast("Order refreshed") } },
-                    onError = { msg -> setEffect { OrderDetailScreenContract.Effect.ShowError(msg) } }
-                )
+                fetchOrders(successToast = "Orders refreshed")
             }
 
-            is OrderDetailScreenContract.Event.ClearError -> clearError()
-            is OrderDetailScreenContract.Event.Back -> setEffect { OrderDetailScreenContract.Effect.Outcome.Back }
+            is OrderDetailScreenContract.Event.ClearError -> {
+                setState { copy(error = null) }
+            }
 
-            // The rest of the events are intentionally no-op for this placeholder VM.
-            else -> Unit
+            is OrderDetailScreenContract.Event.Back -> {
+                setEffect { OrderDetailScreenContract.Effect.Outcome.Back }
+            }
+
+            // Collecting selector
+            is OrderDetailScreenContract.Event.CollectingChanged -> {
+                onCollectingChanged(event.type)
+            }
+
+            // Account flow
+            is OrderDetailScreenContract.Event.RepresentativeSearchChanged -> {
+                setState { copy(representativeSearchText = event.text) }
+            }
+
+            is OrderDetailScreenContract.Event.RepresentativeChecked -> {
+                onRepresentativeChecked(event.representativeId, event.checked)
+            }
+
+            is OrderDetailScreenContract.Event.ClearRepresentativeSelection -> {
+                setState { copy(selectedRepresentativeIdList = emptySet()) }
+            }
+
+            // Courier flow
+            is OrderDetailScreenContract.Event.CourierNameChanged -> {
+                setState { copy(courierName = event.text) }
+            }
+
+            is OrderDetailScreenContract.Event.ClearCourierName -> {
+                setState { copy(courierName = "") }
+            }
+
+            // Signature
+            is OrderDetailScreenContract.Event.Sign -> {
+                sign()
+            }
+
+            is OrderDetailScreenContract.Event.ClearSignature -> {
+                clearSignature()
+            }
+
+            // Correspondence
+            is OrderDetailScreenContract.Event.ToggleEmail -> {
+                setState { copy(emailChecked = event.checked) }
+            }
+
+            is OrderDetailScreenContract.Event.TogglePrint -> {
+                setState { copy(printChecked = event.checked) }
+            }
+
+            is OrderDetailScreenContract.Event.EditEmail -> {
+                setEffect { OrderDetailScreenContract.Effect.ShowToast("Edit email not implemented") }
+            }
+
+            is OrderDetailScreenContract.Event.EditPrinter -> {
+                setEffect { OrderDetailScreenContract.Effect.ShowToast("Edit printer not implemented") }
+            }
+
+            // Final action
+            is OrderDetailScreenContract.Event.Confirm -> {
+                confirm()
+            }
         }
     }
 
-    private suspend fun loadOrder(
-        orderId: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit,
-    ) {
-        setState { copy(isLoading = true, error = null, orderId = orderId) }
-        try {
-            // Simulate network
-            delay(300)
-            val order = Order(
-                id = orderId,
-                customerType = CustomerType.B2C,
-                accountName = null,
-                invoiceNumber = "INV-$orderId",
-                webOrderNumber = null,
-                pickedAt = Clock.System.now(),
-                customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
-                    customerNumber = "CUST-DEMO",
-                    customerType = CustomerType.B2C,
-                    accountName = null,
-                    firstName = "Demo Customer",
-                    lastName = null,
-                    phone = null,
+    private suspend fun observeDefaultOrder() {
+        getDefaultOrderUseCase().collectLatest { order ->
+            setState {
+                copy(
+                    order = order,
+                    orderId = order?.id,
+                    isLoading = false,
+                    error = null
                 )
-            )
-            setState { copy(order = order, isLoading = false, error = null) }
-            onSuccess()
-        } catch (t: Throwable) {
-            val message = t.message ?: "Failed to load order. Please try again."
-            setState { copy(isLoading = false, error = message) }
-            onError(message)
+            }
         }
     }
 
-    private fun clearError() {
-        setState { copy(error = null) }
+    private suspend fun fetchOrders(successToast: String) {
+        setState {
+            copy(
+                isLoading = true,
+                error = null
+            )
+        }
+        val result = fetchOrderListUseCase()
+        result.fold(
+            onSuccess = {
+                setState { copy(isLoading = false) }
+                setEffect { OrderDetailScreenContract.Effect.ShowToast(successToast) }
+            },
+            onFailure = { t ->
+                val msg = t.message ?: "Failed to refresh orders. Please try again."
+                setState {
+                    copy(
+                        isLoading = false,
+                        error = msg
+                    )
+                }
+                setEffect { OrderDetailScreenContract.Effect.ShowError(msg) }
+            }
+        )
     }
+
+    private fun onCollectingChanged(type: CollectingType) {
+        val current = viewState.value
+        if (current.collectingType == type) return
+        setState {
+            copy(
+                collectingType = type,
+                representativeSearchText = if (type == CollectingType.ACCOUNT) representativeSearchText else "",
+                selectedRepresentativeIdList = if (type == CollectingType.ACCOUNT) selectedRepresentativeIdList else emptySet(),
+                courierName = if (type == CollectingType.COURIER) courierName else "",
+            )
+        }
+    }
+
+    private fun onRepresentativeChecked(representativeId: String, checked: Boolean) {
+        setState {
+            val newSet = selectedRepresentativeIdList.toMutableSet()
+            if (checked) newSet.add(representativeId) else newSet.remove(representativeId)
+            copy(selectedRepresentativeIdList = newSet)
+        }
+    }
+
+    private fun sign() {
+        if (!viewState.value.isSigned) {
+            setState { copy(isSigned = true) }
+            setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature captured") }
+        }
+    }
+
+    private fun clearSignature() {
+        if (viewState.value.isSigned) {
+            setState { copy(isSigned = false) }
+            setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature cleared") }
+        }
+    }
+
+    private fun confirm() {
+        val s = viewState.value
+        val hasOrders = (s.order != null) || s.orderList.isNotEmpty()
+        if (!hasOrders) {
+            setEffect { OrderDetailScreenContract.Effect.ShowError("No orders to confirm") }
+            return
+        }
+        when (s.collectingType) {
+            CollectingType.ACCOUNT -> {
+                if (s.selectedRepresentativeIdList.isEmpty()) {
+                    setEffect { OrderDetailScreenContract.Effect.ShowError("Please select at least one representative") }
+                    return
+                }
+            }
+
+            CollectingType.COURIER -> {
+                if (s.courierName.isBlank()) {
+                    setEffect { OrderDetailScreenContract.Effect.ShowError("Please enter the courier name") }
+                    return
+                }
+            }
+
+            CollectingType.STANDARD -> Unit
+        }
+        setEffect { OrderDetailScreenContract.Effect.Outcome.Confirmed }
+    }
+
 }
