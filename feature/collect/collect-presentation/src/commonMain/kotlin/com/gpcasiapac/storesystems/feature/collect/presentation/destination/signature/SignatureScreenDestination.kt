@@ -9,7 +9,7 @@ fun SignatureScreenDestination(
     signatureScreenViewModel: SignatureScreenViewModel = koinViewModel(),
     onOutcome: (outcome: SignatureScreenContract.Effect.Outcome) -> Unit,
 ) {
-    SignatureScreen(
+    SignatureScreenPlaceholder(
         state = signatureScreenViewModel.viewState.collectAsState().value,
         onEventSent = { event -> signatureScreenViewModel.setEvent(event) },
         effectFlow = signatureScreenViewModel.effect,
