@@ -27,7 +27,7 @@ interface OrderDao {
         """
         SELECT COALESCE(account_name, TRIM((COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')))) AS display_name
         FROM orders
-        WHERE COALESCE(account_name, TRIM((COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')))) LIKE :prefix ESCAPE '\\' COLLATE NOCASE
+        WHERE COALESCE(account_name, TRIM((COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')))) LIKE :prefix ESCAPE '!' COLLATE NOCASE
         LIMIT :limit
         """
     )
@@ -36,7 +36,7 @@ interface OrderDao {
     @Query(
         """
         SELECT invoice_number FROM orders
-        WHERE invoice_number LIKE :prefix ESCAPE '\' COLLATE NOCASE
+        WHERE invoice_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
         LIMIT :limit
         """
     )
@@ -46,7 +46,7 @@ interface OrderDao {
         """
         SELECT web_order_number FROM orders
         WHERE web_order_number IS NOT NULL
-          AND web_order_number LIKE :prefix ESCAPE '\' COLLATE NOCASE
+          AND web_order_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
         LIMIT :limit
         """
     )

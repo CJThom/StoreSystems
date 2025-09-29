@@ -5,6 +5,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderList
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetDefaultOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -15,6 +20,13 @@ val collectDomainModule = module {
     factoryOf(::FetchOrderListUseCase)
     factoryOf(::GetOrderSearchSuggestionListUseCase)
     factoryOf(::GetDefaultOrderUseCase)
+
+    // Selection use cases
+    factoryOf(::ObserveOrderSelectionUseCase)
+    factoryOf(::SetOrderSelectionUseCase)
+    factoryOf(::AddOrderSelectionUseCase)
+    factoryOf(::RemoveOrderSelectionUseCase)
+    factoryOf(::ClearOrderSelectionUseCase)
 }
 
 object CollectDomainModuleProvider : ModuleProvider {

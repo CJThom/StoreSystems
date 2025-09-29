@@ -7,14 +7,18 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetDefaultOrderUseCase
-import kotlinx.coroutines.launch
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
 class OrderDetailScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val getDefaultOrderUseCase: GetDefaultOrderUseCase,
+    private val observeOrderListUseCase: ObserveOrderListUseCase,
+    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
 ) : MVIViewModel<
         OrderDetailScreenContract.Event,
         OrderDetailScreenContract.State,
@@ -51,14 +55,10 @@ class OrderDetailScreenViewModel(
     }
 
     override fun onStart() {
-        // Start observing the default order (first in the list)
-        viewModelScope.launch {
-            observeDefaultOrder()
-        }
+        // Observe selection from repository and current order list to render single vs multi
+        viewModelScope.launch { observeSelectionAndOrders() }
         // Kick off an initial fetch to populate data
-        viewModelScope.launch {
-            fetchOrders(successToast = "Orders loaded")
-        }
+        viewModelScope.launch { fetchOrders(successToast = "Orders loaded") }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -137,17 +137,51 @@ class OrderDetailScreenViewModel(
         }
     }
 
-    private suspend fun observeDefaultOrder() {
-        getDefaultOrderUseCase().collectLatest { order ->
-            setState {
-                copy(
-                    order = order,
-                    orderId = order?.id,
-                    isLoading = false,
-                    error = null
-                )
+    private suspend fun observeSelectionAndOrders() {
+        val selectionFlow = observeOrderSelectionUseCase()
+        val orderListFlow = observeOrderListUseCase(OrderQuery(searchText = ""))
+        combine(selectionFlow, orderListFlow) { selectedSet, orders -> selectedSet to orders }
+            .collectLatest { (selectedSet, orders) ->
+                when {
+                    selectedSet.isEmpty() -> {
+                        val default = orders.firstOrNull()
+                        setState {
+                            copy(
+                                order = default,
+                                orderId = default?.id,
+                                orderList = emptyList(),
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                    }
+                    selectedSet.size == 1 -> {
+                        val id = selectedSet.first()
+                        val selected = orders.firstOrNull { it.id == id }
+                        setState {
+                            copy(
+                                order = selected,
+                                orderId = selected?.id ?: id,
+                                orderList = emptyList(),
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                    }
+                    else -> {
+                        val selectedOrders = orders.filter { it.id in selectedSet }
+                        setState {
+                            copy(
+                                order = null,
+                                orderId = null,
+                                orderList = selectedOrders,
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                    }
+                }
             }
-        }
     }
 
     private suspend fun fetchOrders(successToast: String) {

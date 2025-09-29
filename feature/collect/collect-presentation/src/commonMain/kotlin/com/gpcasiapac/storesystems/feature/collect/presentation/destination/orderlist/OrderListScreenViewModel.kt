@@ -24,6 +24,11 @@ class OrderListScreenViewModel(
     private val observeOrderListUseCase: ObserveOrderListUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
+    private val observeOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase,
+    private val setOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase,
+    private val addOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase,
+    private val removeOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase,
+    private val clearOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State {
@@ -101,7 +106,10 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+                viewModelScope.launch {
+                    setOrderSelectionUseCase(listOf(event.orderId))
+                    setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+                }
             }
 
             is OrderListScreenContract.Event.ClearError -> {
@@ -259,6 +267,7 @@ class OrderListScreenViewModel(
     }
 
     private fun handleCancelSelection() {
+        viewModelScope.launch { clearOrderSelectionUseCase() }
         setState {
             copy(
                 isMultiSelectionEnabled = false,
@@ -270,7 +279,10 @@ class OrderListScreenViewModel(
 
     private fun handleConfirmSelection() {
         val selected = viewState.value.selectedOrderIdList.toList()
-        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selected) }
+        viewModelScope.launch {
+            setOrderSelectionUseCase(selected)
+            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selected) }
+        }
         setState {
             copy(
                 isMultiSelectionEnabled = false,
@@ -296,16 +308,21 @@ class OrderListScreenViewModel(
                 isSelectAllChecked = isAllSelected
             )
         }
+        viewModelScope.launch {
+            if (checked) addOrderSelectionUseCase(orderId) else removeOrderSelectionUseCase(orderId)
+        }
     }
 
     private fun handleSelectAll(checked: Boolean) {
+        val current = viewState.value
+        val visibleIdList = current.filteredOrderList.map { it.id }
+        val newSet = if (checked) {
+            current.selectedOrderIdList + visibleIdList
+        } else {
+            current.selectedOrderIdList - visibleIdList.toSet()
+        }
+        viewModelScope.launch { setOrderSelectionUseCase(newSet.toList()) }
         setState {
-            val visibleIdList = filteredOrderList.map { it.id }
-            val newSet = if (checked) {
-                selectedOrderIdList + visibleIdList
-            } else {
-                selectedOrderIdList - visibleIdList.toSet()
-            }
             copy(
                 selectedOrderIdList = newSet.toSet(),
                 isSelectAllChecked = checked
@@ -315,7 +332,10 @@ class OrderListScreenViewModel(
 
     private fun handleSubmitSelectedOrders() {
         val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
-        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selectedOrderIdList) }
+        viewModelScope.launch {
+            setOrderSelectionUseCase(selectedOrderIdList)
+            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selectedOrderIdList) }
+        }
         setState {
             copy(
                 isMultiSelectionEnabled = false,
@@ -326,6 +346,7 @@ class OrderListScreenViewModel(
     }
 
     private fun handleToggleSelectionMode(enabled: Boolean) {
+        viewModelScope.launch { clearOrderSelectionUseCase() }
         setState {
             if (enabled) {
                 copy(

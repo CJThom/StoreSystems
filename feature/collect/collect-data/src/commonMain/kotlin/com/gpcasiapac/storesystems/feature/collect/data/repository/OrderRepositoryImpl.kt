@@ -50,10 +50,11 @@ class OrderRepositoryImpl(
 
         fun escapeLike(input: String): String {
             if (input.isEmpty()) return input
-            val sb = StringBuilder(input.length)
+            val escape = '!'
+            val sb = StringBuilder(input.length * 2)
             for (c in input) {
                 when (c) {
-                    '%', '_' -> sb.append('\\').append(c)
+                    escape, '%', '_' -> sb.append(escape).append(c)
                     else -> sb.append(c)
                 }
             }
