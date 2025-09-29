@@ -17,19 +17,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-enum class CollectionType {
-    STANDARD, ACCOUNT, COURIER
-}
-
-
 @Composable
 fun CollectionTypeSection(
     modifier: Modifier = Modifier,
-    onValueChange: (CollectionType) -> Unit,
+    onValueChange: (CollectingType) -> Unit,
 ) {
     var selectedIndex by remember {
         mutableIntStateOf(0)
@@ -53,7 +49,7 @@ fun CollectionTypeSection(
                 enabled = false,
                 onClick = {
                     selectedIndex = 0
-                    onValueChange(CollectionType.STANDARD)
+                    onValueChange(CollectingType.STANDARD)
                 }
             )
             CustomerTypeSegmentedButton(
@@ -65,7 +61,7 @@ fun CollectionTypeSection(
 
                 onClick = {
                     selectedIndex = 1
-                    onValueChange(CollectionType.ACCOUNT)
+                    onValueChange(CollectingType.ACCOUNT)
                 }
             )
             CustomerTypeSegmentedButton(
@@ -76,7 +72,7 @@ fun CollectionTypeSection(
                 count = 3,
                 onClick = {
                     selectedIndex = 2
-                    onValueChange(CollectionType.COURIER)
+                    onValueChange(CollectingType.COURIER)
                 }
             )
         }

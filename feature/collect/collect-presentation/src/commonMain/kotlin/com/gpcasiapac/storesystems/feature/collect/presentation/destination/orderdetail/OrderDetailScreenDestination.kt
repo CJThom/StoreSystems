@@ -9,6 +9,12 @@ fun OrderDetailScreenDestination(
     orderDetailScreenViewModel: OrderDetailScreenViewModel = koinViewModel(),
     onOutcome: (outcome: OrderDetailScreenContract.Effect.Outcome) -> Unit,
 ) {
+//    OrderDetailScreenPlaceholder(
+//        state = orderDetailScreenViewModel.viewState.collectAsState().value,
+//        onEventSent = { event -> orderDetailScreenViewModel.setEvent(event) },
+//        effectFlow = orderDetailScreenViewModel.effect,
+//        onOutcome = onOutcome,
+//    )
     OrderDetailScreen(
         state = orderDetailScreenViewModel.viewState.collectAsState().value,
         onEventSent = { event -> orderDetailScreenViewModel.setEvent(event) },

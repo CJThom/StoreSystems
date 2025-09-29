@@ -1,11 +1,10 @@
-package au.com.gpcasiapac.compose.collectappui.ui.components
+package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,8 +20,11 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,28 +42,37 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip as UiFilterChip
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
 /**
- * Filter bar component with filter chips and phone number display
+ * Filter bar component with filter chips and generic additional filter toggles
  * Follows Material Design 3 guidelines and theme-driven styling
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterBar(
     selectedFilters: List<String>,
-    phoneNumber: String?,
+    additionalFilters: List<UiFilterChip>,
     onFilterToggle: (String) -> Unit,
-    onPhoneNumberClear: () -> Unit,
+    onAdditionalFilterRemove: (UiFilterChip) -> Unit,
     onSelectAction: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
+    scrollBehavior: FilterBarScrollBehavior? = null,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
+    val isLifted = scrollBehavior?.isLifted ?: false
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        border = if (isLifted) BorderStroke(
+            Dimens.Stroke.thin,
+            MaterialTheme.colorScheme.outlineVariant
+        ) else null,
+        color = if (isLifted) MaterialTheme.colorScheme.surfaceContainerLow else Color.Transparent,
     ) {
         Row(
             modifier = Modifier
@@ -110,11 +121,11 @@ fun FilterBar(
                         onToggle = { onFilterToggle("B2C") }
                     )
 
-                    // Phone number chip if present
-                    phoneNumber?.let { phone ->
-                        PhoneNumberChip(
-                            phoneNumber = phone,
-                            onClear = onPhoneNumberClear
+                    // Additional filter chips
+                    additionalFilters.forEach { filterChip ->
+                        AdditionalFilterChip(
+                            filterChip = filterChip,
+                            onRemove = { onAdditionalFilterRemove(filterChip) }
                         )
                     }
                 }
@@ -216,12 +227,12 @@ private fun FilterChip(
 }
 
 /**
- * Phone number chip with close button
+ * Additional filter chip with close button for any type of filter
  */
 @Composable
-private fun PhoneNumberChip(
-    phoneNumber: String,
-    onClear: () -> Unit,
+private fun AdditionalFilterChip(
+    filterChip: UiFilterChip,
+    onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
@@ -236,17 +247,22 @@ private fun PhoneNumberChip(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
     ) {
-        // Phone icon
+        // Type-specific icon
         Icon(
-            imageVector = Icons.Outlined.Phone,
+            imageVector = when (filterChip.type.name) {
+                "PHONE" -> Icons.Outlined.Phone
+                "ORDER_NUMBER" -> Icons.Outlined.Receipt
+                "NAME" -> Icons.Outlined.Person
+                else -> Icons.Outlined.FilterAlt
+            },
             contentDescription = null,
             tint = colors.onSurface,
             modifier = Modifier.size(18.dp)
         )
 
-        // Phone number text
+        // Filter value text
         Text(
-            text = phoneNumber,
+            text = filterChip.label,
             style = typography.labelLarge.copy(
                 color = colors.onSurface,
                 fontWeight = FontWeight.Medium
@@ -255,12 +271,12 @@ private fun PhoneNumberChip(
 
         // Close button
         IconButton(
-            onClick = onClear,
+            onClick = onRemove,
             modifier = Modifier.size(18.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Clear phone number",
+                contentDescription = "Remove ${filterChip.type.name.lowercase()} filter",
                 tint = colors.onSurface,
                 modifier = Modifier.size(12.dp)
             )
@@ -268,6 +284,7 @@ private fun PhoneNumberChip(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 private fun FilterBarNoPhonePreview() {
@@ -277,7 +294,7 @@ private fun FilterBarNoPhonePreview() {
 
             FilterBar(
                 selectedFilters = selectedFilters,
-                phoneNumber = null,
+                additionalFilters = emptyList(),
                 onFilterToggle = { filter ->
                     selectedFilters = if (selectedFilters.contains(filter)) {
                         selectedFilters - filter
@@ -285,7 +302,7 @@ private fun FilterBarNoPhonePreview() {
                         selectedFilters + filter
                     }
                 },
-                onPhoneNumberClear = { },
+                onAdditionalFilterRemove = { },
                 onSelectAction = { /* Handle select */ },
                 contentPadding = PaddingValues(Dimens.Space.medium),
             )
