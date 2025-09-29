@@ -22,6 +22,10 @@ fun GPCTheme(
         colorScheme = GPCLightColorScheme,
         typography = GPCTypography,
         shapes = GPCShapes,
-        content = content
-    )
+    ) {
+        // Provide borders SSOT to the subtree
+        ProvideComponentBorders {
+            content()
+        }
+    }
 }

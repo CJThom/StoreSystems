@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
@@ -22,6 +24,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
             implementation(libs.androidx.navigation3.runtime)
+            // Compose core for common presentation tokens
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.ui)
         }
         androidMain.dependencies {
             implementation(libs.androidx.navigation3.ui)

@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -193,6 +194,7 @@ fun OrderListScreen(
                     )
                 }
                 stickyHeader {
+
                     FilterBar(
                         selectedFilters = state.customerTypeFilterList.map { it.name },
                         phoneNumber = state.appliedFilterChipList.find { it.type.name == "PHONE" }?.value,
