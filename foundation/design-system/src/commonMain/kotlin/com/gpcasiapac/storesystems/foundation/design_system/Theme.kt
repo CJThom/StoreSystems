@@ -28,7 +28,7 @@ fun GPCTheme(
         typography = GPCTypography,
         shapes = GPCShapes,
     ) {
-        // Provide width tokens; role colors fall back to MaterialTheme.colorScheme by default.
+        // Provide width tokens; install extended colors scheme for project defaults.
         ProvideComponentBorders(
             borders = ComponentBorders(
                 widths = BorderWidths(
@@ -39,7 +39,20 @@ fun GPCTheme(
                 defaultSize = BorderSize.Small
             )
         ) {
-            content()
+            ProvideGpcExtendedColorScheme(
+                scheme = GpcExtendedColorScheme(
+                    success = MaterialTheme.colorScheme.tertiary,
+                    onSuccess = MaterialTheme.colorScheme.onTertiary,
+                    successContainer = MaterialTheme.colorScheme.tertiaryContainer,
+                    onSuccessContainer = MaterialTheme.colorScheme.onTertiaryContainer,
+                    info = MaterialTheme.colorScheme.secondary,
+                    onInfo = MaterialTheme.colorScheme.onSecondary,
+                    infoContainer = MaterialTheme.colorScheme.secondaryContainer,
+                    onInfoContainer = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            ) {
+                content()
+            }
         }
     }
 
