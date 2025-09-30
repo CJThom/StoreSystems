@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBar
-import au.com.gpcasiapac.compose.collectappui.ui.components.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CheckboxOrderCard
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSection
@@ -45,7 +44,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Order
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
-import com.gpcasiapac.storesystems.foundation.design_system.borderStrokes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 

@@ -23,9 +23,11 @@ fun GPCTheme(
         typography = GPCTypography,
         shapes = GPCShapes,
     ) {
-        // Provide borders SSOT to the subtree
-        ProvideComponentBorderStrokes {
-            content()
+        // Provide widths (tokens) and role colors; consumers can override colors per subtree if needed
+        com.gpcasiapac.storesystems.common.presentation.theme.ProvideComponentBorders {
+            com.gpcasiapac.storesystems.common.presentation.theme.ProvideBorderColors {
+                content()
+            }
         }
     }
 }
