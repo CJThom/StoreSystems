@@ -21,7 +21,7 @@ fun CorrespondenceSection(
     ) {
         Text(
             text = "Correspondence",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
 

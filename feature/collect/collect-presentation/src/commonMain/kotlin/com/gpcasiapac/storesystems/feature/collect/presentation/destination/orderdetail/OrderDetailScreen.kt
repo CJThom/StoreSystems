@@ -34,7 +34,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Colle
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.InvoiceHeader
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSimpleAppBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
@@ -101,9 +100,13 @@ fun OrderDetailScreen(
         ) {
             // Invoice Header
             item {
-                InvoiceHeader(
-                    invoiceNumber = state.order?.invoiceNumber.orEmpty(),
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+                Text(
+                    text = "Invoice: ${state.order?.invoiceNumber.orEmpty()}",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.large
+                    )
                 )
             }
 

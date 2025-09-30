@@ -29,7 +29,7 @@ fun ActionButton(
             containerColor = MaterialTheme.colorScheme.tertiary,
             contentColor = MaterialTheme.colorScheme.onTertiary
         ),
-        shape = RoundedCornerShape(Dimens.Space.small)
+        shape = MaterialTheme.shapes.small
     ) {
         title()
     }
@@ -44,7 +44,7 @@ fun ActionButtonPreview() {
         }) {
             Text(
                 text = "CONFIRM",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium)
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
