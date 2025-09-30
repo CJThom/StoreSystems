@@ -25,7 +25,8 @@ kotlinx-datetime = "0.7.1"
 room = "2.8.1"
 sqlite = "2.6.1"
 ksp = "2.2.20-2.0.3"
-compose-bom = "2025.09.00"
+compose-bom = "2025.09.01"
+compose-material3 = "1.9.0-beta06"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -71,6 +72,7 @@ androidx-sqlite-android = { module = "androidx.sqlite:sqlite-android", version.r
 androidx-room-sqlite-wrapper = { module = "androidx.room:room-sqlite-wrapper", version.ref = "room" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

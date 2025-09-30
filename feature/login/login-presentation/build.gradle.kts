@@ -25,7 +25,7 @@ kotlin {
             // Compose UI
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(libs.compose.material3)
             implementation(compose.ui)
 
             // MVI base and feature contracts
