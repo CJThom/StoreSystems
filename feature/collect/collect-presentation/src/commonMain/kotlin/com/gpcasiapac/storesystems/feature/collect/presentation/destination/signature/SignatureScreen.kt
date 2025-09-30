@@ -1,8 +1,9 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,14 +23,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
@@ -49,6 +50,7 @@ fun SignatureScreen(
     onOutcome: (outcome: SignatureScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
@@ -74,7 +76,7 @@ fun SignatureScreen(
                     TopBarTitle("Signature")
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         onEventSent(SignatureScreenContract.Event.Back)
                     }) {
                         Icon(
@@ -95,7 +97,7 @@ fun SignatureScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(Dimens.Space.medium),
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
             ) {
@@ -159,58 +161,3 @@ fun SignatureScreen(
 //    }
 }
 
-@Composable
-private fun Content(
-    padding: PaddingValues,
-    state: SignatureScreenContract.State,
-    onEventSent: (event: SignatureScreenContract.Event) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .padding(padding)
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Signature", style = MaterialTheme.typography.headlineSmall)
-
-        when {
-            state.isLoading -> {
-                CircularProgressIndicator()
-                Text("Capturing…", modifier = Modifier.padding(top = 8.dp))
-            }
-
-            state.error != null -> {
-                Text(
-                    text = state.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-                Button(
-                    onClick = { onEventSent(SignatureScreenContract.Event.StartCapture) },
-                    modifier = Modifier.padding(top = 12.dp)
-                ) {
-                    Text("Retry Capture")
-                }
-            }
-
-            else -> {
-                if (state.isSigned) {
-                    Text("Signature captured!", modifier = Modifier.padding(top = 12.dp))
-                }
-                Button(
-                    onClick = { onEventSent(SignatureScreenContract.Event.StartCapture) },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text(if (state.isSigned) "Retake" else "Capture Signature")
-                }
-                Button(
-                    onClick = { onEventSent(SignatureScreenContract.Event.Back) },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Back")
-                }
-            }
-        }
-    }
-}
