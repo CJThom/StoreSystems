@@ -28,7 +28,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -58,7 +58,7 @@ fun OrderListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val lazyListState = rememberLazyListState()
-    val filterBarScrollBehavior = FilterBarDefaults.liftOnScrollBehavior(lazyListState, stickyHeaderIndex = 1)
+    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(lazyListState, stickyHeaderIndex = 1)
 
 
     LaunchedEffect(effectFlow) {
@@ -183,7 +183,7 @@ fun OrderListScreen(
                 }
                 stickyHeader {
                     FilterBar(
-                        scrollBehavior = filterBarScrollBehavior,
+                        scrollBehavior = stickyHeaderScrollBehavior,
                         selectedFilters = state.customerTypeFilterList.map { it.name },
                         additionalFilters = state.appliedFilterChipList,
                         onFilterToggle = { filter ->
