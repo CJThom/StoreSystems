@@ -228,6 +228,10 @@ fun OrderDetailScreen(
                     onSignClick = {
                         onEventSent(OrderDetailScreenContract.Event.Sign)
                     },
+                    onRetakeClick = {
+                        onEventSent(OrderDetailScreenContract.Event.ClearSignature)
+                    },
+                    signatureStrokes = state.signatureStrokes
                 )
             }
 

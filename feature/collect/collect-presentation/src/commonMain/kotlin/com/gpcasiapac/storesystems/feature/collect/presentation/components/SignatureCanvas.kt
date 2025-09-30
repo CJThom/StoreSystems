@@ -4,10 +4,14 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,7 +42,13 @@ fun SignatureCanvas(
     val strokePx = with(density) { strokeWidth.toPx() }
 
     // Local mutable copy to allow incremental updates then publish via callback
-    var localStrokes by remember(strokes) { mutableStateOf(strokes) }
+    // Remove dependency on strokes to prevent state resets during drawing
+    var localStrokes by remember { mutableStateOf(strokes) }
+    
+    // Sync with external strokes only when they change from outside (not during active drawing)
+    if (localStrokes != strokes && strokes.isNotEmpty() && localStrokes.isEmpty()) {
+        localStrokes = strokes
+    }
 
     Box(modifier) {
         Canvas(
@@ -49,13 +59,22 @@ fun SignatureCanvas(
                         val down = awaitFirstDown(pass = PointerEventPass.Initial)
                         localStrokes = localStrokes + listOf(listOf(down.position))
                         onStrokesChange(localStrokes)
-                        drag(down.id) { change ->
-                            change.consume()
-                            val lastPath = localStrokes.lastOrNull() ?: emptyList()
-                            val updatedLast = lastPath + change.position
-                            localStrokes = localStrokes.dropLast(1) + listOf(updatedLast)
-                            onStrokesChange(localStrokes)
-                        }
+                        
+                        do {
+                            val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                            var hasActivePointer = false
+                            
+                            event.changes.forEach { change ->
+                                if (change.id == down.id && change.pressed) {
+                                    change.consume()
+                                    val lastPath = localStrokes.lastOrNull() ?: emptyList()
+                                    val updatedLast = lastPath + change.position
+                                    localStrokes = localStrokes.dropLast(1) + listOf(updatedLast)
+                                    onStrokesChange(localStrokes)
+                                    hasActivePointer = true
+                                }
+                            }
+                        } while (hasActivePointer)
                     }
                 }
         ) {

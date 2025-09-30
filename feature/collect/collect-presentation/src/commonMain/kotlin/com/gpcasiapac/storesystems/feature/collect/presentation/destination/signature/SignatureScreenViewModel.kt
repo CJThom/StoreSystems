@@ -15,6 +15,7 @@ class SignatureScreenViewModel : MVIViewModel<
             isLoading = false,
             isSigned = false,
             error = null,
+            signatureStrokes = emptyList(),
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -33,11 +34,15 @@ class SignatureScreenViewModel : MVIViewModel<
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: SignatureScreenContract.Event) {
         when (event) {
-            is SignatureScreenContract.Event.StartCapture -> viewModelScope.launch {
-                performSignatureCapture(
-                    onSuccess = { setEffect { SignatureScreenContract.Effect.ShowToast("Signature captured") } },
-                    onError = { msg -> setEffect { SignatureScreenContract.Effect.ShowError(msg) } }
-                )
+            is SignatureScreenContract.Event.StartCapture -> {
+                val strokes = viewState.value.signatureStrokes
+                if (strokes.isNotEmpty()) {
+                    setEffect { SignatureScreenContract.Effect.Outcome.SignatureSaved(strokes) }
+                }
+            }
+
+            is SignatureScreenContract.Event.StrokesChanged -> {
+                setState { copy(signatureStrokes = event.strokes, isSigned = event.strokes.isNotEmpty()) }
             }
 
             is SignatureScreenContract.Event.ClearError -> clearError()

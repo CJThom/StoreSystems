@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.app.collect.navigation.globalpattern
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -45,10 +46,15 @@ class CollectGlobalNavigationViewModel :
     private fun handleCollectOutcome(outcome: CollectOutcome) {
         when (outcome) {
             is CollectOutcome.OrderSelected -> {
-                push(CollectFeatureDestination.OrderDetails(outcome.orderId))
+                push(OrderDetails(outcome.orderId))
             }
 
             is CollectOutcome.Back -> pop()
+            is CollectOutcome.SignatureRequested -> {
+                push(Signature)
+            }
+
+            is CollectOutcome.SignatureSaved -> pop()
         }
     }
 }

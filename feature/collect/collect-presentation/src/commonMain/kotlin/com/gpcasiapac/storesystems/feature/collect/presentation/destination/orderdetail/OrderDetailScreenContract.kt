@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
@@ -34,8 +35,8 @@ object OrderDetailScreenContract {
         // Courier flow
         val courierName: String,
 
-        // Signature (placeholder only – we just track if something was captured)
-        val isSigned: Boolean,
+        // Signature data (stores actual signature strokes for preview)
+        val signatureStrokes: List<List<Offset>>,
 
         // Correspondence
         val emailChecked: Boolean,
@@ -64,6 +65,7 @@ object OrderDetailScreenContract {
 
         // Signature
         data object Sign : Event
+        data class SignatureSaved(val strokes: List<List<Offset>>) : Event
         data object ClearSignature : Event
 
         // Correspondence
@@ -83,6 +85,8 @@ object OrderDetailScreenContract {
         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
+
+            data object SignatureRequested: Outcome
         }
     }
 }
