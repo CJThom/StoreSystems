@@ -3,6 +3,11 @@ package com.gpcasiapac.storesystems.foundation.design_system
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.presentation.theme.BorderSize
+import com.gpcasiapac.storesystems.common.presentation.theme.BorderWidths
+import com.gpcasiapac.storesystems.common.presentation.theme.ComponentBorders
+import com.gpcasiapac.storesystems.common.presentation.theme.ProvideComponentBorders
 
 /**
  * GPC Material 3 Theme
@@ -23,11 +28,19 @@ fun GPCTheme(
         typography = GPCTypography,
         shapes = GPCShapes,
     ) {
-        // Provide widths (tokens) and role colors; consumers can override colors per subtree if needed
-        com.gpcasiapac.storesystems.common.presentation.theme.ProvideComponentBorders {
-            com.gpcasiapac.storesystems.common.presentation.theme.ProvideBorderColors {
-                content()
-            }
+        // Provide width tokens; role colors fall back to MaterialTheme.colorScheme by default.
+        ProvideComponentBorders(
+            borders = ComponentBorders(
+                widths = BorderWidths(
+                    small = 1.dp,
+                    medium = 2.dp,
+                    large = 3.dp
+                ),
+                defaultSize = BorderSize.Small
+            )
+        ) {
+            content()
         }
     }
+
 }
