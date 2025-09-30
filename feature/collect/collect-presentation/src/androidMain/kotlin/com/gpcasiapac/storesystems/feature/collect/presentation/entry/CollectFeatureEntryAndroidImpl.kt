@@ -98,6 +98,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                     when (effect) {
                         is OrderDetailScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is OrderDetailScreenContract.Effect.Outcome.Confirmed -> onOutcome(CollectOutcome.Back) // TODO: Swap for Submit?
+                        is OrderDetailScreenContract.Effect.Outcome.SignatureRequested ->  onOutcome(CollectOutcome.SignatureRequested)
                     }
                 }
             }
@@ -106,6 +107,10 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                 SignatureScreenDestination { outcome ->
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is SignatureScreenContract.Effect.Outcome.SignatureSaved -> {
+                            // TODO: Pass signature data to order detail screen
+                            onOutcome(CollectOutcome.Back)
+                        }
                     }
                 }
             }

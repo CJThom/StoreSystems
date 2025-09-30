@@ -9,6 +9,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BackHand
+import androidx.compose.material.icons.outlined.BusinessCenter
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -24,12 +27,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.InvoiceHeader
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSimpleAppBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
@@ -39,6 +43,9 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.MBoltIcons
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.resources.stringResource
+import storesystems.feature.collect.collect_presentation.generated.resources.Res
+import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +81,7 @@ fun OrderDetailScreen(
                     TopBarTitle("Order Confirmation")
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         onEventSent(OrderDetailScreenContract.Event.Back)
                     }) {
                         Icon(
@@ -93,9 +100,13 @@ fun OrderDetailScreen(
         ) {
             // Invoice Header
             item {
-                InvoiceHeader(
-                    invoiceNumber = state.order?.invoiceNumber.orEmpty(),
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+                Text(
+                    text = "Invoice: ${state.order?.invoiceNumber.orEmpty()}",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.large
+                    )
                 )
             }
 
@@ -181,7 +192,29 @@ fun OrderDetailScreen(
                     onValueChange = { collectionType ->
                         onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
                     },
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                    title = stringResource(Res.string.who_is_collecting),
+                    value = state.collectingType,
+                    options = listOf(
+                        CollectionTypeSectionDisplayParam(
+                            enabled = true,
+                            collectingType = CollectingType.STANDARD,
+                            icon = Icons.Outlined.Person,
+                            label = CollectingType.STANDARD.name,
+                        ),
+                        CollectionTypeSectionDisplayParam(
+                            enabled = true,
+                            collectingType = CollectingType.ACCOUNT,
+                            icon = Icons.Outlined.BusinessCenter,
+                            label = CollectingType.ACCOUNT.name,
+                        ),
+                        CollectionTypeSectionDisplayParam(
+                            enabled = true,
+                            collectingType = CollectingType.COURIER,
+                            icon = Icons.Outlined.LocalShipping,
+                            label = CollectingType.COURIER.name,
+                        )
+                    ),
                 )
             }
             item {
@@ -195,6 +228,10 @@ fun OrderDetailScreen(
                     onSignClick = {
                         onEventSent(OrderDetailScreenContract.Event.Sign)
                     },
+                    onRetakeClick = {
+                        onEventSent(OrderDetailScreenContract.Event.ClearSignature)
+                    },
+                    signatureStrokes = state.signatureStrokes
                 )
             }
 

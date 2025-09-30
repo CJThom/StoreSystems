@@ -109,8 +109,10 @@ fun SignatureScreen(
                 // Signature Canvas
                 SignatureCanvas(
                     modifier = Modifier.fillMaxWidth(),
-                    strokes = listOf(),
-                    onStrokesChange = {},
+                    strokes = state.signatureStrokes,
+                    onStrokesChange = { strokes ->
+                        onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                    },
                     strokeWidth = Dimens.Stroke.normal,
                     strokeColor = MaterialTheme.colorScheme.primary,
                 )
@@ -120,9 +122,11 @@ fun SignatureScreen(
                 // Confirm Button
                 Button(
                     onClick = {
-                        onEventSent(SignatureScreenContract.Event.StartCapture)
+                        if (state.signatureStrokes.isNotEmpty()) {
+                            onEventSent(SignatureScreenContract.Event.StartCapture)
+                        }
                     },
-                    enabled = !state.isLoading,
+                    enabled = !state.isLoading && state.signatureStrokes.isNotEmpty(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(Dimens.Size.buttonHeight),
@@ -140,7 +144,7 @@ fun SignatureScreen(
                         )
                     } else {
                         Text(
-                            text = if (state.isSigned) "RETAKE" else "CONFIRM",
+                            text = "SAVE SIGNATURE",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium
                         )

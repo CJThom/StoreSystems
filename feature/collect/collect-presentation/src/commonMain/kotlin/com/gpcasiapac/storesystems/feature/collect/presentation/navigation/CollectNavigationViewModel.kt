@@ -21,6 +21,8 @@ class CollectNavigationViewModel :
         when (outcome) {
             is CollectOutcome.OrderSelected -> push(CollectFeatureDestination.OrderDetails(outcome.orderId))
             is CollectOutcome.Back -> pop()
+            is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature)
+            is CollectOutcome.SignatureSaved -> pop()
         }
     }
 }

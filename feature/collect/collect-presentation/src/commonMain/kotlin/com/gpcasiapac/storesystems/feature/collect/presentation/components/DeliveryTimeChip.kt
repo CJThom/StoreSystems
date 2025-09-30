@@ -35,9 +35,7 @@ fun DeliveryTimeChip(
 
         Text(
             text = deliveryTime,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Medium
-            ),
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onTertiaryContainer
         )
     }

@@ -95,7 +95,7 @@ class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScree
                 courierName = "",
 
                 // Signature
-                isSigned = false,
+                signatureStrokes = emptyList(),
 
                 // Correspondence
                 emailChecked = true,

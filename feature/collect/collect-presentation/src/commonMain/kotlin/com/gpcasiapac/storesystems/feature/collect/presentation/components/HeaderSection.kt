@@ -33,9 +33,7 @@ fun HeaderSection(
     ) {
         Text(
             text = "Ready to collect",
-            style = typography.headlineLarge.copy(
-                fontWeight = FontWeight.Medium
-            ),
+            style = typography.headlineLarge,
             color = colors.onBackground
         )
 
@@ -45,9 +43,7 @@ fun HeaderSection(
         ) {
             Text(
                 text = ordersCount.toString(),
-                style = typography.labelLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                style = typography.labelLarge,
                 color = colors.onSurfaceVariant
             )
             Text(

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,10 +29,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBar
@@ -58,7 +60,7 @@ fun OrderListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val lazyListState = rememberLazyListState()
-    val filterBarScrollBehavior = FilterBarDefaults.liftOnScrollBehavior(lazyListState, stickyHeaderIndex = 1)
+    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(lazyListState, stickyHeaderIndex = 1)
 
 
     LaunchedEffect(effectFlow) {
@@ -138,7 +140,9 @@ fun OrderListScreen(
                 },
                 actionBar = {
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
+                            .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.secondary)
                             .padding(
                                 horizontal = Dimens.Space.medium,
@@ -184,7 +188,7 @@ fun OrderListScreen(
                 stickyHeader {
                     FilterBar(
                         customerTypeFilterList = state.customerTypeFilterList,
-                        scrollBehavior = filterBarScrollBehavior,
+                        scrollBehavior = stickyHeaderScrollBehavior,
                         onToggleCustomerType = { type, checked ->
                             onEventSent(
                                 OrderListScreenContract.Event.ToggleCustomerType(
@@ -229,12 +233,7 @@ fun OrderListScreen(
                         deliveryTime = order.pickedAt.toString(),
                         isSelected = state.selectedOrderIdList.contains(order.id),
                         onSelectionChanged = { isSelected ->
-                            onEventSent(
-                                OrderListScreenContract.Event.OrderChecked(
-                                    order.id,
-                                    isSelected
-                                )
-                            )
+                            onEventSent(OrderListScreenContract.Event.OrderChecked(order.id, isSelected))
                         },
                         onClick = {
                             onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))

@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
@@ -12,10 +13,12 @@ object SignatureScreenContract {
         val isLoading: Boolean,
         val isSigned: Boolean,
         val error: String?,
+        val signatureStrokes: List<List<Offset>>,
     ) : ViewState
 
     sealed interface Event : ViewEvent {
         data object StartCapture : Event
+        data class StrokesChanged(val strokes: List<List<Offset>>) : Event
         data object ClearError : Event
         data object Back : Event
     }
@@ -26,6 +29,7 @@ object SignatureScreenContract {
 
         sealed interface Outcome : Effect {
             data object Back : Outcome
+            data class SignatureSaved(val strokes: List<List<Offset>>) : Outcome
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail
 
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
@@ -40,7 +41,7 @@ class OrderDetailScreenViewModel(
             ),
             selectedRepresentativeIdList = emptySet(),
             courierName = "",
-            isSigned = false,
+            signatureStrokes = emptyList(),
             emailChecked = true,
             printChecked = true,
         )
@@ -107,6 +108,10 @@ class OrderDetailScreenViewModel(
             // Signature
             is OrderDetailScreenContract.Event.Sign -> {
                 sign()
+            }
+
+            is OrderDetailScreenContract.Event.SignatureSaved -> {
+                onSignatureSaved(event.strokes)
             }
 
             is OrderDetailScreenContract.Event.ClearSignature -> {
@@ -232,15 +237,20 @@ class OrderDetailScreenViewModel(
     }
 
     private fun sign() {
-        if (!viewState.value.isSigned) {
-            setState { copy(isSigned = true) }
-            setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature captured") }
+        // Navigate to signature screen - this will be handled by navigation layer
+        setEffect {
+            OrderDetailScreenContract.Effect.Outcome.SignatureRequested
         }
     }
 
+    private fun onSignatureSaved(strokes: List<List<Offset>>) {
+        setState { copy(signatureStrokes = strokes) }
+        setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature saved") }
+    }
+
     private fun clearSignature() {
-        if (viewState.value.isSigned) {
-            setState { copy(isSigned = false) }
+        if (viewState.value.signatureStrokes.isNotEmpty()) {
+            setState { copy(signatureStrokes = emptyList()) }
             setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature cleared") }
         }
     }

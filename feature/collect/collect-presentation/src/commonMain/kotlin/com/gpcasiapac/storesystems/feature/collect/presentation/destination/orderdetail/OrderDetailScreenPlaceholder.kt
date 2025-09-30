@@ -185,7 +185,7 @@ private fun Content(
                 Spacer(Modifier.height(24.dp))
                 Text("Signature", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
-                if (state.isSigned) {
+                if (state.signatureStrokes.isNotEmpty()) {
                     Text("Signature captured ✓", color = MaterialTheme.colorScheme.primary)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = { onEventSent(OrderDetailScreenContract.Event.ClearSignature) }) { Text("Clear") }
