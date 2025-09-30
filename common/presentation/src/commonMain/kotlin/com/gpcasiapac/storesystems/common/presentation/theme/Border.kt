@@ -170,6 +170,15 @@ fun ProvideComponentBorders(
     CompositionLocalProvider(LocalComponentBorders provides borders, content = content)
 }
 
+@Composable
+fun ProvideComponentBorders(
+    borders: ComponentBorders,
+    colors: BorderColors,
+    content: @Composable () -> Unit
+) {
+    CompositionLocalProvider(LocalComponentBorders provides borders, LocalBorderColors provides colors, content = content)
+}
+
 /**
  * Accessor for the current [BorderColors] role mapping.
  *
@@ -252,5 +261,29 @@ fun MaterialTheme.borderStroke(
     return BorderStroke(
         width = componentBorders.widths.forSize(resolvedSize),
         brush = brush
+    )
+}
+
+
+/**
+ * Provides both border width tokens and role colors in a single call.
+ *
+ * This façade is functionally equivalent to calling:
+ *
+ *   ProvideComponentBorders(borders) { ProvideBorderColors(colors) { content() } }
+ *
+ * Use this when you want to set both in one place (e.g., in your app theme).
+ * Individual providers remain available for targeted overrides.
+ */
+@Composable
+fun ProvideBorders(
+    borders: ComponentBorders,
+    colors: BorderColors,
+    content: @Composable () -> Unit
+) {
+    CompositionLocalProvider(
+        LocalComponentBorders provides borders,
+        LocalBorderColors provides colors,
+        content = content
     )
 }

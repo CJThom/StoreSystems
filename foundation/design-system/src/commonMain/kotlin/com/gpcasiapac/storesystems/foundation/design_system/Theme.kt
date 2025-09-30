@@ -8,6 +8,9 @@ import com.gpcasiapac.storesystems.common.presentation.theme.BorderSize
 import com.gpcasiapac.storesystems.common.presentation.theme.BorderWidths
 import com.gpcasiapac.storesystems.common.presentation.theme.ComponentBorders
 import com.gpcasiapac.storesystems.common.presentation.theme.ProvideComponentBorders
+import com.gpcasiapac.storesystems.common.presentation.theme.ProvideBorderColors
+import com.gpcasiapac.storesystems.common.presentation.theme.BorderColors
+import com.gpcasiapac.storesystems.common.presentation.theme.ProvideBorders
 
 /**
  * GPC Material 3 Theme
@@ -23,37 +26,48 @@ fun GPCTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
+
+    val componentBorders = ComponentBorders(
+        widths = BorderWidths(
+            small = 1.dp,
+            medium = 2.dp,
+            large = 3.dp
+        ),
+        defaultSize = BorderSize.Small
+    )
+
     MaterialTheme(
         colorScheme = GPCLightColorScheme,
         typography = GPCTypography,
         shapes = GPCShapes,
     ) {
-        // Provide width tokens; install extended colors scheme for project defaults.
-        ProvideComponentBorders(
-            borders = ComponentBorders(
-                widths = BorderWidths(
-                    small = 1.dp,
-                    medium = 2.dp,
-                    large = 3.dp
-                ),
-                defaultSize = BorderSize.Small
-            )
+
+        val borderColors = BorderColors(
+            outline = MaterialTheme.colorScheme.outline,
+            variant = MaterialTheme.colorScheme.outlineVariant,
+            error = MaterialTheme.colorScheme.error,
+            selected = MaterialTheme.colorScheme.primary,
+        )
+
+        val extendedScheme = GpcExtendedColorScheme(
+            success = MaterialTheme.colorScheme.tertiary,
+            onSuccess = MaterialTheme.colorScheme.onTertiary,
+            successContainer = MaterialTheme.colorScheme.tertiaryContainer,
+            onSuccessContainer = MaterialTheme.colorScheme.onTertiaryContainer,
+            info = MaterialTheme.colorScheme.secondary,
+            onInfo = MaterialTheme.colorScheme.onSecondary,
+            infoContainer = MaterialTheme.colorScheme.secondaryContainer,
+            onInfoContainer = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+
+        ProvideBorders(
+            borders = componentBorders,
+            colors = borderColors
         ) {
-            ProvideGpcExtendedColorScheme(
-                scheme = GpcExtendedColorScheme(
-                    success = MaterialTheme.colorScheme.tertiary,
-                    onSuccess = MaterialTheme.colorScheme.onTertiary,
-                    successContainer = MaterialTheme.colorScheme.tertiaryContainer,
-                    onSuccessContainer = MaterialTheme.colorScheme.onTertiaryContainer,
-                    info = MaterialTheme.colorScheme.secondary,
-                    onInfo = MaterialTheme.colorScheme.onSecondary,
-                    infoContainer = MaterialTheme.colorScheme.secondaryContainer,
-                    onInfoContainer = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-            ) {
+            ProvideGpcExtendedColorScheme(scheme = extendedScheme) {
                 content()
             }
         }
-    }
 
+    }
 }
