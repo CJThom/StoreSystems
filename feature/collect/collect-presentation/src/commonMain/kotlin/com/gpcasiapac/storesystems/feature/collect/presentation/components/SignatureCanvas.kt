@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -22,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -40,7 +43,7 @@ fun SignatureCanvas(
 ) {
     val density = LocalDensity.current
     val strokePx = with(density) { strokeWidth.toPx() }
-
+    val scrollConnection = object : NestedScrollConnection {}
     // Local mutable copy to allow incremental updates then publish via callback
     // Remove dependency on strokes to prevent state resets during drawing
     var localStrokes by remember { mutableStateOf(strokes) }
@@ -54,6 +57,7 @@ fun SignatureCanvas(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
+                .nestedScroll(scrollConnection)
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown(pass = PointerEventPass.Initial)
