@@ -1,10 +1,12 @@
 package com.gpcasiapac.storesystems.app.superapp.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem.*
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.navigation.BackStackReducer
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -103,11 +105,13 @@ class SuperGlobalNavigationViewModel :
     private fun handleCollect(outcome: CollectOutcome) {
         when (outcome) {
             is CollectOutcome.OrderSelected -> pushInTab(
-                TabItem.Collect(),
-                CollectFeatureDestination.OrderDetails(outcome.orderId)
+                Collect(),
+                OrderDetails(outcome.orderId)
             )
 
-            is CollectOutcome.Back -> popBackInTab(TabItem.Collect(), 1)
+            is CollectOutcome.Back -> popBackInTab(Collect(), 1)
+            CollectOutcome.SignatureRequested -> TODO()
+            is CollectOutcome.SignatureSaved -> TODO()
         }
     }
 
