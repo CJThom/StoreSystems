@@ -13,6 +13,7 @@ object Dimens {
     object Space {
         val extraSmall: Dp = 4.dp
         val small: Dp = 8.dp
+        val semiMedium: Dp = 12.dp
         val medium: Dp = 16.dp
         val large: Dp = 24.dp
         val extraLarge: Dp = 32.dp
@@ -35,10 +36,12 @@ object Dimens {
 
     // Component sizes
     object Size {
-        val iconSmall: Dp = 16.dp
+        val iconSmall: Dp = 20.dp
         val iconMedium: Dp = 24.dp
         val iconLarge: Dp = 32.dp
         val iconExtraLarge: Dp = 48.dp
+
+        val buttonSizeSmall: Dp = 32.dp
 
         val buttonHeight: Dp = 48.dp
         val buttonMinWidth: Dp = 64.dp

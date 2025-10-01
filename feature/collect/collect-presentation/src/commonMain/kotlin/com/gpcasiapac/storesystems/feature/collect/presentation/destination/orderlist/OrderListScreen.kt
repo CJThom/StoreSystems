@@ -187,28 +187,24 @@ fun OrderListScreen(
                 }
                 stickyHeader {
                     FilterBar(
+                        customerTypeFilterList = state.customerTypeFilterList,
                         scrollBehavior = stickyHeaderScrollBehavior,
-                        selectedFilters = state.customerTypeFilterList.map { it.name },
-                        additionalFilters = state.appliedFilterChipList,
-                        onFilterToggle = { filter ->
-                            val customerType = when (filter) {
-                                "B2B" -> CustomerType.B2B
-                                "B2C" -> CustomerType.B2C
-                                else -> return@FilterBar
-                            }
-                            val isCurrentlySelected = state.customerTypeFilterList.contains(customerType)
-                            onEventSent(OrderListScreenContract.Event.ToggleCustomerType(customerType, !isCurrentlySelected))
+                        onToggleCustomerType = { type, checked ->
+                            onEventSent(
+                                OrderListScreenContract.Event.ToggleCustomerType(
+                                    type = type,
+                                    checked = checked
+                                )
+                            )
                         },
-                        onAdditionalFilterRemove = { filterChip ->
-                            onEventSent(OrderListScreenContract.Event.RemoveFilterChip(filterChip))
-                        },
+                        // TODO: Add Input Chips
+                        // additionalFilters = state.appliedFilterChipList,
+//                        onAdditionalFilterRemove = { filterChip ->
+//                            onEventSent(OrderListScreenContract.Event.RemoveFilterChip(filterChip))
+//                        },
                         onSelectAction = {
                             onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(enabled = !state.isMultiSelectionEnabled))
-                        },
-                        contentPadding = PaddingValues(
-                            horizontal = Dimens.Space.medium,
-                            vertical = Dimens.Space.small
-                        ),
+                        }
                     )
 
                 }

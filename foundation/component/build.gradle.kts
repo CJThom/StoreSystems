@@ -15,7 +15,7 @@ kotlin {
             // Compose UI
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(libs.compose.material3)
             implementation(compose.ui)
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
