@@ -470,7 +470,7 @@ class OrderListScreenViewModel(
                 chips.all { chip ->
                     when (chip.type) {
                         OrderSearchSuggestionType.NAME -> {
-                            val name = if (order.customerType == CustomerType.B2B) order.accountName.orEmpty() else order.customer.fullName
+                            val name = if (order.customerType == CustomerType.B2B) order.customer.accountName.orEmpty() else order.customer.fullName
                             name.contains(chip.value, ignoreCase = true)
                         }
 

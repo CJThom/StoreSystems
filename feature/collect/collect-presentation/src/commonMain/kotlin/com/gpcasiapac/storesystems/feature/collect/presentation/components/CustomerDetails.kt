@@ -11,7 +11,9 @@ import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.gpcasiapac.storesystems.foundation.component.DetailItem
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CustomerName
+import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -30,14 +32,16 @@ fun CustomerDetails(
     customerName: String,
     customerNumber: String,
     phoneNumber: String,
+    customerType: CustomerType,
     modifier: Modifier = Modifier
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)) {
-         //Use BusinessNameSection for B2B.
-         CustomerNameSection(
-             customerName = customerName,
-             modifier = Modifier.padding(horizontal = Dimens.Space.medium)
-         )
+        //Use BusinessNameSection for B2B.
+        CustomerName(
+            customerName = customerName,
+            customerType = customerType,
+            modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+        )
         // Details section with customer number and phone
         Row(
             modifier = Modifier
@@ -46,16 +50,16 @@ fun CustomerDetails(
             horizontalArrangement = Arrangement.spacedBy(Dimens.Space.large)
         ) {
             // Left column - Customer Number
-            DetailItem(
-                icon = Icons.Outlined.Receipt,
+            DetailItemMedium(
+                imageVector = Icons.Outlined.Receipt,
                 label = "Customer Number",
                 value = customerNumber,
                 modifier = Modifier.weight(1f)
             )
 
             // Right column - Phone
-            DetailItem(
-                icon = Icons.Outlined.Call,
+            DetailItemMedium(
+                imageVector = Icons.Outlined.Call,
                 label = "Phone",
                 value = phoneNumber,
                 modifier = Modifier.weight(1f)
@@ -76,6 +80,7 @@ private fun CustomerDetailsLightPreview() {
                 customerName = "Johnathan Citizenship",
                 customerNumber = "1887388193",
                 phoneNumber = "0455 100 000",
+                customerType = CustomerType.B2B,
                 modifier = Modifier.padding(Dimens.Space.medium)
             )
         }
@@ -94,7 +99,8 @@ private fun CustomerDetailsDarkPreview() {
                 customerName = "Johnathan Citizenship",
                 customerNumber = "1887388193",
                 phoneNumber = "0455 100 000",
-                modifier =  Modifier.padding(Dimens.Space.medium)
+                customerType = CustomerType.B2C,
+                modifier = Modifier.padding(Dimens.Space.medium)
             )
         }
     }

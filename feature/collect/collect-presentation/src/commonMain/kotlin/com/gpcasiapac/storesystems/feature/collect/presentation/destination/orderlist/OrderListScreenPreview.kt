@@ -8,6 +8,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -17,30 +18,28 @@ private val now get() = Clock.System.now()
     Order(
         id = "1",
         customerType = CustomerType.B2C,
-        accountName = null,
-        invoiceNumber = "INV-1001",
-        webOrderNumber = "WEB-7771",
-        pickedAt = now - 12.minutes,
+        invoiceNumber = "10341882849",
+        webOrderNumber = "84777189930",
+        pickedAt = now - 2.days,
         customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
             customerNumber = "CUST-0001",
             customerType = CustomerType.B2C,
             accountName = null,
-            firstName = "Jane",
-            lastName = "Doe",
+            firstName = "Johnathan",
+            lastName = "Citizenship",
             phone = "+65 8123 4567",
         )
     ),
     Order(
         id = "2",
         customerType = CustomerType.B2B,
-        accountName = "Acme Corp",
-        invoiceNumber = "INV-1002",
-        webOrderNumber = null,
+        invoiceNumber = "10341882849",
+        webOrderNumber = "84777189930",
         pickedAt = now - 2.hours,
         customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
             customerNumber = "ACC-0002",
             customerType = CustomerType.B2B,
-            accountName = "Acme Corp",
+            accountName = "ABC Motorsports PTY Limited",
             firstName = null,
             lastName = null,
             phone = "+65 8000 0002",
@@ -48,18 +47,62 @@ private val now get() = Clock.System.now()
     ),
     Order(
         id = "3",
-        customerType = CustomerType.B2C,
-        accountName = null,
-        invoiceNumber = "INV-1003",
-        webOrderNumber = "WEB-7773",
-        pickedAt = now - 1.hours,
+        customerType = CustomerType.B2B,
+        invoiceNumber = "10341882849",
+        webOrderNumber = "84777189930",
+        pickedAt = now - 45.minutes,
         customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
-            customerNumber = "CUST-0003",
+            customerNumber = "ACC-0003",
+            customerType = CustomerType.B2B,
+            accountName = "AU Mechanics",
+            firstName = null,
+            lastName = null,
+            phone = "+65 8000 0003",
+        )
+    ),
+    Order(
+        id = "4",
+        customerType = CustomerType.B2C,
+        invoiceNumber = "10341882849",
+        webOrderNumber = "84777189930",
+        pickedAt = now - 30.minutes,
+        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+            customerNumber = "CUST-0004",
+            customerType = CustomerType.B2C,
+            accountName = null,
+            firstName = "Jane",
+            lastName = "Doe",
+            phone = "+65 8123 4568",
+        )
+    ),
+    Order(
+        id = "5",
+        customerType = CustomerType.B2C,
+        invoiceNumber = "10341882849",
+        webOrderNumber = "84777189930",
+        pickedAt = now - 15.minutes,
+        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+            customerNumber = "CUST-0005",
             customerType = CustomerType.B2C,
             accountName = null,
             firstName = "John",
-            lastName = "Smith",
-            phone = "+65 8123 0003",
+            lastName = "Doe",
+            phone = "+65 8123 4569",
+        )
+    ),
+    Order(
+        id = "6",
+        customerType = CustomerType.B2C,
+        invoiceNumber = "10341882849",
+        webOrderNumber = "84777189930",
+        pickedAt = now - 5.minutes,
+        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+            customerNumber = "CUST-0006",
+            customerType = CustomerType.B2C,
+            accountName = null,
+            firstName = "Bob",
+            lastName = "Jane",
+            phone = "+65 8123 4570",
         )
     ),
 )

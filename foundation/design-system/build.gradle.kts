@@ -20,7 +20,8 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(project(":common:presentation"))
+
+            implementation(projects.common.presentation)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

@@ -27,6 +27,10 @@ object Dimens {
         val contentSpacing: Dp = Space.medium       // 16dp
     }
 
+    object Adaptive {
+        val gridItemWidth = 325.dp
+    }
+
     object Stroke {
         val veryThin: Dp = 0.5.dp
         val thin: Dp = 1.dp
@@ -36,7 +40,7 @@ object Dimens {
 
     // Component sizes
     object Size {
-        val iconSmall: Dp = 20.dp
+        val iconSmall: Dp = 18.dp
         val iconMedium: Dp = 24.dp
         val iconLarge: Dp = 32.dp
         val iconExtraLarge: Dp = 48.dp

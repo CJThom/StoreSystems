@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayParam
@@ -37,8 +38,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Custo
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSimpleAppBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
-import com.gpcasiapac.storesystems.foundation.component.DetailItem
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
+import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.MBoltIcons
 import kotlinx.coroutines.flow.Flow
@@ -120,34 +121,34 @@ fun OrderDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                     ) {
-                        DetailItem(
+                        DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Sales Order Number",
                             value = state.order?.invoiceNumber.orEmpty(),
-                            icon = Icons.Outlined.Receipt
+                            imageVector = Icons.Outlined.Receipt
                         )
-                        DetailItem(
+                        DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Web Order Number",
                             value = state.order?.webOrderNumber.orEmpty(),
-                            icon = MBoltIcons.Globe
+                            imageVector = MBoltIcons.Globe
                         )
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                     ) {
-                        DetailItem(
+                        DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Created",
                             value = "10341882849",
-                            icon = MBoltIcons.CalendarAddOn
+                            imageVector = MBoltIcons.CalendarAddOn
                         )
-                        DetailItem(
+                        DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Picked",
                             value = state.order?.pickedAt?.toString().orEmpty(),
-                            icon = Icons.Outlined.BackHand
+                            imageVector = Icons.Outlined.BackHand
                         )
                     }
                 }
@@ -161,6 +162,7 @@ fun OrderDetailScreen(
                     customerName = state.order?.customer?.fullName.orEmpty(),
                     customerNumber = state.order?.customer?.customerNumber.orEmpty(),
                     phoneNumber = state.order?.customer?.phone.orEmpty(),
+                    customerType = state.order?.customerType ?: CustomerType.B2B, // TODO: Use placeholder (greeking)
                     modifier = Modifier.padding(horizontal = Dimens.Space.medium)
                 )
             }

@@ -22,7 +22,8 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
 
-            implementation(project(":foundation:design-system"))
+            implementation(projects.common.presentation)
+            implementation(projects.foundation.designSystem)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

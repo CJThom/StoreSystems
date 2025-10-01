@@ -1,0 +1,165 @@
+package com.gpcasiapac.storesystems.foundation.component.detailitem
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BackHand
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import jdk.jfr.Enabled
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
+
+@Composable
+fun DetailItemSmall(
+    value: String,
+    imageVector: ImageVector,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+) {
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+        DetailItemContent(
+            value = value,
+            imageVector = imageVector,
+            modifier = modifier,
+            contentPadding = contentPadding
+        )
+    }
+}
+
+@Composable
+fun DetailItemSmallChip(
+    value: String,
+    imageVector: ImageVector,
+    modifier: Modifier = Modifier,
+    // onClick: (() -> Unit)? = null, // todo onClick adds hit padding
+    //  enabled: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+        ),
+//        onClick = onClick ?: {},
+//        enabled = enabled,
+    ) {
+        DetailItemContent(
+            value = value,
+            imageVector = imageVector,
+            modifier = modifier,
+            contentPadding = contentPadding
+        )
+    }
+}
+
+@Composable
+private fun DetailItemContent(
+    value: String,
+    imageVector: ImageVector,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+) {
+    Row(
+        modifier = modifier.padding(contentPadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Icon(
+            imageVector = imageVector,
+            contentDescription = null,
+            modifier = Modifier.size(Dimens.Size.iconSmall)
+        )
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Medium
+            ),
+            maxLines = 1
+        )
+
+    }
+}
+
+private data class DetailItemSmallPreviewData(
+    val imageVector: ImageVector,
+    val value: String,
+    val emphasise: Boolean
+)
+
+private class DetailItemSmallPreviewProvider :
+    PreviewParameterProvider<DetailItemSmallPreviewData> {
+    override val values = sequenceOf(
+        DetailItemSmallPreviewData(
+            imageVector = Icons.Outlined.Person,
+            value = "1887388193",
+            emphasise = false
+        ),
+        DetailItemSmallPreviewData(
+            imageVector = Icons.Outlined.Phone,
+            value = "0455 100 000",
+            emphasise = false
+        ),
+        DetailItemSmallPreviewData(
+            imageVector = Icons.Outlined.Email,
+            value = "example@example.com",
+            emphasise = false
+        ),
+        DetailItemSmallPreviewData(
+            imageVector = Icons.Outlined.BackHand,
+            value = "2 hours",
+            emphasise = true
+        )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DetailItemSmallPreview(
+    @PreviewParameter(DetailItemSmallPreviewProvider::class) data: DetailItemSmallPreviewData
+) {
+    GPCTheme {
+        DetailItemSmall(
+            imageVector = data.imageVector,
+            value = data.value
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DetailItemSmallChipPreview(
+    @PreviewParameter(DetailItemSmallPreviewProvider::class) data: DetailItemSmallPreviewData
+) {
+    GPCTheme {
+        DetailItemSmallChip(
+            imageVector = data.imageVector,
+            value = data.value
+        )
+    }
+}
+

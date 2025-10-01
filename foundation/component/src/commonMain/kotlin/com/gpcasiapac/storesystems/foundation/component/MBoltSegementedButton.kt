@@ -1,18 +1,23 @@
 package com.gpcasiapac.storesystems.foundation.component
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun SingleChoiceSegmentedButtonRowScope.MBoltSegmentedButton(
@@ -56,4 +61,27 @@ fun SingleChoiceSegmentedButtonRowScope.MBoltSegmentedButton(
             )
         }
     )
+}
+
+@Preview
+@Composable
+private fun MBoltSegmentedButtonPreview() {
+    var selectedIndex by remember { mutableStateOf(0) }
+    val options = listOf("Option 1", "Option 2")
+
+    Surface {
+        SingleChoiceSegmentedButtonRow {
+            options.forEachIndexed { index, label ->
+                MBoltSegmentedButton(
+                    label = label,
+                    icon = Icons.Default.Home,
+                    isActive = selectedIndex == index,
+                    index = index,
+                    count = options.size,
+                    onClick = { selectedIndex = index }
+                )
+            }
+        }
+    }
+
 }

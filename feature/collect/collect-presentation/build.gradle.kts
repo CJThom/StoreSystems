@@ -43,6 +43,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
 
             // Lifecycle for ViewModel + viewModelScope
             implementation(libs.androidx.lifecycle.viewmodel)
@@ -52,6 +53,8 @@ kotlin {
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectDomain)
+
+            implementation(projects.common.kotlin)
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.component)
 

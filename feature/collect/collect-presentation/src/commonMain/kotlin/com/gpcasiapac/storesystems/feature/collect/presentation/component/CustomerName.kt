@@ -1,21 +1,28 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
 import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 // TODO: Move to foundation/components (Depends on CustomerType)
 @Composable
@@ -23,11 +30,13 @@ fun CustomerName(
     customerName: String,
     customerType: CustomerType,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.small)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
 
     Row(
-        modifier = modifier.padding(contentPadding),
+        modifier = modifier
+            .padding(contentPadding)
+            .width(IntrinsicSize.Max),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -39,33 +48,49 @@ fun CustomerName(
 
         Text(
             text = customerName,
-            style = MaterialTheme.typography.titleMedium, // TODO: Match Figma / Fix theme Typography
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth(),// TODO: Match Figma / Fix theme Typography,
+            autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.titleMedium.fontSize)
         )
 
     }
 }
 
-@Preview
-@Composable
-private fun B2BCustomerNamePreview() {
-    GPCTheme {
-        Surface {
-            CustomerName(
-                customerName = "ABC Motorsports PTY Limited",
-                customerType = CustomerType.B2B
-            )
-        }
-    }
+private data class CustomerNamePreviewData(
+    val name: String,
+    val type: CustomerType
+)
+
+private class CustomerNamePreviewProvider : PreviewParameterProvider<CustomerNamePreviewData> {
+    override val values = sequenceOf(
+        CustomerNamePreviewData(
+            name = "ABC Motorsports PTY Limited",
+            type = CustomerType.B2B
+        ),
+        CustomerNamePreviewData(
+            name = "Johnathan Josiah Citizenship Esq.",
+            type = CustomerType.B2C
+        ),
+        CustomerNamePreviewData(
+            name = "Short Co",
+            type = CustomerType.B2B,
+        )
+    )
+
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-private fun B2CCustomerNamePreview() {
+private fun CustomerNamePreview(
+    @PreviewParameter(CustomerNamePreviewProvider::class) data: CustomerNamePreviewData
+) {
     GPCTheme {
         Surface {
             CustomerName(
-                customerName = "Johnathan Citizenship",
-                customerType = CustomerType.B2C
+                customerName = data.name,
+                customerType = data.type
             )
         }
     }

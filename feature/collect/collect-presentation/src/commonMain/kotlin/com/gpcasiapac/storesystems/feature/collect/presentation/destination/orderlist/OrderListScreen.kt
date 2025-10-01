@@ -2,23 +2,19 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Receipt
-import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,25 +25,29 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.FilterBar
+import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CheckboxOrderCard
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.FilterBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MultiSelectBottomBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.OrderDetailRow
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyBarDefaults
+import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,8 +59,11 @@ fun OrderListScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val lazyListState = rememberLazyListState()
-    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(lazyListState, stickyHeaderIndex = 1)
+    val lazyGridState = rememberLazyGridState()
+    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
+        lazyGridState = lazyGridState,
+        stickyHeaderIndex = 1
+    )
 
 
     LaunchedEffect(effectFlow) {
@@ -163,84 +166,93 @@ fun OrderListScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-
+        LazyVerticalGrid(
+            state = lazyGridState,
+            columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            contentPadding = padding
         ) {
-            // Order List
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
-                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
-            ) {
-                item {
-                    // Header Section
-                    HeaderSection(
-                        ordersCount = state.orderCount,
-                        modifier = Modifier.padding(horizontal = Dimens.Space.medium)
-                    )
-                }
-                stickyHeader {
-                    FilterBar(
-                        customerTypeFilterList = state.customerTypeFilterList,
-                        scrollBehavior = stickyHeaderScrollBehavior,
-                        onToggleCustomerType = { type, checked ->
-                            onEventSent(
-                                OrderListScreenContract.Event.ToggleCustomerType(
-                                    type = type,
-                                    checked = checked
-                                )
+            item {
+                HeaderSection(
+                    ordersCount = state.orderCount,
+                    modifier = Modifier
+                )
+            }
+            stickyHeader {
+                FilterBar(
+                    customerTypeFilterList = state.customerTypeFilterList,
+                    scrollBehavior = stickyHeaderScrollBehavior,
+                    onToggleCustomerType = { type, checked ->
+                        onEventSent(
+                            OrderListScreenContract.Event.ToggleCustomerType(
+                                type = type,
+                                checked = checked
                             )
-                        },
-                        // TODO: Add Input Chips
-                        // additionalFilters = state.appliedFilterChipList,
-//                        onAdditionalFilterRemove = { filterChip ->
-//                            onEventSent(OrderListScreenContract.Event.RemoveFilterChip(filterChip))
-//                        },
-                        onSelectAction = {
-                            onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(enabled = !state.isMultiSelectionEnabled))
-                        }
-                    )
+                        )
+                    },
+                    onSelectAction = {
+                        onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(enabled = !state.isMultiSelectionEnabled))
+                    }
+                )
 
-                }
-                items(state.orderList) { order ->
-                    CheckboxOrderCard(
-                        modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                        isSelectable = state.isMultiSelectionEnabled,
+            }
+            items(items = state.orderList, key = { it.id }) { order ->
+                CheckboxCard(
+                    modifier = Modifier.padding(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.small
+                    ),
+                    isCheckable = state.isMultiSelectionEnabled,
+                    isChecked = state.selectedOrderIdList.contains(order.id),
+                    onClick = {
+                        onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))
+                    },
+                    onCheckedChange = { isChecked ->
+                        onEventSent(
+                            OrderListScreenContract.Event.OrderChecked(
+                                orderId = order.id,
+                                checked = isChecked
+                            )
+                        )
+                    }
+                ) {
+                    CollectOrderDetails(
                         customerName = if (order.customerType == CustomerType.B2B) order.customer.accountName
                             ?: "" else order.customer.fullName,
-                        orderDetails = {
-                            OrderDetailRow(
-                                modifier = Modifier.weight(1f),
-                                text = order.invoiceNumber,
-                                icon = Icons.Outlined.Receipt,
-                            )
-                            order.webOrderNumber?.let {
-                                OrderDetailRow(
-                                    modifier = Modifier.weight(1f),
-                                    text = it,
-                                    icon = Icons.Outlined.Web,
-                                )
-                            }
-
-                        },
-                        isBusiness = order.customerType == CustomerType.B2B,
-                        deliveryTime = order.pickedAt.toString(),
-                        isSelected = state.selectedOrderIdList.contains(order.id),
-                        onSelectionChanged = { isSelected ->
-                            onEventSent(OrderListScreenContract.Event.OrderChecked(order.id, isSelected))
-                        },
-                        onClick = {
-                            onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))
-                        }
+                        customerType = order.customerType,
+                        invoiceNumber = order.invoiceNumber,
+                        webOrderNumber = order.webOrderNumber,
+                        pickedAt = order.pickedAt,
+                        contendPadding = PaddingValues(
+                            start = Dimens.Space.medium,
+                            top = Dimens.Space.medium,
+                            bottom = Dimens.Space.medium,
+                            end = if (state.isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
+                        ),
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(
+    name = "Order list",
+    showBackground = true,
+    backgroundColor = 0xFFF5F5F5L,
+    widthDp = 360,
+    heightDp = 720
+)
+@Composable
+private fun OrderListScreenPreview(
+    @PreviewParameter(OrderListScreenStateProvider::class) state: OrderListScreenContract.State
+) {
+    GPCTheme {
+        OrderListScreen(
+            state = state,
+            onEventSent = {},
+            effectFlow = null,
+            onOutcome = {}
+        )
     }
 }

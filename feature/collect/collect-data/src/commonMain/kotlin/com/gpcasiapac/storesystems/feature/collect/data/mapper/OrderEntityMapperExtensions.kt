@@ -8,7 +8,6 @@ fun OrderEntity.toDomain(): Order {
     return Order(
         id = this.id,
         customerType = this.customerEntity.customerType,
-        accountName = this.customerEntity.accountName,
         invoiceNumber = this.invoiceNumber,
         webOrderNumber = this.webOrderNumber,
         pickedAt = this.pickedAt,

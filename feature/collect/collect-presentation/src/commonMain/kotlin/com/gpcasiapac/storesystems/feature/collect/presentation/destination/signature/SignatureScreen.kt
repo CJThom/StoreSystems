@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSimpleAppBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureCanvas
@@ -106,6 +107,7 @@ fun SignatureScreen(
                     customerName = "Customer Name",
                     customerNumber = "Customer Number",
                     phoneNumber = "Phone Number",
+                    customerType = CustomerType.B2C
                 )
                 HorizontalDivider()
                 // Signature Canvas

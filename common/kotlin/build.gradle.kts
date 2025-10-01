@@ -13,10 +13,12 @@ kotlin {
     }
     jvm()
     sourceSets {
-        commonMain.dependencies {
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlinx.coroutines.FlowPreview")
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        commonMain.dependencies {
         }
     }
 }
