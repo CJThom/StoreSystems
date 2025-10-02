@@ -115,6 +115,10 @@ class OrderListScreenViewModel(
                 handleClearSearch()
             }
 
+            is OrderListScreenContract.Event.SearchResultClicked -> {
+                handleSearchResultClicked(event.result)
+            }
+
             is OrderListScreenContract.Event.SearchSuggestionClicked -> {
                 handleSearchSuggestionClicked(event.suggestion)
             }
@@ -232,6 +236,16 @@ class OrderListScreenViewModel(
         setState {
             copy(
                 searchText = suggestion,
+                isSearchActive = false,
+                orderSearchSuggestionList = emptyList()
+            )
+        }
+    }
+
+    private fun handleSearchResultClicked(result: String) {
+        setState {
+            copy(
+                searchText = result,
                 isSearchActive = false,
                 orderSearchSuggestionList = emptyList()
             )

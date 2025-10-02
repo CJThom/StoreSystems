@@ -1,11 +1,14 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import androidx.compose.runtime.Composable
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderStates
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenContract.State> {
@@ -20,17 +23,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 isRefreshing = false,
                 searchText = "",
                 isSearchActive = false,
-                orderSearchSuggestionList = listOf(
-                    OrderSearchSuggestion(text = "Jane", type = OrderSearchSuggestionType.NAME),
-                    OrderSearchSuggestion(
-                        text = "INV-100",
-                        type = OrderSearchSuggestionType.ORDER_NUMBER
-                    ),
-                    OrderSearchSuggestion(
-                        text = "+6512345678",
-                        type = OrderSearchSuggestionType.PHONE
-                    ),
-                ),
+                orderSearchSuggestionList = emptyList(),
                 customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
                 appliedFilterChipList = emptyList(),
                 isFilterSheetOpen = false,
@@ -43,6 +36,23 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 submittedCollectOrder = null,
                 searchHintResultList = emptyList(),
                 error = null,
+            )
+
+            val collapsedSearchBar = base.copy(
+                searchText = "",
+                isSearchActive = false,
+                orderSearchSuggestionList = emptyList()
+            )
+
+            val expandedSearchBar = base.copy(
+                searchText = "John",
+                isSearchActive = true,
+                orderSearchSuggestionList = listOf(
+                    OrderSearchSuggestion(text = "Order #12345 - John Doe", type = OrderSearchSuggestionType.NAME),
+                    OrderSearchSuggestion(text = "Order #12346 - John Smith", type = OrderSearchSuggestionType.NAME),
+                    OrderSearchSuggestion(text = "Order #12347 - John Williams", type = OrderSearchSuggestionType.NAME),
+                    OrderSearchSuggestion(text = "Order #12348 - Johnny Cash", type = OrderSearchSuggestionType.NAME),
+                )
             )
 
             val withFilters = base.copy(
@@ -79,7 +89,8 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             )
 
             return sequenceOf(
-                base,
+                collapsedSearchBar,
+                expandedSearchBar,
                 withFilters,
                 multiSelect,
                 multiSelectAll,

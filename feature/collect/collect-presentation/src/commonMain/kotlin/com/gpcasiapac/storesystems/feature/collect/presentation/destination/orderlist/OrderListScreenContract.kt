@@ -70,6 +70,7 @@ object OrderListScreenContract {
         data class SearchTextChanged(val text: String) : Event
         data class SearchActiveChanged(val active: Boolean) : Event
         data object ClearSearch : Event
+        data class SearchResultClicked(val result: String) : Event
         data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
 
         // Filters & sort

@@ -22,15 +22,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -66,6 +69,22 @@ fun OrderListScreen(
         lazyGridState = lazyGridState,
         stickyHeaderIndex = 1
     )
+    
+    // Search bar state management
+    val searchBarState = rememberSearchBarState(
+        initialValue = if (state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed
+    )
+    val textFieldState = rememberTextFieldState(initialText = state.searchText)
+    
+    // Monitor text changes and trigger search
+    LaunchedEffect(textFieldState) {
+        snapshotFlow { textFieldState.text.toString() }
+            .collect { query ->
+                if (query != state.searchText) {
+                    onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
+                }
+            }
+    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -127,15 +146,26 @@ fun OrderListScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MBoltSearchBar(
-                            textFieldState = rememberTextFieldState(initialText = state.searchText),
+                            textFieldState = textFieldState,
+                            searchBarState = searchBarState,
+                            onSearch = { query ->
+                                // Triggered when user presses enter/search button
+                                onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
+                            },
+                            onExpandedChange = { isExpanded ->
+                                onEventSent(OrderListScreenContract.Event.SearchActiveChanged(isExpanded))
+                            },
+                            onResultClick = { result ->
+                                onEventSent(OrderListScreenContract.Event.SearchResultClicked(result))
+                            },
+                            onClearClick = {
+                                onEventSent(OrderListScreenContract.Event.ClearSearch)
+                            },
+                            searchResults = state.orderSearchSuggestionList.map { it.text },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(Dimens.Space.medium),
-                            placeholderText = "Search by Order #, Name, Phone",
-                            onSearch = { query ->
-                                onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
-                            },
-                            searchResults = state.orderSearchSuggestionList.map { it.text }
+                            placeholderText = "Search by Order #, Name, Phone"
                         )
 
                     }
