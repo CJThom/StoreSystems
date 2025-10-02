@@ -6,8 +6,8 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 
 object OrderDetailScreenContract {
 
@@ -15,10 +15,10 @@ object OrderDetailScreenContract {
     data class State(
         // Single order context (B2C single). If multiple, use [orderList]
         val orderId: String?,
-        val order: Order?,
+        val collectOrder: CollectOrderState?,
 
         // Multiple order context (B2C multi, B2B/account multi, Courier multi)
-        val orderList: List<Order>,
+        val collectOrderList: List<CollectOrderState>,
 
         // Top-level flags
         val isLoading: Boolean,

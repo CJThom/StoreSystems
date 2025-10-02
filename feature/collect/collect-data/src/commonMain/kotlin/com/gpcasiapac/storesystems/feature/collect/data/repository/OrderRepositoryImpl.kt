@@ -7,7 +7,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
@@ -21,11 +21,11 @@ class OrderRepositoryImpl(
 ) : OrderRepository {
 
     // TODO: In Progress: Improve this with Dao query
-    override fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<Order>> {
+    override fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<CollectOrder>> {
         return orderDao.getAllAsFlow().map { orderEntityList ->
-            val orderList: List<Order> = orderEntityList.toDomain()
+            val collectOrderList: List<CollectOrder> = orderEntityList.toDomain()
             val query = orderQuery.searchText.trim().lowercase()
-            if (query.isEmpty()) orderList else orderList.filter { o ->
+            if (query.isEmpty()) collectOrderList else collectOrderList.filter { o ->
                 val name = if (o.customer.customerType == CustomerType.B2B) {
                     o.customer.accountName.orEmpty()
                 } else StringUtils.fullName(o.customer.firstName, o.customer.lastName)

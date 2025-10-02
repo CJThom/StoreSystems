@@ -2,9 +2,9 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.util
 
 import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 
-val Order.displayName: String
+val CollectOrder.displayName: String
     get() {
         val customerFullName = StringUtils.fullName(customer.firstName, customer.lastName)
         return when {

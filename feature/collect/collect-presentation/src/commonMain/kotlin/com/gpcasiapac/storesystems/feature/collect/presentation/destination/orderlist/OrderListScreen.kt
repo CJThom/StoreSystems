@@ -209,33 +209,32 @@ fun OrderListScreen(
                     }
                 )
             }
-            items(items = state.orderList, key = { it.id }) { order ->
+            items(items = state.collectOrderStateList, key = { it.id }) { collectOrderState ->
                 CheckboxCard(
                     modifier = Modifier.padding(
                         horizontal = Dimens.Space.medium,
                         vertical = Dimens.Space.small
                     ),
                     isCheckable = state.isMultiSelectionEnabled,
-                    isChecked = state.selectedOrderIdList.contains(order.id),
+                    isChecked = state.selectedOrderIdList.contains(collectOrderState.id),
                     onClick = {
-                        onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))
+                        onEventSent(OrderListScreenContract.Event.OpenOrder(collectOrderState.id))
                     },
                     onCheckedChange = { isChecked ->
                         onEventSent(
                             OrderListScreenContract.Event.OrderChecked(
-                                orderId = order.id,
+                                orderId = collectOrderState.id,
                                 checked = isChecked
                             )
                         )
                     }
                 ) {
                     CollectOrderDetails(
-                        customerName = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName
-                            ?: "" else StringUtils.fullName(order.customer.firstName, order.customer.lastName),
-                        customerType = order.customer.customerType,
-                        invoiceNumber = order.invoiceNumber,
-                        webOrderNumber = order.webOrderNumber,
-                        pickedAt = order.pickedAt,
+                        customerName = collectOrderState.customerName,
+                        customerType = collectOrderState.customerType,
+                        invoiceNumber = collectOrderState.invoiceNumber,
+                        webOrderNumber = collectOrderState.webOrderNumber,
+                        pickedAt = collectOrderState.pickedAt,
                         contendPadding = PaddingValues(
                             start = Dimens.Space.medium,
                             top = Dimens.Space.medium,

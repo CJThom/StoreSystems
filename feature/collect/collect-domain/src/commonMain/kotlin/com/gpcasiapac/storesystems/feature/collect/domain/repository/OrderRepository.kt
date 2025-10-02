@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.repository
 
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import kotlinx.coroutines.flow.Flow
 
@@ -16,7 +16,7 @@ interface OrderRepository {
     /**
      * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
      */
-    fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<Order>>
+    fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<CollectOrder>>
 
     /**
      * Lightweight, indexed search suggestions from the DB.

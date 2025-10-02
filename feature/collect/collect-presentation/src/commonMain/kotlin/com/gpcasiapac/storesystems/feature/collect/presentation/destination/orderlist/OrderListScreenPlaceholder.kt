@@ -61,8 +61,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip as UiFilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.displayName
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -176,10 +177,10 @@ fun OrderListScreenPlaceholder(
                         item {
                             FilterBar(state = state, onEventSent = onEventSent)
                         }
-                        items(state.filteredOrderList) { order ->
+                        items(state.filteredCollectOrderStateList) { order ->
                             val isChecked = state.selectedOrderIdList.contains(order.id)
                             OrderCard(
-                                order = order,
+                                collectOrderState = order,
                                 showCheckbox = state.isMultiSelectionEnabled,
                                 checked = isChecked,
                                 onCheckedChange = { checked ->
@@ -366,7 +367,7 @@ private fun SuggestionRow(
 
 @Composable
 private fun OrderCard(
-    order: Order,
+    collectOrderState: CollectOrderState,
     modifier: Modifier = Modifier,
     showCheckbox: Boolean = false,
     checked: Boolean = false,
@@ -397,14 +398,14 @@ private fun OrderCard(
             ) {
                 // Header: customer type icon + customer/business name
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val icon = when (order.customer.customerType) {
+                    val icon = when (collectOrderState.customerType) {
                         CustomerType.B2B -> Icons.Outlined.Business
                         CustomerType.B2C -> Icons.Outlined.Person
                     }
                     Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.size(8.dp))
                     Text(
-                        text = order.displayName,
+                        text = collectOrderState.customerName,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -415,19 +416,19 @@ private fun OrderCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.ReceiptLong, contentDescription = null)
                     Spacer(Modifier.size(6.dp))
-                    Text(text = order.invoiceNumber ?: "—", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = collectOrderState.invoiceNumber ?: "—", style = MaterialTheme.typography.bodyMedium)
 
                     Spacer(Modifier.size(16.dp))
                     Icon(Icons.Outlined.Public, contentDescription = null)
                     Spacer(Modifier.size(6.dp))
                     Text(
-                        text = order.webOrderNumber ?: "—",
+                        text = collectOrderState.webOrderNumber ?: "—",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
                 // Time since picked chip
-                TimeSincePickedChip(order.pickedAt)
+                TimeSincePickedChip(collectOrderState.pickedAt)
             }
         }
     }
