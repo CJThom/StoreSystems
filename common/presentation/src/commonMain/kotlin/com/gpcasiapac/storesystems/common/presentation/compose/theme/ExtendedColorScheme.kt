@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.common.presentation.theme
+package com.gpcasiapac.storesystems.common.presentation.compose.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -6,7 +6,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 
 /**
  * Extended color system – common building blocks only.

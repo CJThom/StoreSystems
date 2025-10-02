@@ -5,9 +5,9 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
-import com.gpcasiapac.storesystems.common.presentation.theme.ExtendedColorScheme as CommonExtendedColorScheme
-import com.gpcasiapac.storesystems.common.presentation.theme.LocalExtendedColorScheme
-import com.gpcasiapac.storesystems.common.presentation.theme.ProvideExtendedColorScheme
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.ExtendedColorScheme as CommonExtendedColorScheme
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.LocalExtendedColorScheme
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.ProvideExtendedColorScheme
 
 /**
  * Project/app concrete extended color scheme with explicit roles.

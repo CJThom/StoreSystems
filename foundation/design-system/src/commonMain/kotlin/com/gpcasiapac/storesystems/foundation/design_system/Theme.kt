@@ -4,13 +4,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.common.presentation.theme.BorderSize
-import com.gpcasiapac.storesystems.common.presentation.theme.BorderWidths
-import com.gpcasiapac.storesystems.common.presentation.theme.ComponentBorders
-import com.gpcasiapac.storesystems.common.presentation.theme.ProvideComponentBorders
-import com.gpcasiapac.storesystems.common.presentation.theme.ProvideBorderColors
-import com.gpcasiapac.storesystems.common.presentation.theme.BorderColors
-import com.gpcasiapac.storesystems.common.presentation.theme.ProvideBorders
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderSize
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderWidths
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.ComponentBorders
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderColors
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.ProvideBorders
 
 /**
  * GPC Material 3 Theme
