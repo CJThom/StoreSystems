@@ -53,7 +53,7 @@ fun FilterBar(
     onSelectAction: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = Dimens.Space.medium),
-    scrollBehavior: StickyHeaderScrollBehavior? = null,
+    scrollBehavior: StickyHeaderScrollBehavior? = null
 ) {
 
     val isLifted = scrollBehavior?.isLifted ?: false

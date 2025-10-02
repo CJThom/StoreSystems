@@ -162,7 +162,7 @@ fun OrderDetailScreen(
                     customerName = state.order?.customer?.fullName.orEmpty(),
                     customerNumber = state.order?.customer?.customerNumber.orEmpty(),
                     phoneNumber = state.order?.customer?.phone.orEmpty(),
-                    customerType = state.order?.customerType ?: CustomerType.B2B, // TODO: Use placeholder (greeking)
+                    customerType = state.order?.customer?.customerType ?: CustomerType.B2B, // TODO: Use placeholder (greeking)
                     modifier = Modifier.padding(horizontal = Dimens.Space.medium)
                 )
             }

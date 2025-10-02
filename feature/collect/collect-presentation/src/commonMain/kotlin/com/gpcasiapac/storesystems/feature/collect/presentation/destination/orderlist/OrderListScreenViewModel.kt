@@ -461,7 +461,7 @@ class OrderListScreenViewModel(
         state: OrderListScreenContract.State,
     ): List<Order> {
         // Base: customer type filter
-        var result = orders.filter { it.customerType in state.customerTypeFilterList }
+        var result = orders.filter { it.customer.customerType in state.customerTypeFilterList }
 
         // Apply chips as AND conditions
         val chips = state.appliedFilterChipList
@@ -470,7 +470,7 @@ class OrderListScreenViewModel(
                 chips.all { chip ->
                     when (chip.type) {
                         OrderSearchSuggestionType.NAME -> {
-                            val name = if (order.customerType == CustomerType.B2B) order.customer.accountName.orEmpty() else order.customer.fullName
+                            val name = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName.orEmpty() else order.customer.fullName
                             name.contains(chip.value, ignoreCase = true)
                         }
 

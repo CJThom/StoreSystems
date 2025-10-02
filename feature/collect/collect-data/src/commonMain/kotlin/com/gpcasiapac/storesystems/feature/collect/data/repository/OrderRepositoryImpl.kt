@@ -25,7 +25,7 @@ class OrderRepositoryImpl(
             val orderList: List<Order> = orderEntityList.toDomain()
             val query = orderQuery.searchText.trim().lowercase()
             if (query.isEmpty()) orderList else orderList.filter { o ->
-                val name = if (o.customerType == CustomerType.B2B) {
+                val name = if (o.customer.customerType == CustomerType.B2B) {
                     o.customer.accountName.orEmpty()
                 } else o.customer.fullName
                 name.lowercase().contains(query) ||

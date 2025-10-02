@@ -7,7 +7,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 fun OrderEntity.toDomain(): Order {
     return Order(
         id = this.id,
-        customerType = this.customerEntity.customerType,
         invoiceNumber = this.invoiceNumber,
         webOrderNumber = this.webOrderNumber,
         pickedAt = this.pickedAt,

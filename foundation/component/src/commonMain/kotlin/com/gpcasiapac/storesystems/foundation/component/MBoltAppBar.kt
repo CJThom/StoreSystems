@@ -15,6 +15,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -22,6 +23,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun MBoltAppBar(
     title: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
     actionBar: @Composable (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     navigationIcon: @Composable (() -> Unit)? = null,
@@ -29,20 +31,23 @@ fun MBoltAppBar(
 ) {
     Column {
         TopAppBar(
+            modifier = modifier,
             actions = actions,
             navigationIcon = {
                 navigationIcon?.invoke()
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primary,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 scrolledContainerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                actionIconContentColor = MaterialTheme.colorScheme.onPrimary
             ),
             scrollBehavior = scrollBehavior,
             title = {
                 title()
-            },
-
-            )
+            }
+        )
         actionBar?.invoke()
     }
 }

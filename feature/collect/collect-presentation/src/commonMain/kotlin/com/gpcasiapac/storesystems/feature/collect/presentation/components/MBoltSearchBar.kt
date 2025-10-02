@@ -29,7 +29,7 @@ fun MBoltSearchBar(
     modifier: Modifier = Modifier
 ) {
     // Controls expansion state of the search bar
-    var expanded by rememberSaveable { mutableStateOf(false) }
+    var expanded by rememberSaveable { mutableStateOf(false) } // TODO: Remove this (replace with full screen)
 
     Box(
         modifier

@@ -4,7 +4,6 @@ import kotlin.time.Instant
 
 data class Order(
     val id: String,
-    val customerType: CustomerType,
     val invoiceNumber: String,
     val webOrderNumber: String?,
     val pickedAt: Instant,

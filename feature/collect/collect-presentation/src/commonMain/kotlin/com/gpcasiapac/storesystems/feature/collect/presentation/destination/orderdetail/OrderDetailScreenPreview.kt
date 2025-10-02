@@ -14,7 +14,6 @@ private val now get() = Clock.System.now()
 private fun sampleOrders(): List<Order> = listOf(
     Order(
         id = "1",
-        customerType = CustomerType.B2C,
         invoiceNumber = "INV-1001",
         webOrderNumber = "WEB-7771",
         pickedAt = now - 12.minutes,
@@ -29,7 +28,6 @@ private fun sampleOrders(): List<Order> = listOf(
     ),
     Order(
         id = "2",
-        customerType = CustomerType.B2B,
         invoiceNumber = "INV-1002",
         webOrderNumber = null,
         pickedAt = now - 2.hours,
@@ -44,7 +42,6 @@ private fun sampleOrders(): List<Order> = listOf(
     ),
     Order(
         id = "3",
-        customerType = CustomerType.B2C,
         invoiceNumber = "INV-1003",
         webOrderNumber = "WEB-7773",
         pickedAt = now - 1.hours,

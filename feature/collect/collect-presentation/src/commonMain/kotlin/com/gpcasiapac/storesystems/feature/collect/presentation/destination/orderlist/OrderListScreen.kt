@@ -2,12 +2,14 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,14 +38,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -70,7 +73,6 @@ fun OrderListScreen(
         stickyHeaderIndex = 1
     )
 
-
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
@@ -91,8 +93,6 @@ fun OrderListScreen(
             }
         }
     }
-
-
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
@@ -126,25 +126,22 @@ fun OrderListScreen(
                 navigationIcon = {
                     IconButton(onClick = { /* Handle menu */ }) {
                         Icon(
-                            Icons.AutoMirrored.Outlined.ExitToApp,
+                            imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
                             contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* Handle notifications */ }) {
                         Icon(
-                            Icons.Default.CloudCircle,
-                            contentDescription = "History",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            imageVector = Icons.Default.CloudCircle,
+                            contentDescription = "History"
                         )
                     }
                     IconButton(onClick = { /* Handle more options */ }) {
                         Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "More options",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More options"
                         )
                     }
                 },
@@ -166,7 +163,6 @@ fun OrderListScreen(
                             textFieldState = rememberTextFieldState(initialText = state.searchText),
                             onSearch = { query ->
                                 onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
-                                onEventSent(OrderListScreenContract.Event.SearchActiveChanged(false))
                             },
                             searchResults = state.orderSearchSuggestionList.map { it.text }
                         )
@@ -176,75 +172,79 @@ fun OrderListScreen(
             )
         }
     ) { padding ->
-        Column( // TODO: Figure out why this is needed for sticky bar to stick
+        LazyVerticalGrid(
+            state = lazyGridState,
+            columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding())
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            contentPadding = PaddingValues(
+                start = padding.calculateStartPadding(LocalLayoutDirection.current),
+                end = padding.calculateStartPadding(LocalLayoutDirection.current),
+                bottom = padding.calculateBottomPadding()
+            ),
         ) {
-            LazyVerticalGrid(
-                state = lazyGridState,
-                columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            ) {
-                item {
-                    HeaderSection(
-                        ordersCount = state.orderCount,
-                        modifier = Modifier
-                    )
-                }
-                stickyHeader {
-                    FilterBar(
-                        customerTypeFilterList = state.customerTypeFilterList,
-                        scrollBehavior = stickyHeaderScrollBehavior,
-                        onToggleCustomerType = { type, checked ->
-                            onEventSent(
-                                OrderListScreenContract.Event.ToggleCustomerType(
-                                    type = type,
-                                    checked = checked
-                                )
+            item {
+                HeaderSection(
+                    ordersCount = state.orderCount,
+                    modifier = Modifier
+                )
+            }
+            stickyHeader {
+                FilterBar(
+                    customerTypeFilterList = state.customerTypeFilterList,
+                    scrollBehavior = stickyHeaderScrollBehavior,
+                    onToggleCustomerType = { type, checked ->
+                        onEventSent(
+                            OrderListScreenContract.Event.ToggleCustomerType(
+                                type = type,
+                                checked = checked
                             )
-                        },
-                        onSelectAction = {
-                            onEventSent(OrderListScreenContract.Event.ToggleSelectionMode(enabled = !state.isMultiSelectionEnabled))
-                        }
-                    )
-
-                }
-                items(items = state.orderList, key = { it.id }) { order ->
-                    CheckboxCard(
-                        modifier = Modifier.padding(
-                            horizontal = Dimens.Space.medium,
-                            vertical = Dimens.Space.small
-                        ),
-                        isCheckable = state.isMultiSelectionEnabled,
-                        isChecked = state.selectedOrderIdList.contains(order.id),
-                        onClick = {
-                            onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))
-                        },
-                        onCheckedChange = { isChecked ->
-                            onEventSent(
-                                OrderListScreenContract.Event.OrderChecked(
-                                    orderId = order.id,
-                                    checked = isChecked
-                                )
+                        )
+                    },
+                    onSelectAction = {
+                        onEventSent(
+                            OrderListScreenContract.Event.ToggleSelectionMode(
+                                enabled = !state.isMultiSelectionEnabled
                             )
-                        }
-                    ) {
-                        CollectOrderDetails(
-                            customerName = if (order.customerType == CustomerType.B2B) order.customer.accountName
-                                ?: "" else order.customer.fullName,
-                            customerType = order.customerType,
-                            invoiceNumber = order.invoiceNumber,
-                            webOrderNumber = order.webOrderNumber,
-                            pickedAt = order.pickedAt,
-                            contendPadding = PaddingValues(
-                                start = Dimens.Space.medium,
-                                top = Dimens.Space.medium,
-                                bottom = Dimens.Space.medium,
-                                end = if (state.isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
-                            ),
                         )
                     }
+                )
+            }
+            items(items = state.orderList, key = { it.id }) { order ->
+                CheckboxCard(
+                    modifier = Modifier.padding(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.small
+                    ),
+                    isCheckable = state.isMultiSelectionEnabled,
+                    isChecked = state.selectedOrderIdList.contains(order.id),
+                    onClick = {
+                        onEventSent(OrderListScreenContract.Event.OpenOrder(order.id))
+                    },
+                    onCheckedChange = { isChecked ->
+                        onEventSent(
+                            OrderListScreenContract.Event.OrderChecked(
+                                orderId = order.id,
+                                checked = isChecked
+                            )
+                        )
+                    }
+                ) {
+                    CollectOrderDetails(
+                        customerName = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName
+                            ?: "" else order.customer.fullName,
+                        customerType = order.customer.customerType,
+                        invoiceNumber = order.invoiceNumber,
+                        webOrderNumber = order.webOrderNumber,
+                        pickedAt = order.pickedAt,
+                        contendPadding = PaddingValues(
+                            start = Dimens.Space.medium,
+                            top = Dimens.Space.medium,
+                            bottom = Dimens.Space.medium,
+                            end = if (state.isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
+                        ),
+                    )
                 }
             }
         }

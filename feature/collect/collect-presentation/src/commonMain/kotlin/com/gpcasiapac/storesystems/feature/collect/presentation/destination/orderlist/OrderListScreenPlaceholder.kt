@@ -397,7 +397,7 @@ private fun OrderCard(
             ) {
                 // Header: customer type icon + customer/business name
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val icon = when (order.customerType) {
+                    val icon = when (order.customer.customerType) {
                         CustomerType.B2B -> Icons.Outlined.Business
                         CustomerType.B2C -> Icons.Outlined.Person
                     }

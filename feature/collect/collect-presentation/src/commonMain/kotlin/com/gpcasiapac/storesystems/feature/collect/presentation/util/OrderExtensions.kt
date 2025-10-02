@@ -6,7 +6,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 val Order.displayName: String
     get() = when {
         // Prefer account name for B2B/account orders
-        (customerType == CustomerType.B2B) && !customer.accountName.isNullOrBlank() -> customer.accountName!!
+        (customer.customerType == CustomerType.B2B) && !customer.accountName.isNullOrBlank() -> customer.accountName!!
         // Otherwise prefer the person's full name
         customer.fullName.isNotBlank() -> customer.fullName
         invoiceNumber.isNotBlank() -> invoiceNumber

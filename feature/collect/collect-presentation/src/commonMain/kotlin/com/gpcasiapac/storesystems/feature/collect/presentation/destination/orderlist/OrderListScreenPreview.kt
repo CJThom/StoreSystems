@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Customer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
@@ -17,11 +18,10 @@ private val now get() = Clock.System.now()
  fun sampleOrders(): List<Order> = listOf(
     Order(
         id = "1",
-        customerType = CustomerType.B2C,
         invoiceNumber = "10341882849",
         webOrderNumber = "84777189930",
         pickedAt = now - 2.days,
-        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+        customer = Customer(
             customerNumber = "CUST-0001",
             customerType = CustomerType.B2C,
             accountName = null,
@@ -32,11 +32,10 @@ private val now get() = Clock.System.now()
     ),
     Order(
         id = "2",
-        customerType = CustomerType.B2B,
         invoiceNumber = "10341882849",
         webOrderNumber = "84777189930",
         pickedAt = now - 2.hours,
-        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+        customer = Customer(
             customerNumber = "ACC-0002",
             customerType = CustomerType.B2B,
             accountName = "ABC Motorsports PTY Limited",
@@ -47,11 +46,10 @@ private val now get() = Clock.System.now()
     ),
     Order(
         id = "3",
-        customerType = CustomerType.B2B,
         invoiceNumber = "10341882849",
         webOrderNumber = "84777189930",
         pickedAt = now - 45.minutes,
-        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+        customer = Customer(
             customerNumber = "ACC-0003",
             customerType = CustomerType.B2B,
             accountName = "AU Mechanics",
@@ -62,11 +60,10 @@ private val now get() = Clock.System.now()
     ),
     Order(
         id = "4",
-        customerType = CustomerType.B2C,
         invoiceNumber = "10341882849",
         webOrderNumber = "84777189930",
         pickedAt = now - 30.minutes,
-        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+        customer = Customer(
             customerNumber = "CUST-0004",
             customerType = CustomerType.B2C,
             accountName = null,
@@ -77,11 +74,10 @@ private val now get() = Clock.System.now()
     ),
     Order(
         id = "5",
-        customerType = CustomerType.B2C,
         invoiceNumber = "10341882849",
         webOrderNumber = "84777189930",
         pickedAt = now - 15.minutes,
-        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+        customer = Customer(
             customerNumber = "CUST-0005",
             customerType = CustomerType.B2C,
             accountName = null,
@@ -92,11 +88,10 @@ private val now get() = Clock.System.now()
     ),
     Order(
         id = "6",
-        customerType = CustomerType.B2C,
         invoiceNumber = "10341882849",
         webOrderNumber = "84777189930",
         pickedAt = now - 5.minutes,
-        customer = com.gpcasiapac.storesystems.feature.collect.domain.model.Customer(
+        customer = Customer(
             customerNumber = "CUST-0006",
             customerType = CustomerType.B2C,
             accountName = null,
@@ -144,7 +139,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                     FilterChip(label = "Jane", type = OrderSearchSuggestionType.NAME),
                 ),
                 customerTypeFilterList = setOf(CustomerType.B2C),
-                filteredOrderList = orders.filter { it.customerType == CustomerType.B2C }
+                filteredOrderList = orders.filter { it.customer.customerType == CustomerType.B2C }
             )
 
             val loading = base.copy(isLoading = true, orderList = emptyList(), filteredOrderList = emptyList())
