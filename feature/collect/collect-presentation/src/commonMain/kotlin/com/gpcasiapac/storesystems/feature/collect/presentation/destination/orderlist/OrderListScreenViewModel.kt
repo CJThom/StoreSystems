@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -470,7 +471,7 @@ class OrderListScreenViewModel(
                 chips.all { chip ->
                     when (chip.type) {
                         OrderSearchSuggestionType.NAME -> {
-                            val name = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName.orEmpty() else order.customer.fullName
+                            val name = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName.orEmpty() else StringUtils.fullName(order.customer.firstName, order.customer.lastName)
                             name.contains(chip.value, ignoreCase = true)
                         }
 

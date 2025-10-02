@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.FilterBar
@@ -230,7 +231,7 @@ fun OrderListScreen(
                 ) {
                     CollectOrderDetails(
                         customerName = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName
-                            ?: "" else order.customer.fullName,
+                            ?: "" else StringUtils.fullName(order.customer.firstName, order.customer.lastName),
                         customerType = order.customer.customerType,
                         invoiceNumber = order.invoiceNumber,
                         webOrderNumber = order.webOrderNumber,

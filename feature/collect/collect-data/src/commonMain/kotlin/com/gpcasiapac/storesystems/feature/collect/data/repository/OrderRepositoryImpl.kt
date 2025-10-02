@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.data.repository
 
+import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.OrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
@@ -27,7 +28,7 @@ class OrderRepositoryImpl(
             if (query.isEmpty()) orderList else orderList.filter { o ->
                 val name = if (o.customer.customerType == CustomerType.B2B) {
                     o.customer.accountName.orEmpty()
-                } else o.customer.fullName
+                } else StringUtils.fullName(o.customer.firstName, o.customer.lastName)
                 name.lowercase().contains(query) ||
                         o.invoiceNumber.lowercase().contains(query) ||
                         ((o.webOrderNumber ?: "").lowercase().contains(query))
