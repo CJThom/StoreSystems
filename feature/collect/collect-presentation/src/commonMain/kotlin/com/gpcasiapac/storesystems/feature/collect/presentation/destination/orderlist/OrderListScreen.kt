@@ -4,8 +4,6 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,23 +25,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
@@ -97,27 +93,6 @@ fun OrderListScreen(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
-        bottomBar = {
-            AnimatedVisibility(
-                visible = state.isMultiSelectionEnabled,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
-            ) {
-                MultiSelectBottomBar(
-                    selectedCount = state.selectedOrderIdList.size,
-                    isSelectAllChecked = state.isSelectAllChecked,
-                    onSelectAllToggle = { checked ->
-                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
-                    },
-                    onCancelClick = {
-                        onEventSent(OrderListScreenContract.Event.CancelSelection)
-                    },
-                    onSelectClick = {
-                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
-                    }
-                )
-            }
-        },
         topBar = {
             MBoltAppBar(
                 scrollBehavior = scrollBehavior,
@@ -147,18 +122,15 @@ fun OrderListScreen(
                     GPCLogoTitle("Collect")
                 },
                 actionBar = {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .padding(
-                                horizontal = Dimens.Space.medium,
-                                vertical = Dimens.Space.small
-                            )
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         MBoltSearchBar(
                             textFieldState = rememberTextFieldState(initialText = state.searchText),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Dimens.Space.medium),
                             onSearch = { query ->
                                 onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
                             },
@@ -168,7 +140,28 @@ fun OrderListScreen(
                     }
                 }
             )
-        }
+        },
+        bottomBar = {
+            AnimatedVisibility(
+                visible = state.isMultiSelectionEnabled,
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it })
+            ) {
+                MultiSelectBottomBar(
+                    selectedCount = state.selectedOrderIdList.size,
+                    isSelectAllChecked = state.isSelectAllChecked,
+                    onSelectAllToggle = { checked ->
+                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                    },
+                    onCancelClick = {
+                        onEventSent(OrderListScreenContract.Event.CancelSelection)
+                    },
+                    onSelectClick = {
+                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                    }
+                )
+            }
+        },
     ) { padding ->
         LazyVerticalGrid(
             state = lazyGridState,
