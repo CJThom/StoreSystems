@@ -2,15 +2,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -42,10 +39,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.FilterBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.HeaderSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.FilterBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle

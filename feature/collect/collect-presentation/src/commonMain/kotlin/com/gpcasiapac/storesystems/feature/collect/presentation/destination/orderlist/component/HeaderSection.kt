@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.component
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

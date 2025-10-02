@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.component
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.theme.borderStroke
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.StickyHeaderScrollBehavior
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyHeaderScrollBehavior
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
