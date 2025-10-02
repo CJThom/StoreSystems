@@ -21,6 +21,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetO
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.fixture.CollectOrderPlaceholderData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -41,9 +42,12 @@ class OrderListScreenViewModel(
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State {
+
+        val placeholders = CollectOrderPlaceholderData.list(count = 10)
+        
         return OrderListScreenContract.State(
-            collectOrderStateList = emptyList(),
-            filteredCollectOrderStateList = emptyList(),
+            collectOrderStateList = placeholders,
+            filteredCollectOrderStateList = placeholders,
             isLoading = true,
             isRefreshing = true,
             searchText = "",
@@ -148,6 +152,10 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.Back -> {
                 setEffect { OrderListScreenContract.Effect.Outcome.Back }
+            }
+
+            is OrderListScreenContract.Event.Logout -> {
+                setEffect { OrderListScreenContract.Effect.Outcome.Logout }
             }
 
             is OrderListScreenContract.Event.CancelSelection -> {

@@ -97,10 +97,10 @@ fun OrderListScreen(
             MBoltAppBar(
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = { /* Handle menu */ }) {
+                    IconButton(onClick = { onEventSent(OrderListScreenContract.Event.Logout) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
-                            contentDescription = "Menu",
+                            contentDescription = "Logout",
                         )
                     }
                 },
@@ -131,6 +131,7 @@ fun OrderListScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(Dimens.Space.medium),
+                            placeholderText = "Search by Order #, Name, Phone",
                             onSearch = { query ->
                                 onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
                             },

@@ -24,6 +24,11 @@ class CollectAppNavigationViewModel :
     }
 
     private fun handleExternalCollectOutcome(externalOutcome: CollectExternalOutcome) {
-        // No app-level collect external outcomes for now
+        when (externalOutcome) {
+            is CollectExternalOutcome.Logout -> replaceTop(CollectAppDestination.LoginHost)
+            is CollectExternalOutcome.OpenScanner -> {
+                // TODO: Handle scanner if needed
+            }
+        }
     }
 }

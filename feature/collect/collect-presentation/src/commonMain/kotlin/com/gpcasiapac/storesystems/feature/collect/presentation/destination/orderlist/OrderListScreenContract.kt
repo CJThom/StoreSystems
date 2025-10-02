@@ -61,6 +61,7 @@ object OrderListScreenContract {
         // Navigation
         data class OpenOrder(val orderId: String) : Event
         data object Back : Event
+        data object Logout : Event
 
         // Errors
         data object ClearError : Event
@@ -111,6 +112,7 @@ object OrderListScreenContract {
             data class OrderSelected(val orderId: String) : Outcome
             data class OrdersSelected(val orderIds: List<String>) : Outcome
             data object Back : Outcome
+            data object Logout : Outcome
         }
     }
 }

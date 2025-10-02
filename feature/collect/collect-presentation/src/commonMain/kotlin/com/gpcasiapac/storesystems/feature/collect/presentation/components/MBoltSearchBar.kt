@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +27,8 @@ fun MBoltSearchBar(
     textFieldState: TextFieldState,
     onSearch: (String) -> Unit,
     searchResults: List<String>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    placeholderText: String = "Search..."
 ) {
     // Controls expansion state of the search bar
     var expanded by rememberSaveable { mutableStateOf(false) } // TODO: Remove this (replace with full screen)
@@ -36,7 +38,6 @@ fun MBoltSearchBar(
 
     ) {
         DockedSearchBar(
-
             inputField = {
                 SearchBarDefaults.InputField(
                     query = textFieldState.text.toString(),
@@ -47,10 +48,16 @@ fun MBoltSearchBar(
                     },
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search") }
+                    placeholder = { Text(placeholderText) },
+                    colors = SearchBarDefaults.inputFieldColors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
             },
             expanded = expanded,
+            colors = SearchBarDefaults.colors(),
             onExpandedChange = { expanded = it },
         ) {
 

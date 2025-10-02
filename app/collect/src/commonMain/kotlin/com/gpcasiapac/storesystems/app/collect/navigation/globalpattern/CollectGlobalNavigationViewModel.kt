@@ -50,6 +50,9 @@ class CollectGlobalNavigationViewModel :
             }
 
             is CollectOutcome.Back -> pop()
+            is CollectOutcome.Logout -> {
+                replaceTop(LoginFeatureDestination.Login)
+            }
             is CollectOutcome.SignatureRequested -> {
                 push(Signature)
             }
