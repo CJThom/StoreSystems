@@ -21,6 +21,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetO
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
@@ -44,7 +45,7 @@ class OrderListScreenViewModel(
             collectOrderStateList = emptyList(),
             filteredCollectOrderStateList = emptyList(),
             isLoading = true,
-            isRefreshing = false,
+            isRefreshing = true,
             searchText = "",
             isSearchActive = false,
             orderSearchSuggestionList = emptyList(),
@@ -79,6 +80,7 @@ class OrderListScreenViewModel(
         }
 
         viewModelScope.launch {
+            delay(3000)
             fetchOrderList(successToast = "Orders loaded")
         }
 
@@ -380,7 +382,7 @@ class OrderListScreenViewModel(
 
         setState {
             copy(
-                isLoading = true,
+                isRefreshing = true,
                 error = null
             )
         }
@@ -389,12 +391,12 @@ class OrderListScreenViewModel(
 
         result.fold(
             onSuccess = {
-                setState { copy(isLoading = false) }
+                setState { copy(isRefreshing = false) }
                 setEffect { OrderListScreenContract.Effect.ShowToast(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
-                setState { copy(isLoading = false, error = msg) }
+                setState { copy(isRefreshing = false, error = msg) }
                 setEffect { OrderListScreenContract.Effect.ShowError(msg) }
             }
         )

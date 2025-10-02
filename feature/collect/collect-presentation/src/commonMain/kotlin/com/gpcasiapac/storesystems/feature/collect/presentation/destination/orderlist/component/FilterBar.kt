@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyHeaderScrollBehavior
@@ -52,6 +53,7 @@ fun FilterBar(
     onToggleCustomerType: (type: CustomerType, checked: Boolean) -> Unit,
     onSelectAction: () -> Unit,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(horizontal = Dimens.Space.medium),
     scrollBehavior: StickyHeaderScrollBehavior? = null
 ) {
@@ -76,7 +78,7 @@ fun FilterBar(
                 onClick = {
                     // TODO: Handle filter action
                 },
-                modifier = Modifier.size(Dimens.Size.buttonSizeSmall),
+                modifier = Modifier.placeholder(isLoading).size(Dimens.Size.buttonSizeSmall),
                 border = MaterialTheme.borderStroke()  // TODO: Remove overrides when M3 updates colors
             ) {
                 Icon(
@@ -107,13 +109,24 @@ fun FilterBar(
                     val b2cSelected = CustomerType.B2C in customerTypeFilterList
 
                     FilterChip(
-                        label = { Text("B2B") },
+                        label = {
+                            Text(
+                                text = "B2B",
+                                modifier = Modifier.placeholder(isLoading)
+                            )
+                        },
                         selected = b2bSelected,
-                        onClick = { onToggleCustomerType(CustomerType.B2B, !b2bSelected) }
-                    )
+                        onClick = { onToggleCustomerType(CustomerType.B2B, !b2bSelected) },
+
+                        )
 
                     FilterChip(
-                        label = { Text("B2C") },
+                        label = {
+                            Text(
+                                text = "B2C",
+                                modifier = Modifier.placeholder(isLoading)
+                            )
+                        },
                         selected = b2cSelected,
                         onClick = { onToggleCustomerType(CustomerType.B2C, !b2cSelected) }
                     )
@@ -124,7 +137,9 @@ fun FilterBar(
                         // TODO: Handle sort action
                     },
                     shape = MaterialTheme.shapes.small,
-                    modifier = Modifier.size(Dimens.Size.buttonSizeSmall),
+                    modifier = Modifier
+                        .placeholder(isLoading)
+                        .size(Dimens.Size.buttonSizeSmall),
                     border = MaterialTheme.borderStroke()  // TODO: Remove overrides when M3 updates colors
                 ) {
                     Icon(
@@ -142,7 +157,7 @@ fun FilterBar(
             // Right side - SELECT button
             OutlinedButton(
                 onClick = onSelectAction,
-                modifier = Modifier.height(Dimens.Size.buttonSizeSmall),
+                modifier = Modifier.placeholder(isLoading).height(Dimens.Size.buttonSizeSmall),
                 contentPadding = PaddingValues(
                     horizontal = Dimens.Space.semiMedium,
                     vertical = 0.dp
@@ -183,3 +198,23 @@ private fun FilterBarNoPhonePreview() {
         }
     }
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+private fun FilterBarNoPhoneLoadingPreview() {
+    GPCTheme {
+        Surface {
+
+            FilterBar(
+                customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
+                isLoading = true,
+                onToggleCustomerType = { type, checked ->
+                },
+                onSelectAction = { /* Handle select */ }
+            )
+        }
+    }
+}
+

@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -23,6 +24,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun HeaderSection(
     ordersCount: Int,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
 
@@ -33,12 +35,14 @@ fun HeaderSection(
 
         Text(
             text = "Ready to collect", // TODO: Use String resource
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.placeholder(isLoading)
         )
 
         Row(
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall),
+            modifier = Modifier.placeholder(isLoading)
         ) {
             Text(
                 text = ordersCount.toString(),
@@ -60,6 +64,19 @@ fun HeaderSectionPreview() {
     GPCTheme {
         Surface(modifier = Modifier.padding(Dimens.Space.medium)) {
             HeaderSection(ordersCount = 6)
+        }
+    }
+}
+
+@Preview
+@Composable
+fun HeaderSectionLoadingPreview() {
+    GPCTheme {
+        Surface(modifier = Modifier.padding(Dimens.Space.medium)) {
+            HeaderSection(
+                ordersCount = 6,
+                isLoading = true
+            )
         }
     }
 }

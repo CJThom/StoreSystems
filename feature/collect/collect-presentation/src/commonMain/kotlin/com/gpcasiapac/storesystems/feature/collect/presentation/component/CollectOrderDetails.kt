@@ -32,6 +32,7 @@ fun CollectOrderDetails(
     webOrderNumber: String?,
     pickedAt: Instant,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     contendPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
 
@@ -43,7 +44,8 @@ fun CollectOrderDetails(
         CustomerName(
             customerName = customerName,
             customerType = customerType,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            isLoading = isLoading
         )
 
         Row(
@@ -54,6 +56,7 @@ fun CollectOrderDetails(
             DetailItemSmall(
                 value = invoiceNumber,
                 imageVector = Icons.Outlined.Receipt,
+                isLoading = isLoading,
                 modifier = Modifier
             )
 
@@ -61,6 +64,8 @@ fun CollectOrderDetails(
                 DetailItemSmall(
                     value = webOrderNumber,
                     imageVector = Icons.Outlined.Web, // TODO: Get globe icon
+                    isLoading = isLoading,
+                    modifier = Modifier
                 )
             }
 
@@ -69,7 +74,8 @@ fun CollectOrderDetails(
         DetailItemSmallChip(
             value = pickedAt.toTimeAgoString(),
             imageVector = Icons.Outlined.BackHand,
-            modifier = Modifier
+            modifier = Modifier,
+            isLoading = isLoading
         )
 
     }

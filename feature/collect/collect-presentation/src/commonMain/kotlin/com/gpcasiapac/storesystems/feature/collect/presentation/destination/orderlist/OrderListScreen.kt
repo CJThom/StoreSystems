@@ -178,13 +178,15 @@ fun OrderListScreen(
             item {
                 HeaderSection(
                     ordersCount = state.orderCount,
-                    modifier = Modifier
+                    modifier = Modifier,
+                    isLoading = state.isRefreshing
                 )
             }
             stickyHeader {
                 FilterBar(
                     customerTypeFilterList = state.customerTypeFilterList,
                     scrollBehavior = stickyHeaderScrollBehavior,
+                    isLoading = state.isRefreshing,
                     onToggleCustomerType = { type, checked ->
                         onEventSent(
                             OrderListScreenContract.Event.ToggleCustomerType(
@@ -228,6 +230,7 @@ fun OrderListScreen(
                         invoiceNumber = collectOrderState.invoiceNumber,
                         webOrderNumber = collectOrderState.webOrderNumber,
                         pickedAt = collectOrderState.pickedAt,
+                        isLoading = state.isRefreshing,
                         contendPadding = PaddingValues(
                             start = Dimens.Space.medium,
                             top = Dimens.Space.medium,

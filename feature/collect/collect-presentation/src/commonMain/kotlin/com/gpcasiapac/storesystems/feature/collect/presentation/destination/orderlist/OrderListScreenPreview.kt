@@ -22,8 +22,14 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 isSearchActive = false,
                 orderSearchSuggestionList = listOf(
                     OrderSearchSuggestion(text = "Jane", type = OrderSearchSuggestionType.NAME),
-                    OrderSearchSuggestion(text = "INV-100", type = OrderSearchSuggestionType.ORDER_NUMBER),
-                    OrderSearchSuggestion(text = "+6512345678", type = OrderSearchSuggestionType.PHONE),
+                    OrderSearchSuggestion(
+                        text = "INV-100",
+                        type = OrderSearchSuggestionType.ORDER_NUMBER
+                    ),
+                    OrderSearchSuggestion(
+                        text = "+6512345678",
+                        type = OrderSearchSuggestionType.PHONE
+                    ),
                 ),
                 customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
                 appliedFilterChipList = emptyList(),
@@ -48,7 +54,16 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 filteredCollectOrderStateList = orders.filter { it.customerType == CustomerType.B2C }
             )
 
-            val loading = base.copy(isLoading = true, collectOrderStateList = emptyList(), filteredCollectOrderStateList = emptyList())
+            val loading = base.copy(
+                isLoading = true,
+                collectOrderStateList = orders,
+                filteredCollectOrderStateList = emptyList()
+            )
+            val refreshing = base.copy(
+                isRefreshing = true,
+                collectOrderStateList = orders,
+                filteredCollectOrderStateList = emptyList()
+            )
             val error = base.copy(error = "Failed to load orders")
 
             val multiSelect = base.copy(
@@ -63,7 +78,15 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 isSelectAllChecked = true
             )
 
-            return sequenceOf(base, withFilters, multiSelect, multiSelectAll, loading, error)
+            return sequenceOf(
+                base,
+                withFilters,
+                multiSelect,
+                multiSelectAll,
+                loading,
+                refreshing,
+                error
+            )
         }
 }
 
