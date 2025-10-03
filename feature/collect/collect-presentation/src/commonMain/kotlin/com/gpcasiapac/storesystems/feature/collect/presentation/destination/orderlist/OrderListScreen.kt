@@ -106,6 +106,8 @@ fun OrderListScreen(
         }
     }
 
+
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = {
@@ -154,7 +156,7 @@ fun OrderListScreen(
                                 onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
                             },
                             onExpandedChange = { isExpanded ->
-                                onEventSent(OrderListScreenContract.Event.SearchActiveChanged(isExpanded))
+                                onEventSent(OrderListScreenContract.Event.SearchOnExpandedChange(isExpanded))
                             },
                             onBackPressed = {
                                 onEventSent(OrderListScreenContract.Event.SearchBarBackPressed)

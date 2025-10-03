@@ -108,8 +108,8 @@ class OrderListScreenViewModel(
                 handleSearchTextChanged(event.text)
             }
 
-            is OrderListScreenContract.Event.SearchActiveChanged -> {
-                handleSearchActiveChanged(event.active)
+            is OrderListScreenContract.Event.SearchOnExpandedChange -> {
+                handleSearchOnExpandedChange(event.expand)
             }
 
             is OrderListScreenContract.Event.ClearSearch -> {
@@ -117,7 +117,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SearchBarBackPressed -> {
-                handleSearchBarBackPressed()
+                setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
             }
 
             is OrderListScreenContract.Event.SearchResultClicked -> {
@@ -207,14 +207,6 @@ class OrderListScreenViewModel(
                 handleToggleSelectionMode(event.enabled)
             }
 
-
-            is OrderListScreenContract.Event.RequestCollapseSearchBar -> {
-                setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
-            }
-
-            is OrderListScreenContract.Event.RequestExpandSearchBar -> {
-                setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
-            }
         }
     }
 
@@ -228,18 +220,12 @@ class OrderListScreenViewModel(
         }
     }
 
-    private fun handleSearchActiveChanged(active: Boolean) {
-        if (active) {
+    private fun handleSearchOnExpandedChange(expand: Boolean) {
+        if (expand) {
             setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
         } else {
             setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
         }
-//        setState {
-//            copy(
-//                isSearchActive = active,
-//                orderSearchSuggestionList = if (active) orderSearchSuggestionList else emptyList()
-//            )
-//        }
     }
 
     private fun handleClearSearch() {
@@ -249,16 +235,6 @@ class OrderListScreenViewModel(
                 orderSearchSuggestionList = emptyList()
             )
         }
-    }
-
-    private fun handleSearchBarBackPressed() {
-        setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
-//        setState {
-//            copy(
-//                isSearchActive = false,
-//                orderSearchSuggestionList = emptyList()
-//            )
-//        }
     }
 
     private fun handleSearchSuggestionClicked(suggestion: String) {

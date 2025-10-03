@@ -68,15 +68,12 @@ object OrderListScreenContract {
 
         // Search & suggestions
         data class SearchTextChanged(val text: String) : Event
-        data class SearchActiveChanged(val active: Boolean) : Event
+        data class SearchOnExpandedChange(val expand: Boolean) : Event
         data object ClearSearch : Event
         data object SearchBarBackPressed : Event
         data class SearchResultClicked(val result: String) : Event
         data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
-        
-        // Search bar animation requests
-        data object RequestExpandSearchBar : Event
-        data object RequestCollapseSearchBar : Event
+
 
         // Filters & sort
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event

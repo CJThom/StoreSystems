@@ -1,7 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +21,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,10 +48,11 @@ fun MBoltSearchBar(
     placeholderText: String = "Search..."
 ) {
 
+    // TODO: Somehow sync this with the onExpandedChange of the SearchBarInputField
     // Monitor expansion state changes and notify parent
-//    LaunchedEffect(searchBarState.currentValue) {
-//        onExpandedChange(searchBarState.currentValue == SearchBarValue.Expanded)
-//    }
+    LaunchedEffect(searchBarState.currentValue) {
+        onExpandedChange(searchBarState.currentValue == SearchBarValue.Expanded)
+    }
 
     Box(modifier = modifier) {
         // Collapsed search bar (lives in TopBar)
@@ -162,16 +162,11 @@ private fun SearchBarInputField(
             )
         },
         leadingIcon = {
-            Crossfade(targetState = isExpanded, label = "leading-icon") { _expanded ->
-                if (!_expanded) {
-                    IconButton(onClick = {}, enabled = false) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
+            AnimatedContent(
+                targetState = isExpanded,
+                label = "leading-icon",
+            ) { value ->
+                if (value) {
                     IconButton(onClick = onBackPressed) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -179,6 +174,13 @@ private fun SearchBarInputField(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    )
                 }
             }
         },
@@ -249,4 +251,3 @@ fun MBoltSearchBarExpandedPreview() {
         )
     }
 }
-
