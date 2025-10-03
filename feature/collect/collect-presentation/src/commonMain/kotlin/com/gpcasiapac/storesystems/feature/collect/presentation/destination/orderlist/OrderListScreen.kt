@@ -2,6 +2,8 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.PaddingValues
@@ -70,9 +72,17 @@ fun OrderListScreen(
         stickyHeaderIndex = 1
     )
     
-    // Search bar state management
+    // Search bar state management with custom smooth animations
     val searchBarState = rememberSearchBarState(
-        initialValue = if (state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed
+        initialValue = if (state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed,
+        animationSpecForExpand = tween(
+            durationMillis = 400,
+            easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f) // EmphasizedDecelerate for smooth expansion
+        ),
+        animationSpecForCollapse = tween(
+            durationMillis = 500,
+            easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f) // EmphasizedAccelerate for smooth collapse
+        )
     )
     val textFieldState = rememberTextFieldState(initialText = state.searchText)
     
