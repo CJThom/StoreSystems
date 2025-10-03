@@ -24,6 +24,8 @@ class TabsHostViewModel : MVIViewModel<TabsHostContract.Event, TabsHostContract.
                 // Example: you could set an effect to trigger a scanner, or route to a Scanner host
                 // setEffect { TabsHostEffect.OpenScanner }
             }
+
+            CollectExternalOutcome.Logout -> TODO()
         }
     }
 }

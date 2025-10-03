@@ -163,9 +163,10 @@ fun OrderListScreen(
                             },
                             searchResults = state.orderSearchSuggestionList.map { it.text },
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Dimens.Space.medium),
-                            placeholderText = "Search by Order #, Name, Phone"
+                                .fillMaxWidth(),
+                            //  .padding(Dimens.Space.medium),
+                            placeholderText = "Search by Order #, Name, Phone",
+                            contentPadding = PaddingValues(Dimens.Space.medium)
                         )
 
                     }

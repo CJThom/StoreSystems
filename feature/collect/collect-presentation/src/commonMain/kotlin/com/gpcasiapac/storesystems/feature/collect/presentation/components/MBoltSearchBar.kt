@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
@@ -10,6 +11,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,16 +20,15 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -36,14 +37,15 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun MBoltSearchBar(
     textFieldState: TextFieldState,
-    searchBarState: androidx.compose.material3.SearchBarState,
+    searchBarState: SearchBarState,
     onSearch: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     onResultClick: (String) -> Unit,
     onClearClick: () -> Unit,
     searchResults: List<String>,
     modifier: Modifier = Modifier,
-    placeholderText: String = "Search..."
+    placeholderText: String = "Search...",
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val scope = rememberCoroutineScope()
 
@@ -67,16 +69,21 @@ fun MBoltSearchBar(
                         scope.launch { searchBarState.animateToCollapsed() }
                     },
                     onClearClick = onClearClick,
+                    isExpanded = false
                 )
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(contentPadding)
         )
 
         // Expanded full-screen search bar with results
         ExpandedFullScreenSearchBar(
+            modifier = modifier,
             state = searchBarState,
             inputField = {
                 SearchBarInputField(
+                   modifier = Modifier.padding(horizontal = Dimens.Space.medium),
                     textFieldState = textFieldState,
                     searchBarState = searchBarState,
                     placeholderText = placeholderText,
@@ -84,7 +91,8 @@ fun MBoltSearchBar(
                         onSearch(query)
                         scope.launch { searchBarState.animateToCollapsed() }
                     },
-                    onClearClick = onClearClick
+                    onClearClick = onClearClick,
+                    isExpanded = true
                 )
             }
         ) {
@@ -101,7 +109,7 @@ fun MBoltSearchBar(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp)
+                        .padding(Dimens.Space.medium)
                 )
             } else {
                 searchResults.forEach { result ->
@@ -112,6 +120,10 @@ fun MBoltSearchBar(
                                 onResultClick(result)
                             }
                             .fillMaxWidth()
+                            .padding(
+                                horizontal = Dimens.Space.medium,
+                                vertical = Dimens.Space.extraSmall
+                            )
                     )
                 }
             }
@@ -126,46 +138,88 @@ fun MBoltSearchBar(
 @Composable
 private fun SearchBarInputField(
     textFieldState: TextFieldState,
-    searchBarState: androidx.compose.material3.SearchBarState,
+    searchBarState: SearchBarState,
     placeholderText: String,
     onSearch: (String) -> Unit,
-    onClearClick: () -> Unit
+    onClearClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isExpanded: Boolean = false,
 ) {
-    SearchBarDefaults.InputField(
-        textFieldState = textFieldState,
-        searchBarState = searchBarState,
-        shape = MaterialTheme.shapes.small,
-        onSearch = onSearch,
-        placeholder = { Text(placeholderText) },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+    val scope = rememberCoroutineScope()
+
+    if (!isExpanded) {
+        // Collapsed: use the real SearchBar InputField so it expands naturally on focus/click
+        SearchBarDefaults.InputField(
+            modifier = modifier,
+            textFieldState = textFieldState,
+            searchBarState = searchBarState,
+            shape = MaterialTheme.shapes.small,
+            onSearch = onSearch,
+            placeholder = {
+                Text(placeholderText)
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            colors = SearchBarDefaults.inputFieldColors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface
             )
-        },
-        trailingIcon = {
-            if (textFieldState.text.isNotEmpty()) {
+        )
+    } else {
+        // Expanded: full input with back and optional clear
+        SearchBarDefaults.InputField(
+            modifier = modifier,
+            textFieldState = textFieldState,
+            searchBarState = searchBarState,
+            shape = MaterialTheme.shapes.small,
+            onSearch = onSearch,
+            placeholder = {
+                Text(
+                    placeholderText
+                )
+            },
+            leadingIcon = {
                 IconButton(
-                    onClick = { 
-                        textFieldState.clearText()
-                        onClearClick()
+                    onClick = {
+                        scope.launch { searchBarState.animateToCollapsed() }
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear search",
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        },
-        colors = SearchBarDefaults.inputFieldColors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            disabledContainerColor = MaterialTheme.colorScheme.surface
+            },
+            trailingIcon = {
+                if (textFieldState.text.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            textFieldState.clearText()
+                            onClearClick()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            colors = SearchBarDefaults.inputFieldColors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface
+            )
         )
-    )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
