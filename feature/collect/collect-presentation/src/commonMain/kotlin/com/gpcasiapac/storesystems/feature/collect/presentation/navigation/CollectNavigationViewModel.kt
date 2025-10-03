@@ -1,13 +1,18 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.navigation
 
+import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
+
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
 class CollectNavigationViewModel :
-    BaseNavViewModel<CollectNavigationContract.Event, CollectFeatureDestination>() {
+    BaseNavViewModel<CollectNavigationContract.Event, CollectFeatureDestination, CollectNavigationContract.State>() {
 
     override fun provideStartKey(): CollectFeatureDestination = CollectFeatureDestination.Orders
+    
+    override fun createStateWithStack(stack: List<NavKey>): CollectNavigationContract.State = 
+        CollectNavigationContract.State(stack = stack)
 
     override fun handleEvents(event: CollectNavigationContract.Event) {
         when (event) {
@@ -22,7 +27,10 @@ class CollectNavigationViewModel :
             is CollectOutcome.OrderSelected -> push(CollectFeatureDestination.OrderDetails(outcome.orderId))
             is CollectOutcome.Back -> pop()
             is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature)
-            is CollectOutcome.SignatureSaved -> pop()
+            is CollectOutcome.SignatureSaved -> {
+                outcome.strokes
+                pop()
+            }
         }
     }
 }

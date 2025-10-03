@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.app.collect.navigation.globalpattern
 
 import androidx.navigation3.runtime.NavKey
+import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
@@ -14,9 +15,12 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
  * intended to be the main choice going forward.
  */
 class CollectGlobalNavigationViewModel :
-    BaseNavViewModel<CollectGlobalNavContract.Event, NavKey>() {
+    BaseNavViewModel<CollectGlobalNavContract.Event, NavKey, CollectAppNavContract.State>() {
 
     override fun provideStartKey(): NavKey = LoginFeatureDestination.Login
+    
+    override fun createStateWithStack(stack: List<NavKey>): CollectAppNavContract.State =
+        CollectAppNavContract.State(stack = stack)
 
     override fun handleEvents(event: CollectGlobalNavContract.Event) {
         when (event) {
@@ -36,6 +40,7 @@ class CollectGlobalNavigationViewModel :
             }
 
             is LoginOutcome.LoginCompleted -> {
+                // Navigate to orders after successful login
                 replaceTop(CollectFeatureDestination.Orders)
             }
 
@@ -50,11 +55,14 @@ class CollectGlobalNavigationViewModel :
             }
 
             is CollectOutcome.Back -> pop()
+            
             is CollectOutcome.SignatureRequested -> {
                 push(Signature)
             }
 
-            is CollectOutcome.SignatureSaved -> pop()
+            is CollectOutcome.SignatureSaved -> {
+                pop()
+            }
         }
     }
 }

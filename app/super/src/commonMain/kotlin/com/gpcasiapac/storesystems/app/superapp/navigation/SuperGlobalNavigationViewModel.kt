@@ -110,8 +110,8 @@ class SuperGlobalNavigationViewModel :
             )
 
             is CollectOutcome.Back -> popBackInTab(Collect(), 1)
-            CollectOutcome.SignatureRequested -> TODO()
-            is CollectOutcome.SignatureSaved -> TODO()
+            CollectOutcome.SignatureRequested -> pushInTab(Collect(), Signature)
+            is CollectOutcome.SignatureSaved -> popBackInTab(Collect(), 1)
         }
     }
 

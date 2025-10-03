@@ -1,13 +1,17 @@
 package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
 
+import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 
 class CollectAppNavigationViewModel :
-    BaseNavViewModel<CollectAppNavContract.Event, CollectAppDestination>() {
+    BaseNavViewModel<CollectAppNavContract.Event, CollectAppDestination, CollectAppNavContract.State>() {
 
     override fun provideStartKey(): CollectAppDestination = CollectAppDestination.LoginHost
+
+    override fun createStateWithStack(stack: List<NavKey>): CollectAppNavContract.State =
+        CollectAppNavContract.State(stack = stack)
 
     override fun handleEvents(event: CollectAppNavContract.Event) {
         when (event) {

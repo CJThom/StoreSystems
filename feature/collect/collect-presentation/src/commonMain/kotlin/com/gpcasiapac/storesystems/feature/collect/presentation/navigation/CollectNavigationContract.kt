@@ -1,7 +1,9 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.navigation
 
+import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
+import com.gpcasiapac.storesystems.common.presentation.navigation.ViewStateWithNavigation
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
@@ -17,4 +19,10 @@ object CollectNavigationContract {
     sealed interface Effect : ViewSideEffect {
         data class ExternalOutcome(val externalOutcome: CollectExternalOutcome) : Effect
     }
+
+    /**
+     * Collect feature navigation state.
+     * Currently only contains the navigation stack but can be extended with collect-specific state later.
+     */
+    data class State(override val stack: List<NavKey>) : ViewStateWithNavigation
 }
