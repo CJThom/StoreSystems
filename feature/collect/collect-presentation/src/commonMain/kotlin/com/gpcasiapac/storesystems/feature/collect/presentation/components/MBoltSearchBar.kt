@@ -1,17 +1,16 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,78 +25,83 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MBoltSearchBar(
-    textFieldState: TextFieldState,
+    query: String,
+    onQueryChange: (String) -> Unit,
     searchBarState: SearchBarState,
     onSearch: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
+    onBackPressed: () -> Unit,
     onResultClick: (String) -> Unit,
     onClearClick: () -> Unit,
     searchResults: List<String>,
     modifier: Modifier = Modifier,
-    placeholderText: String = "Search...",
-    contentPadding: PaddingValues = PaddingValues()
+    placeholderText: String = "Search..."
 ) {
-    val scope = rememberCoroutineScope()
 
-    // Monitor expansion state changes
-    LaunchedEffect(searchBarState.currentValue) {
-        onExpandedChange(searchBarState.currentValue == SearchBarValue.Expanded)
-    }
+    // Monitor expansion state changes and notify parent
+//    LaunchedEffect(searchBarState.currentValue) {
+//        onExpandedChange(searchBarState.currentValue == SearchBarValue.Expanded)
+//    }
 
     Box(modifier = modifier) {
-        // Collapsed search bar
+        // Collapsed search bar (lives in TopBar)
         SearchBar(
+            modifier = Modifier.padding(Dimens.Space.medium),
             state = searchBarState,
             shape = MaterialTheme.shapes.small,
             inputField = {
                 SearchBarInputField(
-                    textFieldState = textFieldState,
-                    searchBarState = searchBarState,
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                    onExpandedChange = onExpandedChange,
                     placeholderText = placeholderText,
-                    onSearch = { query ->
-                        onSearch(query)
-                        scope.launch { searchBarState.animateToCollapsed() }
-                    },
-                    onClearClick = onClearClick,
-                    isExpanded = false
+                    onSearch = onSearch,
+                    onBackPressed = onBackPressed,
+                    onClearClick = onClearClick
                 )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(contentPadding)
+            }
         )
 
-        // Expanded full-screen search bar with results
+        // Expanded full-screen search bar (opens in new window)
         ExpandedFullScreenSearchBar(
-            modifier = modifier,
+            modifier = Modifier,
             state = searchBarState,
+            collapsedShape = MaterialTheme.shapes.small,
+            colors = SearchBarDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                inputFieldColors = SearchBarDefaults.inputFieldColors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            ),
             inputField = {
                 SearchBarInputField(
-                   modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                    textFieldState = textFieldState,
-                    searchBarState = searchBarState,
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                    onExpandedChange = onExpandedChange,
                     placeholderText = placeholderText,
-                    onSearch = { query ->
-                        onSearch(query)
-                        scope.launch { searchBarState.animateToCollapsed() }
-                    },
+                    onSearch = onSearch,
+                    onBackPressed = onBackPressed,
                     onClearClick = onClearClick,
-                    isExpanded = true
                 )
             }
         ) {
             // Search results content
-            if (searchResults.isEmpty() && textFieldState.text.isNotEmpty()) {
+            if (searchResults.isEmpty() && query.isNotEmpty()) {
                 // Empty state
                 ListItem(
                     headlineContent = { 
@@ -116,9 +120,7 @@ fun MBoltSearchBar(
                     ListItem(
                         headlineContent = { Text(result) },
                         modifier = Modifier
-                            .clickable {
-                                onResultClick(result)
-                            }
+                            .clickable { onResultClick(result) }
                             .fillMaxWidth()
                             .padding(
                                 horizontal = Dimens.Space.medium,
@@ -131,95 +133,72 @@ fun MBoltSearchBar(
     }
 }
 
-/**
- * Extracted input field composable to avoid duplication
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchBarInputField(
-    textFieldState: TextFieldState,
-    searchBarState: SearchBarState,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     placeholderText: String,
     onSearch: (String) -> Unit,
+    onBackPressed: () -> Unit,
     onClearClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isExpanded: Boolean = false,
 ) {
-    val scope = rememberCoroutineScope()
-
-    if (!isExpanded) {
-        // Collapsed: use the real SearchBar InputField so it expands naturally on focus/click
-        SearchBarDefaults.InputField(
-            modifier = modifier,
-            textFieldState = textFieldState,
-            searchBarState = searchBarState,
-            shape = MaterialTheme.shapes.small,
-            onSearch = onSearch,
-            placeholder = {
-                Text(placeholderText)
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            colors = SearchBarDefaults.inputFieldColors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                disabledContainerColor = MaterialTheme.colorScheme.surface
+    SearchBarDefaults.InputField(
+        query = query,
+        onQueryChange = onQueryChange,
+        onSearch = onSearch,
+        expanded = isExpanded,
+        onExpandedChange = onExpandedChange,
+        modifier = modifier.background(MaterialTheme.colorScheme.surface),
+        placeholder = {
+            Text(
+                text = placeholderText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-        )
-    } else {
-        // Expanded: full input with back and optional clear
-        SearchBarDefaults.InputField(
-            modifier = modifier,
-            textFieldState = textFieldState,
-            searchBarState = searchBarState,
-            shape = MaterialTheme.shapes.small,
-            onSearch = onSearch,
-            placeholder = {
-                Text(
-                    placeholderText
-                )
-            },
-            leadingIcon = {
-                IconButton(
-                    onClick = {
-                        scope.launch { searchBarState.animateToCollapsed() }
+        },
+        leadingIcon = {
+            Crossfade(targetState = isExpanded, label = "leading-icon") { _expanded ->
+                if (!_expanded) {
+                    IconButton(onClick = {}, enabled = false) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                } else {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-            },
-            trailingIcon = {
-                if (textFieldState.text.isNotEmpty()) {
-                    IconButton(
-                        onClick = {
-                            textFieldState.clearText()
-                            onClearClick()
-                        }
-                    ) {
+            }
+        },
+        trailingIcon = if (!isExpanded || query.isEmpty()) null else {
+            {
+                IconButton(onClick = onClearClick) {
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Clear search",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-            },
-            colors = SearchBarDefaults.inputFieldColors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                disabledContainerColor = MaterialTheme.colorScheme.surface
-            )
+            }
+        },
+        colors = SearchBarDefaults.inputFieldColors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            disabledContainerColor = MaterialTheme.colorScheme.surface
         )
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -228,10 +207,12 @@ private fun SearchBarInputField(
 fun MBoltSearchBarCollapsedPreview() {
     GPCTheme {
         MBoltSearchBar(
-            textFieldState = rememberTextFieldState(),
+            query = "",
+            onQueryChange = {},
             searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed),
             onSearch = {},
             onExpandedChange = {},
+            onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
             searchResults = listOf(
@@ -250,10 +231,12 @@ fun MBoltSearchBarCollapsedPreview() {
 fun MBoltSearchBarExpandedPreview() {
     GPCTheme {
         MBoltSearchBar(
-            textFieldState = rememberTextFieldState(initialText = "John"),
+            query = "John",
+            onQueryChange = {},
             searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
             onSearch = {},
             onExpandedChange = {},
+            onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
             searchResults = listOf(

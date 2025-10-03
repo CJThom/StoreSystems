@@ -70,8 +70,13 @@ object OrderListScreenContract {
         data class SearchTextChanged(val text: String) : Event
         data class SearchActiveChanged(val active: Boolean) : Event
         data object ClearSearch : Event
+        data object SearchBarBackPressed : Event
         data class SearchResultClicked(val result: String) : Event
         data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
+        
+        // Search bar animation requests
+        data object RequestExpandSearchBar : Event
+        data object RequestCollapseSearchBar : Event
 
         // Filters & sort
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event
@@ -108,6 +113,10 @@ object OrderListScreenContract {
         data class Haptic(val type: HapticType) : Effect
         data class OpenDialer(val phoneNumber: String) : Effect
         data class CopyToClipboard(val label: String, val text: String) : Effect
+        
+        // Search bar animations
+        data object ExpandSearchBar : Effect
+        data object CollapseSearchBar : Effect
 
         sealed interface Outcome : Effect {
             data class OrderSelected(val orderId: String) : Outcome

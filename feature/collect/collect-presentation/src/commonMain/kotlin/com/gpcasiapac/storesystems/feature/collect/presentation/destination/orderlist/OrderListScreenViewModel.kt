@@ -1,12 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 import androidx.lifecycle.viewModelScope
-import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
@@ -18,6 +16,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.Clea
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderSelected
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
@@ -115,6 +116,10 @@ class OrderListScreenViewModel(
                 handleClearSearch()
             }
 
+            is OrderListScreenContract.Event.SearchBarBackPressed -> {
+                handleSearchBarBackPressed()
+            }
+
             is OrderListScreenContract.Event.SearchResultClicked -> {
                 handleSearchResultClicked(event.result)
             }
@@ -126,7 +131,7 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.OpenOrder -> {
                 viewModelScope.launch {
                     setOrderSelectionUseCase(listOf(event.orderId))
-                    setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+                    setEffect { OrderSelected(event.orderId) }
                 }
             }
 
@@ -155,11 +160,11 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.Back -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.Back }
+                setEffect { Back }
             }
 
             is OrderListScreenContract.Event.Logout -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.Logout }
+                setEffect { Logout }
             }
 
             is OrderListScreenContract.Event.CancelSelection -> {
@@ -191,7 +196,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SubmitOrder -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+                setEffect { OrderSelected(event.orderId) }
             }
 
             is OrderListScreenContract.Event.SubmitSelectedOrders -> {
@@ -200,6 +205,15 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.ToggleSelectionMode -> {
                 handleToggleSelectionMode(event.enabled)
+            }
+
+
+            is OrderListScreenContract.Event.RequestCollapseSearchBar -> {
+                setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
+            }
+
+            is OrderListScreenContract.Event.RequestExpandSearchBar -> {
+                setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
             }
         }
     }
@@ -215,12 +229,17 @@ class OrderListScreenViewModel(
     }
 
     private fun handleSearchActiveChanged(active: Boolean) {
-        setState {
-            copy(
-                isSearchActive = active,
-                orderSearchSuggestionList = if (active) orderSearchSuggestionList else emptyList()
-            )
+        if (active) {
+            setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
+        } else {
+            setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
         }
+//        setState {
+//            copy(
+//                isSearchActive = active,
+//                orderSearchSuggestionList = if (active) orderSearchSuggestionList else emptyList()
+//            )
+//        }
     }
 
     private fun handleClearSearch() {
@@ -230,6 +249,16 @@ class OrderListScreenViewModel(
                 orderSearchSuggestionList = emptyList()
             )
         }
+    }
+
+    private fun handleSearchBarBackPressed() {
+        setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
+//        setState {
+//            copy(
+//                isSearchActive = false,
+//                orderSearchSuggestionList = emptyList()
+//            )
+//        }
     }
 
     private fun handleSearchSuggestionClicked(suggestion: String) {

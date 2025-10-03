@@ -2,8 +2,6 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,7 +12,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
@@ -35,7 +32,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -53,6 +50,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 
@@ -71,30 +69,10 @@ fun OrderListScreen(
         lazyGridState = lazyGridState,
         stickyHeaderIndex = 1
     )
-    
-    // Search bar state management with custom smooth animations
-    val searchBarState = rememberSearchBarState(
-        initialValue = if (state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed,
-        animationSpecForExpand = tween(
-            durationMillis = 400,
-            easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f) // EmphasizedDecelerate for smooth expansion
-        ),
-        animationSpecForCollapse = tween(
-            durationMillis = 500,
-            easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f) // EmphasizedAccelerate for smooth collapse
-        )
-    )
-    val textFieldState = rememberTextFieldState(initialText = state.searchText)
-    
-    // Monitor text changes and trigger search
-    LaunchedEffect(textFieldState) {
-        snapshotFlow { textFieldState.text.toString() }
-            .collect { query ->
-                if (query != state.searchText) {
-                    onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
-                }
-            }
-    }
+    val scope = rememberCoroutineScope()
+
+    // Search bar state management
+    val searchBarState = rememberSearchBarState(initialValue =if(state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -113,6 +91,17 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.Haptic -> TODO()
                 is OrderListScreenContract.Effect.OpenDialer -> TODO()
                 is OrderListScreenContract.Effect.ShowSnackbar -> TODO()
+                is OrderListScreenContract.Effect.CollapseSearchBar -> {
+                    scope.launch {
+                        searchBarState.animateToCollapsed()
+                    }
+                }
+
+                is OrderListScreenContract.Effect.ExpandSearchBar -> {
+                    scope.launch {
+                        searchBarState.animateToExpanded()
+                    }
+                }
             }
         }
     }
@@ -156,14 +145,19 @@ fun OrderListScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MBoltSearchBar(
-                            textFieldState = textFieldState,
+                            query = state.searchText,
+                            onQueryChange = { query ->
+                                onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
+                            },
                             searchBarState = searchBarState,
                             onSearch = { query ->
-                                // Triggered when user presses enter/search button
                                 onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
                             },
                             onExpandedChange = { isExpanded ->
                                 onEventSent(OrderListScreenContract.Event.SearchActiveChanged(isExpanded))
+                            },
+                            onBackPressed = {
+                                onEventSent(OrderListScreenContract.Event.SearchBarBackPressed)
                             },
                             onResultClick = { result ->
                                 onEventSent(OrderListScreenContract.Event.SearchResultClicked(result))
@@ -172,13 +166,9 @@ fun OrderListScreen(
                                 onEventSent(OrderListScreenContract.Event.ClearSearch)
                             },
                             searchResults = state.orderSearchSuggestionList.map { it.text },
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            //  .padding(Dimens.Space.medium),
-                            placeholderText = "Search by Order #, Name, Phone",
-                            contentPadding = PaddingValues(Dimens.Space.medium)
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholderText = "Search by Order #, Name, Phone"
                         )
-
                     }
                 }
             )
