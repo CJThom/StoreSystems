@@ -9,7 +9,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
@@ -38,6 +37,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
     ) {
         val collectNavigationViewModel: CollectNavigationViewModel = koinViewModel()
         val collectEntry: CollectFeatureEntry = koinInject()
+        val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
 
         val state by collectNavigationViewModel.viewState.collectAsState()
 
@@ -50,7 +50,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
         }
 
         NavDisplay(
-            sceneStrategy = rememberListDetailSceneStrategy(),
+            sceneStrategy = sceneStrategy,
             backStack = state.stack,
             onBack = { count ->
                 collectNavigationViewModel.setEvent(
@@ -81,7 +81,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
         onOutcome: (CollectOutcome) -> Unit,
     ) {
         builder.apply {
-            entry<CollectFeatureDestination.Orders>(metadata = ListDetailSceneStrategy.listPane(), key = CollectFeatureDestination.Orders) {
+            entry<CollectFeatureDestination.Orders>(metadata = ListDetailSceneStrategy.listPane()) {
                 OrderListScreenDestination { outcome ->
                     when (outcome) {
                         is OrderListScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
@@ -111,7 +111,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                 }
             }
 
-            entry<CollectFeatureDestination.Signature>(key = CollectFeatureDestination.Signature,metadata = ListDetailSceneStrategy.extraPane()) {
+            entry<CollectFeatureDestination.Signature>(metadata = ListDetailSceneStrategy.extraPane()) {
                 SignatureScreenDestination { outcome ->
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)

@@ -1,16 +1,18 @@
 package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
 
-import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
-import com.gpcasiapac.storesystems.common.presentation.navigation.RootNavState
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 
-class SuperAppShellViewModel : BaseNavViewModel<SuperAppShellContract.Event, SuperAppDestination, RootNavState>() {
+class SuperAppShellViewModel :
+    BaseNavViewModel<SuperAppShellContract.Event,SuperAppShellContract.State, SuperAppDestination>() {
 
-    override fun provideStartKey(): SuperAppDestination = SuperAppDestination.LoginHost
-    
-    override fun createStateWithStack(stack: List<NavKey>): RootNavState = 
-        RootNavState(stack = stack)
+    override fun setInitialState(): SuperAppShellContract.State {
+        return SuperAppShellContract.State(stack = listOf(SuperAppDestination.LoginHost))
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: SuperAppShellContract.Event) {
         when (event) {

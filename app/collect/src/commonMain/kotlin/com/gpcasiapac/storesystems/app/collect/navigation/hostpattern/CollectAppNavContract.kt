@@ -10,7 +10,11 @@ object CollectAppNavContract {
 
     data class State(
         override val stack: List<NavKey>
-    ) : ViewStateWithNavigation
+    ) : ViewStateWithNavigation<State> {
+        override fun copyWithStack(stack: List<NavKey>): State {
+            return copy(stack = stack)
+        }
+    }
 
     sealed interface Event : ViewEvent {
         data class FromLogin(val outcome: LoginExternalOutcome) : Event

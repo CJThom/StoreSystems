@@ -4,7 +4,8 @@ import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
-import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.OrderDetails
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.Signature
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -15,12 +16,15 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
  * intended to be the main choice going forward.
  */
 class CollectGlobalNavigationViewModel :
-    BaseNavViewModel<CollectGlobalNavContract.Event, NavKey, CollectAppNavContract.State>() {
+    BaseNavViewModel<CollectGlobalNavContract.Event,CollectAppNavContract.State, NavKey>() {
 
-    override fun provideStartKey(): NavKey = LoginFeatureDestination.Login
+    override fun setInitialState(): CollectAppNavContract.State {
+        return CollectAppNavContract.State(stack = listOf(LoginFeatureDestination.Login))
+    }
 
-    override fun createStateWithStack(stack: List<NavKey>): CollectAppNavContract.State =
-        CollectAppNavContract.State(stack = stack)
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: CollectGlobalNavContract.Event) {
         when (event) {

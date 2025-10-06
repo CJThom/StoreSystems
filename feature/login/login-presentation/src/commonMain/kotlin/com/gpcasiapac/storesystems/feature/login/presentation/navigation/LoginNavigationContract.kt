@@ -24,5 +24,9 @@ object LoginNavigationContract {
      * Login feature navigation state.
      * Currently only contains the navigation stack but can be extended with login-specific state later.
      */
-    data class State(override val stack: List<NavKey>) : ViewStateWithNavigation
+    data class State(override val stack: List<NavKey>) : ViewStateWithNavigation<State> {
+        override fun copyWithStack(stack: List<NavKey>): State {
+            return copy(stack = stack)
+        }
+    }
 }

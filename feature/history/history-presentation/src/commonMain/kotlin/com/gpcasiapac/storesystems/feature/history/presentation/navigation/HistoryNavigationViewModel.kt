@@ -1,18 +1,19 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.navigation
 
-import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
-
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.feature.history.api.HistoryOutcome
 
 class HistoryNavigationViewModel :
-    BaseNavViewModel<HistoryNavigationContract.Event, HistoryFeatureDestination, HistoryNavigationContract.State>() {
+    BaseNavViewModel<HistoryNavigationContract.Event,HistoryNavigationContract.State, HistoryFeatureDestination>() {
 
-    override fun provideStartKey(): HistoryFeatureDestination = HistoryFeatureDestination.History
-    
-    override fun createStateWithStack(stack: List<NavKey>): HistoryNavigationContract.State = 
-        HistoryNavigationContract.State(stack = stack)
+    override fun setInitialState(): HistoryNavigationContract.State {
+        return HistoryNavigationContract.State(listOf(HistoryFeatureDestination.History))
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: HistoryNavigationContract.Event) {
         when (event) {
