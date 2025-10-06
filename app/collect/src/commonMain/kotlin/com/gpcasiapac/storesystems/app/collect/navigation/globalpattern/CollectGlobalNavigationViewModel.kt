@@ -18,7 +18,7 @@ class CollectGlobalNavigationViewModel :
     BaseNavViewModel<CollectGlobalNavContract.Event, NavKey, CollectAppNavContract.State>() {
 
     override fun provideStartKey(): NavKey = LoginFeatureDestination.Login
-    
+
     override fun createStateWithStack(stack: List<NavKey>): CollectAppNavContract.State =
         CollectAppNavContract.State(stack = stack)
 
@@ -40,7 +40,6 @@ class CollectGlobalNavigationViewModel :
             }
 
             is LoginOutcome.LoginCompleted -> {
-                // Navigate to orders after successful login
                 replaceTop(CollectFeatureDestination.Orders)
             }
 
@@ -55,14 +54,14 @@ class CollectGlobalNavigationViewModel :
             }
 
             is CollectOutcome.Back -> pop()
-            
+            is CollectOutcome.Logout -> {
+                replaceTop(LoginFeatureDestination.Login)
+            }
             is CollectOutcome.SignatureRequested -> {
                 push(Signature)
             }
 
-            is CollectOutcome.SignatureSaved -> {
-                pop()
-            }
+            is CollectOutcome.SignatureSaved -> pop()
         }
     }
 }

@@ -6,10 +6,10 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 
 
@@ -17,8 +17,8 @@ object OrderListScreenContract {
     @Immutable
     data class State(
         // Data
-        val orderList: List<Order>,                                   // full dataset observed
-        val filteredOrderList: List<Order>,                           // single list rendered (optional if DB-side)
+        val collectOrderStateList: List<CollectOrderState>,                                   // full dataset observed
+        val filteredCollectOrderStateList: List<CollectOrderState>,                           // single list rendered (optional if DB-side)
 
         // Loading / refreshing
         val isLoading: Boolean,
@@ -45,10 +45,10 @@ object OrderListScreenContract {
 
         // Submission / transient UI
         val isSubmitting: Boolean,                                          // e.g., "Submitting order..." snackbar
-        val submittedOrder: Order?,
+        val submittedCollectOrder: CollectOrderState?,
 
         // Suggestions from old shape (kept for compatibility if used elsewhere)
-        val searchHintResultList: List<Order>,
+        val searchHintResultList: List<CollectOrderState>,
 
         // Error
         val error: String?,
@@ -61,15 +61,19 @@ object OrderListScreenContract {
         // Navigation
         data class OpenOrder(val orderId: String) : Event
         data object Back : Event
+        data object Logout : Event
 
         // Errors
         data object ClearError : Event
 
         // Search & suggestions
         data class SearchTextChanged(val text: String) : Event
-        data class SearchActiveChanged(val active: Boolean) : Event
+        data class SearchOnExpandedChange(val expand: Boolean) : Event
         data object ClearSearch : Event
+        data object SearchBarBackPressed : Event
+        data class SearchResultClicked(val result: String) : Event
         data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
+
 
         // Filters & sort
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event
@@ -106,11 +110,16 @@ object OrderListScreenContract {
         data class Haptic(val type: HapticType) : Effect
         data class OpenDialer(val phoneNumber: String) : Effect
         data class CopyToClipboard(val label: String, val text: String) : Effect
+        
+        // Search bar animations
+        data object ExpandSearchBar : Effect
+        data object CollapseSearchBar : Effect
 
         sealed interface Outcome : Effect {
             data class OrderSelected(val orderId: String) : Outcome
             data class OrdersSelected(val orderIds: List<String>) : Outcome
             data object Back : Outcome
+            data object Logout : Outcome
         }
     }
 }

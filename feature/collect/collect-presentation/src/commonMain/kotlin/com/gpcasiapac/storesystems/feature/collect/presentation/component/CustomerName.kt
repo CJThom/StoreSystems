@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
 import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
@@ -30,6 +31,7 @@ fun CustomerName(
     customerName: String,
     customerType: CustomerType,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues()
 ) {
 
@@ -42,8 +44,8 @@ fun CustomerName(
     ) {
 
         when (customerType) {
-            CustomerType.B2B -> B2BIcon()
-            CustomerType.B2C -> B2CIcon()
+            CustomerType.B2B -> B2BIcon(isLoading = isLoading)
+            CustomerType.B2C -> B2CIcon(isLoading = isLoading)
         }
 
         Text(
@@ -51,7 +53,9 @@ fun CustomerName(
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth(),// TODO: Match Figma / Fix theme Typography,
+            modifier = Modifier
+                .fillMaxWidth()
+                .placeholder(isLoading),// TODO: Match Figma / Fix theme Typography,
             autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.titleMedium.fontSize)
         )
 
@@ -91,6 +95,22 @@ private fun CustomerNamePreview(
             CustomerName(
                 customerName = data.name,
                 customerType = data.type
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CustomerNameLoadingPreview(
+    @PreviewParameter(CustomerNamePreviewProvider::class) data: CustomerNamePreviewData
+) {
+    GPCTheme {
+        Surface(modifier = Modifier.padding(Dimens.Space.medium)) {
+            CustomerName(
+                customerName = data.name,
+                customerType = data.type,
+                isLoading = true
             )
         }
     }

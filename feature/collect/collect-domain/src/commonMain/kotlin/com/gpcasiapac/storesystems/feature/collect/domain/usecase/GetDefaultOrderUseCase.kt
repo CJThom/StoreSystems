@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase
 
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 class GetDefaultOrderUseCase(
     private val orderRepository: OrderRepository,
 ) {
-    operator fun invoke(): Flow<Order?> {
+    operator fun invoke(): Flow<CollectOrder?> {
         return orderRepository.getOrderListFlow(OrderQuery(searchText = ""))
             .map { it.firstOrNull() }
     }

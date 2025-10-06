@@ -96,6 +96,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                             }
                         }
                         is OrderListScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is OrderListScreenContract.Effect.Outcome.Logout -> onOutcome(CollectOutcome.Logout)
                     }
                 }
             }

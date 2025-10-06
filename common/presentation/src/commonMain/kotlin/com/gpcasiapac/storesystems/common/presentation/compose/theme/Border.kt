@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.common.presentation.theme
+package com.gpcasiapac.storesystems.common.presentation.compose.theme
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.MaterialTheme
@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -254,7 +255,7 @@ fun MaterialTheme.borderStroke(
  */
 @Composable
 fun MaterialTheme.borderStroke(
-    brush: androidx.compose.ui.graphics.Brush,
+    brush: Brush,
     size: BorderSize? = null
 ): BorderStroke {
     val resolvedSize = size ?: componentBorders.defaultSize

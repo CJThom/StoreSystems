@@ -26,6 +26,7 @@ kotlin {
             implementation(libs.koin.core)
 
             // Shared utilities
+            implementation(projects.common.kotlin)
             implementation(projects.common.networking)
             implementation(projects.common.persistence)
 

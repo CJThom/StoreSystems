@@ -25,6 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.foundation.PlaceholderDefaults
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.color
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import jdk.jfr.Enabled
@@ -37,6 +40,7 @@ fun DetailItemSmall(
     value: String,
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
 ) {
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
@@ -44,6 +48,7 @@ fun DetailItemSmall(
             value = value,
             imageVector = imageVector,
             modifier = modifier,
+            isLoading = isLoading,
             contentPadding = contentPadding
         )
     }
@@ -54,6 +59,7 @@ fun DetailItemSmallChip(
     value: String,
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     // onClick: (() -> Unit)? = null, // todo onClick adds hit padding
     //  enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
@@ -63,13 +69,18 @@ fun DetailItemSmallChip(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = MaterialTheme.colorScheme.onTertiaryContainer
         ),
+        modifier = modifier.placeholder(
+            visible = isLoading,
+            color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.tertiaryContainer)
+        ),
 //        onClick = onClick ?: {},
 //        enabled = enabled,
     ) {
         DetailItemContent(
             value = value,
             imageVector = imageVector,
-            modifier = modifier,
+            modifier = Modifier,
+            isLoading = isLoading,
             contentPadding = contentPadding
         )
     }
@@ -80,10 +91,11 @@ private fun DetailItemContent(
     value: String,
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
 ) {
     Row(
-        modifier = modifier.padding(contentPadding),
+        modifier = modifier.padding(contentPadding).placeholder(visible = isLoading),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -92,6 +104,7 @@ private fun DetailItemContent(
             imageVector = imageVector,
             contentDescription = null,
             modifier = Modifier.size(Dimens.Size.iconSmall)
+
         )
 
         Text(
@@ -99,7 +112,8 @@ private fun DetailItemContent(
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Medium
             ),
-            maxLines = 1
+            maxLines = 1,
+            modifier = Modifier,
         )
 
     }
@@ -108,7 +122,7 @@ private fun DetailItemContent(
 private data class DetailItemSmallPreviewData(
     val imageVector: ImageVector,
     val value: String,
-    val emphasise: Boolean
+    val isLoading: Boolean
 )
 
 private class DetailItemSmallPreviewProvider :
@@ -117,22 +131,22 @@ private class DetailItemSmallPreviewProvider :
         DetailItemSmallPreviewData(
             imageVector = Icons.Outlined.Person,
             value = "1887388193",
-            emphasise = false
+            isLoading = false
         ),
         DetailItemSmallPreviewData(
             imageVector = Icons.Outlined.Phone,
             value = "0455 100 000",
-            emphasise = false
+            isLoading = false
         ),
         DetailItemSmallPreviewData(
             imageVector = Icons.Outlined.Email,
             value = "example@example.com",
-            emphasise = false
+            isLoading = false
         ),
         DetailItemSmallPreviewData(
             imageVector = Icons.Outlined.BackHand,
             value = "2 hours",
-            emphasise = true
+            isLoading = true
         )
     )
 }
@@ -145,7 +159,8 @@ private fun DetailItemSmallPreview(
     GPCTheme {
         DetailItemSmall(
             imageVector = data.imageVector,
-            value = data.value
+            value = data.value,
+            isLoading = data.isLoading
         )
     }
 }
@@ -158,7 +173,8 @@ private fun DetailItemSmallChipPreview(
     GPCTheme {
         DetailItemSmallChip(
             imageVector = data.imageVector,
-            value = data.value
+            value = data.value,
+            isLoading = data.isLoading
         )
     }
 }

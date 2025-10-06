@@ -5,14 +5,25 @@ import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderSelected
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.fixture.CollectOrderPlaceholderData
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
@@ -24,19 +35,22 @@ class OrderListScreenViewModel(
     private val observeOrderListUseCase: ObserveOrderListUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
-    private val observeOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase,
-    private val setOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase,
-    private val addOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase,
-    private val removeOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase,
-    private val clearOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase,
+    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
+    private val setOrderSelectionUseCase: SetOrderSelectionUseCase,
+    private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
+    private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
+    private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     override fun setInitialState(): OrderListScreenContract.State {
+
+        val placeholders = CollectOrderPlaceholderData.list(count = 10)
+        
         return OrderListScreenContract.State(
-            orderList = emptyList(),
-            filteredOrderList = emptyList(),
+            collectOrderStateList = placeholders,
+            filteredCollectOrderStateList = placeholders,
             isLoading = true,
-            isRefreshing = false,
+            isRefreshing = true,
             searchText = "",
             isSearchActive = false,
             orderSearchSuggestionList = emptyList(),
@@ -49,7 +63,7 @@ class OrderListScreenViewModel(
             isSelectAllChecked = false,
             orderCount = 0,
             isSubmitting = false,
-            submittedOrder = null,
+            submittedCollectOrder = null,
             searchHintResultList = emptyList(),
             error = null,
         )
@@ -71,6 +85,7 @@ class OrderListScreenViewModel(
         }
 
         viewModelScope.launch {
+            delay(3000)
             fetchOrderList(successToast = "Orders loaded")
         }
 
@@ -93,12 +108,20 @@ class OrderListScreenViewModel(
                 handleSearchTextChanged(event.text)
             }
 
-            is OrderListScreenContract.Event.SearchActiveChanged -> {
-                handleSearchActiveChanged(event.active)
+            is OrderListScreenContract.Event.SearchOnExpandedChange -> {
+                handleSearchOnExpandedChange(event.expand)
             }
 
             is OrderListScreenContract.Event.ClearSearch -> {
                 handleClearSearch()
+            }
+
+            is OrderListScreenContract.Event.SearchBarBackPressed -> {
+                setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
+            }
+
+            is OrderListScreenContract.Event.SearchResultClicked -> {
+                handleSearchResultClicked(event.result)
             }
 
             is OrderListScreenContract.Event.SearchSuggestionClicked -> {
@@ -108,7 +131,7 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.OpenOrder -> {
                 viewModelScope.launch {
                     setOrderSelectionUseCase(listOf(event.orderId))
-                    setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+                    setEffect { OrderSelected(event.orderId) }
                 }
             }
 
@@ -137,7 +160,11 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.Back -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.Back }
+                setEffect { Back }
+            }
+
+            is OrderListScreenContract.Event.Logout -> {
+                setEffect { Logout }
             }
 
             is OrderListScreenContract.Event.CancelSelection -> {
@@ -169,7 +196,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SubmitOrder -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.OrderSelected(event.orderId) }
+                setEffect { OrderSelected(event.orderId) }
             }
 
             is OrderListScreenContract.Event.SubmitSelectedOrders -> {
@@ -179,6 +206,7 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.ToggleSelectionMode -> {
                 handleToggleSelectionMode(event.enabled)
             }
+
         }
     }
 
@@ -192,12 +220,11 @@ class OrderListScreenViewModel(
         }
     }
 
-    private fun handleSearchActiveChanged(active: Boolean) {
-        setState {
-            copy(
-                isSearchActive = active,
-                orderSearchSuggestionList = if (active) orderSearchSuggestionList else emptyList()
-            )
+    private fun handleSearchOnExpandedChange(expand: Boolean) {
+        if (expand) {
+            setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
+        } else {
+            setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
         }
     }
 
@@ -220,6 +247,16 @@ class OrderListScreenViewModel(
         }
     }
 
+    private fun handleSearchResultClicked(result: String) {
+        setState {
+            copy(
+                searchText = result,
+                isSearchActive = false,
+                orderSearchSuggestionList = emptyList()
+            )
+        }
+    }
+
     private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
         setState {
             val updated = customerTypeFilterList.toMutableSet().apply {
@@ -230,8 +267,8 @@ class OrderListScreenViewModel(
                 }
             }
             val base = copy(customerTypeFilterList = updated)
-            val filtered = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filtered)
+            val filtered = applyFiltersTo(collectOrderStateList, base)
+            base.copy(filteredCollectOrderStateList = filtered)
         }
     }
 
@@ -243,8 +280,9 @@ class OrderListScreenViewModel(
                 appliedFilterChipList = newFilterChipList,
                 isFilterSheetOpen = false
             )
-            val filteredOrderList: List<Order> = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filteredOrderList)
+            val filteredCollectOrderStateList: List<CollectOrderState> =
+                applyFiltersTo(collectOrderStateList, base)
+            base.copy(filteredCollectOrderStateList = filteredCollectOrderStateList)
         }
     }
 
@@ -253,16 +291,18 @@ class OrderListScreenViewModel(
             val newFilterChipList: List<FilterChip> =
                 appliedFilterChipList.filterNot { it == filterChip }
             val base = copy(appliedFilterChipList = newFilterChipList)
-            val filteredOrderList: List<Order> = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filteredOrderList)
+            val filteredCollectOrderStateList: List<CollectOrderState> =
+                applyFiltersTo(collectOrderStateList, base)
+            base.copy(filteredCollectOrderStateList = filteredCollectOrderStateList)
         }
     }
 
     private fun handleResetFilters() {
         setState {
             val base = copy(appliedFilterChipList = emptyList())
-            val filteredOrderList: List<Order> = applyFiltersTo(orderList, base)
-            base.copy(filteredOrderList = filteredOrderList)
+            val filteredCollectOrderStateList: List<CollectOrderState> =
+                applyFiltersTo(collectOrderStateList, base)
+            base.copy(filteredCollectOrderStateList = filteredCollectOrderStateList)
         }
     }
 
@@ -301,7 +341,7 @@ class OrderListScreenViewModel(
                     remove(orderId)
                 }
             }
-            val visibleIdList = filteredOrderList.map { it.id }.toSet()
+            val visibleIdList = filteredCollectOrderStateList.map { it.id }.toSet()
             val isAllSelected = visibleIdList.isNotEmpty() && visibleIdList.all { it in newSet }
             copy(
                 selectedOrderIdList = newSet,
@@ -315,7 +355,7 @@ class OrderListScreenViewModel(
 
     private fun handleSelectAll(checked: Boolean) {
         val current = viewState.value
-        val visibleIdList = current.filteredOrderList.map { it.id }
+        val visibleIdList = current.filteredCollectOrderStateList.map { it.id }
         val newSet = if (checked) {
             current.selectedOrderIdList + visibleIdList
         } else {
@@ -369,7 +409,7 @@ class OrderListScreenViewModel(
 
         setState {
             copy(
-                isLoading = true,
+                isRefreshing = true,
                 error = null
             )
         }
@@ -378,12 +418,12 @@ class OrderListScreenViewModel(
 
         result.fold(
             onSuccess = {
-                setState { copy(isLoading = false) }
+                setState { copy(isRefreshing = false) }
                 setEffect { OrderListScreenContract.Effect.ShowToast(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
-                setState { copy(isLoading = false, error = msg) }
+                setState { copy(isRefreshing = false, error = msg) }
                 setEffect { OrderListScreenContract.Effect.ShowError(msg) }
             }
         )
@@ -405,14 +445,15 @@ class OrderListScreenViewModel(
         queryFlow.flatMapLatest { query ->
             observeOrderListUseCase(query)
         }.collectLatest { orders ->
+            val collectOrderStateList = orders.toState()
             setState {
                 val newStateBase = copy(
-                    orderList = orders,
+                    collectOrderStateList = collectOrderStateList,
                     orderCount = orders.size,
                     isLoading = false,
                     error = null,
                 )
-                val filtered = applyFiltersTo(orders, newStateBase)
+                val filtered = applyFiltersTo(collectOrderStateList, newStateBase)
                 // Maintain selection consistency when list changes
                 val filteredIds = filtered.map { it.id }.toSet()
                 val newSelected =
@@ -420,7 +461,7 @@ class OrderListScreenViewModel(
                 val allSelected =
                     isMultiSelectionEnabled && filteredIds.isNotEmpty() && filteredIds.size == newSelected.size
                 newStateBase.copy(
-                    filteredOrderList = filtered,
+                    filteredCollectOrderStateList = collectOrderStateList,
                     selectedOrderIdList = newSelected,
                     isSelectAllChecked = allSelected
                 )
@@ -457,11 +498,12 @@ class OrderListScreenViewModel(
 
     // TODO: Fix AI slop?
     private fun applyFiltersTo(
-        orders: List<Order>,
+        collectOrderStateList: List<CollectOrderState>,
         state: OrderListScreenContract.State,
-    ): List<Order> {
+    ): List<CollectOrderState> {
         // Base: customer type filter
-        var result = orders.filter { it.customer.customerType in state.customerTypeFilterList }
+        var result =
+            collectOrderStateList.filter { it.customerType in state.customerTypeFilterList }
 
         // Apply chips as AND conditions
         val chips = state.appliedFilterChipList
@@ -470,8 +512,7 @@ class OrderListScreenViewModel(
                 chips.all { chip ->
                     when (chip.type) {
                         OrderSearchSuggestionType.NAME -> {
-                            val name = if (order.customer.customerType == CustomerType.B2B) order.customer.accountName.orEmpty() else order.customer.fullName
-                            name.contains(chip.value, ignoreCase = true)
+                            order.customerName.contains(chip.value, ignoreCase = true)
                         }
 
                         OrderSearchSuggestionType.ORDER_NUMBER ->

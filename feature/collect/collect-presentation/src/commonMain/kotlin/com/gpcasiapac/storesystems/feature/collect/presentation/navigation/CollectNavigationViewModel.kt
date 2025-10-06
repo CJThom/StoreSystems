@@ -2,7 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
-
+import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
@@ -10,8 +10,8 @@ class CollectNavigationViewModel :
     BaseNavViewModel<CollectNavigationContract.Event, CollectFeatureDestination, CollectNavigationContract.State>() {
 
     override fun provideStartKey(): CollectFeatureDestination = CollectFeatureDestination.Orders
-    
-    override fun createStateWithStack(stack: List<NavKey>): CollectNavigationContract.State = 
+
+    override fun createStateWithStack(stack: List<NavKey>): CollectNavigationContract.State =
         CollectNavigationContract.State(stack = stack)
 
     override fun handleEvents(event: CollectNavigationContract.Event) {
@@ -22,10 +22,13 @@ class CollectNavigationViewModel :
     }
 
     private fun handleOutcome(outcome: CollectOutcome) {
-        // No external outcomes to emit (internal navigation only for now)
         when (outcome) {
             is CollectOutcome.OrderSelected -> push(CollectFeatureDestination.OrderDetails(outcome.orderId))
             is CollectOutcome.Back -> pop()
+            is CollectOutcome.Logout -> {
+                // Emit external outcome to navigate to login screen
+                setEffect { CollectNavigationContract.Effect.ExternalOutcome(CollectExternalOutcome.Logout) }
+            }
             is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature)
             is CollectOutcome.SignatureSaved -> {
                 outcome.strokes

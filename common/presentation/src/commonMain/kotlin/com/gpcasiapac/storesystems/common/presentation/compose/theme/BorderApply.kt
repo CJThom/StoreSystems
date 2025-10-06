@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.common.presentation.theme
+package com.gpcasiapac.storesystems.common.presentation.compose.theme
 
 import androidx.compose.foundation.border
 import androidx.compose.material3.MaterialTheme

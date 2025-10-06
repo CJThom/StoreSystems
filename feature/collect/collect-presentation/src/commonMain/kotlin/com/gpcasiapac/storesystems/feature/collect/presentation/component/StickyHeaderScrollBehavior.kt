@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.components
+package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState

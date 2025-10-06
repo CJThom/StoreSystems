@@ -4,17 +4,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 
 class OrderDetailScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
@@ -28,8 +26,8 @@ class OrderDetailScreenViewModel(
     override fun setInitialState(): OrderDetailScreenContract.State =
         OrderDetailScreenContract.State(
             orderId = null,
-            order = null,
-            orderList = emptyList(),
+            collectOrder = null,
+            collectOrderList = emptyList(),
             isLoading = false,
             error = null,
             collectingType = CollectingType.STANDARD,
@@ -152,9 +150,9 @@ class OrderDetailScreenViewModel(
                         val default = orders.firstOrNull()
                         setState {
                             copy(
-                                order = default,
+                                collectOrder = default?.toState(),
                                 orderId = default?.id,
-                                orderList = emptyList(),
+                                collectOrderList = emptyList(),
                                 isLoading = false,
                                 error = null
                             )
@@ -165,9 +163,9 @@ class OrderDetailScreenViewModel(
                         val selected = orders.firstOrNull { it.id == id }
                         setState {
                             copy(
-                                order = selected,
+                                collectOrder = selected?.toState(),
                                 orderId = selected?.id ?: id,
-                                orderList = emptyList(),
+                                collectOrderList = emptyList(),
                                 isLoading = false,
                                 error = null
                             )
@@ -177,9 +175,9 @@ class OrderDetailScreenViewModel(
                         val selectedOrders = orders.filter { it.id in selectedSet }
                         setState {
                             copy(
-                                order = null,
+                                collectOrder = null,
                                 orderId = null,
-                                orderList = selectedOrders,
+                                collectOrderList = selectedOrders.toState(),
                                 isLoading = false,
                                 error = null
                             )
@@ -257,7 +255,7 @@ class OrderDetailScreenViewModel(
 
     private fun confirm() {
         val s = viewState.value
-        val hasOrders = (s.order != null) || s.orderList.isNotEmpty()
+        val hasOrders = (s.collectOrder != null) || s.collectOrderList.isNotEmpty()
         if (!hasOrders) {
             setEffect { OrderDetailScreenContract.Effect.ShowError("No orders to confirm") }
             return

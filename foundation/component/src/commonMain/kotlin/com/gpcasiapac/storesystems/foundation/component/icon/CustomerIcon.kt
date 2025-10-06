@@ -13,7 +13,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.common.presentation.theme.borderStroke
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -27,11 +28,12 @@ object CustomerIconDefaults {
 
 @Composable
 fun B2BIcon(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
 ) {
-    Dimens
     Surface(
-        modifier = modifier.size(CustomerIconDefaults.SIZE.dp),
+        modifier = modifier.size(CustomerIconDefaults.SIZE.dp)
+            .placeholder(isLoading, shape = CircleShape),
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         border = MaterialTheme.borderStroke(),
         shape = CircleShape
@@ -47,10 +49,12 @@ fun B2BIcon(
 
 @Composable
 fun B2CIcon(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
 ) {
     Surface(
-        modifier = modifier.size(CustomerIconDefaults.SIZE.dp),
+        modifier = modifier.size(CustomerIconDefaults.SIZE.dp)
+            .placeholder(isLoading, shape = CircleShape),
         border = MaterialTheme.borderStroke(),
         shape = CircleShape
     ) {
@@ -72,6 +76,15 @@ fun B2CIconPreview() {
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun B2CIconLoadingPreview() {
+    GPCTheme {
+        Box(Modifier.padding(Dimens.Space.medium)) {
+            B2CIcon(isLoading = true)
+        }
+    }
+}
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -79,6 +92,16 @@ fun B2BIconPreview() {
     GPCTheme {
         Box(Modifier.padding(Dimens.Space.medium)) {
             B2BIcon()
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun B2BIconLoadingPreview() {
+    GPCTheme {
+        Box(Modifier.padding(Dimens.Space.medium)) {
+            B2BIcon(isLoading = true)
         }
     }
 }

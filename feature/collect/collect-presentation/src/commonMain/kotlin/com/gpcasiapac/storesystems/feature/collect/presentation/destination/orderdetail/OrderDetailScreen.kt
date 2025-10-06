@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
@@ -102,7 +103,7 @@ fun OrderDetailScreen(
             // Invoice Header
             item {
                 Text(
-                    text = "Invoice: ${state.order?.invoiceNumber.orEmpty()}",
+                    text = "Invoice: ${state.collectOrder?.invoiceNumber.orEmpty()}",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(
                         horizontal = Dimens.Space.medium,
@@ -124,13 +125,13 @@ fun OrderDetailScreen(
                         DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Sales Order Number",
-                            value = state.order?.invoiceNumber.orEmpty(),
+                            value = state.collectOrder?.invoiceNumber.orEmpty(),
                             imageVector = Icons.Outlined.Receipt
                         )
                         DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Web Order Number",
-                            value = state.order?.webOrderNumber.orEmpty(),
+                            value = state.collectOrder?.webOrderNumber.orEmpty(),
                             imageVector = MBoltIcons.Globe
                         )
                     }
@@ -147,7 +148,7 @@ fun OrderDetailScreen(
                         DetailItemMedium(
                             modifier = Modifier.weight(1f),
                             label = "Picked",
-                            value = state.order?.pickedAt?.toString().orEmpty(),
+                            value = state.collectOrder?.pickedAt?.toString().orEmpty(),
                             imageVector = Icons.Outlined.BackHand
                         )
                     }
@@ -159,10 +160,10 @@ fun OrderDetailScreen(
             // Customer Information
             item {
                 CustomerDetails(
-                    customerName = state.order?.customer?.fullName.orEmpty(),
-                    customerNumber = state.order?.customer?.customerNumber.orEmpty(),
-                    phoneNumber = state.order?.customer?.phone.orEmpty(),
-                    customerType = state.order?.customer?.customerType ?: CustomerType.B2B, // TODO: Use placeholder (greeking)
+                    customerName = state.collectOrder?.customerName.orEmpty(),
+                    customerNumber = "", // Not available in CollectOrderState
+                    phoneNumber = "", // Not available in CollectOrderState
+                    customerType = state.collectOrder?.customerType ?: CustomerType.B2B, // TODO: Use placeholder (greeking)
                     modifier = Modifier.padding(horizontal = Dimens.Space.medium)
                 )
             }

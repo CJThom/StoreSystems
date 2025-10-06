@@ -11,12 +11,4 @@ data class Customer(
     val firstName: String?,
     val lastName: String?,
     val phone: String?
-) {
-
-    // TODO: Move out of this class
-    val fullName: String
-        get() = listOfNotNull(
-            firstName?.takeIf { it.isNotBlank() },
-            lastName?.takeIf { it.isNotBlank() })
-            .joinToString(" ")
-}
+)

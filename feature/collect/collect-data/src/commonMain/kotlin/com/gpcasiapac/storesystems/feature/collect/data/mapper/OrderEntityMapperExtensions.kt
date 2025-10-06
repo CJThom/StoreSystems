@@ -2,10 +2,10 @@ package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Customer
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Order
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 
-fun OrderEntity.toDomain(): Order {
-    return Order(
+fun OrderEntity.toDomain(): CollectOrder {
+    return CollectOrder(
         id = this.id,
         invoiceNumber = this.invoiceNumber,
         webOrderNumber = this.webOrderNumber,
@@ -21,6 +21,6 @@ fun OrderEntity.toDomain(): Order {
     )
 }
 
-fun List<OrderEntity>.toDomain(): List<Order> {
+fun List<OrderEntity>.toDomain(): List<CollectOrder> {
     return this.map { it.toDomain() }
 }
