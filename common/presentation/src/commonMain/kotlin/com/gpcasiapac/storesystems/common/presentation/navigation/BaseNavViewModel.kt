@@ -51,10 +51,5 @@ abstract class BaseNavViewModel<Event : ViewEvent, K : NavKey, State : ViewState
     protected fun replaceTop(key: K) = setState { 
         createStateWithStack(BackStackReducer.replaceTop(stack, key))
     }
-    
-    /**
-     * Helper method for features to update their custom state while preserving navigation.
-     * Usage: updateState { copy(customProperty = newValue) }
-     */
-    protected fun updateState(transform: State.() -> State) = setState(transform)
+
 }

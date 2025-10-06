@@ -22,6 +22,13 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
 
+            implementation(compose.material3AdaptiveNavigationSuite)
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+
+
             implementation(projects.common.presentation)
             implementation(projects.foundation.designSystem)
         }
