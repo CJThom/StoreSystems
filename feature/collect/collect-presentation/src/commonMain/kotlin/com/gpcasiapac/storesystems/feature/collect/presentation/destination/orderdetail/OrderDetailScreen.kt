@@ -1,7 +1,9 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +17,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -133,19 +136,29 @@ fun OrderDetailScreen(
                 }
 
             } else {
-                state.collectOrderListItemStateList.forEach { collectOrderState ->
-
-                    CollectOrderDetails(
-                        customerName = collectOrderState.customerName,
-                        customerType = collectOrderState.customerType,
-                        invoiceNumber = collectOrderState.invoiceNumber,
-                        webOrderNumber = collectOrderState.webOrderNumber,
-                        pickedAt = collectOrderState.pickedAt,
-                        isLoading = state.isLoading,
-                        contendPadding = PaddingValues(Dimens.Space.medium),
-                    )
+                Column(
+                    modifier = Modifier.padding(Dimens.Space.medium),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+                ) {
+                    state.collectOrderListItemStateList.forEach { collectOrderState ->
+                        OutlinedCard(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            onClick = {},
+                            enabled = true
+                        ) {
+                            CollectOrderDetails(
+                                customerName = collectOrderState.customerName,
+                                customerType = collectOrderState.customerType,
+                                invoiceNumber = collectOrderState.invoiceNumber,
+                                webOrderNumber = collectOrderState.webOrderNumber,
+                                pickedAt = collectOrderState.pickedAt,
+                                isLoading = state.isLoading,
+                                contendPadding = PaddingValues(Dimens.Space.medium),
+                            )
+                        }
+                    }
                 }
-
                 HorizontalDivider()
 
 
