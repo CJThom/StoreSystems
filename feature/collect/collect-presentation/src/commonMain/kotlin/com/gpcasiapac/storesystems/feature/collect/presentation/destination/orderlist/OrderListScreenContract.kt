@@ -9,7 +9,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 
 
@@ -17,8 +17,8 @@ object OrderListScreenContract {
     @Immutable
     data class State(
         // Data
-        val collectOrderStateList: List<CollectOrderState>,                                   // full dataset observed
-        val filteredCollectOrderStateList: List<CollectOrderState>,                           // single list rendered (optional if DB-side)
+        val collectOrderListItemStateList: List<CollectOrderListItemState>,                                   // full dataset observed
+        val filteredCollectOrderListItemStateList: List<CollectOrderListItemState>,                           // single list rendered (optional if DB-side)
 
         // Loading / refreshing
         val isLoading: Boolean,
@@ -45,10 +45,10 @@ object OrderListScreenContract {
 
         // Submission / transient UI
         val isSubmitting: Boolean,                                          // e.g., "Submitting order..." snackbar
-        val submittedCollectOrder: CollectOrderState?,
+        val submittedCollectOrder: CollectOrderListItemState?,
 
         // Suggestions from old shape (kept for compatibility if used elsewhere)
-        val searchHintResultList: List<CollectOrderState>,
+        val searchHintResultList: List<CollectOrderListItemState>,
 
         // Error
         val error: String?,

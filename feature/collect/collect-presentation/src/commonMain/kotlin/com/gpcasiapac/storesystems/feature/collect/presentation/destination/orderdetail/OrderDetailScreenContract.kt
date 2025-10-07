@@ -7,18 +7,16 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 
 object OrderDetailScreenContract {
 
     @Immutable
     data class State(
-        // Single order context (B2C single). If multiple, use [orderList]
-        val orderId: String?,
-        val collectOrder: CollectOrderState?,
+        val collectOrderWithCustomerWithLineItemsState: CollectOrderWithCustomerWithLineItemsState?,
+        val collectOrderListItemStateList: List<CollectOrderListItemState>,
 
-        // Multiple order context (B2C multi, B2B/account multi, Courier multi)
-        val collectOrderList: List<CollectOrderState>,
+        val isMultiOrder: () -> Boolean, // TODO: Maybe remove as now there is nullable collectOrderState
 
         // Top-level flags
         val isLoading: Boolean,
@@ -42,6 +40,7 @@ object OrderDetailScreenContract {
         val emailChecked: Boolean,
         val printChecked: Boolean,
     ) : ViewState
+
 
     sealed interface Event : ViewEvent {
         // Data loading

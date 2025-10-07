@@ -1,14 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
-import androidx.compose.runtime.Composable
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderStates
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
-import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenContract.State> {
@@ -17,8 +14,8 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             val orders = sampleCollectOrderStates()
 
             val base = OrderListScreenContract.State(
-                collectOrderStateList = orders,
-                filteredCollectOrderStateList = orders,
+                collectOrderListItemStateList = orders,
+                filteredCollectOrderListItemStateList = orders,
                 isLoading = false,
                 isRefreshing = false,
                 searchText = "",
@@ -61,18 +58,18 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                     FilterChip(label = "Jane", type = OrderSearchSuggestionType.NAME),
                 ),
                 customerTypeFilterList = setOf(CustomerType.B2C),
-                filteredCollectOrderStateList = orders.filter { it.customerType == CustomerType.B2C }
+                filteredCollectOrderListItemStateList = orders.filter { it.customerType == CustomerType.B2C }
             )
 
             val loading = base.copy(
                 isLoading = true,
-                collectOrderStateList = orders,
-                filteredCollectOrderStateList = emptyList()
+                collectOrderListItemStateList = orders,
+                filteredCollectOrderListItemStateList = emptyList()
             )
             val refreshing = base.copy(
                 isRefreshing = true,
-                collectOrderStateList = orders,
-                filteredCollectOrderStateList = emptyList()
+                collectOrderListItemStateList = orders,
+                filteredCollectOrderListItemStateList = emptyList()
             )
             val error = base.copy(error = "Failed to load orders")
 

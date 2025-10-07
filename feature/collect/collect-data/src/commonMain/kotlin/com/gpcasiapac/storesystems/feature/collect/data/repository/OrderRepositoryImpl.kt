@@ -6,8 +6,8 @@ import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
@@ -21,17 +21,17 @@ class OrderRepositoryImpl(
 ) : OrderRepository {
 
     // TODO: In Progress: Improve this with Dao query
-    override fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<CollectOrder>> {
-        return orderDao.getAllAsFlow().map { orderEntityList ->
-            val collectOrderList: List<CollectOrder> = orderEntityList.toDomain()
+    override fun getOrderListFlow(orderQuery: OrderQuery): Flow<List<CollectOrderWithCustomerWithLineItems>> {
+        return orderDao.getAllWithDetailsAsFlow().map { orderEntityList ->
+            val collectOrderList: List<CollectOrderWithCustomerWithLineItems> = orderEntityList.toDomain()
             val query = orderQuery.searchText.trim().lowercase()
             if (query.isEmpty()) collectOrderList else collectOrderList.filter { o ->
                 val name = if (o.customer.customerType == CustomerType.B2B) {
                     o.customer.accountName.orEmpty()
                 } else StringUtils.fullName(o.customer.firstName, o.customer.lastName)
                 name.lowercase().contains(query) ||
-                        o.invoiceNumber.lowercase().contains(query) ||
-                        ((o.webOrderNumber ?: "").lowercase().contains(query))
+                        o.order.invoiceNumber.lowercase().contains(query) ||
+                        ((o.order.webOrderNumber ?: "").lowercase().contains(query))
             }
         }
     }

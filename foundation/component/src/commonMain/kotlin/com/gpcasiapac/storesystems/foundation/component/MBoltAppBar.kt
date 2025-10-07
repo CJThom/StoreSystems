@@ -2,53 +2,93 @@ package com.gpcasiapac.storesystems.foundation.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowLeft
-import androidx.compose.material.icons.filled.ArrowLeft
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+object MBoltAppBarDefaults {
+
+    @Composable
+    fun topAppBarColors(
+        containerColor: Color = MaterialTheme.colorScheme.primary,
+        scrolledContainerColor: Color = MaterialTheme.colorScheme.primary,
+        navigationIconContentColor: Color = MaterialTheme.colorScheme.onPrimary,
+        titleContentColor: Color = MaterialTheme.colorScheme.onPrimary,
+        actionIconContentColor: Color = MaterialTheme.colorScheme.onPrimary,
+        subtitleContentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    ): TopAppBarColors = TopAppBarDefaults.topAppBarColors(
+        containerColor = containerColor,
+        navigationIconContentColor = navigationIconContentColor,
+        scrolledContainerColor = scrolledContainerColor,
+        titleContentColor = titleContentColor,
+        actionIconContentColor = actionIconContentColor,
+        subtitleContentColor = subtitleContentColor
+    )
+
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MBoltAppBar(
     title: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    actionBar: @Composable (() -> Unit)? = null,
+    navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    navigationIcon: @Composable (() -> Unit)? = null,
+    expandedHeight: Dp = TopAppBarDefaults.TopAppBarExpandedHeight,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
+    colors: TopAppBarColors = MBoltAppBarDefaults.topAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+) {
+    TopAppBar(
+        title = title,
+        modifier = modifier,
+        actions = actions,
+        navigationIcon = navigationIcon,
+        colors = colors,
+        expandedHeight = expandedHeight,
+        windowInsets = windowInsets,
+        scrollBehavior = scrollBehavior,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MBoltAppBar(
+    title: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    secondaryAppBar: @Composable (() -> Unit)? = null,
+    expandedHeight: Dp = TopAppBarDefaults.TopAppBarExpandedHeight,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
+    colors: TopAppBarColors = MBoltAppBarDefaults.topAppBarColors(),
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     Column {
-        TopAppBar(
+        MBoltAppBar(
+            title = title,
             modifier = modifier,
             actions = actions,
-            navigationIcon = {
-                navigationIcon?.invoke()
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                scrolledContainerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            scrollBehavior = scrollBehavior,
-            title = {
-                title()
-            }
+            navigationIcon = navigationIcon,
+            colors = colors,
+            expandedHeight = expandedHeight,
+            windowInsets = windowInsets,
+            scrollBehavior = scrollBehavior
         )
-        actionBar?.invoke()
+        secondaryAppBar?.invoke()
     }
 }
 
@@ -61,7 +101,7 @@ fun MBoltAppBarPreview() {
             title = {
                 GPCLogoTitle("Store Systems")
             },
-            actionBar = {
+            secondaryAppBar = {
 
             }, navigationIcon = {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

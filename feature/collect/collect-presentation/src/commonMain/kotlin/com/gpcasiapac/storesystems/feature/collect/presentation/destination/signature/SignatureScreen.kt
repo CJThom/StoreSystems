@@ -30,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSimpleAppBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureCanvas
+import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import kotlinx.coroutines.flow.Flow
@@ -67,7 +67,7 @@ fun SignatureScreen(
 
     Scaffold(
         topBar = {
-            MBoltSimpleAppBar(
+            MBoltAppBar(
                 title = {
                     TopBarTitle("Signature")
                 },

@@ -4,7 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderWithCustomerWithLineItems
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,8 +21,9 @@ interface OrderDao {
     @Query("SELECT COUNT(*) FROM orders")
     suspend fun getCount(): Int
 
+    @Transaction
     @Query("SELECT * FROM orders ORDER BY picked_at DESC")
-    fun getAllAsFlow(): Flow<List<OrderEntity>>
+    fun getAllWithDetailsAsFlow(): Flow<List<OrderWithCustomerWithLineItems>>
 
     // Lightweight suggestion queries (prefix match) returning only needed columns, limited per type
     @Query(

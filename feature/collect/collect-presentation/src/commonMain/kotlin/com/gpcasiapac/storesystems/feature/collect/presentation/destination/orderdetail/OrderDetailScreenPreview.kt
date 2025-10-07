@@ -2,22 +2,22 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderStates
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStates
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderState
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScreenContract.State> {
     override val values: Sequence<OrderDetailScreenContract.State>
         get() {
-            val orders = sampleCollectOrderStates()
+            val orders = sampleCollectOrderListItemStates()
+            val order = sampleCollectOrderState()
 
             val base = OrderDetailScreenContract.State(
                 // Single order context
-                orderId = orders.first().id,
-                collectOrder = orders.first(),
-
+                collectOrderWithCustomerWithLineItemsState = order,
                 // Multi-order context
-                collectOrderList = emptyList(),
-
+                collectOrderListItemStateList = emptyList(),
+                isMultiOrder = { false },
                 // Flags
                 isLoading = false,
                 error = null,
@@ -45,36 +45,34 @@ class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScree
                 printChecked = true,
             )
 
-            val singleB2C = base
+            val singleB2C = base.copy(
+                collectOrderListItemStateList = orders.take(1)
+            )
 
             val multiB2C = base.copy(
-                orderId = null,
-                collectOrder = null,
-                collectOrderList = orders,
+                collectOrderWithCustomerWithLineItemsState = null,
+                collectOrderListItemStateList = orders,
                 collectingType = CollectingType.STANDARD,
             )
 
             val accountFlow = base.copy(
-                orderId = null,
-                collectOrder = null,
-                collectOrderList = orders.take(2),
+                collectOrderWithCustomerWithLineItemsState = null,
+                collectOrderListItemStateList = orders.take(2),
                 collectingType = CollectingType.ACCOUNT,
                 representativeSearchText = "Jo",
                 selectedRepresentativeIdList = setOf("rep-1"),
             )
 
             val courierFlow = base.copy(
-                orderId = null,
-                collectOrder = null,
-                collectOrderList = orders,
+                collectOrderWithCustomerWithLineItemsState = null,
+                collectOrderListItemStateList = orders,
                 collectingType = CollectingType.COURIER,
                 courierName = "DHL Express",
             )
 
             val loading = base.copy(
                 isLoading = true,
-                collectOrder = null,
-                collectOrderList = emptyList(),
+                collectOrderListItemStateList = emptyList(),
             )
 
             val error = base.copy(

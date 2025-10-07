@@ -3,15 +3,18 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
-import kotlinx.coroutines.flow.combine
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class OrderDetailScreenViewModel(
@@ -23,11 +26,11 @@ class OrderDetailScreenViewModel(
         OrderDetailScreenContract.State,
         OrderDetailScreenContract.Effect>() {
 
-    override fun setInitialState(): OrderDetailScreenContract.State =
-        OrderDetailScreenContract.State(
-            orderId = null,
-            collectOrder = null,
-            collectOrderList = emptyList(),
+    override fun setInitialState(): OrderDetailScreenContract.State {
+        return OrderDetailScreenContract.State(
+            collectOrderWithCustomerWithLineItemsState = CollectOrderWithCustomerWithLineItemsState.placeholder(),
+            collectOrderListItemStateList = listOf(CollectOrderListItemState.placeholder()),
+            isMultiOrder = { viewState.value.collectOrderListItemStateList.count() > 1 },
             isLoading = false,
             error = null,
             collectingType = CollectingType.STANDARD,
@@ -44,6 +47,7 @@ class OrderDetailScreenViewModel(
             printChecked = true,
         )
 
+    }
     override suspend fun awaitReadiness(): Boolean {
         // This placeholder screen has no special readiness requirement
         return true
@@ -147,12 +151,11 @@ class OrderDetailScreenViewModel(
             .collectLatest { (selectedSet, orders) ->
                 when {
                     selectedSet.isEmpty() -> {
-                        val default = orders.firstOrNull()
+                        val default: CollectOrder? = orders.firstOrNull()
                         setState {
                             copy(
-                                collectOrder = default?.toState(),
-                                orderId = default?.id,
-                                collectOrderList = emptyList(),
+                                collectOrderListItemStateList = default?.let { listOf(it.toState()) }
+                                    ?: emptyList(),
                                 isLoading = false,
                                 error = null
                             )
@@ -163,9 +166,8 @@ class OrderDetailScreenViewModel(
                         val selected = orders.firstOrNull { it.id == id }
                         setState {
                             copy(
-                                collectOrder = selected?.toState(),
-                                orderId = selected?.id ?: id,
-                                collectOrderList = emptyList(),
+                                collectOrderListItemStateList = selected?.let { listOf(it.toState()) }
+                                    ?: emptyList(),
                                 isLoading = false,
                                 error = null
                             )
@@ -175,9 +177,7 @@ class OrderDetailScreenViewModel(
                         val selectedOrders = orders.filter { it.id in selectedSet }
                         setState {
                             copy(
-                                collectOrder = null,
-                                orderId = null,
-                                collectOrderList = selectedOrders.toState(),
+                                collectOrderListItemStateList = selectedOrders.toState(),
                                 isLoading = false,
                                 error = null
                             )
@@ -255,7 +255,7 @@ class OrderDetailScreenViewModel(
 
     private fun confirm() {
         val s = viewState.value
-        val hasOrders = (s.collectOrder != null) || s.collectOrderList.isNotEmpty()
+        val hasOrders = s.collectOrderListItemStateList.isNotEmpty()
         if (!hasOrders) {
             setEffect { OrderDetailScreenContract.Effect.ShowError("No orders to confirm") }
             return

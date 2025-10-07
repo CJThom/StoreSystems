@@ -141,7 +141,7 @@ fun OrderListScreen(
                 title = {
                     GPCLogoTitle("Collect")
                 },
-                actionBar = {
+                secondaryAppBar = {
                     Surface(
                         color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.fillMaxWidth()
@@ -238,7 +238,7 @@ fun OrderListScreen(
                     }
                 )
             }
-            items(items = state.collectOrderStateList, key = { it.id }) { collectOrderState ->
+            items(items = state.collectOrderListItemStateList, key = { it.id }) { collectOrderState ->
                 CheckboxCard(
                     modifier = Modifier.padding(
                         horizontal = Dimens.Space.medium,

@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,68 +32,68 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun CustomerDetails(
     customerName: String,
     customerNumber: String,
-    phoneNumber: String,
+    phoneNumber: String?,
     customerType: CustomerType,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)) {
-        //Use BusinessNameSection for B2B.
+    Column(
+        modifier = modifier.padding(contentPadding)
+    ) {
+
         CustomerName(
             customerName = customerName,
             customerType = customerType,
-            modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+            modifier = Modifier,
+            contentPadding = PaddingValues(Dimens.Space.medium)
         )
-        // Details section with customer number and phone
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.Space.medium),
+                .padding(Dimens.Space.medium),
             horizontalArrangement = Arrangement.spacedBy(Dimens.Space.large)
         ) {
-            // Left column - Customer Number
+
             DetailItemMedium(
                 imageVector = Icons.Outlined.Receipt,
                 label = "Customer Number",
                 value = customerNumber,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                isLoading = isLoading
             )
 
-            // Right column - Phone
             DetailItemMedium(
                 imageVector = Icons.Outlined.Call,
                 label = "Phone",
-                value = phoneNumber,
-                modifier = Modifier.weight(1f)
+                value = phoneNumber ?: "-",
+                modifier = Modifier.weight(1f),
+                isLoading = isLoading
             )
+
         }
     }
 }
 
-/**
- * Preview for CustomerDetails in light theme
- */
 @Preview
 @Composable
-private fun CustomerDetailsLightPreview() {
+private fun CustomerDetailsB2BPreview() {
     GPCTheme {
         Surface {
             CustomerDetails(
                 customerName = "Johnathan Citizenship",
                 customerNumber = "1887388193",
                 phoneNumber = "0455 100 000",
-                customerType = CustomerType.B2B,
-                modifier = Modifier.padding(Dimens.Space.medium)
+                customerType = CustomerType.B2B
             )
         }
     }
 }
 
-/**
- * Preview for CustomerDetails in dark theme
- */
 @Preview
 @Composable
-private fun CustomerDetailsDarkPreview() {
+private fun CustomerDetailsB2CPreview() {
     GPCTheme {
         Surface {
             CustomerDetails(
@@ -100,7 +101,7 @@ private fun CustomerDetailsDarkPreview() {
                 customerNumber = "1887388193",
                 phoneNumber = "0455 100 000",
                 customerType = CustomerType.B2C,
-                modifier = Modifier.padding(Dimens.Space.medium)
+                modifier = Modifier
             )
         }
     }

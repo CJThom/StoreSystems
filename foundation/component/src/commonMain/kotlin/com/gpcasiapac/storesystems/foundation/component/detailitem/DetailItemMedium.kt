@@ -2,11 +2,13 @@ package com.gpcasiapac.storesystems.foundation.component.detailitem
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
@@ -19,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -35,12 +38,13 @@ fun DetailItemMedium(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
+    isLoading: Boolean = false, // Todo add isLoading
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     Row(
         modifier = modifier
             .padding(contentPadding)
-            .fillMaxWidth(),
+            .width(IntrinsicSize.Max),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
@@ -56,13 +60,17 @@ fun DetailItemMedium(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -103,7 +111,8 @@ private fun DetailItemMediumPreview(
         DetailItemMedium(
             imageVector = data.icon,
             label = data.label,
-            value = data.value
+            value = data.value,
+            contentPadding = PaddingValues(Dimens.Space.medium)
         )
     }
 }

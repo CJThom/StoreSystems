@@ -5,7 +5,8 @@ import kotlin.time.Instant
 data class CollectOrder(
     val id: String,
     val invoiceNumber: String,
+    val salesOrderNumber: String,
     val webOrderNumber: String?,
-    val pickedAt: Instant,
-    val customer: Customer,
+    val createdAt: Instant,
+    val pickedAt: Instant
 )

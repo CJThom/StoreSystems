@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
-import com.gpcasiapac.storesystems.feature.collect.domain.model.Customer
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 
 fun OrderEntity.toDomain(): CollectOrder {
@@ -10,7 +10,7 @@ fun OrderEntity.toDomain(): CollectOrder {
         invoiceNumber = this.invoiceNumber,
         webOrderNumber = this.webOrderNumber,
         pickedAt = this.pickedAt,
-        customer = Customer(
+        collectOrderCustomer = CollectOrderCustomer(
             customerNumber = this.customerEntity.customerNumber,
             customerType = this.customerEntity.customerType,
             accountName = this.customerEntity.accountName,
