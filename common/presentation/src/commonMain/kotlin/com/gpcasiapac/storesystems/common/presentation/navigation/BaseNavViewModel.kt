@@ -29,4 +29,12 @@ abstract class BaseNavViewModel<Event : ViewEvent,  State : ViewStateWithNavigat
         copyWithStack(BackStackReducer.replaceTop(stack, key))
     }
 
+    protected fun pushOrReplaceTop(key: K) = setState {
+        copyWithStack(BackStackReducer.pushOrReplace(stack, key))
+    }
+
+    protected fun truncateAfterAndPush(key: K, afterKey: K) = setState {
+        copyWithStack(BackStackReducer.truncateAfterAndPush(stack, key, afterKey))
+    }
+
 }

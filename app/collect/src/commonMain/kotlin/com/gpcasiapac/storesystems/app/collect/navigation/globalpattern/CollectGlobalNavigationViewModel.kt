@@ -54,7 +54,7 @@ class CollectGlobalNavigationViewModel :
     private fun handleCollectOutcome(outcome: CollectOutcome) {
         when (outcome) {
             is CollectOutcome.OrderSelected -> {
-                push(OrderDetails(outcome.orderId))
+                push(OrderDetails)
             }
 
             is CollectOutcome.Back -> pop()
