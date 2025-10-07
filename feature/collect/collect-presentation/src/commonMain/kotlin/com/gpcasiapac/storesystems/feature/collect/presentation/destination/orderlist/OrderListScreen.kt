@@ -238,21 +238,21 @@ fun OrderListScreen(
                     }
                 )
             }
-            items(items = state.collectOrderListItemStateList, key = { it.id }) { collectOrderState ->
+            items(items = state.collectOrderListItemStateList, key = { it.invoiceNumber }) { collectOrderState ->
                 CheckboxCard(
                     modifier = Modifier.padding(
                         horizontal = Dimens.Space.medium,
                         vertical = Dimens.Space.small
                     ),
                     isCheckable = state.isMultiSelectionEnabled,
-                    isChecked = state.selectedOrderIdList.contains(collectOrderState.id),
+                    isChecked = state.selectedOrderIdList.contains(collectOrderState.invoiceNumber),
                     onClick = {
-                        onEventSent(OrderListScreenContract.Event.OpenOrder(collectOrderState.id))
+                        onEventSent(OrderListScreenContract.Event.OpenOrder(collectOrderState.invoiceNumber))
                     },
                     onCheckedChange = { isChecked ->
                         onEventSent(
                             OrderListScreenContract.Event.OrderChecked(
-                                orderId = collectOrderState.id,
+                                orderId = collectOrderState.invoiceNumber,
                                 checked = isChecked
                             )
                         )

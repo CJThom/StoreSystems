@@ -2,15 +2,15 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStates
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderWithCustomerWithLineItemsState
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScreenContract.State> {
     override val values: Sequence<OrderDetailScreenContract.State>
         get() {
-            val orders = sampleCollectOrderListItemStates()
-            val order = sampleCollectOrderState()
+            val orders = sampleCollectOrderListItemStateList()
+            val order = sampleCollectOrderWithCustomerWithLineItemsState()
 
             val base = OrderDetailScreenContract.State(
                 // Single order context

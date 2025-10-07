@@ -1,14 +1,15 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderLineItemEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLineItem
 
-internal fun OrderLineItemEntity.toDomain(): CollectOrderLineItem {
+internal fun CollectOrderLineItemEntity.toDomain(): CollectOrderLineItem {
     return CollectOrderLineItem(
-        lineNumber = lineNumber
+        invoiceNumber = this.invoiceNumber,
+        lineNumber = this.lineNumber
     )
 }
 
-internal fun List<OrderLineItemEntity>.toDomain(): List<CollectOrderLineItem> {
+internal fun List<CollectOrderLineItemEntity>.toDomain(): List<CollectOrderLineItem> {
     return map { it.toDomain() }
 }

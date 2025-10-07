@@ -8,7 +8,6 @@ import kotlin.time.Instant
 
 @Immutable
 data class CollectOrderState(
-    val id: String,
     val invoiceNumber: String,
     val salesOrderNumber: String,
     val webOrderNumber: String?,
@@ -20,8 +19,7 @@ data class CollectOrderState(
 
         fun placeholder(index: Int = 0): CollectOrderState {
             return CollectOrderState(
-                id = "PLACEHOLDER_$index",
-                invoiceNumber = PlaceholderValue.fixed(12),
+                invoiceNumber = "${PlaceholderValue.fixed(12)}$index",
                 salesOrderNumber = PlaceholderValue.fixed(12),
                 webOrderNumber = PlaceholderValue.fixed(12),
                 createdAt = Clock.System.now(),

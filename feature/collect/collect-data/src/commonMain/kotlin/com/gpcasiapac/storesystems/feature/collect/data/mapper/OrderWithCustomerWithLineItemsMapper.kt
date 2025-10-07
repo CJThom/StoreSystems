@@ -1,16 +1,16 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderWithCustomerWithLineItems
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 
-internal fun OrderWithCustomerWithLineItems.toDomain(): CollectOrderWithCustomerWithLineItems {
+internal fun CollectOrderWithCustomerWithLineItemsRelation.toDomain(): CollectOrderWithCustomerWithLineItems {
     return CollectOrderWithCustomerWithLineItems(
-        order = order.toDomain(),
-        customer = customer.toDomain(),
-        lineItemList = lineItems.toDomain()
+        order = orderEntity.toDomain(),
+        customer = customerEntity.toDomain(),
+        lineItemList = lineItemEntityList.toDomain()
     )
 }
 
-internal fun List<OrderWithCustomerWithLineItems>.toDomain(): List<CollectOrderWithCustomerWithLineItems> {
+internal fun List<CollectOrderWithCustomerWithLineItemsRelation>.toDomain(): List<CollectOrderWithCustomerWithLineItems> {
     return map { it.toDomain() }
 }

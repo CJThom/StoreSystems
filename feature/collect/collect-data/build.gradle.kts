@@ -32,6 +32,7 @@ kotlin {
 
             // Room KMP runtime and bundled SQLite driver
             implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.room.ktx)
             implementation(libs.androidx.sqlite.bundled)
         }
         androidMain.dependencies {

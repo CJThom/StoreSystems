@@ -8,11 +8,17 @@ import androidx.room.TypeConverters
 import com.gpcasiapac.storesystems.common.persistence.db.RoomDbFinalizer
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.CustomerTypeConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.TimeConverters
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.OrderDao
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 
 @Database(
-    entities = [OrderEntity::class],
+    entities = [
+        CollectOrderEntity::class,
+        CollectOrderCustomerEntity::class,
+        CollectOrderLineItemEntity::class,
+    ],
     version = 1,
     exportSchema = true,
 )
@@ -22,7 +28,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEnt
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun orderDao(): OrderDao
+    abstract fun orderDao(): CollectOrderDao
 }
 
 @Suppress("KotlinNoActualForExpect")

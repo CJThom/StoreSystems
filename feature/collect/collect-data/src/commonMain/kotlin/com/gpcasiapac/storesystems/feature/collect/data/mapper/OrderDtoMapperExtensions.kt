@@ -1,41 +1,37 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CustomerEntity
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.OrderEntity
-import com.gpcasiapac.storesystems.feature.collect.data.network.dto.OrderDto
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
+import com.gpcasiapac.storesystems.feature.collect.data.network.dto.CollectOrderDto
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import kotlin.time.Instant
 
-fun OrderDto.toEntity(): OrderEntity {
-
-    val customerType = customerTypeFrom(this.customerType)
-
-    val account = if (customerType == CustomerType.B2B) {
-        this.accountName?.takeIf { it.isNotBlank() }
-            ?: this.customerName?.takeIf { it.isNotBlank() } ?: ""
-    } else {
-        ""
-    }
-
-    return OrderEntity(
-        id = this.id,
-        invoiceNumber = this.invoiceNumber,
-        webOrderNumber = this.webOrderNumber,
-        pickedAt = Instant.fromEpochMilliseconds(this.pickedAtEpochMillis),
-        customerEntity = CustomerEntity(
+fun CollectOrderDto.toRelation(): CollectOrderWithCustomerWithLineItemsRelation {
+    return CollectOrderWithCustomerWithLineItemsRelation(
+        orderEntity = CollectOrderEntity(
+            invoiceNumber = this.invoiceNumber,
+            salesOrderNumber = this.salesOrderNumber,
+            webOrderNumber = this.webOrderNumber,
+            createdAt = Instant.fromEpochMilliseconds(this.createdAtEpochMillis),
+            pickedAt = Instant.fromEpochMilliseconds(this.pickedAtEpochMillis)
+        ),
+        customerEntity = CollectOrderCustomerEntity(
+            invoiceNumber = this.invoiceNumber,
             customerNumber = this.customerNumber,
-            customerType = customerType,
-            accountName = account,
+            customerType = customerTypeFrom(this.customerType),
+            accountName = this.accountName,
             firstName = this.customerFirstName,
             lastName = this.customerLastName,
-            phone = this.customerPhone,
+            phone = this.customerPhone
         ),
+        lineItemEntityList = emptyList()
     )
 
 }
 
-fun List<OrderDto>.toEntity(): List<OrderEntity> {
-    return this.map { it.toEntity() }
+fun List<CollectOrderDto>.toRelation(): List<CollectOrderWithCustomerWithLineItemsRelation> {
+    return this.map { it.toRelation() }
 }
 
 private fun customerTypeFrom(customerType: String): CustomerType {

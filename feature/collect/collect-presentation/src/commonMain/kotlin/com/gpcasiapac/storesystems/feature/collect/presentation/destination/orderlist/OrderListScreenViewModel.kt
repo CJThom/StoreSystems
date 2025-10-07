@@ -9,8 +9,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSugge
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
-    private val observeOrderListUseCase: ObserveOrderListUseCase,
+    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
@@ -113,7 +113,6 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.ClearSearch -> {
                 handleClearSearch()
-.
             }
 
             is OrderListScreenContract.Event.SearchBarBackPressed -> {
@@ -341,7 +340,7 @@ class OrderListScreenViewModel(
                     remove(orderId)
                 }
             }
-            val visibleIdList = filteredCollectOrderListItemStateList.map { it.id }.toSet()
+            val visibleIdList = filteredCollectOrderListItemStateList.map { it.invoiceNumber }.toSet()
             val isAllSelected = visibleIdList.isNotEmpty() && visibleIdList.all { it in newSet }
             copy(
                 selectedOrderIdList = newSet,
@@ -355,7 +354,7 @@ class OrderListScreenViewModel(
 
     private fun handleSelectAll(checked: Boolean) {
         val current = viewState.value
-        val visibleIdList = current.filteredCollectOrderListItemStateList.map { it.id }
+        val visibleIdList = current.filteredCollectOrderListItemStateList.map { it.invoiceNumber }
         val newSet = if (checked) {
             current.selectedOrderIdList + visibleIdList
         } else {
@@ -442,8 +441,9 @@ class OrderListScreenViewModel(
             }
         )
 
+        // TODO: Query stuff
         queryFlow.flatMapLatest { query ->
-            observeOrderListUseCase(query)
+            getCollectOrderWithCustomerListFlowUseCase()
         }.collectLatest { orders ->
             val collectOrderStateList = orders.toListItemState()
             setState {
@@ -455,7 +455,7 @@ class OrderListScreenViewModel(
                 )
                 val filtered = applyFiltersTo(collectOrderStateList, newStateBase)
                 // Maintain selection consistency when list changes
-                val filteredIds = filtered.map { it.id }.toSet()
+                val filteredIds = filtered.map { it.invoiceNumber }.toSet()
                 val newSelected =
                     if (isMultiSelectionEnabled) selectedOrderIdList.intersect(filteredIds) else emptySet()
                 val allSelected =
@@ -515,12 +515,13 @@ class OrderListScreenViewModel(
                             order.customerName.contains(chip.value, ignoreCase = true)
                         }
 
-                        OrderSearchGoBack
+                        OrderSearchSuggestionType.ORDER_NUMBER -> {
                             order.invoiceNumber.contains(chip.value, ignoreCase = true) ||
                                     (order.webOrderNumber?.contains(
                                         chip.value,
                                         ignoreCase = true
                                     ) == true)
+                        }
 
                         // No phone field on Order yet; keep as no-op so it doesn't exclude everything
                         OrderSearchSuggestionType.PHONE -> true

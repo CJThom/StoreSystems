@@ -4,14 +4,14 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderStates
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenContract.State> {
     override val values: Sequence<OrderListScreenContract.State>
         get() {
-            val orders = sampleCollectOrderStates()
+            val orders = sampleCollectOrderListItemStateList()
 
             val base = OrderListScreenContract.State(
                 collectOrderListItemStateList = orders,
@@ -75,13 +75,13 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
 
             val multiSelect = base.copy(
                 isMultiSelectionEnabled = true,
-                selectedOrderIdList = setOf(orders[0].id, orders[2].id),
+                selectedOrderIdList = setOf(orders[0].invoiceNumber, orders[2].invoiceNumber),
                 isSelectAllChecked = false
             )
 
             val multiSelectAll = base.copy(
                 isMultiSelectionEnabled = true,
-                selectedOrderIdList = orders.map { it.id }.toSet(),
+                selectedOrderIdList = orders.map { it.invoiceNumber }.toSet(),
                 isSelectAllChecked = true
             )
 

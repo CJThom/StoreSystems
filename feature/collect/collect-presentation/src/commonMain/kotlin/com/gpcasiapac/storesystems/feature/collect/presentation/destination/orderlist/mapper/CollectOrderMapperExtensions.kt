@@ -1,23 +1,20 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper
 
+
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderState
 
-
 internal fun CollectOrder.toState(): CollectOrderState {
     return CollectOrderState(
-        id = this.id,
         invoiceNumber = this.invoiceNumber,
         salesOrderNumber = this.salesOrderNumber,
         webOrderNumber = this.webOrderNumber,
         createdAt = this.createdAt,
-        pickedAt = this.pickedAt,
+        pickedAt = this.pickedAt
     )
 }
 
 internal fun List<CollectOrder>.toState(): List<CollectOrderState> {
     return map { it.toState() }
 }
-
-
 

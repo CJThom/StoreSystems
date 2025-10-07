@@ -4,10 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
- data class OrderDto(
-
-    @SerialName("id")
-    val id: String,
+ data class CollectOrderDto(
 
     // Legacy fields (kept for backward compatibility with existing JSON/migrations)
     @SerialName("customer_type")
@@ -37,8 +34,14 @@ import kotlinx.serialization.Serializable
     @SerialName("invoice_number")
     val invoiceNumber: String,
 
+    @SerialName("sales_order_number")
+    val salesOrderNumber: String,
+
     @SerialName("web_order_number")
     val webOrderNumber: String?,
+
+    @SerialName("created_at_epoch_ms")
+    val createdAtEpochMillis: Long,
 
     @SerialName("picked_at_epoch_ms")
     val pickedAtEpochMillis: Long,

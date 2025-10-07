@@ -99,19 +99,19 @@ fun OrderDetailScreen(
         ) {
             if (state.collectOrderWithCustomerWithLineItemsState != null) {
                 OrderDetails(
-                    invoiceNumber = state.collectOrderWithCustomerWithLineItemsState.invoiceNumber,
-                    webOrderNumber = state.collectOrderWithCustomerWithLineItemsState.webOrderNumber,
-                    createdAt = state.collectOrderWithCustomerWithLineItemsState.pickedAt, // TODO: get Order date
-                    pickedAt = state.collectOrderWithCustomerWithLineItemsState.pickedAt,
+                    invoiceNumber = state.collectOrderWithCustomerWithLineItemsState.order.invoiceNumber,
+                    webOrderNumber = state.collectOrderWithCustomerWithLineItemsState.order.webOrderNumber,
+                    createdAt = state.collectOrderWithCustomerWithLineItemsState.order.pickedAt, // TODO: get Order date
+                    pickedAt = state.collectOrderWithCustomerWithLineItemsState.order.pickedAt,
                 )
 
                 HorizontalDivider()
 
                 CustomerDetails(
-                    customerName = state.collectOrderWithCustomerWithLineItemsState.customerName,
-                    customerNumber = state.collectOrderWithCustomerWithLineItemsState.customerNumber,
-                    phoneNumber = state.collectOrderWithCustomerWithLineItemsState.customerMobileNumber,
-                    customerType = state.collectOrderWithCustomerWithLineItemsState.customerType,
+                    customerName = state.collectOrderWithCustomerWithLineItemsState.customer.name,
+                    customerNumber = state.collectOrderWithCustomerWithLineItemsState.customer.customerNumber,
+                    phoneNumber = state.collectOrderWithCustomerWithLineItemsState.customer.mobileNumber,
+                    customerType = state.collectOrderWithCustomerWithLineItemsState.customer.type,
                     modifier = Modifier
                 )
 

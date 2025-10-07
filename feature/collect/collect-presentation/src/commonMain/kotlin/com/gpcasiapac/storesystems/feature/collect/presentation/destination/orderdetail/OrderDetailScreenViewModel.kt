@@ -3,15 +3,13 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -19,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class OrderDetailScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val observeOrderListUseCase: ObserveOrderListUseCase,
+    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
 ) : MVIViewModel<
         OrderDetailScreenContract.Event,
@@ -146,16 +144,15 @@ class OrderDetailScreenViewModel(
 
     private suspend fun observeSelectionAndOrders() {
         val selectionFlow = observeOrderSelectionUseCase()
-        val orderListFlow = observeOrderListUseCase(OrderQuery(searchText = ""))
+        val orderListFlow = getCollectOrderWithCustomerListFlowUseCase()
         combine(selectionFlow, orderListFlow) { selectedSet, orders -> selectedSet to orders }
             .collectLatest { (selectedSet, orders) ->
                 when {
                     selectedSet.isEmpty() -> {
-                        val default: CollectOrder? = orders.firstOrNull()
+                        //   val default: CollectOrder? = orders.firstOrNull()
                         setState {
                             copy(
-                                collectOrderListItemStateList = default?.let { listOf(it.toState()) }
-                                    ?: emptyList(),
+                                collectOrderListItemStateList = orders.toListItemState(),
                                 isLoading = false,
                                 error = null
                             )
@@ -163,10 +160,10 @@ class OrderDetailScreenViewModel(
                     }
                     selectedSet.size == 1 -> {
                         val id = selectedSet.first()
-                        val selected = orders.firstOrNull { it.id == id }
+                        val selected = orders.firstOrNull { it.order.invoiceNumber == id }
                         setState {
                             copy(
-                                collectOrderListItemStateList = selected?.let { listOf(it.toState()) }
+                                collectOrderListItemStateList = selected?.let { listOf(it.toListItemState()) }
                                     ?: emptyList(),
                                 isLoading = false,
                                 error = null
@@ -174,10 +171,10 @@ class OrderDetailScreenViewModel(
                         }
                     }
                     else -> {
-                        val selectedOrders = orders.filter { it.id in selectedSet }
+                        val selectedOrders = orders.filter { it.order.invoiceNumber in selectedSet }
                         setState {
                             copy(
-                                collectOrderListItemStateList = selectedOrders.toState(),
+                                collectOrderListItemStateList = selectedOrders.toListItemState(),
                                 isLoading = false,
                                 error = null
                             )
