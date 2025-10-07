@@ -19,6 +19,8 @@ interface OrderRepository {
      */
     fun getCollectOrderWithCustomerWithLineItemsListFlow(orderQuery: OrderQuery): Flow<List<CollectOrderWithCustomerWithLineItems>>
 
+    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
+
     fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>>
 
     /**

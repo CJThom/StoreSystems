@@ -16,6 +16,7 @@ import org.koin.dsl.module
 val collectPresentationModule = module {
     viewModelOf(::OrderListScreenViewModel)
     viewModelOf(::OrderDetailScreenViewModel)
+
     viewModelOf(::SignatureScreenViewModel)
     viewModelOf(::CollectNavigationViewModel)
 

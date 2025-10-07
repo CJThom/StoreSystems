@@ -20,6 +20,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSugge
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class OrderRepositoryImpl(
@@ -43,6 +44,10 @@ class OrderRepositoryImpl(
                         ((o.order.webOrderNumber ?: "").lowercase().contains(query))
             }
         }
+    }
+
+    override fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?> {
+        return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber = invoiceNumber).map { it.toDomain() }
     }
 
     override fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>> {

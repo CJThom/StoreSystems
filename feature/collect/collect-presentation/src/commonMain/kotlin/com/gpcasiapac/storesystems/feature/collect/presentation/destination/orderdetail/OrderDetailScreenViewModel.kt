@@ -4,19 +4,25 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class OrderDetailScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
+    private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
     private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
 ) : MVIViewModel<
@@ -28,7 +34,6 @@ class OrderDetailScreenViewModel(
         return OrderDetailScreenContract.State(
             collectOrderWithCustomerWithLineItemsState = CollectOrderWithCustomerWithLineItemsState.placeholder(),
             collectOrderListItemStateList = listOf(CollectOrderListItemState.placeholder()),
-            isMultiOrder = { viewState.value.collectOrderListItemStateList.count() > 1 },
             isLoading = false,
             error = null,
             collectingType = CollectingType.STANDARD,
@@ -114,6 +119,8 @@ class OrderDetailScreenViewModel(
                 onSignatureSaved(event.strokes)
             }
 
+
+
             is OrderDetailScreenContract.Event.ClearSignature -> {
                 clearSignature()
             }
@@ -142,46 +149,54 @@ class OrderDetailScreenViewModel(
         }
     }
 
+    private sealed interface OrderSelectionResult {
+        data class Single(val order: CollectOrderWithCustomerWithLineItems?) : OrderSelectionResult
+        data class Multi(val orders: List<CollectOrderWithCustomer>) : OrderSelectionResult
+    }
+
     private suspend fun observeSelectionAndOrders() {
-        val selectionFlow = observeOrderSelectionUseCase()
-        val orderListFlow = getCollectOrderWithCustomerListFlowUseCase()
-        combine(selectionFlow, orderListFlow) { selectedSet, orders -> selectedSet to orders }
-            .collectLatest { (selectedSet, orders) ->
-                when {
-                    selectedSet.isEmpty() -> {
-                        //   val default: CollectOrder? = orders.firstOrNull()
-                        setState {
-                            copy(
-                                collectOrderListItemStateList = orders.toListItemState(),
-                                isLoading = false,
-                                error = null
-                            )
-                        }
+        observeOrderSelectionUseCase().flatMapLatest { selectionSet ->
+            when {
+                selectionSet.size == 1 -> {
+                    getCollectOrderWithCustomerWithLineItemsFlowUseCase(selectionSet.first()).map { order ->
+                        OrderSelectionResult.Single(order)
                     }
-                    selectedSet.size == 1 -> {
-                        val id = selectedSet.first()
-                        val selected = orders.firstOrNull { it.order.invoiceNumber == id }
-                        setState {
-                            copy(
-                                collectOrderListItemStateList = selected?.let { listOf(it.toListItemState()) }
-                                    ?: emptyList(),
-                                isLoading = false,
-                                error = null
-                            )
+                }
+                else -> {
+                    getCollectOrderWithCustomerListFlowUseCase().map { allOrders ->
+                        val selectedOrders = if (selectionSet.isNotEmpty()) {
+                            allOrders.filter { it.order.invoiceNumber in selectionSet }
+                        } else {
+                            allOrders
                         }
-                    }
-                    else -> {
-                        val selectedOrders = orders.filter { it.order.invoiceNumber in selectedSet }
-                        setState {
-                            copy(
-                                collectOrderListItemStateList = selectedOrders.toListItemState(),
-                                isLoading = false,
-                                error = null
-                            )
-                        }
+                        OrderSelectionResult.Multi(selectedOrders)
                     }
                 }
             }
+        }.collectLatest { result ->
+            when (result) {
+                is OrderSelectionResult.Single -> {
+                    setState {
+                        copy(
+                            collectOrderWithCustomerWithLineItemsState = result.order?.toState(), // todo check null
+                            collectOrderListItemStateList = emptyList(),
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                }
+                is OrderSelectionResult.Multi -> {
+                    setState {
+                        copy(
+                            collectOrderWithCustomerWithLineItemsState = null,
+                            collectOrderListItemStateList = result.orders.toListItemState(),
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private suspend fun fetchOrders(successToast: String) {

@@ -17,7 +17,7 @@ class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScree
                 collectOrderWithCustomerWithLineItemsState = order,
                 // Multi-order context
                 collectOrderListItemStateList = emptyList(),
-                isMultiOrder = { false },
+               // isMultiOrder = { false },
                 // Flags
                 isLoading = false,
                 error = null,

@@ -10,6 +10,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectO
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -40,6 +41,10 @@ interface CollectOrderDao {
     @Transaction
     @Query("SELECT * FROM collect_orders ORDER BY picked_at DESC")
     fun getCollectOrderWithCustomerRelationListFlow(): Flow<List<CollectOrderWithCustomerRelation>>
+
+    @Transaction
+    @Query("SELECT * FROM collect_orders where invoice_number = :invoiceNumber")
+    fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber:String): Flow<CollectOrderWithCustomerWithLineItemsRelation>
 
 //    // Lightweight suggestion queries (prefix match) returning only needed columns, limited per type
 //    @Query(

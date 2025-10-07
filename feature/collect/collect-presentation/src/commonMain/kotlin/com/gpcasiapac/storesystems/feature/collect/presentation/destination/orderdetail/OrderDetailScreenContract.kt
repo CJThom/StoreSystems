@@ -17,10 +17,9 @@ object OrderDetailScreenContract {
         val collectOrderWithCustomerWithLineItemsState: CollectOrderWithCustomerWithLineItemsState?,
         val collectOrderListItemStateList: List<CollectOrderListItemState>,
 
-        val isMultiOrder: () -> Boolean, // TODO: Maybe remove as now there is nullable collectOrderState
-
-        // Top-level flags
+        // Loading / refreshing
         val isLoading: Boolean,
+
         val error: String?,
 
         // Who's collecting

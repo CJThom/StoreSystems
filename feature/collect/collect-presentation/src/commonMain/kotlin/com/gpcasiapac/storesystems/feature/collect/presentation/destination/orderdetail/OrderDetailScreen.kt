@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayParam
@@ -130,103 +132,116 @@ fun OrderDetailScreen(
 //                    }
                 }
 
-            }
+            } else {
+                state.collectOrderListItemStateList.forEach { collectOrderState ->
 
-            HorizontalDivider()
-
-
-            // Collection Type Section
-
-            CollectionTypeSection(
-                onValueChange = { collectionType ->
-                    onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
-                },
-                modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                title = stringResource(Res.string.who_is_collecting),
-                value = state.collectingType,
-                options = listOf(
-                    CollectionTypeSectionDisplayParam(
-                        enabled = true,
-                        collectingType = CollectingType.STANDARD,
-                        icon = Icons.Outlined.Person,
-                        label = CollectingType.STANDARD.name,
-                    ), CollectionTypeSectionDisplayParam(
-                        enabled = true,
-                        collectingType = CollectingType.ACCOUNT,
-                        icon = Icons.Outlined.BusinessCenter,
-                        label = CollectingType.ACCOUNT.name,
-                    ), CollectionTypeSectionDisplayParam(
-                        enabled = true,
-                        collectingType = CollectingType.COURIER,
-                        icon = Icons.Outlined.LocalShipping,
-                        label = CollectingType.COURIER.name,
+                    CollectOrderDetails(
+                        customerName = collectOrderState.customerName,
+                        customerType = collectOrderState.customerType,
+                        invoiceNumber = collectOrderState.invoiceNumber,
+                        webOrderNumber = collectOrderState.webOrderNumber,
+                        pickedAt = collectOrderState.pickedAt,
+                        isLoading = state.isLoading,
+                        contendPadding = PaddingValues(Dimens.Space.medium),
                     )
-                ),
-            )
+                }
+
+                HorizontalDivider()
 
 
-            HorizontalDivider()
+                // Collection Type Section
 
-
-            // Signature Section
-
-            SignatureSection(
-                modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                onSignClick = {
-                    onEventSent(OrderDetailScreenContract.Event.Sign)
-                },
-                onRetakeClick = {
-                    onEventSent(OrderDetailScreenContract.Event.ClearSignature)
-                },
-                signatureStrokes = state.signatureStrokes
-            )
-
-
-            // Correspondence Section
-
-            CorrespondenceSection(
-                modifier = Modifier.padding(horizontal = Dimens.Space.medium)
-            ) {
-                CorrespondenceItemRow(
-                    "Email",
-                    "Send email to customer",
-                    isEnabled = state.emailChecked,
-                    onEdit = {
-                        onEventSent(OrderDetailScreenContract.Event.EditEmail)
+                CollectionTypeSection(
+                    onValueChange = { collectionType ->
+                        onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
                     },
-                    onCheckChange = {
-                        onEventSent(OrderDetailScreenContract.Event.ToggleEmail(!state.emailChecked))
-                    })
-                CorrespondenceItemRow(
-                    "Print",
-                    "Send invoice to printer",
-                    isEnabled = state.printChecked,
-                    onEdit = {
-                        onEventSent(OrderDetailScreenContract.Event.EditPrinter)
+                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                    title = stringResource(Res.string.who_is_collecting),
+                    value = state.collectingType,
+                    options = listOf(
+                        CollectionTypeSectionDisplayParam(
+                            enabled = true,
+                            collectingType = CollectingType.STANDARD,
+                            icon = Icons.Outlined.Person,
+                            label = CollectingType.STANDARD.name,
+                        ), CollectionTypeSectionDisplayParam(
+                            enabled = true,
+                            collectingType = CollectingType.ACCOUNT,
+                            icon = Icons.Outlined.BusinessCenter,
+                            label = CollectingType.ACCOUNT.name,
+                        ), CollectionTypeSectionDisplayParam(
+                            enabled = true,
+                            collectingType = CollectingType.COURIER,
+                            icon = Icons.Outlined.LocalShipping,
+                            label = CollectingType.COURIER.name,
+                        )
+                    ),
+                )
+
+
+                HorizontalDivider()
+
+
+                // Signature Section
+
+                SignatureSection(
+                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                    onSignClick = {
+                        onEventSent(OrderDetailScreenContract.Event.Sign)
                     },
-                    onCheckChange = {
-                        onEventSent(OrderDetailScreenContract.Event.TogglePrint(!state.printChecked))
-                    })
+                    onRetakeClick = {
+                        onEventSent(OrderDetailScreenContract.Event.ClearSignature)
+                    },
+                    signatureStrokes = state.signatureStrokes
+                )
+
+
+                // Correspondence Section
+
+                CorrespondenceSection(
+                    modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+                ) {
+                    CorrespondenceItemRow(
+                        "Email",
+                        "Send email to customer",
+                        isEnabled = state.emailChecked,
+                        onEdit = {
+                            onEventSent(OrderDetailScreenContract.Event.EditEmail)
+                        },
+                        onCheckChange = {
+                            onEventSent(OrderDetailScreenContract.Event.ToggleEmail(!state.emailChecked))
+                        })
+                    CorrespondenceItemRow(
+                        "Print",
+                        "Send invoice to printer",
+                        isEnabled = state.printChecked,
+                        onEdit = {
+                            onEventSent(OrderDetailScreenContract.Event.EditPrinter)
+                        },
+                        onCheckChange = {
+                            onEventSent(OrderDetailScreenContract.Event.TogglePrint(!state.printChecked))
+                        })
+                }
+
+
+                // Confirm Button
+
+                ActionButton(
+                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                    title = {
+                        Text(
+                            text = "Confirm",
+                        )
+                    },
+                    onClick = {
+                        onEventSent(OrderDetailScreenContract.Event.Confirm)
+                    },
+                )
             }
-
-
-            // Confirm Button
-
-            ActionButton(
-                modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                title = {
-                    Text(
-                        text = "Confirm",
-                    )
-                },
-                onClick = {
-                    onEventSent(OrderDetailScreenContract.Event.Confirm)
-                },
-            )
         }
     }
-
 }
+
 
 @Preview(
     name = "Order detail",
