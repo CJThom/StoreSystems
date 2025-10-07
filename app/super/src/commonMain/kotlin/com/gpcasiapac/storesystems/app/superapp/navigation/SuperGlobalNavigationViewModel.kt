@@ -106,7 +106,7 @@ class SuperGlobalNavigationViewModel :
         when (outcome) {
             is CollectOutcome.OrderSelected -> pushInTab(
                 Collect(),
-                OrderDetails(outcome.orderId)
+                OrderDetails
             )
 
             is CollectOutcome.Back -> popBackInTab(Collect(), 1)
