@@ -3,9 +3,16 @@ package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 
-class SuperAppShellViewModel : BaseNavViewModel<SuperAppShellContract.Event, SuperAppDestination>() {
+class SuperAppShellViewModel :
+    BaseNavViewModel<SuperAppShellContract.Event,SuperAppShellContract.State, SuperAppDestination>() {
 
-    override fun provideStartKey(): SuperAppDestination = SuperAppDestination.LoginHost
+    override fun setInitialState(): SuperAppShellContract.State {
+        return SuperAppShellContract.State(stack = listOf(SuperAppDestination.LoginHost))
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: SuperAppShellContract.Event) {
         when (event) {

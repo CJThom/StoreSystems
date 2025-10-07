@@ -10,9 +10,20 @@ import org.koin.core.component.KoinComponent
 
 class LoginNavigationViewModel(
     private val flags: FeatureFlags
-) : BaseNavViewModel<LoginNavigationContract.Event, LoginFeatureDestination>(), KoinComponent {
+) : BaseNavViewModel<LoginNavigationContract.Event, LoginNavigationContract.State, LoginFeatureDestination>(),
+    KoinComponent {
 
-    override fun provideStartKey(): LoginFeatureDestination = LoginFeatureDestination.Login
+    override fun setInitialState(): LoginNavigationContract.State {
+        return LoginNavigationContract.State(
+            stack = listOf(
+                LoginFeatureDestination.Login
+            )
+        )
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: LoginNavigationContract.Event) {
         when (event) {

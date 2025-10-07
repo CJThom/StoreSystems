@@ -9,24 +9,32 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
  * Base ViewModel that manages a navigation back stack as immutable list in state.
  *
  * - Compose-free and UI-agnostic
- * - Single source of truth lives in the ViewModelx
+ * - Single source of truth lives in the ViewModel
  * - Backed by simple reducer helpers for predictable, testable behavior
+ * - Generic state support allows features to extend with additional properties
  */
-abstract class BaseNavViewModel<Event : ViewEvent, K : NavKey> :
-    MVIViewModel<Event, NavState, ViewSideEffect>() {
-
-    /**
-     * Provide the starting key shown as the root of the back stack.
-     * Using a function avoids subclass property initialization order issues during base init.
-     */
-    protected abstract fun provideStartKey(): K
-
-    override fun setInitialState(): NavState = NavState(stack = listOf(provideStartKey()))
-
-    override fun onStart() { /* no-op by default */ }
+abstract class BaseNavViewModel<Event : ViewEvent,  State : ViewStateWithNavigation<State>, K : NavKey> :
+    MVIViewModel<Event, State, ViewSideEffect>() {
 
     // Protected helpers for subclasses to update the back stack from their handleEvents()
-    protected fun push(key: K) = setState { copy(stack = BackStackReducer.push(stack, key)) }
-    protected fun pop(count: Int = 1) = setState { copy(stack = BackStackReducer.pop(stack, count)) }
-    protected fun replaceTop(key: K) = setState { copy(stack = BackStackReducer.replaceTop(stack, key)) }
+    protected fun push(key: K) = setState {
+        copyWithStack(BackStackReducer.push(stack, key))
+    }
+
+    protected fun pop(count: Int = 1) = setState {
+        copyWithStack(BackStackReducer.pop(stack, count))
+    }
+
+    protected fun replaceTop(key: K) = setState {
+        copyWithStack(BackStackReducer.replaceTop(stack, key))
+    }
+
+    protected fun pushOrReplaceTop(key: K) = setState {
+        copyWithStack(BackStackReducer.pushOrReplace(stack, key))
+    }
+
+    protected fun truncateAfterAndPush(key: K, afterKey: K) = setState {
+        copyWithStack(BackStackReducer.truncateAfterAndPush(stack, key, afterKey))
+    }
+
 }

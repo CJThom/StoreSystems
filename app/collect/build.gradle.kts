@@ -19,10 +19,12 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.androidx.compose)
-
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
             implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -31,7 +33,9 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.preview)
             implementation(compose.components.resources)
+            implementation(compose.animation)
             implementation(compose.components.uiToolingPreview)
+            implementation(compose.material3AdaptiveNavigationSuite)
 
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)

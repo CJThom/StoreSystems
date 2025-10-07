@@ -5,9 +5,15 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 
 class CollectAppNavigationViewModel :
-    BaseNavViewModel<CollectAppNavContract.Event, CollectAppDestination>() {
+    BaseNavViewModel<CollectAppNavContract.Event, CollectAppNavContract.State, CollectAppDestination>() {
 
-    override fun provideStartKey(): CollectAppDestination = CollectAppDestination.LoginHost
+    override fun setInitialState(): CollectAppNavContract.State {
+        return CollectAppNavContract.State(stack = listOf(CollectAppDestination.LoginHost))
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: CollectAppNavContract.Event) {
         when (event) {

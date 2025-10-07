@@ -6,9 +6,18 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 
 class CollectNavigationViewModel :
-    BaseNavViewModel<CollectNavigationContract.Event, CollectFeatureDestination>() {
+    BaseNavViewModel<CollectNavigationContract.Event, CollectNavigationContract.State, CollectFeatureDestination>() {
 
-    override fun provideStartKey(): CollectFeatureDestination = CollectFeatureDestination.Orders
+    override fun setInitialState(): CollectNavigationContract.State {
+        return CollectNavigationContract.State(
+            stack = listOf(CollectFeatureDestination.Orders),
+            mayBeString = null
+        )
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: CollectNavigationContract.Event) {
         when (event) {
@@ -19,14 +28,16 @@ class CollectNavigationViewModel :
 
     private fun handleOutcome(outcome: CollectOutcome) {
         when (outcome) {
-            is CollectOutcome.OrderSelected -> push(CollectFeatureDestination.OrderDetails(outcome.orderId))
+            is CollectOutcome.OrderSelected -> pushOrReplaceTop(CollectFeatureDestination.OrderDetails)
             is CollectOutcome.Back -> pop()
             is CollectOutcome.Logout -> {
                 // Emit external outcome to navigate to login screen
                 setEffect { CollectNavigationContract.Effect.ExternalOutcome(CollectExternalOutcome.Logout) }
             }
             is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature)
-            is CollectOutcome.SignatureSaved -> pop()
+            is CollectOutcome.SignatureSaved -> {
+                pop()
+            }
         }
     }
 }

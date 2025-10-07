@@ -5,9 +5,15 @@ import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.feature.history.api.HistoryOutcome
 
 class HistoryNavigationViewModel :
-    BaseNavViewModel<HistoryNavigationContract.Event, HistoryFeatureDestination>() {
+    BaseNavViewModel<HistoryNavigationContract.Event,HistoryNavigationContract.State, HistoryFeatureDestination>() {
 
-    override fun provideStartKey(): HistoryFeatureDestination = HistoryFeatureDestination.History
+    override fun setInitialState(): HistoryNavigationContract.State {
+        return HistoryNavigationContract.State(listOf(HistoryFeatureDestination.History))
+    }
+
+    override fun onStart() {
+
+    }
 
     override fun handleEvents(event: HistoryNavigationContract.Event) {
         when (event) {
