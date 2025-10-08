@@ -1,41 +1,42 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.SignatureInput
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureCanvas
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -103,33 +104,54 @@ fun SignatureScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(Dimens.Space.medium),
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
             ) {
                 // Customer Details Card
                 CustomerDetails(
+                    modifier = Modifier.padding(Dimens.Space.medium),
                     customerName = "Customer Name",
                     customerNumber = "Customer Number",
                     phoneNumber = "Phone Number",
                     customerType = CustomerType.B2C
                 )
                 HorizontalDivider()
-//                SignatureInput {
-//                    signatureBitmap.value = it
-//                }
-                // Signature Canvas
-                //Signature
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        "Please sign here",
+                        modifier = Modifier.padding(Dimens.Space.medium),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    OutlinedButton(
+                        enabled = state.signatureStrokes.isNotEmpty(),
+                        onClick = {
+                            onEventSent(SignatureScreenContract.Event.StrokesChanged(emptyList()))
+                        }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear")
+                            Text("Clear All")
+                        }
+                    }
+                }
+
                 SignatureCanvas(
+                    onComplete = {
+                        signatureBitmap.value = it
+                    },
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .weight(1f)  ,
+                        .padding(Dimens.Space.medium)
+                        .weight(1f),
                     strokes = state.signatureStrokes,
                     onStrokesChange = { strokes ->
                         onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
                     },
-                    strokeWidth = 6.dp,
-                    strokeColor = MaterialTheme.colorScheme.primary,
+                    strokeColor = Color.Black,
                 )
 
                 // Confirm Button
@@ -141,14 +163,8 @@ fun SignatureScreen(
                     },
                     enabled = !state.isLoading && state.signatureStrokes.isNotEmpty(),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Dimens.Size.buttonHeight),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
-                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.38f)
-                    ),
+                        .padding(Dimens.Space.medium)
+                        .fillMaxWidth(),
                     shape = MaterialTheme.shapes.small
                 ) {
                     if (state.isLoading) {
@@ -166,9 +182,5 @@ fun SignatureScreen(
             }
         }
     }
-
-//    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
-//        Content(padding, state, onEventSent)
-//    }
 }
 
