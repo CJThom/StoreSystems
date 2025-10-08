@@ -81,6 +81,9 @@ object OrderFulfilmentScreenContract {
 
         // Product list
         data object ToggleProductListExpansion : Event
+
+        // Order item click
+        data class OrderClicked(val invoiceNumber: String) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -90,8 +93,8 @@ object OrderFulfilmentScreenContract {
         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
-
             data object SignatureRequested: Outcome
+            data class NavigateToOrderDetails(val invoiceNumber: String) : Outcome
         }
     }
 }

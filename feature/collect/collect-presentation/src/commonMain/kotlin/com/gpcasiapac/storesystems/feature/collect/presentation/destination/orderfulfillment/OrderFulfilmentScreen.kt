@@ -34,12 +34,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Colle
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.ListSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.OrderDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.SingleOrderContent
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -120,7 +116,9 @@ fun OrderFulfilmentScreen(
                     state.collectOrderListItemStateList.forEach { collectOrderState ->
                         OutlinedCard(
                             modifier = Modifier.fillMaxWidth(),
-                            onClick = {},
+                            onClick = {
+                                onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(collectOrderState.invoiceNumber))
+                            },
                             enabled = true
                         ) {
                             CollectOrderDetails(
@@ -221,52 +219,6 @@ fun OrderFulfilmentScreen(
             )
         }
     }
-}
-
-//compose function for single order content
-@Composable
-fun SingleOrderContent(
-    orderState: CollectOrderWithCustomerWithLineItemsState,
-    onViewMoreClick: () -> Unit,
-    visibleLineItemListCount: Int,
-    isProductListExpanded: Boolean,
-) {
-
-    OrderDetails(
-        invoiceNumber = orderState.order.invoiceNumber,
-        webOrderNumber = orderState.order.webOrderNumber,
-        createdAt = orderState.order.pickedAt, // TODO: get Order date
-        pickedAt = orderState.order.pickedAt,
-    )
-
-    HorizontalDivider()
-
-    CustomerDetails(
-        customerName = orderState.customer.name,
-        customerNumber = orderState.customer.customerNumber,
-        phoneNumber = orderState.customer.mobileNumber,
-        customerType = orderState.customer.type,
-        modifier = Modifier
-    )
-
-    HorizontalDivider()
-
-    ListSection(
-        headline = "Product list",
-        modifier = Modifier,
-        isExpanded = isProductListExpanded,
-        onViewMoreClick = onViewMoreClick,
-    ) {
-        orderState.lineItemList.take(visibleLineItemListCount).forEach { lineItem ->
-            ProductDetails(
-                description = lineItem.productDescription,
-                sku = lineItem.productNumber,
-                quantity = lineItem.quantity,
-                contentPadding = PaddingValues()
-            )
-        }
-    }
-
 }
 
 @Preview(

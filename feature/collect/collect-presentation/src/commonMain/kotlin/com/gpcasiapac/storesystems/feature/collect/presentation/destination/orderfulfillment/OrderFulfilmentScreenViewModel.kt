@@ -145,6 +145,9 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.ToggleProductListExpansion -> {
                 toggleProductListExpansion()
             }
+            is OrderFulfilmentScreenContract.Event.OrderClicked -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(event.invoiceNumber) }
+            }
         }
     }
 

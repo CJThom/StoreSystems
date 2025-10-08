@@ -119,6 +119,9 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                         is OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
                             CollectOutcome.SignatureRequested
                         )
+                        is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
+                            CollectOutcome.OrderSelected(effect.invoiceNumber)
+                        )
                     }
                 }
             }
