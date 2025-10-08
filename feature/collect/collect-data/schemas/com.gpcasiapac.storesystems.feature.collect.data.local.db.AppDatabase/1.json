@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1df33f2cb2772b4619b27329f1b3de45",
+    "identityHash": "a918eb6e0482718f5905968dfae944f4",
     "entities": [
       {
         "tableName": "collect_orders",
@@ -97,7 +97,7 @@
       },
       {
         "tableName": "collect_order_line_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`line_number` INTEGER NOT NULL, `invoice_number` TEXT NOT NULL, PRIMARY KEY(`line_number`), FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`line_number` INTEGER NOT NULL, `invoice_number` TEXT NOT NULL, `sku` TEXT NOT NULL, `product_number` TEXT NOT NULL, `product_description` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `unit_price` REAL NOT NULL, PRIMARY KEY(`invoice_number`, `line_number`), FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "lineNumber",
@@ -110,14 +110,56 @@
             "columnName": "invoice_number",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "sku",
+            "columnName": "sku",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productNumber",
+            "columnName": "product_number",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productDescription",
+            "columnName": "product_description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantity",
+            "columnName": "quantity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPrice",
+            "columnName": "unit_price",
+            "affinity": "REAL",
+            "notNull": true
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
+            "invoice_number",
             "line_number"
           ]
         },
+        "indices": [
+          {
+            "name": "index_collect_order_line_items_invoice_number",
+            "unique": false,
+            "columnNames": [
+              "invoice_number"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_collect_order_line_items_invoice_number` ON `${TABLE_NAME}` (`invoice_number`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "collect_orders",
@@ -135,7 +177,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1df33f2cb2772b4619b27329f1b3de45')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a918eb6e0482718f5905968dfae944f4')"
     ]
   }
 }

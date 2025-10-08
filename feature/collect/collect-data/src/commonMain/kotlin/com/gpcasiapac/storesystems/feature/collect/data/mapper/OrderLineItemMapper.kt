@@ -5,8 +5,12 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLine
 
 internal fun CollectOrderLineItemEntity.toDomain(): CollectOrderLineItem {
     return CollectOrderLineItem(
-        invoiceNumber = this.invoiceNumber,
-        lineNumber = this.lineNumber
+        lineNumber = this.lineNumber,
+        sku = this.sku,
+        productNumber = this.productNumber,
+        productDescription = this.productDescription,
+        quantity = this.quantity,
+        unitPrice = this.unitPrice
     )
 }
 

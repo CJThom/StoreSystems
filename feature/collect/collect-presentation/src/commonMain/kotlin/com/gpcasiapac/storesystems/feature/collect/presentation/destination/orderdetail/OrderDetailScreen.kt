@@ -128,9 +128,9 @@ fun OrderDetailScreen(
                 ) {
                     state.collectOrderWithCustomerWithLineItemsState.lineItemList.forEach { lineItem ->
                         ProductDetails(
-                            productName = product.name,
-                            productCode = product.code,
-                            quantity = product.quantity,
+                            productName = lineItem.productDescription,
+                            productCode = lineItem.productNumber,
+                            quantity = lineItem.quantity,
                         )
                     }
                 }

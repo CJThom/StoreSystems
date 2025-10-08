@@ -6,7 +6,12 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 
 internal fun CollectOrderLineItem.toState(): CollectOrderLineItemState {
     return CollectOrderLineItemState(
-        lineNumber = this.lineNumber
+        lineNumber = this.lineNumber,
+        sku = this.sku,
+        productNumber = this.productNumber,
+        productDescription = this.productDescription,
+        quantity = this.quantity,
+        unitPrice = this.unitPrice
     )
 }
 

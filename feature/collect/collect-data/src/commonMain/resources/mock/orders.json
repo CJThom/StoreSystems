@@ -10,7 +10,25 @@
     "sales_order_number": "SO-001",
     "web_order_number": "84777189930",
     "created_at_epoch_ms": 1759131000000,
-    "picked_at_epoch_ms": 1759131300000
+    "picked_at_epoch_ms": 1759131300000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Product 1 Description",
+        "quantity": 2,
+        "unit_price": 10.50
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Product 2 Description",
+        "quantity": 1,
+        "unit_price": 25.00
+      }
+    ]
   },
   {
     "customer_type": "B2B",
@@ -22,7 +40,17 @@
     "sales_order_number": "SO-002",
     "web_order_number": "84777189930",
     "created_at_epoch_ms": 1759296600000,
-    "picked_at_epoch_ms": 1759296900000
+    "picked_at_epoch_ms": 1759296900000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Product 3 Description",
+        "quantity": 10,
+        "unit_price": 100.00
+      }
+    ]
   },
   {
     "customer_type": "B2B",
@@ -34,7 +62,33 @@
     "sales_order_number": "SO-003",
     "web_order_number": "84777189930",
     "created_at_epoch_ms": 1759301100000,
-    "picked_at_epoch_ms": 1759301400000
+    "picked_at_epoch_ms": 1759301400000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Product 4 Description",
+        "quantity": 1,
+        "unit_price": 50.00
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Product 5 Description",
+        "quantity": 2,
+        "unit_price": 15.00
+      },
+      {
+        "line_number": 3,
+        "sku": "SKU-006",
+        "product_number": "PROD-006",
+        "product_description": "Product 6 Description",
+        "quantity": 3,
+        "unit_price": 75.00
+      }
+    ]
   },
   {
     "customer_type": "B2C",
@@ -47,7 +101,41 @@
     "sales_order_number": "SO-004",
     "web_order_number": "84777189930",
     "created_at_epoch_ms": 1759302000000,
-    "picked_at_epoch_ms": 1759302300000
+    "picked_at_epoch_ms": 1759302300000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Product 5 Description",
+        "quantity": 3,
+        "unit_price": 15.00
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Product 1 Description",
+        "quantity": 1,
+        "unit_price": 10.50
+      },
+      {
+        "line_number": 3,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Product 2 Description",
+        "quantity": 1,
+        "unit_price": 25.00
+      },
+      {
+        "line_number": 4,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Product 3 Description",
+        "quantity": 4,
+        "unit_price": 100.00
+      }
+    ]
   },
   {
     "customer_type": "B2C",
@@ -60,7 +148,49 @@
     "sales_order_number": "SO-005",
     "web_order_number": "84777189930",
     "created_at_epoch_ms": 1759302900000,
-    "picked_at_epoch_ms": 1759303200000
+    "picked_at_epoch_ms": 1759303200000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Product 1 Description",
+        "quantity": 1,
+        "unit_price": 10.50
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Product 2 Description",
+        "quantity": 2,
+        "unit_price": 25.00
+      },
+      {
+        "line_number": 3,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Product 3 Description",
+        "quantity": 3,
+        "unit_price": 100.00
+      },
+      {
+        "line_number": 4,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Product 4 Description",
+        "quantity": 4,
+        "unit_price": 50.00
+      },
+      {
+        "line_number": 5,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Product 5 Description",
+        "quantity": 5,
+        "unit_price": 15.00
+      }
+    ]
   },
   {
     "customer_type": "B2C",
@@ -73,7 +203,57 @@
     "sales_order_number": "SO-006",
     "web_order_number": "84777189930",
     "created_at_epoch_ms": 1759303500000,
-    "picked_at_epoch_ms": 1759303800000
+    "picked_at_epoch_ms": 1759303800000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Product 2 Description",
+        "quantity": 5,
+        "unit_price": 25.00
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Product 1 Description",
+        "quantity": 1,
+        "unit_price": 10.50
+      },
+      {
+        "line_number": 3,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Product 3 Description",
+        "quantity": 2,
+        "unit_price": 100.00
+      },
+      {
+        "line_number": 4,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Product 4 Description",
+        "quantity": 1,
+        "unit_price": 50.00
+      },
+      {
+        "line_number": 5,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Product 5 Description",
+        "quantity": 3,
+        "unit_price": 15.00
+      },
+      {
+        "line_number": 6,
+        "sku": "SKU-006",
+        "product_number": "PROD-006",
+        "product_description": "Product 6 Description",
+        "quantity": 1,
+        "unit_price": 75.00
+      }
+    ]
   },
   {
     "customer_type": "B2C",
@@ -86,7 +266,17 @@
     "sales_order_number": "SO-007",
     "web_order_number": null,
     "created_at_epoch_ms": 1696636500000,
-    "picked_at_epoch_ms": 1696636800000
+    "picked_at_epoch_ms": 1696636800000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Product 3 Description",
+        "quantity": 2,
+        "unit_price": 100.00
+      }
+    ]
   },
   {
     "customer_type": "B2B",
@@ -98,7 +288,25 @@
     "sales_order_number": "SO-008",
     "web_order_number": "WEB-2008",
     "created_at_epoch_ms": 1696722900000,
-    "picked_at_epoch_ms": 1696723200000
+    "picked_at_epoch_ms": 1696723200000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Product 4 Description",
+        "quantity": 100,
+        "unit_price": 50.00
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Product 5 Description",
+        "quantity": 200,
+        "unit_price": 15.00
+      }
+    ]
   },
   {
     "customer_type": "B2C",
@@ -111,7 +319,17 @@
     "sales_order_number": "SO-009",
     "web_order_number": null,
     "created_at_epoch_ms": 1696809300000,
-    "picked_at_epoch_ms": 1696809600000
+    "picked_at_epoch_ms": 1696809600000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Product 1 Description",
+        "quantity": 1,
+        "unit_price": 10.50
+      }
+    ]
   },
   {
     "customer_type": "B2B",
@@ -123,6 +341,16 @@
     "sales_order_number": "SO-010",
     "web_order_number": "WEB-2010",
     "created_at_epoch_ms": 1696895700000,
-    "picked_at_epoch_ms": 1696896000000
+    "picked_at_epoch_ms": 1696896000000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Product 2 Description",
+        "quantity": 10,
+        "unit_price": 25.00
+      }
+    ]
   }
 ]

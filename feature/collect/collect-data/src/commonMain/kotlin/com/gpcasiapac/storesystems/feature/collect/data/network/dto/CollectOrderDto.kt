@@ -46,4 +46,7 @@ import kotlinx.serialization.Serializable
     @SerialName("picked_at_epoch_ms")
     val pickedAtEpochMillis: Long,
 
+    @SerialName("line_items")
+    val lineItemDtoList: List<CollectOrderLineItemDto> = emptyList()
+
 )

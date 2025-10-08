@@ -1,7 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.model
 
 data class CollectOrderLineItem(
-    val invoiceNumber: String,
     val lineNumber: Int,
+    val sku: String,
+    val productNumber: String,
+    val productDescription: String,
+    val quantity: Int,
+    val unitPrice: Double
 )
-

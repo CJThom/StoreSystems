@@ -79,12 +79,27 @@ fun sampleCollectOrderWithCustomerWithLineItemsState(): CollectOrderWithCustomer
     lineItemList = listOf(
         CollectOrderLineItemState(
             lineNumber = 1,
+            sku = "SKU-001",
+            productNumber = "PROD-001",
+            productDescription = "Product 1 Description",
+            quantity = 2,
+            unitPrice = 10.50
         ),
         CollectOrderLineItemState(
             lineNumber = 2,
+            sku = "SKU-002",
+            productNumber = "PROD-002",
+            productDescription = "Product 2 Description",
+            quantity = 1,
+            unitPrice = 25.00
         ),
         CollectOrderLineItemState(
             lineNumber = 3,
+            sku = "SKU-003",
+            productNumber = "PROD-003",
+            productDescription = "Product 3 Description",
+            quantity = 10,
+            unitPrice = 100.00
         ),
     )
 )
