@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -23,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SingleOrderContent
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +43,9 @@ fun OrderDetailsScreen(
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
+                is OrderDetailsScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
+                    effect.message, duration = SnackbarDuration.Short
+                )
                 is OrderDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
                     effect.error
                 )
