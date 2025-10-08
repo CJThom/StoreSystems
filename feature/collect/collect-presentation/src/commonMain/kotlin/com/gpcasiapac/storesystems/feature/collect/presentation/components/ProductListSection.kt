@@ -23,10 +23,12 @@ fun ProductListSection(
     modifier: Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
         modifier = modifier
     ) {
+
         Text(
             text = "Product list",
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
@@ -59,10 +61,8 @@ fun ProductListPreview() {
                 ProductDetails(
                     productName = "Bendix Brake Pads Set - Ultimate 4WD - DB2060 ULT4WD",
                     productCode = "1A5563",
-                    price = 37.99,
                     quantity = 8,
-                    showPrice = true,
-                    showQuantity = true
+                    isLoading = false
                 )
             }
         }

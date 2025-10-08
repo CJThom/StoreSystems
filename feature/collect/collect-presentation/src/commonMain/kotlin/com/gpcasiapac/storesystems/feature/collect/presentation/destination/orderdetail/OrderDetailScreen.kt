@@ -35,6 +35,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Colle
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.component.OrderDetails
@@ -125,14 +126,13 @@ fun OrderDetailScreen(
                 ProductListSection(
                     modifier = Modifier.padding(horizontal = Dimens.Space.medium)
                 ) {
-//                    products.forEach { product ->
-//                        ProductDetails(
-//                            productName = product.name,
-//                            productCode = product.code,
-//                            price = product.price,
-//                            quantity = product.quantity,
-//                        )
-//                    }
+                    state.collectOrderWithCustomerWithLineItemsState.lineItemList.forEach { lineItem ->
+                        ProductDetails(
+                            productName = product.name,
+                            productCode = product.code,
+                            quantity = product.quantity,
+                        )
+                    }
                 }
 
             } else {

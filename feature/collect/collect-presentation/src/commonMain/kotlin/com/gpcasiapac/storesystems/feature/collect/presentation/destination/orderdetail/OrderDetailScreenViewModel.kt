@@ -4,27 +4,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSelectionResult
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class OrderDetailScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
-    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
-    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
+    private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
 ) : MVIViewModel<
         OrderDetailScreenContract.Event,
         OrderDetailScreenContract.State,
@@ -62,17 +55,19 @@ class OrderDetailScreenViewModel(
 
     override fun onStart() {
         // Observe selection from repository and current order list to render single vs multi
-        viewModelScope.launch { observeSelectionAndOrders() }
-        // Kick off an initial fetch to populate data
-        viewModelScope.launch { fetchOrders(successToast = "Orders loaded") }
+        viewModelScope.launch {
+            observeOrderSelectionResult()
+        }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: OrderDetailScreenContract.Event) {
         when (event) {
 
-            is OrderDetailScreenContract.Event.Refresh -> viewModelScope.launch {
-                fetchOrders(successToast = "Orders refreshed")
+            is OrderDetailScreenContract.Event.Refresh -> {
+                viewModelScope.launch {
+                    fetchOrders(successToast = "Orders refreshed")
+                }
             }
 
             is OrderDetailScreenContract.Event.ClearError -> {
@@ -119,8 +114,6 @@ class OrderDetailScreenViewModel(
                 onSignatureSaved(event.strokes)
             }
 
-
-
             is OrderDetailScreenContract.Event.ClearSignature -> {
                 clearSignature()
             }
@@ -149,36 +142,13 @@ class OrderDetailScreenViewModel(
         }
     }
 
-    private sealed interface OrderSelectionResult {
-        data class Single(val order: CollectOrderWithCustomerWithLineItems?) : OrderSelectionResult
-        data class Multi(val orders: List<CollectOrderWithCustomer>) : OrderSelectionResult
-    }
-
-    private suspend fun observeSelectionAndOrders() {
-        observeOrderSelectionUseCase().flatMapLatest { selectionSet ->
-            when {
-                selectionSet.size == 1 -> {
-                    getCollectOrderWithCustomerWithLineItemsFlowUseCase(selectionSet.first()).map { order ->
-                        OrderSelectionResult.Single(order)
-                    }
-                }
-                else -> {
-                    getCollectOrderWithCustomerListFlowUseCase().map { allOrders ->
-                        val selectedOrders = if (selectionSet.isNotEmpty()) {
-                            allOrders.filter { it.order.invoiceNumber in selectionSet }
-                        } else {
-                            allOrders
-                        }
-                        OrderSelectionResult.Multi(selectedOrders)
-                    }
-                }
-            }
-        }.collectLatest { result ->
+    private suspend fun observeOrderSelectionResult() {
+        observeOrderSelectionResultUseCase().collectLatest { result ->
             when (result) {
                 is OrderSelectionResult.Single -> {
                     setState {
                         copy(
-                            collectOrderWithCustomerWithLineItemsState = result.order?.toState(), // todo check null
+                            collectOrderWithCustomerWithLineItemsState = result.order?.toState(), // TODO: Handle null
                             collectOrderListItemStateList = emptyList(),
                             isLoading = false,
                             error = null
@@ -189,7 +159,7 @@ class OrderDetailScreenViewModel(
                     setState {
                         copy(
                             collectOrderWithCustomerWithLineItemsState = null,
-                            collectOrderListItemStateList = result.orders.toListItemState(),
+                            collectOrderListItemStateList = result.orderList.toListItemState(),
                             isLoading = false,
                             error = null
                         )

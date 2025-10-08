@@ -11,7 +11,6 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -21,16 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.foundation.PlaceholderDefaults
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.color
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import jdk.jfr.Enabled
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
@@ -95,7 +91,10 @@ private fun DetailItemContent(
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
 ) {
     Row(
-        modifier = modifier.padding(contentPadding).placeholder(visible = isLoading),
+        modifier = modifier
+            .padding(contentPadding)
+            .padding(end = Dimens.Space.extraSmall)
+            .placeholder(visible = isLoading),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
