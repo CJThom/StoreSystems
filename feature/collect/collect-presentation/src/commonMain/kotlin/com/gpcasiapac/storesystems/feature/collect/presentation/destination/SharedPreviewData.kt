@@ -1,10 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderCustomerState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderLineItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderCustomerState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderLineItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days

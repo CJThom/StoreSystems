@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
@@ -17,16 +17,16 @@ import kotlinx.coroutines.launch
 
 private const val COLLAPSED_PRODUCT_LIST_COUNT = 2
 
-class OrderDetailScreenViewModel(
+class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
 ) : MVIViewModel<
-        OrderDetailScreenContract.Event,
-        OrderDetailScreenContract.State,
-        OrderDetailScreenContract.Effect>() {
+        OrderFulfilmentScreenContract.Event,
+        OrderFulfilmentScreenContract.State,
+        OrderFulfilmentScreenContract.Effect>() {
 
-    override fun setInitialState(): OrderDetailScreenContract.State {
-        return OrderDetailScreenContract.State(
+    override fun setInitialState(): OrderFulfilmentScreenContract.State {
+        return OrderFulfilmentScreenContract.State(
             collectOrderWithCustomerWithLineItemsState = CollectOrderWithCustomerWithLineItemsState.placeholder(),
             collectOrderListItemStateList = listOf(CollectOrderListItemState.placeholder()),
             isLoading = false,
@@ -64,85 +64,85 @@ class OrderDetailScreenViewModel(
     }
 
     // TABLE OF CONTENTS - All possible events handled here
-    override fun handleEvents(event: OrderDetailScreenContract.Event) {
+    override fun handleEvents(event: OrderFulfilmentScreenContract.Event) {
         when (event) {
 
-            is OrderDetailScreenContract.Event.Refresh -> {
+            is OrderFulfilmentScreenContract.Event.Refresh -> {
                 viewModelScope.launch {
                     fetchOrders(successToast = "Orders refreshed")
                 }
             }
 
-            is OrderDetailScreenContract.Event.ClearError -> {
+            is OrderFulfilmentScreenContract.Event.ClearError -> {
                 setState { copy(error = null) }
             }
 
-            is OrderDetailScreenContract.Event.Back -> {
-                setEffect { OrderDetailScreenContract.Effect.Outcome.Back }
+            is OrderFulfilmentScreenContract.Event.Back -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Back }
             }
 
             // Collecting selector
-            is OrderDetailScreenContract.Event.CollectingChanged -> {
+            is OrderFulfilmentScreenContract.Event.CollectingChanged -> {
                 onCollectingChanged(event.type)
             }
 
             // Account flow
-            is OrderDetailScreenContract.Event.RepresentativeSearchChanged -> {
+            is OrderFulfilmentScreenContract.Event.RepresentativeSearchChanged -> {
                 setState { copy(representativeSearchText = event.text) }
             }
 
-            is OrderDetailScreenContract.Event.RepresentativeChecked -> {
+            is OrderFulfilmentScreenContract.Event.RepresentativeChecked -> {
                 onRepresentativeChecked(event.representativeId, event.checked)
             }
 
-            is OrderDetailScreenContract.Event.ClearRepresentativeSelection -> {
+            is OrderFulfilmentScreenContract.Event.ClearRepresentativeSelection -> {
                 setState { copy(selectedRepresentativeIdList = emptySet()) }
             }
 
             // Courier flow
-            is OrderDetailScreenContract.Event.CourierNameChanged -> {
+            is OrderFulfilmentScreenContract.Event.CourierNameChanged -> {
                 setState { copy(courierName = event.text) }
             }
 
-            is OrderDetailScreenContract.Event.ClearCourierName -> {
+            is OrderFulfilmentScreenContract.Event.ClearCourierName -> {
                 setState { copy(courierName = "") }
             }
 
             // Signature
-            is OrderDetailScreenContract.Event.Sign -> {
+            is OrderFulfilmentScreenContract.Event.Sign -> {
                 sign()
             }
 
-            is OrderDetailScreenContract.Event.SignatureSaved -> {
+            is OrderFulfilmentScreenContract.Event.SignatureSaved -> {
                 onSignatureSaved(event.strokes)
             }
 
-            is OrderDetailScreenContract.Event.ClearSignature -> {
+            is OrderFulfilmentScreenContract.Event.ClearSignature -> {
                 clearSignature()
             }
 
             // Correspondence
-            is OrderDetailScreenContract.Event.ToggleEmail -> {
+            is OrderFulfilmentScreenContract.Event.ToggleEmail -> {
                 setState { copy(emailChecked = event.checked) }
             }
 
-            is OrderDetailScreenContract.Event.TogglePrint -> {
+            is OrderFulfilmentScreenContract.Event.TogglePrint -> {
                 setState { copy(printChecked = event.checked) }
             }
 
-            is OrderDetailScreenContract.Event.EditEmail -> {
-                setEffect { OrderDetailScreenContract.Effect.ShowToast("Edit email not implemented") }
+            is OrderFulfilmentScreenContract.Event.EditEmail -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit email not implemented") }
             }
 
-            is OrderDetailScreenContract.Event.EditPrinter -> {
-                setEffect { OrderDetailScreenContract.Effect.ShowToast("Edit printer not implemented") }
+            is OrderFulfilmentScreenContract.Event.EditPrinter -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit printer not implemented") }
             }
 
             // Final action
-            is OrderDetailScreenContract.Event.Confirm -> {
+            is OrderFulfilmentScreenContract.Event.Confirm -> {
                 confirm()
             }
-            is OrderDetailScreenContract.Event.ToggleProductListExpansion -> {
+            is OrderFulfilmentScreenContract.Event.ToggleProductListExpansion -> {
                 toggleProductListExpansion()
             }
         }
@@ -201,7 +201,7 @@ class OrderDetailScreenViewModel(
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
-                setEffect { OrderDetailScreenContract.Effect.ShowToast(successToast) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
@@ -211,7 +211,7 @@ class OrderDetailScreenViewModel(
                         error = msg
                     )
                 }
-                setEffect { OrderDetailScreenContract.Effect.ShowError(msg) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowError(msg) }
             }
         )
     }
@@ -240,19 +240,19 @@ class OrderDetailScreenViewModel(
     private fun sign() {
         // Navigate to signature screen - this will be handled by navigation layer
         setEffect {
-            OrderDetailScreenContract.Effect.Outcome.SignatureRequested
+            OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested
         }
     }
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {
         setState { copy(signatureStrokes = strokes) }
-        setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature saved") }
+        setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Signature saved") }
     }
 
     private fun clearSignature() {
         if (viewState.value.signatureStrokes.isNotEmpty()) {
             setState { copy(signatureStrokes = emptyList()) }
-            setEffect { OrderDetailScreenContract.Effect.ShowToast("Signature cleared") }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Signature cleared") }
         }
     }
 
@@ -260,27 +260,27 @@ class OrderDetailScreenViewModel(
         val s = viewState.value
         val hasOrders = s.collectOrderListItemStateList.isNotEmpty()
         if (!hasOrders) {
-            setEffect { OrderDetailScreenContract.Effect.ShowError("No orders to confirm") }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowError("No orders to confirm") }
             return
         }
         when (s.collectingType) {
             CollectingType.ACCOUNT -> {
                 if (s.selectedRepresentativeIdList.isEmpty()) {
-                    setEffect { OrderDetailScreenContract.Effect.ShowError("Please select at least one representative") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please select at least one representative") }
                     return
                 }
             }
 
             CollectingType.COURIER -> {
                 if (s.courierName.isBlank()) {
-                    setEffect { OrderDetailScreenContract.Effect.ShowError("Please enter the courier name") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please enter the courier name") }
                     return
                 }
             }
 
             CollectingType.STANDARD -> Unit
         }
-        setEffect { OrderDetailScreenContract.Effect.Outcome.Confirmed }
+        setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
     }
 
 }

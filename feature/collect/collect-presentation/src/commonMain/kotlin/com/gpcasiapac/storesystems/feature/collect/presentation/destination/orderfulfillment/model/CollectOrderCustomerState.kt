@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model
 
 import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.fixture.PlaceholderValue

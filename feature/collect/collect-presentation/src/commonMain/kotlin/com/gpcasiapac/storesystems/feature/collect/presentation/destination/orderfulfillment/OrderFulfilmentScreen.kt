@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,8 +38,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Custo
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.component.OrderDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.OrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -54,26 +54,26 @@ import storesystems.feature.collect.collect_presentation.generated.resources.who
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderDetailScreen(
-    state: OrderDetailScreenContract.State,
-    onEventSent: (event: OrderDetailScreenContract.Event) -> Unit,
-    effectFlow: Flow<OrderDetailScreenContract.Effect>?,
-    onOutcome: (outcome: OrderDetailScreenContract.Effect.Outcome) -> Unit,
+fun OrderFulfilmentScreen(
+    state: OrderFulfilmentScreenContract.State,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
+    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderDetailScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
+                is OrderFulfilmentScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
                     effect.message, duration = SnackbarDuration.Short
                 )
 
-                is OrderDetailScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
+                is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
                     effect.error, duration = SnackbarDuration.Long
                 )
 
-                is OrderDetailScreenContract.Effect.Outcome -> onOutcome(effect)
+                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }
@@ -84,7 +84,7 @@ fun OrderDetailScreen(
                 TopBarTitle("Order Confirmation")
             }, navigationIcon = {
                 IconButton(onClick = {
-                    onEventSent(OrderDetailScreenContract.Event.Back)
+                    onEventSent(OrderFulfilmentScreenContract.Event.Back)
                 }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -109,7 +109,7 @@ fun OrderDetailScreen(
                     isProductListExpanded = state.visibleProductListItemCount > 2,
                     visibleLineItemListCount = state.visibleProductListItemCount,
                     onViewMoreClick = {
-                        onEventSent(OrderDetailScreenContract.Event.ToggleProductListExpansion)
+                        onEventSent(OrderFulfilmentScreenContract.Event.ToggleProductListExpansion)
                     })
 
             } else {
@@ -141,7 +141,7 @@ fun OrderDetailScreen(
 
             CollectionTypeSection(
                 onValueChange = { collectionType ->
-                    onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
+                    onEventSent(OrderFulfilmentScreenContract.Event.CollectingChanged(collectionType))
                 },
                 modifier = Modifier.padding(horizontal = Dimens.Space.medium),
                 title = stringResource(Res.string.who_is_collecting),
@@ -172,10 +172,10 @@ fun OrderDetailScreen(
             SignatureSection(
                 modifier = Modifier.padding(horizontal = Dimens.Space.medium),
                 onSignClick = {
-                    onEventSent(OrderDetailScreenContract.Event.Sign)
+                    onEventSent(OrderFulfilmentScreenContract.Event.Sign)
                 },
                 onRetakeClick = {
-                    onEventSent(OrderDetailScreenContract.Event.ClearSignature)
+                    onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
                 },
                 signatureStrokes = state.signatureStrokes
             )
@@ -188,20 +188,20 @@ fun OrderDetailScreen(
                     "Send email to customer",
                     isEnabled = state.emailChecked,
                     onEdit = {
-                        onEventSent(OrderDetailScreenContract.Event.EditEmail)
+                        onEventSent(OrderFulfilmentScreenContract.Event.EditEmail)
                     },
                     onCheckChange = {
-                        onEventSent(OrderDetailScreenContract.Event.ToggleEmail(!state.emailChecked))
+                        onEventSent(OrderFulfilmentScreenContract.Event.ToggleEmail(!state.emailChecked))
                     })
                 CorrespondenceItemRow(
                     "Print",
                     "Send invoice to printer",
                     isEnabled = state.printChecked,
                     onEdit = {
-                        onEventSent(OrderDetailScreenContract.Event.EditPrinter)
+                        onEventSent(OrderFulfilmentScreenContract.Event.EditPrinter)
                     },
                     onCheckChange = {
-                        onEventSent(OrderDetailScreenContract.Event.TogglePrint(!state.printChecked))
+                        onEventSent(OrderFulfilmentScreenContract.Event.TogglePrint(!state.printChecked))
                     })
             }
 
@@ -216,7 +216,7 @@ fun OrderDetailScreen(
                     )
                 },
                 onClick = {
-                    onEventSent(OrderDetailScreenContract.Event.Confirm)
+                    onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
                 },
             )
         }
@@ -270,17 +270,17 @@ fun SingleOrderContent(
 }
 
 @Preview(
-    name = "Order detail",
+    name = "Order Fulfilment",
     showBackground = true,
     backgroundColor = 0xFFF5F5F5L,
     widthDp = 360,
     heightDp = 720
 )
 @Composable
-private fun OrderDetailScreenPreview(
-    @PreviewParameter(OrderDetailScreenStateProvider::class) state: OrderDetailScreenContract.State
+private fun OrderFulfilmentScreenPreview(
+    @PreviewParameter(OrderFulfilmentScreenStateProvider::class) state: OrderFulfilmentScreenContract.State
 ) {
     GPCTheme {
-        OrderDetailScreen(state = state, onEventSent = {}, effectFlow = null, onOutcome = {})
+        OrderFulfilmentScreen(state = state, onEventSent = {}, effectFlow = null, onOutcome = {})
     }
 }

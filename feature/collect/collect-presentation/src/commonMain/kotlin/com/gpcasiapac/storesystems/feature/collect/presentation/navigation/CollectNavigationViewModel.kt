@@ -28,7 +28,7 @@ class CollectNavigationViewModel :
 
     private fun handleOutcome(outcome: CollectOutcome) {
         when (outcome) {
-            is CollectOutcome.OrderSelected -> pushOrReplaceTop(CollectFeatureDestination.OrderDetails)
+            is CollectOutcome.OrderSelected -> pushOrReplaceTop(CollectFeatureDestination.OrderFulfilment)
             is CollectOutcome.Back -> pop()
             is CollectOutcome.Logout -> {
                 // Emit external outcome to navigate to login screen

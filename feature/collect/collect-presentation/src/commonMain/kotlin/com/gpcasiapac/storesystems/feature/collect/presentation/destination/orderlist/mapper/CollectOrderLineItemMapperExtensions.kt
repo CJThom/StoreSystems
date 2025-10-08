@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLineItem
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderLineItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderLineItemState
 
 
 internal fun CollectOrderLineItem.toState(): CollectOrderLineItemState {

@@ -2,7 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.util.CustomerNameFormatter
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderCustomerState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderCustomerState
 
 
 internal fun CollectOrderCustomer.toState(): CollectOrderCustomerState {

@@ -2,7 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.di
 
 import com.gpcasiapac.storesystems.common.di.ModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenViewModel
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectFeatureEntryImpl
@@ -15,7 +15,7 @@ import org.koin.dsl.module
 
 val collectPresentationModule = module {
     viewModelOf(::OrderListScreenViewModel)
-    viewModelOf(::OrderDetailScreenViewModel)
+    viewModelOf(::OrderFulfilmentScreenViewModel)
 
     viewModelOf(::SignatureScreenViewModel)
     viewModelOf(::CollectNavigationViewModel)

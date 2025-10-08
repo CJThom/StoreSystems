@@ -18,8 +18,8 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.OrderDetailScreenDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract
@@ -106,17 +106,17 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                 }
             }
 
-            entry<CollectFeatureDestination.OrderDetails>(
+            entry<CollectFeatureDestination.OrderFulfilment>(
                 metadata = ListDetailSceneStrategy.detailPane(),
-                key = CollectFeatureDestination.OrderDetails
+                key = CollectFeatureDestination.OrderFulfilment
             ) { d ->
-                OrderDetailScreenDestination { effect ->
+                OrderFulfilmentScreenDestination { effect ->
                     when (effect) {
-                        is OrderDetailScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
-                        is OrderDetailScreenContract.Effect.Outcome.Confirmed -> onOutcome(
+                        is OrderFulfilmentScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is OrderFulfilmentScreenContract.Effect.Outcome.Confirmed -> onOutcome(
                             CollectOutcome.Back
                         ) // TODO: Swap for Submit?
-                        is OrderDetailScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
+                        is OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
                             CollectOutcome.SignatureRequested
                         )
                     }

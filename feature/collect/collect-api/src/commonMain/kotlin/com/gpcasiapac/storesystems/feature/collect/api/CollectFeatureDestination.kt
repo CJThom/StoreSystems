@@ -9,7 +9,10 @@ sealed interface CollectFeatureDestination : NavKey {
     data object Orders : CollectFeatureDestination
 
     @Serializable
-    data object OrderDetails : CollectFeatureDestination
+    data object OrderFulfilment : CollectFeatureDestination
+
+    @Serializable
+    data object OrderDetails: CollectFeatureDestination
 
     @Serializable
     data object Signature : CollectFeatureDestination

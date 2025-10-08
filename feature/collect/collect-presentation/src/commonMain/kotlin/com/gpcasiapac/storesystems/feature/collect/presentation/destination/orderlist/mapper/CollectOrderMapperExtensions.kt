@@ -2,7 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderState
 
 internal fun CollectOrder.toState(): CollectOrderState {
     return CollectOrderState(

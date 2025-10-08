@@ -4,7 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
-import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.OrderDetails
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.OrderFulfilment
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.Signature
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
@@ -54,7 +54,7 @@ class CollectGlobalNavigationViewModel :
     private fun handleCollectOutcome(outcome: CollectOutcome) {
         when (outcome) {
             is CollectOutcome.OrderSelected -> {
-                push(OrderDetails)
+                push(OrderFulfilment)
             }
 
             is CollectOutcome.Back -> pop()
