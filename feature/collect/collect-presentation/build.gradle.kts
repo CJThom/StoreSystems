@@ -22,6 +22,16 @@ kotlin {
             // Navigation3 UI on Android only
             implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            
+            // Ink API for signature capture
+            implementation(libs.androidx.ink.authoring)
+            implementation(libs.androidx.ink.brush)
+            implementation(libs.androidx.ink.geometry)
+            implementation(libs.androidx.ink.rendering)
+            implementation(libs.androidx.ink.strokes)
+            implementation(libs.androidx.ink.nativeloader)
+            implementation(libs.androidx.input.motionprediction)
+
         }
         commonMain.dependencies {
             // Compose UI
@@ -63,6 +73,7 @@ kotlin {
             implementation(projects.common.kotlin)
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.component)
+            implementation(libs.io.github.niyajali.compose.signature)
 
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }

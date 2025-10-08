@@ -25,6 +25,12 @@ kotlin {
             implementation(libs.androidx.compose.material3.adaptive)
             implementation(libs.androidx.compose.material3.adaptive.layout)
             implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.ink.authoring)
+            implementation(libs.androidx.ink.brush)
+            implementation(libs.androidx.ink.rendering)
+            implementation(libs.androidx.ink.strokes)
+            implementation(libs.androidx.input.motionprediction)
+            implementation(libs.androidx.ink.nativeloader)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -36,7 +42,6 @@ kotlin {
             implementation(compose.animation)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3AdaptiveNavigationSuite)
-
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
 
