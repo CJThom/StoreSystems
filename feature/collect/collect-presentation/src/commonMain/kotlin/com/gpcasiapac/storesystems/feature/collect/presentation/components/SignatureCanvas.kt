@@ -95,8 +95,8 @@ fun SignatureCanvas(
     var localStrokes by remember { mutableStateOf(strokes) }
 
     LaunchedEffect(strokes) {
-        // Sync with external strokes only when they change from outside (not during active drawing)
-        if (localStrokes != strokes && strokes.isNotEmpty() && localStrokes.isEmpty() && !isDrawing) {
+        // Sync with external strokes when they change from outside (not during active drawing)
+        if (localStrokes != strokes && !isDrawing) {
             localStrokes = strokes
         }
     }
