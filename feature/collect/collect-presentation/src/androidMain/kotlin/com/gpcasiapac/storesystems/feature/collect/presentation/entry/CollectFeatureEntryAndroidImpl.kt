@@ -18,6 +18,8 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
@@ -64,7 +66,6 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                // Reuse feature entries; forward outcomes to this feature VM
                 registerEntries(
                     builder = this,
                     onOutcome = { outcome ->
@@ -83,7 +84,6 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
         builder.apply {
             entry<CollectFeatureDestination.Orders>(
                 metadata = ListDetailSceneStrategy.listPane(),
-                key = CollectFeatureDestination.Orders
             ) {
                 OrderListScreenDestination { outcome ->
                     when (outcome) {
@@ -92,11 +92,8 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
                         )
 
                         is OrderListScreenContract.Effect.Outcome.OrdersSelected -> {
-                            // For now, just navigate to the first selected order or ignore
                             outcome.orderIds.firstOrNull()?.let { id ->
                                 onOutcome(CollectOutcome.OrderSelected(id))
-                            } ?: run {
-                                // No selection; no-op
                             }
                         }
 
@@ -108,33 +105,41 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
 
             entry<CollectFeatureDestination.OrderFulfilment>(
                 metadata = ListDetailSceneStrategy.detailPane(),
-                key = CollectFeatureDestination.OrderFulfilment
-            ) { d ->
+            ) {
                 OrderFulfilmentScreenDestination { effect ->
                     when (effect) {
                         is OrderFulfilmentScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is OrderFulfilmentScreenContract.Effect.Outcome.Confirmed -> onOutcome(
                             CollectOutcome.Back
-                        ) // TODO: Swap for Submit?
+                        )
                         is OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
                             CollectOutcome.SignatureRequested
                         )
                         is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
-                            CollectOutcome.OrderSelected(effect.invoiceNumber)
+                            CollectOutcome.NavigateToOrderDetails(effect.invoiceNumber)
                         )
+                    }
+                }
+            }
+
+            entry<CollectFeatureDestination.OrderDetails>(
+                metadata = ListDetailSceneStrategy.detailPane(),
+            ) { destination ->
+
+                OrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
+                    when (outcome) {
+                        is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                     }
                 }
             }
 
             entry<CollectFeatureDestination.Signature>(
                 metadata = ListDetailSceneStrategy.extraPane(),
-                key = CollectFeatureDestination.Signature
             ) {
                 SignatureScreenDestination { outcome ->
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is SignatureScreenContract.Effect.Outcome.SignatureSaved -> {
-                            // TODO: Pass signature data to order detail screen
                             onOutcome(CollectOutcome.Back)
                         }
                     }

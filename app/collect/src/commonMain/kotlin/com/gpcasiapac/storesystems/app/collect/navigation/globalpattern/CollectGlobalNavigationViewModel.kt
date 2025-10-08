@@ -16,7 +16,7 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
  * intended to be the main choice going forward.
  */
 class CollectGlobalNavigationViewModel :
-    BaseNavViewModel<CollectGlobalNavContract.Event,CollectAppNavContract.State, NavKey>() {
+    BaseNavViewModel<CollectGlobalNavContract.Event, CollectAppNavContract.State, NavKey>() {
 
     override fun setInitialState(): CollectAppNavContract.State {
         return CollectAppNavContract.State(stack = listOf(LoginFeatureDestination.Login))
@@ -53,19 +53,21 @@ class CollectGlobalNavigationViewModel :
 
     private fun handleCollectOutcome(outcome: CollectOutcome) {
         when (outcome) {
-            is CollectOutcome.OrderSelected -> {
-                push(OrderFulfilment)
-            }
+            is CollectOutcome.OrderSelected -> pushOrReplaceTop(OrderFulfilment)
 
             is CollectOutcome.Back -> pop()
             is CollectOutcome.Logout -> {
                 replaceTop(LoginFeatureDestination.Login)
             }
+
             is CollectOutcome.SignatureRequested -> {
                 push(Signature)
             }
 
             is CollectOutcome.SignatureSaved -> pop()
+            is CollectOutcome.NavigateToOrderDetails -> {
+                push(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber))
+            }
         }
     }
 }

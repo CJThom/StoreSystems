@@ -4,6 +4,7 @@ import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewMod
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
+import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationContract.Effect.*
 
 class CollectNavigationViewModel :
     BaseNavViewModel<CollectNavigationContract.Event, CollectNavigationContract.State, CollectFeatureDestination>() {
@@ -32,11 +33,15 @@ class CollectNavigationViewModel :
             is CollectOutcome.Back -> pop()
             is CollectOutcome.Logout -> {
                 // Emit external outcome to navigate to login screen
-                setEffect { CollectNavigationContract.Effect.ExternalOutcome(CollectExternalOutcome.Logout) }
+                setEffect { ExternalOutcome(CollectExternalOutcome.Logout) }
             }
             is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature)
             is CollectOutcome.SignatureSaved -> {
                 pop()
+            }
+
+            is CollectOutcome.NavigateToOrderDetails -> {
+                pushOrReplaceTop(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber))
             }
         }
     }
