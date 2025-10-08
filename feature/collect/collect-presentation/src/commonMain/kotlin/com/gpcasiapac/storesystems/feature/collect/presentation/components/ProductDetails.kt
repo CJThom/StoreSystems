@@ -35,15 +35,15 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * image, description, product code, price, and quantity.
  * Follows Material 3 design principles and uses semantic tokens from the theme.
  *
- * @param productName The product name/description
- * @param productCode The product code identifier
+ * @param description The product name/description
+ * @param sku The product code identifier
  * @param quantity The product quantity
  * @param modifier Modifier for the root composable
  */
 @Composable
 fun ProductDetails(
-    productName: String,
-    productCode: String,
+    description: String,
+    sku: String,
     quantity: Int,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
@@ -67,7 +67,7 @@ fun ProductDetails(
         ) {
 
             Text(
-                text = productName,
+                text = description,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium
                 ),
@@ -77,7 +77,7 @@ fun ProductDetails(
             )
 
             DetailItemSmall(
-                value = productCode,
+                value = sku,
                 imageVector = Icons.Default.Search,
                 isLoading = isLoading,
             )
@@ -130,8 +130,8 @@ private fun ProductDetailsPreview() {
     GPCTheme {
         Surface {
             ProductDetails(
-                productName = "Dupli-Color Vinyl & Fabric Paint Gloss Black",
-                productCode = "A9442910",
+                description = "Dupli-Color Vinyl & Fabric Paint Gloss Black",
+                sku = "A9442910",
                 quantity = 2
             )
         }
@@ -145,8 +145,8 @@ private fun ProductDetailsLoadingPreview() {
     GPCTheme {
         Surface {
             ProductDetails(
-                productName = "Dupli-Color Vinyl & Fabric Paint Gloss Black",
-                productCode = "A9442910",
+                description = "Dupli-Color Vinyl & Fabric Paint Gloss Black",
+                sku = "A9442910",
                 quantity = 2,
                 isLoading = true
             )

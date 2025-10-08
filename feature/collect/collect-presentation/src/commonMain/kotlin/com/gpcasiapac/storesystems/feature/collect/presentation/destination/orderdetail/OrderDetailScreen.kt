@@ -35,10 +35,11 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Colle
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.ListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.ProductListSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.component.OrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetail.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -69,8 +70,7 @@ fun OrderDetailScreen(
                 )
 
                 is OrderDetailScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-                    effect.error,
-                    duration = SnackbarDuration.Long
+                    effect.error, duration = SnackbarDuration.Long
                 )
 
                 is OrderDetailScreenContract.Effect.Outcome -> onOutcome(effect)
@@ -78,25 +78,25 @@ fun OrderDetailScreen(
         }
     }
 
-    Scaffold(topBar = {
-        MBoltAppBar(title = {
-            TopBarTitle("Order Confirmation")
-        }, navigationIcon = {
-            IconButton(onClick = {
-                onEventSent(OrderDetailScreenContract.Event.Back)
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-        })
-    }, snackbarHost = {
-        SnackbarHost(snackbarHostState)
-    }
+    Scaffold(
+        topBar = {
+            MBoltAppBar(title = {
+                TopBarTitle("Order Confirmation")
+            }, navigationIcon = {
+                IconButton(onClick = {
+                    onEventSent(OrderDetailScreenContract.Event.Back)
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            })
+        }, snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
     ) { padding ->
-
 
         Column(
             modifier = Modifier
@@ -104,36 +104,13 @@ fun OrderDetailScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             if (state.collectOrderWithCustomerWithLineItemsState != null) {
-                OrderDetails(
-                    invoiceNumber = state.collectOrderWithCustomerWithLineItemsState.order.invoiceNumber,
-                    webOrderNumber = state.collectOrderWithCustomerWithLineItemsState.order.webOrderNumber,
-                    createdAt = state.collectOrderWithCustomerWithLineItemsState.order.pickedAt, // TODO: get Order date
-                    pickedAt = state.collectOrderWithCustomerWithLineItemsState.order.pickedAt,
-                )
-
-                HorizontalDivider()
-
-                CustomerDetails(
-                    customerName = state.collectOrderWithCustomerWithLineItemsState.customer.name,
-                    customerNumber = state.collectOrderWithCustomerWithLineItemsState.customer.customerNumber,
-                    phoneNumber = state.collectOrderWithCustomerWithLineItemsState.customer.mobileNumber,
-                    customerType = state.collectOrderWithCustomerWithLineItemsState.customer.type,
-                    modifier = Modifier
-                )
-
-                HorizontalDivider()
-
-                ProductListSection(
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium)
-                ) {
-                    state.collectOrderWithCustomerWithLineItemsState.lineItemList.forEach { lineItem ->
-                        ProductDetails(
-                            productName = lineItem.productDescription,
-                            productCode = lineItem.productNumber,
-                            quantity = lineItem.quantity,
-                        )
-                    }
-                }
+                SingleOrderContent(
+                    orderState = state.collectOrderWithCustomerWithLineItemsState,
+                    isProductListExpanded = state.visibleProductListItemCount > 2,
+                    visibleLineItemListCount = state.visibleProductListItemCount,
+                    onViewMoreClick = {
+                        onEventSent(OrderDetailScreenContract.Event.ToggleProductListExpansion)
+                    })
 
             } else {
                 Column(
@@ -142,8 +119,7 @@ fun OrderDetailScreen(
                 ) {
                     state.collectOrderListItemStateList.forEach { collectOrderState ->
                         OutlinedCard(
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = {},
                             enabled = true
                         ) {
@@ -159,102 +135,139 @@ fun OrderDetailScreen(
                         }
                     }
                 }
-                HorizontalDivider()
-
-
-                // Collection Type Section
-
-                CollectionTypeSection(
-                    onValueChange = { collectionType ->
-                        onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
-                    },
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                    title = stringResource(Res.string.who_is_collecting),
-                    value = state.collectingType,
-                    options = listOf(
-                        CollectionTypeSectionDisplayParam(
-                            enabled = true,
-                            collectingType = CollectingType.STANDARD,
-                            icon = Icons.Outlined.Person,
-                            label = CollectingType.STANDARD.name,
-                        ), CollectionTypeSectionDisplayParam(
-                            enabled = true,
-                            collectingType = CollectingType.ACCOUNT,
-                            icon = Icons.Outlined.BusinessCenter,
-                            label = CollectingType.ACCOUNT.name,
-                        ), CollectionTypeSectionDisplayParam(
-                            enabled = true,
-                            collectingType = CollectingType.COURIER,
-                            icon = Icons.Outlined.LocalShipping,
-                            label = CollectingType.COURIER.name,
-                        )
-                    ),
-                )
-
-
-                HorizontalDivider()
-
-
-                // Signature Section
-
-                SignatureSection(
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                    onSignClick = {
-                        onEventSent(OrderDetailScreenContract.Event.Sign)
-                    },
-                    onRetakeClick = {
-                        onEventSent(OrderDetailScreenContract.Event.ClearSignature)
-                    },
-                    signatureStrokes = state.signatureStrokes
-                )
-
-
-                // Correspondence Section
-
-                CorrespondenceSection(
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium)
-                ) {
-                    CorrespondenceItemRow(
-                        "Email",
-                        "Send email to customer",
-                        isEnabled = state.emailChecked,
-                        onEdit = {
-                            onEventSent(OrderDetailScreenContract.Event.EditEmail)
-                        },
-                        onCheckChange = {
-                            onEventSent(OrderDetailScreenContract.Event.ToggleEmail(!state.emailChecked))
-                        })
-                    CorrespondenceItemRow(
-                        "Print",
-                        "Send invoice to printer",
-                        isEnabled = state.printChecked,
-                        onEdit = {
-                            onEventSent(OrderDetailScreenContract.Event.EditPrinter)
-                        },
-                        onCheckChange = {
-                            onEventSent(OrderDetailScreenContract.Event.TogglePrint(!state.printChecked))
-                        })
-                }
-
-
-                // Confirm Button
-
-                ActionButton(
-                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-                    title = {
-                        Text(
-                            text = "Confirm",
-                        )
-                    },
-                    onClick = {
-                        onEventSent(OrderDetailScreenContract.Event.Confirm)
-                    },
-                )
             }
+
+            HorizontalDivider()
+
+            CollectionTypeSection(
+                onValueChange = { collectionType ->
+                    onEventSent(OrderDetailScreenContract.Event.CollectingChanged(collectionType))
+                },
+                modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                title = stringResource(Res.string.who_is_collecting),
+                value = state.collectingType,
+                options = listOf(
+                    CollectionTypeSectionDisplayParam(
+                        enabled = true,
+                        collectingType = CollectingType.STANDARD,
+                        icon = Icons.Outlined.Person,
+                        label = CollectingType.STANDARD.name,
+                    ), CollectionTypeSectionDisplayParam(
+                        enabled = true,
+                        collectingType = CollectingType.ACCOUNT,
+                        icon = Icons.Outlined.BusinessCenter,
+                        label = CollectingType.ACCOUNT.name,
+                    ), CollectionTypeSectionDisplayParam(
+                        enabled = true,
+                        collectingType = CollectingType.COURIER,
+                        icon = Icons.Outlined.LocalShipping,
+                        label = CollectingType.COURIER.name,
+                    )
+                ),
+            )
+
+
+            HorizontalDivider()
+
+            SignatureSection(
+                modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                onSignClick = {
+                    onEventSent(OrderDetailScreenContract.Event.Sign)
+                },
+                onRetakeClick = {
+                    onEventSent(OrderDetailScreenContract.Event.ClearSignature)
+                },
+                signatureStrokes = state.signatureStrokes
+            )
+
+            CorrespondenceSection(
+                modifier = Modifier.padding(horizontal = Dimens.Space.medium)
+            ) {
+                CorrespondenceItemRow(
+                    "Email",
+                    "Send email to customer",
+                    isEnabled = state.emailChecked,
+                    onEdit = {
+                        onEventSent(OrderDetailScreenContract.Event.EditEmail)
+                    },
+                    onCheckChange = {
+                        onEventSent(OrderDetailScreenContract.Event.ToggleEmail(!state.emailChecked))
+                    })
+                CorrespondenceItemRow(
+                    "Print",
+                    "Send invoice to printer",
+                    isEnabled = state.printChecked,
+                    onEdit = {
+                        onEventSent(OrderDetailScreenContract.Event.EditPrinter)
+                    },
+                    onCheckChange = {
+                        onEventSent(OrderDetailScreenContract.Event.TogglePrint(!state.printChecked))
+                    })
+            }
+
+
+            // Confirm Button
+
+            ActionButton(
+                modifier = Modifier.padding(horizontal = Dimens.Space.medium),
+                title = {
+                    Text(
+                        text = "Confirm",
+                    )
+                },
+                onClick = {
+                    onEventSent(OrderDetailScreenContract.Event.Confirm)
+                },
+            )
         }
     }
 }
 
+//compose function for single order content
+@Composable
+fun SingleOrderContent(
+    orderState: CollectOrderWithCustomerWithLineItemsState,
+    onViewMoreClick: () -> Unit,
+    visibleLineItemListCount: Int,
+    isProductListExpanded: Boolean,
+) {
+
+    OrderDetails(
+        invoiceNumber = orderState.order.invoiceNumber,
+        webOrderNumber = orderState.order.webOrderNumber,
+        createdAt = orderState.order.pickedAt, // TODO: get Order date
+        pickedAt = orderState.order.pickedAt,
+    )
+
+    HorizontalDivider()
+
+    CustomerDetails(
+        customerName = orderState.customer.name,
+        customerNumber = orderState.customer.customerNumber,
+        phoneNumber = orderState.customer.mobileNumber,
+        customerType = orderState.customer.type,
+        modifier = Modifier
+    )
+
+    HorizontalDivider()
+
+    ListSection(
+        headline = "Product list",
+        modifier = Modifier,
+        isExpanded = isProductListExpanded,
+        onViewMoreClick = onViewMoreClick,
+    ) {
+        orderState.lineItemList.take(visibleLineItemListCount).forEach { lineItem ->
+            ProductDetails(
+                description = lineItem.productDescription,
+                sku = lineItem.productNumber,
+                quantity = lineItem.quantity,
+                contentPadding = PaddingValues()
+            )
+        }
+    }
+
+}
 
 @Preview(
     name = "Order detail",

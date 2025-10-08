@@ -39,6 +39,9 @@ object OrderDetailScreenContract {
         // Correspondence
         val emailChecked: Boolean,
         val printChecked: Boolean,
+
+        // Product list
+        val visibleProductListItemCount: Int,
     ) : ViewState
 
 
@@ -75,6 +78,9 @@ object OrderDetailScreenContract {
 
         // Final action
         data object Confirm : Event
+
+        // Product list
+        data object ToggleProductListExpansion : Event
     }
 
     sealed interface Effect : ViewSideEffect {

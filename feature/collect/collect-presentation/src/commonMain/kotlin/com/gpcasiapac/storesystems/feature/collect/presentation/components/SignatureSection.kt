@@ -26,7 +26,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 fun SignatureSection(
     onSignClick: () -> Unit,
     onRetakeClick: () -> Unit = {},
-    signatureStrokes: List<List<Offset>> = emptyList(),
+    signatureStrokes: List<List<Offset>>,
     modifier: Modifier = Modifier,
 ) {
     val hasSignature = signatureStrokes.isNotEmpty()

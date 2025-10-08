@@ -9,7 +9,7 @@ import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScreenContract.State> {
     override val values: Sequence<OrderDetailScreenContract.State>
         get() {
-            val orders = sampleCollectOrderListItemStateList()
+            val orders = sampleCollectOrderListItemStateList().take(3)
             val order = sampleCollectOrderWithCustomerWithLineItemsState()
 
             val base = OrderDetailScreenContract.State(
@@ -21,6 +21,8 @@ class OrderDetailScreenStateProvider : PreviewParameterProvider<OrderDetailScree
                 // Flags
                 isLoading = false,
                 error = null,
+
+                visibleProductListItemCount = 2,
 
                 // Collecting
                 collectingType = CollectingType.STANDARD,

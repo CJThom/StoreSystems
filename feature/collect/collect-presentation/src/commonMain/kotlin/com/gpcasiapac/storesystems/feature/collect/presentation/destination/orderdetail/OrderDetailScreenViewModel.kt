@@ -15,6 +15,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+private const val COLLAPSED_PRODUCT_LIST_COUNT = 2
+
 class OrderDetailScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
@@ -41,6 +43,7 @@ class OrderDetailScreenViewModel(
             signatureStrokes = emptyList(),
             emailChecked = true,
             printChecked = true,
+            visibleProductListItemCount = COLLAPSED_PRODUCT_LIST_COUNT
         )
 
     }
@@ -139,6 +142,22 @@ class OrderDetailScreenViewModel(
             is OrderDetailScreenContract.Event.Confirm -> {
                 confirm()
             }
+            is OrderDetailScreenContract.Event.ToggleProductListExpansion -> {
+                toggleProductListExpansion()
+            }
+        }
+    }
+
+    private fun toggleProductListExpansion() {
+        val totalItemCount = viewState.value.collectOrderWithCustomerWithLineItemsState?.lineItemList?.size ?: 0
+        setState {
+            copy(
+                visibleProductListItemCount = if (visibleProductListItemCount == totalItemCount) {
+                    COLLAPSED_PRODUCT_LIST_COUNT
+                } else {
+                    totalItemCount
+                }
+            )
         }
     }
 
@@ -146,12 +165,14 @@ class OrderDetailScreenViewModel(
         observeOrderSelectionResultUseCase().collectLatest { result ->
             when (result) {
                 is OrderSelectionResult.Single -> {
+                    val orderState = result.order?.toState()
                     setState {
                         copy(
-                            collectOrderWithCustomerWithLineItemsState = result.order?.toState(), // TODO: Handle null
+                            collectOrderWithCustomerWithLineItemsState = orderState,
                             collectOrderListItemStateList = emptyList(),
                             isLoading = false,
-                            error = null
+                            error = null,
+                            visibleProductListItemCount = orderState?.lineItemList?.size?.coerceAtMost(COLLAPSED_PRODUCT_LIST_COUNT) ?: 0
                         )
                     }
                 }
