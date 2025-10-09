@@ -2,10 +2,20 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSelectionResult
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class SignatureScreenViewModel : MVIViewModel<
+class SignatureScreenViewModel(
+    private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
+    private val saveSignatureUseCase: SaveSignatureUseCase
+) : MVIViewModel<
         SignatureScreenContract.Event,
         SignatureScreenContract.State,
         SignatureScreenContract.Effect>() {
@@ -16,6 +26,7 @@ class SignatureScreenViewModel : MVIViewModel<
             isSigned = false,
             error = null,
             signatureStrokes = emptyList(),
+            invoiceNumbers = emptyList()
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -28,25 +39,71 @@ class SignatureScreenViewModel : MVIViewModel<
     }
 
     override fun onStart() {
-        // No-op: nothing to load initially for signature
+        viewModelScope.launch {
+            observeOrderSelectionResult()
+        }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: SignatureScreenContract.Event) {
         when (event) {
             is SignatureScreenContract.Event.StartCapture -> {
-                val strokes = viewState.value.signatureStrokes
-                if (strokes.isNotEmpty()) {
-                    setEffect { SignatureScreenContract.Effect.Outcome.SignatureSaved(strokes) }
+                val signatureBitmap = viewState.value.signatureBitmap
+                if (signatureBitmap != null) {
+                    viewModelScope.launch {
+                        try {
+                            // Convert ImageBitmap to byte array using KMP-compatible approach
+                            val base64String =
+                                imageBitmapToBase64Encoded(imageBitmap = signatureBitmap)
+                            // Call the use case with correct parameters
+                            saveSignatureUseCase(
+                                base64Signature = base64String,
+                                invoiceNumber = viewState.value.invoiceNumbers
+                            )
+
+                            // Set success effect
+                            setEffect {
+                                SignatureScreenContract.Effect.Outcome.SignatureSaved(
+                                    viewState.value.signatureStrokes
+                                )
+                            }
+                        } catch (e: Exception) {
+                            setEffect {
+                                SignatureScreenContract.Effect.ShowError("Failed to save signature: ${e.message}")
+                            }
+                        }
+                    }
+                } else {
+                    setEffect {
+                        SignatureScreenContract.Effect.ShowToast("Please draw a signature first")
+                    }
                 }
             }
 
             is SignatureScreenContract.Event.StrokesChanged -> {
-                setState { copy(signatureStrokes = event.strokes, isSigned = event.strokes.isNotEmpty()) }
+                setState {
+                    copy(
+                        signatureStrokes = event.strokes,
+                        isSigned = event.strokes.isNotEmpty()
+                    )
+                }
             }
 
             is SignatureScreenContract.Event.ClearError -> clearError()
-            is SignatureScreenContract.Event.Back -> setEffect { SignatureScreenContract.Effect.Outcome.Back }
+            is SignatureScreenContract.Event.Back -> setEffect { Back }
+            is SignatureScreenContract.Event.SignatureCompleted -> {
+                setState { copy(signatureBitmap = event.signatureBitmap) }
+            }
+
+            SignatureScreenContract.Event.ClearSignature -> {
+                setState {
+                    copy(
+                        signatureStrokes = emptyList(),
+                        isSigned = false,
+                        signatureBitmap = null
+                    )
+                }
+            }
         }
     }
 
@@ -66,6 +123,31 @@ class SignatureScreenViewModel : MVIViewModel<
             onError(message)
         }
     }
+
+    private suspend fun observeOrderSelectionResult() {
+        observeOrderSelectionResultUseCase().collectLatest { result ->
+            when (result) {
+                is OrderSelectionResult.Single -> {
+                    val orderState = result.order?.toState()
+                    setState {
+                        copy(
+                            invoiceNumbers = result.order?.order?.invoiceNumber?.let { listOf(it) }
+                                .orEmpty()
+                        )
+                    }
+                }
+
+                is OrderSelectionResult.Multi -> {
+                    setState {
+                        copy(
+                            invoiceNumbers = result.orderList.map { it.order.invoiceNumber }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
 
     private fun clearError() {
         setState { copy(error = null) }

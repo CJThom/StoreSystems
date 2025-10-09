@@ -75,4 +75,7 @@ interface CollectOrderDao {
         """
     )
     suspend fun getWebOrderSuggestionsPrefix(prefix: String, limit: Int): List<String>
+
+    @Query("UPDATE collect_orders SET signature = :signature WHERE invoice_number IN (:invoiceNumbers)")
+    suspend fun updateSignature(signature: String, invoiceNumbers: List<String>)
 }

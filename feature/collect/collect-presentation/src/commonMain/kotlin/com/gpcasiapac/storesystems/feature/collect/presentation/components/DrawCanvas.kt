@@ -6,7 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -45,10 +47,11 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun SignatureCanvas(
+fun DrawCanvas(
     modifier: Modifier = Modifier,
     strokes: List<List<Offset>>,
     onStrokesChange: (List<List<Offset>>) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(horizontal = Dimens.Space.medium),
     shape: Shape = MaterialTheme.shapes.medium,
     border: BorderStroke = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     background: Color = MaterialTheme.colorScheme.primaryContainer,
@@ -56,8 +59,8 @@ fun SignatureCanvas(
     strokeColor: Color,
     exportWidth: Dp? = null,
     exportHeight: Dp? = null,
-    onComplete: ((ImageBitmap?) -> Unit)? = null,
-    completionDelayMs: Long = 2000L, // 2 seconds of inactivity
+    onComplete: ((ImageBitmap) -> Unit)? = null,
+    completionDelayMs: Long = 1200L, // 1.2 seconds of inactivity
 ) {
     val density = LocalDensity.current
     val strokePx = with(density) { strokeWidth.toPx() }
@@ -131,6 +134,7 @@ fun SignatureCanvas(
     Canvas(
         modifier = modifier
             .fillMaxSize()
+            .padding(contentPadding)
             .nestedScroll(scrollConnection)
             .background(background)
             .border(border, shape)
@@ -314,11 +318,11 @@ private fun createSmoothPath(points: List<Offset>): Path {
 
 @Preview
 @Composable
-fun SignatureCanvasPreview() {
+fun DrawCanvasPreview() {
     var strokes by remember { mutableStateOf<List<List<Offset>>>(emptyList()) }
     GPCTheme {
         Surface {
-            SignatureCanvas(
+            DrawCanvas(
                 strokes = strokes,
                 onStrokesChange = { strokes = it },
                 strokeWidth = Dimens.Stroke.thin,

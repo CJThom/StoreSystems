@@ -22,6 +22,9 @@ data class CollectOrderEntity(
     val createdAt: Instant,
 
     @ColumnInfo(name = "picked_at")
-    val pickedAt: Instant
+    val pickedAt: Instant,
+
+    @ColumnInfo(name = "signature")
+    val signature: String?
 
 )

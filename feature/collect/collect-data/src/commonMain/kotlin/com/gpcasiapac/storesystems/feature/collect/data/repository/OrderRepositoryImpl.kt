@@ -86,6 +86,13 @@ class OrderRepositoryImpl(
 
     }
 
+    override suspend fun saveSignature(
+        signature: String,
+        invoiceNumber: List<String>
+    ): Result<Unit> = runCatching {
+        collectOrderDao.updateSignature(signature, invoiceNumber)
+    }
+
     // TODO: In Progress: Improve this with Dao query
     override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> { // TODO: Should this return a flow?
         return emptyList()

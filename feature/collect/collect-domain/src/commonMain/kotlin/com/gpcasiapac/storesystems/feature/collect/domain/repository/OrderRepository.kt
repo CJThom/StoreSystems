@@ -32,4 +32,6 @@ interface OrderRepository {
      * Trigger a refresh/sync. In fake repo this seeds demo data.
      */
     suspend fun refreshOrders(): Result<Unit>
+
+    suspend fun saveSignature(signature: String, invoiceNumber: List<String>): Result<Unit>
 }

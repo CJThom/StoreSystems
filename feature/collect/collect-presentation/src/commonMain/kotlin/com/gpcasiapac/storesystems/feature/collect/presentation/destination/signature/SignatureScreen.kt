@@ -1,7 +1,5 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,17 +25,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureCanvas
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.DrawCanvas
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -55,9 +49,6 @@ fun SignatureScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
-    val signatureBitmap = remember {
-        mutableStateOf<ImageBitmap?>(null)
-    }
 
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
@@ -109,7 +100,6 @@ fun SignatureScreen(
             ) {
                 // Customer Details Card
                 CustomerDetails(
-                    modifier = Modifier.padding(Dimens.Space.medium),
                     customerName = "Customer Name",
                     customerNumber = "Customer Number",
                     phoneNumber = "Phone Number",
@@ -117,18 +107,19 @@ fun SignatureScreen(
                 )
                 HorizontalDivider()
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = Dimens.Space.medium),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
                         "Please sign here",
-                        modifier = Modifier.padding(Dimens.Space.medium),
                         style = MaterialTheme.typography.titleLarge
                     )
                     OutlinedButton(
                         enabled = state.signatureStrokes.isNotEmpty(),
                         onClick = {
-                            onEventSent(SignatureScreenContract.Event.StrokesChanged(emptyList()))
+                            onEventSent(SignatureScreenContract.Event.ClearSignature)
                         }
                     ) {
                         Row(
@@ -140,12 +131,11 @@ fun SignatureScreen(
                     }
                 }
 
-                SignatureCanvas(
-                    onComplete = {
-                        signatureBitmap.value = it
+                DrawCanvas(
+                    onComplete = { image ->
+                        onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
                     },
                     modifier = Modifier
-                        .padding(Dimens.Space.medium)
                         .weight(1f),
                     strokes = state.signatureStrokes,
                     onStrokesChange = { strokes ->
@@ -157,11 +147,11 @@ fun SignatureScreen(
                 // Confirm Button
                 Button(
                     onClick = {
-                        if (state.signatureStrokes.isNotEmpty()) {
+                        if (state.signatureBitmap != null) {
                             onEventSent(SignatureScreenContract.Event.StartCapture)
                         }
                     },
-                    enabled = !state.isLoading && state.signatureStrokes.isNotEmpty(),
+                    enabled = !state.isLoading && state.signatureBitmap != null,
                     modifier = Modifier
                         .padding(Dimens.Space.medium)
                         .fillMaxWidth(),
