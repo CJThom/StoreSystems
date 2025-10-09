@@ -1,14 +1,12 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.entry
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
-import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -39,9 +37,9 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
         onExternalOutcome: (CollectExternalOutcome) -> Unit,
     ) {
         val collectNavigationViewModel: CollectNavigationViewModel = koinViewModel()
-          val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
+        val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
 
-        val state by collectNavigationViewModel.viewState.collectAsState()
+        val state by collectNavigationViewModel.viewState.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
             collectNavigationViewModel.effect.collect { effect ->
@@ -51,10 +49,6 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
             }
         }
 
-//        sceneStrategy = ListDetailSceneStrategy(
-//            backNavigationBehavior = BackNavigationBehavior.PopUntilCurrentDestinationChange,
-//            directive = PaneScaffoldDirective.Default
-//        ),
 
         NavDisplay(
             sceneStrategy = sceneStrategy,

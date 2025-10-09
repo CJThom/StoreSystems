@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -32,7 +31,7 @@ fun AndroidAppNavigation(
             appNavigationViewModel.setEvent(CollectAppNavContract.Event.PopBack(1))
         },
         entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator (),
+            rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
@@ -46,7 +45,6 @@ fun AndroidAppNavigation(
                 )
             }
 
-            // Entry that renders the Collect feature Host
             entry<CollectAppDestination.CollectHost> {
                 collectEntry.Host(
                     onExternalOutcome = { externalOutcome ->

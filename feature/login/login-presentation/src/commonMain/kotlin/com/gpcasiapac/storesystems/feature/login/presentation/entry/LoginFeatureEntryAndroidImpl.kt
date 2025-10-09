@@ -1,8 +1,8 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.entry
 
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -20,13 +20,54 @@ import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.Login
 import com.gpcasiapac.storesystems.feature.login.presentation.mfa_screen.MfaScreen
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationContract
 import com.gpcasiapac.storesystems.feature.login.presentation.navigation.LoginNavigationViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Android-specific implementation that also registers Navigation3 entries.
  */
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
+
+    @Composable
+    override fun Host(
+        onExternalOutcome: (LoginExternalOutcome) -> Unit,
+    ) {
+
+        val loginNavigationViewModel: LoginNavigationViewModel = koinViewModel()
+        val state by loginNavigationViewModel.viewState.collectAsStateWithLifecycle()
+
+        LaunchedEffect(Unit) {
+            loginNavigationViewModel.effect.collect { effect ->
+                when (effect) {
+                    is LoginNavigationContract.Effect.ExternalOutcome -> onExternalOutcome(effect.outcome)
+                }
+            }
+        }
+
+        NavDisplay(
+            backStack = state.stack,
+            onBack = {
+                loginNavigationViewModel.setEvent(
+                    LoginNavigationContract.Event.PopBack(1)
+                )
+            },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                registerEntries(
+                    builder = this,
+                    onOutcome = { outcome ->
+                        loginNavigationViewModel.setEvent(
+                            LoginNavigationContract.Event.Outcome(outcome)
+                        )
+                    }
+                )
+            }
+        )
+
+    }
 
     override fun registerEntries(
         builder: EntryProviderScope<NavKey>,
@@ -57,47 +98,6 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
                 )
             }
         }
-    }
-
-    @Composable
-    override fun Host(
-        onExternalOutcome: (LoginExternalOutcome) -> Unit,
-    ) {
-
-        val loginNavigationViewModel: LoginNavigationViewModel = koinViewModel()
-        val state by loginNavigationViewModel.viewState.collectAsStateWithLifecycle()
-
-        LaunchedEffect(Unit) {
-            loginNavigationViewModel.effect.collect { effect ->
-                when (effect) {
-                    is LoginNavigationContract.Effect.ExternalOutcome -> onExternalOutcome(effect.outcome)
-                }
-            }
-        }
-
-        NavDisplay(
-            backStack = state.stack,
-            onBack = {
-                loginNavigationViewModel.setEvent(
-                    LoginNavigationContract.Event.PopBack(1)
-                )
-            },
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator (),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
-            entryProvider = entryProvider {
-                registerEntries(
-                    builder = this,
-                    onOutcome = { outcome ->
-                        loginNavigationViewModel.setEvent(
-                            LoginNavigationContract.Event.Outcome(outcome)
-                        )
-                    }
-                )
-            }
-        )
-
     }
 
 }
