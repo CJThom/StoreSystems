@@ -28,7 +28,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectO
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun orderDao(): CollectOrderDao
+    abstract fun collectOrderDao(): CollectOrderDao
 }
 
 @Suppress("KotlinNoActualForExpect")

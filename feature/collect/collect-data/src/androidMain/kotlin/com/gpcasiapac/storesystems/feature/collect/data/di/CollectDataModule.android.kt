@@ -6,7 +6,6 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.getRoomDatabase
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-val collectDataJvmModule: Module = module {
-    single<AppDatabase> { getRoomDatabase(getDatabaseBuilder()) }
-    single { get<AppDatabase>().orderDao() }
+actual val collectDataDatabaseModule: Module = module {
+    single<AppDatabase> { getRoomDatabase(getDatabaseBuilder(get())) }
 }
