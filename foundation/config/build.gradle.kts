@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     androidTarget {
-        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
     }
     jvm()
 
