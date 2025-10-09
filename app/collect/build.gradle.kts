@@ -19,17 +19,16 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.androidx.compose)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
+//            implementation(libs.androidx.navigation3.ui)
+//            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.preview)
             implementation(compose.components.resources)
@@ -37,6 +36,12 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3AdaptiveNavigationSuite)
 
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+            
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
 
@@ -45,6 +50,8 @@ kotlin {
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
             // Feature dependencies
             implementation(projects.feature.login.loginApi)

@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.di
 
+import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.presentation.entry.LoginFeatureEntryAndroidImpl
 import com.gpcasiapac.storesystems.feature.login.presentation.login_screen.LoginViewModel
@@ -19,4 +20,11 @@ val loginPresentationAndroidModule = module {
 
     // Bind Android-specific FeatureEntry
     singleOf(::LoginFeatureEntryAndroidImpl).bind<LoginFeatureEntry>()
+
+
+}
+
+// TODO: Move this to common/foundation?
+val loggingModule = module {
+    single<Logger> { Logger.withTag("StoreSystemsLogger") }
 }

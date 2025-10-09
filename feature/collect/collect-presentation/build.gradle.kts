@@ -20,30 +20,34 @@ kotlin {
         }
         androidMain.dependencies {
             // Navigation3 UI on Android only
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
         }
         commonMain.dependencies {
             // Compose UI
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3AdaptiveNavigationSuite)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
 
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
             implementation(projects.common.di)
+
+            implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
+
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+
 
             // Koin and coroutines
             implementation(libs.koin.core)

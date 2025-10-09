@@ -17,18 +17,18 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltSegmentedButtonRow(
     modifier: Modifier = Modifier,
     selected: R,
     onValueChange: (R) -> Unit,
-    options: List<T>,
+    optionList: List<T>,
     selectionMapper: (T) -> R,
     equals: (T, R) -> Boolean = { a, b -> a == b },
 ) {
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
-        options.forEachIndexed { index, option ->
+        optionList.forEachIndexed { index, option ->
             MBoltSegmentedButton(
                 label = option.label,
                 icon = option.icon,
                 isActive = equals(option, selected),
                 index = index,
-                count = options.size,
+                count = optionList.size,
                 enabled = option.enabled,
                 onClick = {
                     val selectedOption = selectionMapper(option)
@@ -38,3 +38,4 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltSegmentedButtonRow(
         }
     }
 }
+

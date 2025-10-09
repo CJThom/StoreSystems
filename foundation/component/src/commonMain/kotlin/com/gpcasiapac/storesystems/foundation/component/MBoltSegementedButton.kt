@@ -1,8 +1,9 @@
 package com.gpcasiapac.storesystems.foundation.component
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
@@ -16,7 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -41,16 +44,22 @@ fun SingleChoiceSegmentedButtonRowScope.MBoltSegmentedButton(
             disabledInactiveContentColor = MaterialTheme.colorScheme.outlineVariant,
         ),
         icon = {
-            Icon(
-                imageVector = if (isActive) Icons.Default.Check else icon,
-                contentDescription = label
+            SegmentedButtonDefaults.Icon(
+                active = isActive,
+                inactiveContent = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                    )
+                }
             )
         },
         enabled = enabled,
         shape = SegmentedButtonDefaults.itemShape(
             index = index,
             count = count,
-            baseShape = MaterialTheme.shapes.medium
+            baseShape = MaterialTheme.shapes.small
         ),
         onClick = onClick,
         selected = isActive,
@@ -69,19 +78,20 @@ private fun MBoltSegmentedButtonPreview() {
     var selectedIndex by remember { mutableStateOf(0) }
     val options = listOf("Option 1", "Option 2")
 
-    Surface {
-        SingleChoiceSegmentedButtonRow {
-            options.forEachIndexed { index, label ->
-                MBoltSegmentedButton(
-                    label = label,
-                    icon = Icons.Default.Home,
-                    isActive = selectedIndex == index,
-                    index = index,
-                    count = options.size,
-                    onClick = { selectedIndex = index }
-                )
+    GPCTheme {
+        Surface {
+            SingleChoiceSegmentedButtonRow {
+                options.forEachIndexed { index, label ->
+                    MBoltSegmentedButton(
+                        label = label,
+                        icon = Icons.Outlined.Home,
+                        isActive = selectedIndex == index,
+                        index = index,
+                        count = options.size,
+                        onClick = { selectedIndex = index }
+                    )
+                }
             }
         }
     }
-
 }

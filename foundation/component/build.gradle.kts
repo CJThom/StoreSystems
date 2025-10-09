@@ -15,7 +15,7 @@ kotlin {
             // Compose UI
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
@@ -26,8 +26,6 @@ kotlin {
             implementation(libs.androidx.compose.material3.adaptive)
             implementation(libs.androidx.compose.material3.adaptive.layout)
             implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
-
 
             implementation(projects.common.presentation)
             implementation(projects.foundation.designSystem)

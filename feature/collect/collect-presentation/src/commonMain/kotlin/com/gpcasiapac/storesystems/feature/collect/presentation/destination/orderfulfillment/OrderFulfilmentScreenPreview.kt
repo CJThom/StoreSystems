@@ -1,7 +1,13 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BusinessCenter
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.Person
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayState
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderWithCustomerWithLineItemsState
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
@@ -17,7 +23,7 @@ class OrderFulfilmentScreenStateProvider : PreviewParameterProvider<OrderFulfilm
                 collectOrderWithCustomerWithLineItemsState = order,
                 // Multi-order context
                 collectOrderListItemStateList = emptyList(),
-               // isMultiOrder = { false },
+                // isMultiOrder = { false },
                 // Flags
                 isLoading = false,
                 error = null,
@@ -26,6 +32,24 @@ class OrderFulfilmentScreenStateProvider : PreviewParameterProvider<OrderFulfilm
 
                 // Collecting
                 collectingType = CollectingType.STANDARD,
+                collectionTypeOptionList = listOf(
+                    CollectionTypeSectionDisplayState(
+                        enabled = true,
+                        collectingType = CollectingType.STANDARD,
+                        icon = Icons.Outlined.Person,
+                        label = CollectingType.STANDARD.name,
+                    ), CollectionTypeSectionDisplayState(
+                        enabled = true,
+                        collectingType = CollectingType.ACCOUNT,
+                        icon = Icons.Outlined.BusinessCenter,
+                        label = CollectingType.ACCOUNT.name,
+                    ), CollectionTypeSectionDisplayState(
+                        enabled = true,
+                        collectingType = CollectingType.COURIER,
+                        icon = Icons.Outlined.LocalShipping,
+                        label = CollectingType.COURIER.name,
+                    )
+                ),
 
                 // Account flow
                 representativeSearchText = "",
@@ -43,8 +67,20 @@ class OrderFulfilmentScreenStateProvider : PreviewParameterProvider<OrderFulfilm
                 signatureStrokes = emptyList(),
 
                 // Correspondence
-                emailChecked = true,
-                printChecked = true,
+                correspondenceOptionList = listOf(
+                    CorrespondenceItemDisplayParam(
+                        id = "email",
+                        type = "Email",
+                        detail = "Send email to customer",
+                        isEnabled = true
+                    ),
+                    CorrespondenceItemDisplayParam(
+                        id = "print",
+                        type = "Print",
+                        detail = "Send invoice to printer",
+                        isEnabled = true
+                    )
+                ),
             )
 
             val singleB2C = base.copy(

@@ -7,6 +7,8 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayState
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 
@@ -24,6 +26,7 @@ object OrderFulfilmentScreenContract {
 
         // Who's collecting
         val collectingType: CollectingType,
+        val collectionTypeOptionList: List<CollectionTypeSectionDisplayState>,
 
         // Account flow
         val representativeSearchText: String,
@@ -37,8 +40,7 @@ object OrderFulfilmentScreenContract {
         val signatureStrokes: List<List<Offset>>,
 
         // Correspondence
-        val emailChecked: Boolean,
-        val printChecked: Boolean,
+        val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
 
         // Product list
         val visibleProductListItemCount: Int,
@@ -71,10 +73,8 @@ object OrderFulfilmentScreenContract {
         data object ClearSignature : Event
 
         // Correspondence
-        data class ToggleEmail(val checked: Boolean) : Event
-        data class TogglePrint(val checked: Boolean) : Event
-        data object EditEmail : Event
-        data object EditPrinter : Event
+        data class ToggleCorrespondence(val id: String) : Event
+        data class EditCorrespondence(val id: String) : Event
 
         // Final action
         data object Confirm : Event

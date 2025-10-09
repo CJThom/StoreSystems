@@ -4,11 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
@@ -28,7 +29,7 @@ import org.koin.compose.viewmodel.koinViewModel
 class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
 
     override fun registerEntries(
-        builder: EntryProviderBuilder<NavKey>,
+        builder: EntryProviderScope<NavKey>,
         onOutcome: (LoginOutcome) -> Unit,
     ) {
         builder.apply {
@@ -64,9 +65,7 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
     ) {
 
         val loginNavigationViewModel: LoginNavigationViewModel = koinViewModel()
-        val state by loginNavigationViewModel.viewState.collectAsState()
-
-        val loginEntry: LoginFeatureEntry = koinInject()
+        val state by loginNavigationViewModel.viewState.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
             loginNavigationViewModel.effect.collect { effect ->
@@ -78,17 +77,17 @@ class LoginFeatureEntryAndroidImpl : LoginFeatureEntry {
 
         NavDisplay(
             backStack = state.stack,
-            onBack = { count ->
+            onBack = {
                 loginNavigationViewModel.setEvent(
-                    LoginNavigationContract.Event.PopBack(count)
+                    LoginNavigationContract.Event.PopBack(1)
                 )
             },
             entryDecorators = listOf(
-                rememberSavedStateNavEntryDecorator(),
+                rememberSaveableStateHolderNavEntryDecorator (),
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                loginEntry.registerEntries(
+                registerEntries(
                     builder = this,
                     onOutcome = { outcome ->
                         loginNavigationViewModel.setEvent(

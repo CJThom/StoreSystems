@@ -1,5 +1,9 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BusinessCenter
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -8,9 +12,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSelectionRe
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayState
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -32,6 +38,24 @@ class OrderFulfilmentScreenViewModel(
             isLoading = false,
             error = null,
             collectingType = CollectingType.STANDARD,
+            collectionTypeOptionList = listOf(
+                CollectionTypeSectionDisplayState(
+                    enabled = true,
+                    collectingType = CollectingType.STANDARD,
+                    icon = Icons.Outlined.Person,
+                    label = CollectingType.STANDARD.name,
+                ), CollectionTypeSectionDisplayState(
+                    enabled = true,
+                    collectingType = CollectingType.ACCOUNT,
+                    icon = Icons.Outlined.BusinessCenter,
+                    label = CollectingType.ACCOUNT.name,
+                ), CollectionTypeSectionDisplayState(
+                    enabled = true,
+                    collectingType = CollectingType.COURIER,
+                    icon = Icons.Outlined.LocalShipping,
+                    label = CollectingType.COURIER.name,
+                )
+            ),
             representativeSearchText = "",
             recentRepresentativeList = listOf(
                 Representative("rep-1", "John Doe", "#9288180049912"),
@@ -41,8 +65,20 @@ class OrderFulfilmentScreenViewModel(
             selectedRepresentativeIdList = emptySet(),
             courierName = "",
             signatureStrokes = emptyList(),
-            emailChecked = true,
-            printChecked = true,
+            correspondenceOptionList = listOf(
+                CorrespondenceItemDisplayParam(
+                    id = "email",
+                    type = "Email",
+                    detail = "Send email to customer",
+                    isEnabled = true
+                ),
+                CorrespondenceItemDisplayParam(
+                    id = "print",
+                    type = "Print",
+                    detail = "Send invoice to printer",
+                    isEnabled = true
+                )
+            ),
             visibleProductListItemCount = COLLAPSED_PRODUCT_LIST_COUNT
         )
 
@@ -122,20 +158,12 @@ class OrderFulfilmentScreenViewModel(
             }
 
             // Correspondence
-            is OrderFulfilmentScreenContract.Event.ToggleEmail -> {
-                setState { copy(emailChecked = event.checked) }
+            is OrderFulfilmentScreenContract.Event.ToggleCorrespondence -> {
+                onCorrespondenceToggled(event.id)
             }
 
-            is OrderFulfilmentScreenContract.Event.TogglePrint -> {
-                setState { copy(printChecked = event.checked) }
-            }
-
-            is OrderFulfilmentScreenContract.Event.EditEmail -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit email not implemented") }
-            }
-
-            is OrderFulfilmentScreenContract.Event.EditPrinter -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit printer not implemented") }
+            is OrderFulfilmentScreenContract.Event.EditCorrespondence -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit ${event.id} not implemented") }
             }
 
             // Final action
@@ -148,6 +176,19 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
                 setEffect { OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(event.invoiceNumber) }
             }
+        }
+    }
+
+    private fun onCorrespondenceToggled(id: String) {
+        setState {
+            val updatedOptions = correspondenceOptionList.map {
+                if (it.id == id) {
+                    it.copy(isEnabled = !it.isEnabled)
+                } else {
+                    it
+                }
+            }
+            copy(correspondenceOptionList = updatedOptions)
         }
     }
 

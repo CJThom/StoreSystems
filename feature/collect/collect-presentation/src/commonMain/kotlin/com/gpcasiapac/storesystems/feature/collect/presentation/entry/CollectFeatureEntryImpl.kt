@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.entry
 
 import androidx.compose.runtime.Composable
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
@@ -21,7 +21,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
     }
 
     override fun registerEntries(
-        builder: EntryProviderBuilder<NavKey>,
+        builder: EntryProviderScope <NavKey>,
         onOutcome: (CollectOutcome) -> Unit,
     ) {
         // no-op on non-Android targets by default

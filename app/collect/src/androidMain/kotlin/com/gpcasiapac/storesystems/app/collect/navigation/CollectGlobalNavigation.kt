@@ -5,7 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpattern.CollectGlobalNavContract
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpattern.CollectGlobalNavigationViewModel
@@ -30,11 +30,11 @@ fun AndroidAppNavigationGlobal() {
 
     NavDisplay(
         backStack = state.stack,
-        onBack = { count ->
-            appNavigationViewModel.setEvent(CollectGlobalNavContract.Event.PopBack(count))
+        onBack = {
+            appNavigationViewModel.setEvent(CollectGlobalNavContract.Event.PopBack(1))
         },
         entryDecorators = listOf(
-            rememberSavedStateNavEntryDecorator(),
+            rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {

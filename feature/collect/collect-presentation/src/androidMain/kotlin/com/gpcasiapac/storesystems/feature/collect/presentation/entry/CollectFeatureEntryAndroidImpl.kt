@@ -1,6 +1,8 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.entry
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
+import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
@@ -8,11 +10,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
@@ -38,7 +39,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
         onExternalOutcome: (CollectExternalOutcome) -> Unit,
     ) {
         val collectNavigationViewModel: CollectNavigationViewModel = koinViewModel()
-        val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
+          val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
 
         val state by collectNavigationViewModel.viewState.collectAsState()
 
@@ -50,26 +51,34 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
             }
         }
 
+//        sceneStrategy = ListDetailSceneStrategy(
+//            backNavigationBehavior = BackNavigationBehavior.PopUntilCurrentDestinationChange,
+//            directive = PaneScaffoldDirective.Default
+//        ),
+
         NavDisplay(
             sceneStrategy = sceneStrategy,
             backStack = state.stack,
-            onBack = { count ->
+            onBack = {
                 collectNavigationViewModel.setEvent(
                     CollectNavigationContract.Event.PopBack(
-                        count
+                        1
                     )
                 )
             },
             entryDecorators = listOf(
-                rememberSceneSetupNavEntryDecorator(),
-                rememberSavedStateNavEntryDecorator(),
+                rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
                 registerEntries(
                     builder = this,
                     onOutcome = { outcome ->
-                        collectNavigationViewModel.setEvent(CollectNavigationContract.Event.Outcome(outcome))
+                        collectNavigationViewModel.setEvent(
+                            CollectNavigationContract.Event.Outcome(
+                                outcome
+                            )
+                        )
                     }
                 )
             }
@@ -78,7 +87,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
 
     @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     override fun registerEntries(
-        builder: EntryProviderBuilder<NavKey>,
+        builder: EntryProviderScope<NavKey>,
         onOutcome: (CollectOutcome) -> Unit,
     ) {
         builder.apply {
@@ -108,13 +117,18 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
             ) {
                 OrderFulfilmentScreenDestination { effect ->
                     when (effect) {
-                        is OrderFulfilmentScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is OrderFulfilmentScreenContract.Effect.Outcome.Back -> onOutcome(
+                            CollectOutcome.Back
+                        )
+
                         is OrderFulfilmentScreenContract.Effect.Outcome.Confirmed -> onOutcome(
                             CollectOutcome.Back
                         )
+
                         is OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
                             CollectOutcome.SignatureRequested
                         )
+
                         is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
                             CollectOutcome.NavigateToOrderDetails(effect.invoiceNumber)
                         )
@@ -128,7 +142,9 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
 
                 OrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
                     when (outcome) {
-                        is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
+                            CollectOutcome.Back
+                        )
                     }
                 }
             }
