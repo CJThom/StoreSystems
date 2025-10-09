@@ -11,7 +11,8 @@ data class CollectOrderState(
     val salesOrderNumber: String,
     val webOrderNumber: String?,
     val createdAt: Instant,
-    val pickedAt: Instant
+    val pickedAt: Instant,
+    val signature: String? = null
 ) {
 
     companion object {

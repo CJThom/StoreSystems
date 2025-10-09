@@ -30,6 +30,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Collec
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignatureSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SingleOrderContent
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -155,7 +156,11 @@ fun OrderFulfilmentScreen(
                     value = state.collectingType,
                     optionList = state.collectionTypeOptionList,
                     onValueChange = { collectionType ->
-                        onEventSent(OrderFulfilmentScreenContract.Event.CollectingChanged(collectionType))
+                        onEventSent(
+                            OrderFulfilmentScreenContract.Event.CollectingChanged(
+                                collectionType
+                            )
+                        )
                     },
                 )
             }
@@ -165,19 +170,28 @@ fun OrderFulfilmentScreen(
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
-                SignatureSection(
+//                SignatureSection(
+//                    onSignClick = {
+//                        onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+//                    },
+//                    onRetakeClick = {
+//                        onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+//                    },
+//                    signatureStrokes = state.signatureStrokes
+//                )
+                SignaturePreviewImage(
                     onSignClick = {
                         onEventSent(OrderFulfilmentScreenContract.Event.Sign)
                     },
                     onRetakeClick = {
                         onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
                     },
-                    signatureStrokes = state.signatureStrokes
+                    image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
                 )
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
-              HorizontalDivider()
+                HorizontalDivider()
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {

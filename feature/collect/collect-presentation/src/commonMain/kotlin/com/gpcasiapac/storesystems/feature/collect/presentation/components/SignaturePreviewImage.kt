@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,7 +44,7 @@ fun SignaturePreviewImage(
             shape = RoundedCornerShape(Dimens.Space.small)
         ) {
             if (image != null) {
-                Column {
+                Column(modifier = Modifier.padding(Dimens.Space.medium)) {
                     // Show signature preview
                     Base64ImageView(image)
 
