@@ -2,6 +2,8 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
@@ -20,7 +22,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
-data class CollectionTypeSectionDisplayParam(
+data class CollectionTypeSectionDisplayState(
     val collectingType: CollectingType,
     override val icon: ImageVector,
     override val label: String,
@@ -31,12 +33,13 @@ data class CollectionTypeSectionDisplayParam(
 fun CollectionTypeSection(
     title: String,
     value: CollectingType,
-    options: List<CollectionTypeSectionDisplayParam>,
-    modifier: Modifier = Modifier,
     onValueChange: (CollectingType) -> Unit,
+    optionList: List<CollectionTypeSectionDisplayState>,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         Text(
@@ -45,7 +48,7 @@ fun CollectionTypeSection(
         )
         MBoltSegmentedButtonRow(
             selected = value,
-            options = options,
+            optionList = optionList,
             selectionMapper = { option ->
                 option.collectingType
             },
@@ -54,6 +57,7 @@ fun CollectionTypeSection(
         )
     }
 }
+
 
 @Preview
 @Composable
@@ -66,20 +70,20 @@ fun CollectionTypeSectionPreview() {
 
                 },
                 title = "Who's Collecting",
-                options = listOf(
-                    CollectionTypeSectionDisplayParam(
+                optionList = listOf(
+                    CollectionTypeSectionDisplayState(
                         collectingType = CollectingType.STANDARD,
                         icon = Icons.Outlined.Person,
                         label = CollectingType.STANDARD.name,
                         enabled = true
                     ),
-                    CollectionTypeSectionDisplayParam(
+                    CollectionTypeSectionDisplayState(
                         enabled = true,
                         collectingType = CollectingType.ACCOUNT,
                         icon = Icons.Outlined.BusinessCenter,
                         label = CollectingType.ACCOUNT.name,
                     ),
-                    CollectionTypeSectionDisplayParam(
+                    CollectionTypeSectionDisplayState(
                         enabled = true,
                         collectingType = CollectingType.COURIER,
                         icon = Icons.Outlined.LocalShipping,

@@ -8,24 +8,21 @@ plugins {
 }
 
 kotlin {
-    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
         androidMain.dependencies {
-          //  implementation(compose.preview)
-          //  implementation(libs.androidx.activity.compose)
-           // implementation(libs.koin.androidx.compose)
 
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
 
         }
         commonMain.dependencies {
+
+            implementation(libs.kermit)
             // Compose UI
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
 
             // MVI base and feature contracts
@@ -38,7 +35,14 @@ kotlin {
             implementation(projects.core.identity.identityApi)
 
             // Navigation3 runtime for NavKey/entry registrations
+            implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
+
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
 
             // Coroutines and Lifecycle
             implementation(libs.kotlinx.coroutines.core)

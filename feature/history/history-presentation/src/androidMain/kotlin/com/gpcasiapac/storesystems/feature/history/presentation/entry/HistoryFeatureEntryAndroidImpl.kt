@@ -5,10 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.feature.history.api.HistoryExternalOutcome
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
@@ -42,11 +42,11 @@ class HistoryFeatureEntryAndroidImpl : HistoryFeatureEntry {
 
         NavDisplay(
             backStack = state.stack,
-            onBack = { count ->
-                navViewModel.setEvent(HistoryNavigationContract.Event.PopBack(count))
+            onBack = {
+                navViewModel.setEvent(HistoryNavigationContract.Event.PopBack(1))
             },
             entryDecorators = listOf(
-                rememberSavedStateNavEntryDecorator(),
+                rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
@@ -61,7 +61,7 @@ class HistoryFeatureEntryAndroidImpl : HistoryFeatureEntry {
     }
 
     override fun registerEntries(
-        builder: EntryProviderBuilder<NavKey>,
+        builder: EntryProviderScope<NavKey>,
         onOutcome: (HistoryOutcome) -> Unit,
     ) {
         builder.apply {

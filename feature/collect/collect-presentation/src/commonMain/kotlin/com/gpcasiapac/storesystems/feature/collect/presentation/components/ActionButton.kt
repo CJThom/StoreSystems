@@ -17,8 +17,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ActionButton(
-    modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     title: @Composable () -> Unit
 ) {
     Button(

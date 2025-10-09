@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     androidTarget {
-        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
     }
     jvm()
     sourceSets {
@@ -20,40 +20,34 @@ kotlin {
         }
         androidMain.dependencies {
             // Navigation3 UI on Android only
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            
-            // Ink API for signature capture
-            implementation(libs.androidx.ink.authoring)
-            implementation(libs.androidx.ink.brush)
-            implementation(libs.androidx.ink.geometry)
-            implementation(libs.androidx.ink.rendering)
-            implementation(libs.androidx.ink.strokes)
-            implementation(libs.androidx.ink.nativeloader)
-            implementation(libs.androidx.input.motionprediction)
 
         }
         commonMain.dependencies {
             // Compose UI
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3AdaptiveNavigationSuite)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
 
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
             implementation(projects.common.di)
+
+            implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
+
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+
 
             // Koin and coroutines
             implementation(libs.koin.core)
@@ -73,7 +67,6 @@ kotlin {
             implementation(projects.common.kotlin)
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.component)
-            implementation(libs.io.github.niyajali.compose.signature)
 
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }

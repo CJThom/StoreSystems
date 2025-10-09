@@ -6,12 +6,14 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenViewModel
+import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectFeatureEntryAndroidImpl
 import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectFeatureEntryImpl
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val collectPresentationModule = module {
@@ -21,7 +23,8 @@ val collectPresentationModule = module {
     viewModelOf(::SignatureScreenViewModel)
     viewModelOf(::CollectNavigationViewModel)
 
-    singleOf(::CollectFeatureEntryImpl) { bind<CollectFeatureEntry>() }
+    //factory<CollectFeatureEntry> { CollectFeatureEntryAndroidImpl() }
+    singleOf(::CollectFeatureEntryAndroidImpl).bind<CollectFeatureEntry>()
 }
 
 object CollectPresentationModuleProvider : ModuleProvider {

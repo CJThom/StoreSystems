@@ -1,17 +1,13 @@
-package com.gpcasiapac.storesystems.app.collect.navigation
+package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppDestination
-import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
-import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavigationViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
@@ -25,18 +21,17 @@ import org.koin.compose.viewmodel.koinViewModel
 fun AndroidAppNavigation(
     appNavigationViewModel: CollectAppNavigationViewModel = koinViewModel(),
 ) {
-    val state by appNavigationViewModel.viewState.collectAsState()
+    val state by appNavigationViewModel.viewState.collectAsStateWithLifecycle()
     val loginEntry: LoginFeatureEntry = koinInject()
     val collectEntry: CollectFeatureEntry = koinInject()
 
     NavDisplay(
         backStack = state.stack,
-        onBack = { count ->
-            appNavigationViewModel.setEvent(CollectAppNavContract.Event.PopBack(count))
+        onBack = {
+            appNavigationViewModel.setEvent(CollectAppNavContract.Event.PopBack(1))
         },
         entryDecorators = listOf(
-            rememberSceneSetupNavEntryDecorator(),
-            rememberSavedStateNavEntryDecorator(),
+            rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
@@ -50,7 +45,6 @@ fun AndroidAppNavigation(
                 )
             }
 
-            // Entry that renders the Collect feature Host
             entry<CollectAppDestination.CollectHost> {
                 collectEntry.Host(
                     onExternalOutcome = { externalOutcome ->

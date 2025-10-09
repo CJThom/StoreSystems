@@ -37,7 +37,7 @@ fun GPCTheme(
     MaterialTheme(
         colorScheme = GPCLightColorScheme,
         typography = GPCTypography,
-        shapes = GPCShapes,
+        shapes = GPCShapes
     ) {
 
         val borderColors = BorderColors(

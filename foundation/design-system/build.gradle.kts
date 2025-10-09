@@ -8,13 +8,13 @@ plugins {
 }
 
 kotlin {
-    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)

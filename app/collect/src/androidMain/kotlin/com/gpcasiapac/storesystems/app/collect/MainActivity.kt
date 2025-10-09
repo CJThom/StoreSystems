@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.gpcasiapac.storesystems.app.collect.navigation.AndroidAppNavigation
+import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.AndroidAppNavigation
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
 class MainActivity : ComponentActivity() {

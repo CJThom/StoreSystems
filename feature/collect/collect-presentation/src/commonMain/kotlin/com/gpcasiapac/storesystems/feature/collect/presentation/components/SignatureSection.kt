@@ -3,14 +3,20 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -20,18 +26,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 
 @Composable
 fun SignatureSection(
     onSignClick: () -> Unit,
-    onRetakeClick: () -> Unit = {},
     signatureStrokes: List<List<Offset>>,
     modifier: Modifier = Modifier,
+    onRetakeClick: () -> Unit = {},
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
     val hasSignature = signatureStrokes.isNotEmpty()
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         Text(
@@ -51,7 +59,7 @@ fun SignatureSection(
                         strokes = signatureStrokes,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
+
                     // Buttons row
                     Row(
                         modifier = Modifier
@@ -81,26 +89,28 @@ fun SignatureSection(
                 }
             } else {
                 // Show sign button when no signature
-                Box(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
-                    contentAlignment = Alignment.Center
+                        .height(200.dp),
+                    border = MaterialTheme.borderStroke()
                 ) {
-                    Button(
-                        onClick = onSignClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(20.dp)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "SIGN",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium)
-                        )
+                        Button(
+                            onClick = onSignClick
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit"
+                            )
+                            Text(text = "SIGN")
+                        }
                     }
                 }
+
             }
         }
     }

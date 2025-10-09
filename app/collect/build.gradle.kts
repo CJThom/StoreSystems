@@ -1,5 +1,7 @@
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,38 +12,47 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+
 kotlin {
-    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
+
+    jvmToolchain(21)
+
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
+    }
 
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.androidx.compose)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.ink.authoring)
-            implementation(libs.androidx.ink.brush)
-            implementation(libs.androidx.ink.rendering)
-            implementation(libs.androidx.ink.strokes)
-            implementation(libs.androidx.input.motionprediction)
-            implementation(libs.androidx.ink.nativeloader)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.preview)
             implementation(compose.components.resources)
             implementation(compose.animation)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3AdaptiveNavigationSuite)
+
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
 
@@ -50,6 +61,8 @@ kotlin {
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
             // Feature dependencies
             implementation(projects.feature.login.loginApi)

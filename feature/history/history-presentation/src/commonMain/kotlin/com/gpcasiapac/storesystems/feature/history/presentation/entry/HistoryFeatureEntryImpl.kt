@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.entry
 
 import androidx.compose.runtime.Composable
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.feature.history.api.HistoryExternalOutcome
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureEntry
@@ -19,7 +19,7 @@ class HistoryFeatureEntryImpl : HistoryFeatureEntry {
     }
 
     override fun registerEntries(
-        builder: EntryProviderBuilder<NavKey>,
+        builder: EntryProviderScope <NavKey>,
         onOutcome: (HistoryOutcome) -> Unit,
     ) {
         // no-op on non-Android targets

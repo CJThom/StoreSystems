@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.entry
 
 import androidx.compose.runtime.Composable
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
@@ -20,7 +20,7 @@ class LoginFeatureEntryImpl : LoginFeatureEntry {
 
 
     override fun registerEntries(
-        builder: EntryProviderBuilder<NavKey>,
+        builder: EntryProviderScope<NavKey>,
         onOutcome: (LoginOutcome) -> Unit,
     ) { /* no-op on non-Android targets for now */ }
 }

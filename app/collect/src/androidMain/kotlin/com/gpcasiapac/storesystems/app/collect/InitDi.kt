@@ -10,10 +10,10 @@ import com.gpcasiapac.storesystems.core.identity.domain.di.identityDomainModule
 import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataAndroidModule
 import com.gpcasiapac.storesystems.feature.collect.data.di.collectDataModule
 import com.gpcasiapac.storesystems.feature.collect.domain.di.collectDomainModule
-import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationAndroidModule
+import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectFeatureModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.collectPresentationModule
 import com.gpcasiapac.storesystems.feature.login.domain.di.loginDomainModule
-import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationAndroidModule
+import com.gpcasiapac.storesystems.feature.login.presentation.di.loginFeatureModule
 import com.gpcasiapac.storesystems.feature.login.presentation.di.loginPresentationModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -39,13 +39,13 @@ fun ComponentActivity.initCollectAppKoin() {
         startKoin {
             allowOverride(true)
             modules(
+                loginFeatureModule,
+                collectFeatureModule,
                 identityDomainModule,
                 identityDataModule,
                 loginDomainModule,
                 loginPresentationModule,
-                loginPresentationAndroidModule,
                 collectPresentationModule,
-                collectPresentationAndroidModule,
                 collectDomainModule,
                 collectDataModule,
                 collectDataAndroidModule,

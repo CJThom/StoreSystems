@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     androidTarget {
-        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
     }
     jvm()
     sourceSets {
@@ -28,10 +28,11 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
+            implementation(libs.androidx.navigation3.ui)
         }
         androidMain.dependencies {
-            implementation(libs.androidx.navigation3.ui)
+
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
