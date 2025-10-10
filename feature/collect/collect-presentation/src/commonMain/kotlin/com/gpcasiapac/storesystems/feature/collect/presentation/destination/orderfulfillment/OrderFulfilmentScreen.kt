@@ -3,8 +3,11 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,6 +55,7 @@ fun OrderFulfilmentScreen(
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -93,7 +97,10 @@ fun OrderFulfilmentScreen(
     ) { padding ->
 
         Column(
-            modifier = Modifier.padding(padding),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(padding),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
             if (state.collectOrderWithCustomerWithLineItemsState != null) {
