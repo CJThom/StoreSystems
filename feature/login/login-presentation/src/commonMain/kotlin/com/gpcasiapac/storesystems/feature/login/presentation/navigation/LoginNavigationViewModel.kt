@@ -28,7 +28,7 @@ class LoginNavigationViewModel(
     override fun handleEvents(event: LoginNavigationContract.Event) {
         when (event) {
             is LoginNavigationContract.Event.Outcome -> handleOutcome(event.outcome)
-            is LoginNavigationContract.Event.PopBack -> pop(event.count)
+            is LoginNavigationContract.Event.PopBack -> pop()
         }
     }
 

@@ -11,11 +11,7 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
-        androidMain.dependencies {
 
-
-
-        }
         commonMain.dependencies {
 
             implementation(libs.kermit)

@@ -13,7 +13,7 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 object LoginNavigationContract {
     sealed interface Event : ViewEvent {
         data class Outcome(val outcome: LoginOutcome) : Event
-        data class PopBack(val count: Int = 1) : Event
+        data object PopBack : Event
     }
 
     sealed interface Effect : ViewSideEffect {

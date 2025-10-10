@@ -1,5 +1,8 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.entry
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,10 +50,11 @@ class LoginFeatureEntryImpl : LoginFeatureEntry {
         NavDisplay(
             backStack = state.stack,
             onBack = {
-                loginNavigationViewModel.setEvent(
-                    LoginNavigationContract.Event.PopBack(1)
-                )
+                loginNavigationViewModel.setEvent(LoginNavigationContract.Event.PopBack)
             },
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            popTransitionSpec = { fadeIn() togetherWith fadeOut() },
+            predictivePopTransitionSpec = { fadeIn() togetherWith fadeOut() },
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()

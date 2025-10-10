@@ -1,5 +1,8 @@
 package com.gpcasiapac.storesystems.app.collect.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,6 +32,9 @@ fun CollectNavDisplay() {
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
+        transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+        popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+        predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         entryProvider = entryProvider {
             entry<CollectAppNavContract.Destination.LoginHost> {
                 loginEntry.Host(
@@ -53,5 +59,3 @@ fun CollectNavDisplay() {
         }
     )
 }
-
-

@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.app.superapp.navigation
 
+import androidx.compose.animation.ContentTransform
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -81,6 +82,7 @@ private fun TabsHostScreen(
             NavDisplay(
                 backStack = listOf(tabsState.selectedTab),
                 onBack = { /* let child Hosts handle back internally */ },
+                entryDecorators = emptyList(),
                 entryProvider = entryProvider {
                     entry<TabItem.Picking> {
                         // TODO: replace with real Picking host when available

@@ -31,10 +31,10 @@ kotlin {
     }
 
     sourceSets {
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.androidx.compose)
-        }
+//        androidMain.dependencies {
+//            implementation(libs.androidx.activity.compose)
+//            implementation(libs.koin.androidx.compose)
+//        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -61,7 +61,7 @@ kotlin {
 
 
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            
+
 
             // Feature dependencies
             implementation(projects.feature.login.loginApi)
@@ -91,6 +91,7 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+
         }
     }
 }
