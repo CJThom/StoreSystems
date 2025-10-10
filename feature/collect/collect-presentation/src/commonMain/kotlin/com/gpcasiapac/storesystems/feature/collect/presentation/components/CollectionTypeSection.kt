@@ -8,12 +8,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.foundation.component.MBoltSegmentedButtonRow
 import com.gpcasiapac.storesystems.foundation.component.MBoltSegmentedRowOptionDisplayParam
@@ -42,10 +41,12 @@ fun CollectionTypeSection(
         modifier = modifier.padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        Text(
+
+        HeaderMedium(
             text = title,
-            style = MaterialTheme.typography.titleMedium
+            contentPadding = PaddingValues(0.dp)
         )
+
         MBoltSegmentedButtonRow(
             selected = value,
             optionList = optionList,

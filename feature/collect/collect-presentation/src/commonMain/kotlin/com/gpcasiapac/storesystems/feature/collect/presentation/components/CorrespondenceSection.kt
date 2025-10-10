@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -20,18 +17,16 @@ fun CorrespondenceSection(
     correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
     onCheckedChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(horizontal = Dimens.Space.medium),
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
 
-        Text(
+        HeaderMedium(
             text = "Correspondence",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(
+            contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding(),
                 start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),

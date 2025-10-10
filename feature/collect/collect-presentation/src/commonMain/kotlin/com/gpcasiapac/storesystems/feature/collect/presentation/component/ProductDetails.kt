@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.components
+package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

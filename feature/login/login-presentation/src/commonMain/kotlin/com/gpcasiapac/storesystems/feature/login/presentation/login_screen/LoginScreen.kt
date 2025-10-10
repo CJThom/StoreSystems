@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
+
 @Composable
 fun LoginScreen(
     state: LoginScreenContract.State,
@@ -65,7 +66,10 @@ fun LoginScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier

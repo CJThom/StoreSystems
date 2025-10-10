@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,19 +25,21 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 
 @Composable
 fun SignaturePreviewImage(
-    modifier: Modifier = Modifier,
-    onSignClick: () -> Unit,
-    onRetakeClick: () -> Unit = {},
     image: String?,
+    onSignClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onRetakeClick: () -> Unit = {},
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        Text(
+
+        HeaderMedium(
             text = "Signature",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
-            color = MaterialTheme.colorScheme.onBackground
+            isLoading = false,
+            contentPadding = PaddingValues()
         )
 
         Card(

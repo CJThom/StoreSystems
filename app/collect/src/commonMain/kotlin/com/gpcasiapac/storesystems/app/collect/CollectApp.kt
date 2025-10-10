@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.app.collect
 
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import com.gpcasiapac.storesystems.app.collect.di.getAppModules
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectNavDisplay

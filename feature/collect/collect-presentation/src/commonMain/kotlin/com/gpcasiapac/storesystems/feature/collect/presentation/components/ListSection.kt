@@ -6,14 +6,12 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.ProductDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleLineItemList
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -36,11 +34,10 @@ fun ListSection(
     ) {
 
         if (headline != null) {
-            // TODO: Create Headline component
-            Text(
+            HeaderMedium(
                 text = headline,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
-                modifier = Modifier.placeholder(isLoading)
+                isLoading = isLoading,
+                contentPadding = PaddingValues()
             )
         }
 

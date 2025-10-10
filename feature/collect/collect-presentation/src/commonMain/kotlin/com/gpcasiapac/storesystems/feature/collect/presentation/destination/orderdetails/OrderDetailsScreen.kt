@@ -23,8 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.SingleOrderContent
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import kotlinx.coroutines.flow.Flow
@@ -85,7 +84,7 @@ fun OrderDetailsScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                SingleOrderContent(
+                OrderDetailsLarge(
                     orderState = state.order
                 )
             }

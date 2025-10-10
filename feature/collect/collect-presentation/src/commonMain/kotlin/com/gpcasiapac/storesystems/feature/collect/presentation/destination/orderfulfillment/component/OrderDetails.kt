@@ -1,7 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,10 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material.icons.outlined.Receipt
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.MBoltIcons
@@ -35,13 +33,9 @@ fun OrderDetails(
 
     Column(modifier = modifier.padding(contentPadding)) {
 
-        Box(modifier = Modifier.padding(Dimens.Space.medium)) {
-            Text(
-                text = "Invoice: $invoiceNumber",
-                style = MaterialTheme.typography.titleLarge, // TODO: Emphasise?
-                maxLines = 1,
-            )
-        }
+        HeaderMedium(
+            text = "Invoice: $invoiceNumber",
+        )
 
         Column(
             modifier = Modifier.padding(Dimens.Space.medium),
