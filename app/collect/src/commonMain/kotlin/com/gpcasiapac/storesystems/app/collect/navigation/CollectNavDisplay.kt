@@ -1,9 +1,5 @@
 package com.gpcasiapac.storesystems.app.collect.navigation
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,15 +12,10 @@ import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * App-level Navigation3 host that starts at Login Host and navigates to Collect Host based on outcomes.
- */
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
-@Composable
-fun AndroidAppNavigation(
 
-) {
-  val   appNavigationViewModel: CollectAppNavigationViewModel = koinViewModel()
+@Composable
+fun CollectNavDisplay() {
+    val appNavigationViewModel: CollectAppNavigationViewModel = koinViewModel()
     val state by appNavigationViewModel.viewState.collectAsStateWithLifecycle()
     val loginEntry: LoginFeatureEntry = koinInject()
     val collectEntry: CollectFeatureEntry = koinInject()
@@ -34,13 +25,12 @@ fun AndroidAppNavigation(
         onBack = {
             appNavigationViewModel.setEvent(CollectAppNavContract.Event.PopBack)
         },
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
-            entry<CollectAppDestination.LoginHost> {
+            entry<CollectAppNavContract.Destination.LoginHost> {
                 loginEntry.Host(
                     onExternalOutcome = { externalOutcome ->
                         appNavigationViewModel.setEvent(
@@ -50,7 +40,7 @@ fun AndroidAppNavigation(
                 )
             }
 
-            entry<CollectAppDestination.CollectHost> {
+            entry<CollectAppNavContract.Destination.CollectHost> {
                 collectEntry.Host(
                     onExternalOutcome = { externalOutcome ->
                         appNavigationViewModel.setEvent(
@@ -63,3 +53,5 @@ fun AndroidAppNavigation(
         }
     )
 }
+
+
