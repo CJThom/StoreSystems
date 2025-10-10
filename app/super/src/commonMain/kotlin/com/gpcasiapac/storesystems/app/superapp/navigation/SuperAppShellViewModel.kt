@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
+package com.gpcasiapac.storesystems.app.superapp.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
@@ -17,7 +17,7 @@ class SuperAppShellViewModel :
     override fun handleEvents(event: SuperAppShellContract.Event) {
         when (event) {
             is SuperAppShellContract.Event.FromLogin -> handleLoginExternal(event.outcome)
-            is SuperAppShellContract.Event.PopBack -> pop(event.count)
+            is SuperAppShellContract.Event.PopBack -> pop()
         }
     }
 

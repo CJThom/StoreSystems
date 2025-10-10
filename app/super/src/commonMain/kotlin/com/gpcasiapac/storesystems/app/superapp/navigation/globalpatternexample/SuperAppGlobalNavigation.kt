@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation.globalpattern
+package com.gpcasiapac.storesystems.app.superapp.navigation.globalpatternexample
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -10,16 +10,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.gpcasiapac.storesystems.app.superapp.navigation.AppShellKey
+import com.gpcasiapac.storesystems.app.superapp.component.TabsNavigationBar
 import com.gpcasiapac.storesystems.app.superapp.navigation.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.app.superapp.navigation.PickingFeatureDestination
-import com.gpcasiapac.storesystems.app.superapp.navigation.SuperGlobalNavContract
-import com.gpcasiapac.storesystems.app.superapp.navigation.SuperGlobalNavigationViewModel
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
-import com.gpcasiapac.storesystems.app.superapp.navigation.TabsNavigationBar
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
@@ -36,15 +32,12 @@ fun SuperAppGlobalNavigation() {
     // Outer shell NavDisplay controls Login flow (via registerEntries) -> TabsHost
     NavDisplay(
         backStack = state.appShellStack,
-        onBack = { count ->
-            superNavigationViewModel.setEvent(
-                SuperGlobalNavContract.Event.Shell.Pop(count)
-            )
+        onBack = {
+            superNavigationViewModel.setEvent(SuperGlobalNavContract.Event.Shell.Pop)
         },
         entryDecorators = listOf(
-            rememberSavedStateNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
-            rememberSceneSetupNavEntryDecorator()
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
             // Register Login feature entries; VM handles outcomes and pushes keys into appShellStack
@@ -75,12 +68,9 @@ fun SuperAppGlobalNavigation() {
                         // Inner selector: shows exactly one tab entry
                         NavDisplay(
                             backStack = listOf(state.selectedTab),
-                            onBack = { count ->
+                            onBack = {
                                 superNavigationViewModel.setEvent(
-                                    SuperGlobalNavContract.Event.TabsHost.Pop(
-                                        tab = state.selectedTab,
-                                        count = count
-                                    )
+                                    SuperGlobalNavContract.Event.TabsHost.Pop(tab = state.selectedTab)
                                 )
                             },
                             entryProvider = entryProvider {
@@ -88,18 +78,14 @@ fun SuperAppGlobalNavigation() {
                                 entry<TabItem.Picking> {
                                     NavDisplay(
                                         backStack = state.pickingStack,
-                                        onBack = { count ->
+                                        onBack = {
                                             superNavigationViewModel.setEvent(
-                                                SuperGlobalNavContract.Event.TabsHost.Pop(
-                                                    TabItem.Picking(),
-                                                    count
-                                                )
+                                                SuperGlobalNavContract.Event.TabsHost.Pop(TabItem.Picking())
                                             )
                                         },
                                         entryDecorators = listOf(
-                                            rememberSavedStateNavEntryDecorator(),
-                                            rememberViewModelStoreNavEntryDecorator(),
-                                            rememberSceneSetupNavEntryDecorator()
+                                            rememberSaveableStateHolderNavEntryDecorator(),
+                                            rememberViewModelStoreNavEntryDecorator()
                                         ),
                                         entryProvider = entryProvider {
                                             // TODO: Replace stub with pickingEntry.registerEntries when available
@@ -112,18 +98,14 @@ fun SuperAppGlobalNavigation() {
                                 entry<TabItem.Collect> {
                                     NavDisplay(
                                         backStack = state.collectStack,
-                                        onBack = { count ->
+                                        onBack = {
                                             superNavigationViewModel.setEvent(
-                                                SuperGlobalNavContract.Event.TabsHost.Pop(
-                                                    TabItem.Collect(),
-                                                    count
-                                                )
+                                                SuperGlobalNavContract.Event.TabsHost.Pop(TabItem.Collect())
                                             )
                                         },
                                         entryDecorators = listOf(
-                                            rememberSavedStateNavEntryDecorator(),
-                                            rememberViewModelStoreNavEntryDecorator(),
-                                            rememberSceneSetupNavEntryDecorator()
+                                            rememberSaveableStateHolderNavEntryDecorator(),
+                                            rememberViewModelStoreNavEntryDecorator()
                                         ),
                                         entryProvider = entryProvider {
                                             collectEntry.registerEntries(this) { outcome ->
@@ -141,18 +123,14 @@ fun SuperAppGlobalNavigation() {
                                 entry<TabItem.History> {
                                     NavDisplay(
                                         backStack = state.historyStack,
-                                        onBack = { count ->
+                                        onBack = {
                                             superNavigationViewModel.setEvent(
-                                                SuperGlobalNavContract.Event.TabsHost.Pop(
-                                                    TabItem.History(),
-                                                    count
-                                                )
+                                                SuperGlobalNavContract.Event.TabsHost.Pop(TabItem.History())
                                             )
                                         },
                                         entryDecorators = listOf(
-                                            rememberSavedStateNavEntryDecorator(),
-                                            rememberViewModelStoreNavEntryDecorator(),
-                                            rememberSceneSetupNavEntryDecorator()
+                                            rememberSaveableStateHolderNavEntryDecorator(),
+                                            rememberViewModelStoreNavEntryDecorator()
                                         ),
                                         entryProvider = entryProvider {
                                             entry<HistoryFeatureDestination.Root> { Text("History (stub)") }

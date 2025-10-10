@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
+package com.gpcasiapac.storesystems.app.superapp.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -10,18 +10,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+
 import androidx.navigation3.ui.NavDisplay
-import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
-import com.gpcasiapac.storesystems.app.superapp.navigation.TabsNavigationBar
+import com.gpcasiapac.storesystems.app.superapp.component.TabsNavigationBar
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SuperAppNavigation() {
+fun SuperNavDisplay() {
     // Shell VM using BaseNavViewModel
     val shellViewModel: SuperAppShellViewModel = koinViewModel()
     val shellState by shellViewModel.viewState.collectAsState()
@@ -32,13 +31,12 @@ fun SuperAppNavigation() {
     // Outer shell NavDisplay controls LoginHost -> MainHost
     NavDisplay(
         backStack = shellState.stack,
-        onBack = { count -> shellViewModel.setEvent(
-            SuperAppShellContract.Event.PopBack(count)
-        ) },
+        onBack = {
+            shellViewModel.setEvent(SuperAppShellContract.Event.PopBack)
+        },
         entryDecorators = listOf(
-            rememberSavedStateNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
-            rememberSceneSetupNavEntryDecorator()
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
             // Login host

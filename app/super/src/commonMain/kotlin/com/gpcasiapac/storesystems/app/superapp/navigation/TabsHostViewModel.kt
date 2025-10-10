@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
+package com.gpcasiapac.storesystems.app.superapp.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect

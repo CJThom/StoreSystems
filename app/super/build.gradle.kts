@@ -15,11 +15,8 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
-            implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.androidx.compose)
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -27,27 +24,32 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.preview)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
             implementation(compose.materialIconsExtended)
+            implementation(compose.components.resources)
+            implementation(compose.animation)
+            implementation(compose.components.uiToolingPreview)
+            implementation(compose.material3AdaptiveNavigationSuite)
 
+            implementation(libs.androidx.compose.material3.adaptive.layout)
+            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+
+            implementation(libs.androidx.compose.material3.adaptive)
+            implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
 
-            // Bring Lifecycle KMP into this module explicitly so commonMain VMs resolve ViewModel
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
 
-            implementation(projects.common.presentation)
-            implementation(projects.foundation.config)
-            implementation(projects.common.featureFlags)
-
-            // Koin core for common expect declarations
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
 
+
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+
             // Feature APIs and Presentations
             implementation(projects.feature.login.loginApi)
+            implementation(projects.feature.login.loginDomain)
             implementation(projects.feature.login.loginPresentation)
 
             implementation(projects.feature.collect.collectApi)
@@ -60,12 +62,17 @@ kotlin {
             implementation(projects.feature.picking.pickingPresentation)
 
             // Domain/data DI for login/identity
-            implementation(projects.feature.login.loginDomain)
+
             implementation(projects.core.identity.identityDomain)
             implementation(projects.core.identity.identityData)
-            
+
+            implementation(projects.common.featureFlags)
+            implementation(projects.common.di)
+            implementation(projects.common.presentation)
+
             // Design system theme
             implementation(projects.foundation.designSystem)
+            implementation(projects.foundation.config)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {

@@ -1,10 +1,11 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation
+package com.gpcasiapac.storesystems.app.superapp.component
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 
 @Composable
 fun TabsNavigationBar(

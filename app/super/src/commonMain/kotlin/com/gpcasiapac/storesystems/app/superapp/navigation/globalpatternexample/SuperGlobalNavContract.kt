@@ -1,6 +1,7 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation
+package com.gpcasiapac.storesystems.app.superapp.navigation.globalpatternexample
 
 import androidx.navigation3.runtime.NavKey
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
@@ -18,7 +19,7 @@ object SuperGlobalNavContract {
         // Shell domain (no bottom tabs)
         sealed interface Shell : Event {
             data class FromLogin(val outcome: LoginOutcome) : Shell
-            data class Pop(val count: Int = 1) : Shell
+            data object Pop : Shell
             // Add more shell-scoped outcomes when needed (e.g., ProductDetails)
         }
 
@@ -29,7 +30,7 @@ object SuperGlobalNavContract {
 
             // data class FromPicking(val outcome: PickingOutcome) : TabsHost
             // data class FromHistory(val outcome: HistoryOutcome) : TabsHost
-            data class Pop(val tab: TabItem, val count: Int = 1) : TabsHost
+            data class Pop(val tab: TabItem) : TabsHost
         }
 
     }

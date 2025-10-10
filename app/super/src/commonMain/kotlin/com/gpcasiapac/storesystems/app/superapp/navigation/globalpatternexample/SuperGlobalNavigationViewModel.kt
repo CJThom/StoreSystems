@@ -1,12 +1,13 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation
+package com.gpcasiapac.storesystems.app.superapp.navigation.globalpatternexample
 
 import androidx.navigation3.runtime.NavKey
-import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem.*
+import com.gpcasiapac.storesystems.app.superapp.navigation.HistoryFeatureDestination
+import com.gpcasiapac.storesystems.app.superapp.navigation.PickingFeatureDestination
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.navigation.BackStackReducer
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
-import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -32,14 +33,14 @@ class SuperGlobalNavigationViewModel :
             // Shell domain
             is SuperGlobalNavContract.Event.Shell -> when (event) {
                 is SuperGlobalNavContract.Event.Shell.FromLogin -> handleLogin(event.outcome)
-                is SuperGlobalNavContract.Event.Shell.Pop -> popBack(event.count)
+                is SuperGlobalNavContract.Event.Shell.Pop -> popBack()
             }
 
             // TabsHost domain
             is SuperGlobalNavContract.Event.TabsHost -> when (event) {
                 is SuperGlobalNavContract.Event.TabsHost.SelectTab -> selectTab(event.tab)
                 is SuperGlobalNavContract.Event.TabsHost.FromCollect -> handleCollect(event.outcome)
-                is SuperGlobalNavContract.Event.TabsHost.Pop -> popBackInTab(event.tab, event.count)
+                is SuperGlobalNavContract.Event.TabsHost.Pop -> popBackInTab(event.tab)
             }
 
         }
@@ -59,36 +60,27 @@ class SuperGlobalNavigationViewModel :
         when (outcome) {
             is LoginOutcome.MfaRequired -> pushInShell(LoginFeatureDestination.Mfa(outcome.userId))
             is LoginOutcome.LoginCompleted -> enterTabsHost()
-            is LoginOutcome.Back -> popBack(1)
+            is LoginOutcome.Back -> popBack()
         }
     }
 
-    private fun popBack(count: Int) {
+    private fun popBack() {
         setState {
             val atTabs = appShellStack.lastOrNull() == AppShellKey.TabsHost
             if (!atTabs) {
-                copy(appShellStack = BackStackReducer.pop(appShellStack, count))
+                copy(appShellStack = BackStackReducer.pop(appShellStack))
             } else {
                 when (selectedTab) {
                     is TabItem.Picking -> copy(
-                        pickingStack = BackStackReducer.pop(
-                            pickingStack,
-                            count
-                        )
+                        pickingStack = BackStackReducer.pop(pickingStack)
                     )
 
                     is TabItem.Collect -> copy(
-                        collectStack = BackStackReducer.pop(
-                            collectStack,
-                            count
-                        )
+                        collectStack = BackStackReducer.pop(collectStack)
                     )
 
                     is TabItem.History -> copy(
-                        historyStack = BackStackReducer.pop(
-                            historyStack,
-                            count
-                        )
+                        historyStack = BackStackReducer.pop(historyStack)
                     )
 
                     null -> this
@@ -105,11 +97,11 @@ class SuperGlobalNavigationViewModel :
     private fun handleCollect(outcome: CollectOutcome) {
         when (outcome) {
             is CollectOutcome.OrderSelected -> pushInTab(
-                Collect(),
-                OrderFulfilment
+                TabItem.Collect(),
+                CollectFeatureDestination.OrderFulfilment
             )
 
-            is CollectOutcome.Back -> popBackInTab(Collect(), 1)
+            is CollectOutcome.Back -> popBackInTab(TabItem.Collect(), 1)
             CollectOutcome.SignatureRequested -> TODO()
             is CollectOutcome.SignatureSaved -> TODO()
             CollectOutcome.Logout -> TODO()

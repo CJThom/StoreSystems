@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.superapp.navigation.hostpattern
+package com.gpcasiapac.storesystems.app.superapp.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
@@ -25,6 +25,6 @@ object SuperAppShellContract {
 
     sealed interface Event : ViewEvent {
         data class FromLogin(val outcome: LoginExternalOutcome) : Event
-        data class PopBack(val count: Int = 1) : Event
+        data object PopBack : Event
     }
 }

@@ -1,7 +1,8 @@
-package com.gpcasiapac.storesystems.app.collect.di
+package com.gpcasiapac.storesystems.app.superapp.di
 
-import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavigationViewModel
-import com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample.CollectGlobalNavigationViewModel
+import com.gpcasiapac.storesystems.app.superapp.navigation.SuperAppShellViewModel
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabsHostViewModel
+import com.gpcasiapac.storesystems.app.superapp.navigation.globalpatternexample.SuperGlobalNavigationViewModel
 import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
@@ -26,18 +27,20 @@ fun getAppModules(): List<Module> {
         CollectDataModuleProvider,
         CollectDomainModuleProvider,
         CollectPresentationModuleProvider,
+        CollectDataModuleProvider,
+        CollectDomainModuleProvider,
+        CollectPresentationModuleProvider,
     )
 
     val moduleList = providerList.flatMap { it.modules() }.toMutableList()
 
     // TODO: Use ModuleProvider
-    moduleList.add(collectAppNavigationModule)
+    moduleList.add(superGlobalNavigationModule)
     moduleList.add(appModule)
 
     return moduleList
 }
 
-// TODO: Idk what this is
 val appModule = module {
     single<FeatureFlags> {
         object : FeatureFlags {
@@ -48,7 +51,8 @@ val appModule = module {
 }
 
 
-val collectAppNavigationModule = module {
-    viewModelOf(::CollectAppNavigationViewModel)
-    viewModelOf(::CollectGlobalNavigationViewModel)
+val superGlobalNavigationModule: Module = module {
+    viewModelOf(::SuperGlobalNavigationViewModel)
+    viewModelOf(::SuperAppShellViewModel)
+    viewModelOf(::TabsHostViewModel)
 }

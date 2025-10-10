@@ -55,14 +55,13 @@ kotlin {
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
 
-            implementation(projects.common.presentation)
-            implementation(projects.foundation.config)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
-            implementation(projects.common.di)
+
 
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            
 
             // Feature dependencies
             implementation(projects.feature.login.loginApi)
@@ -81,9 +80,12 @@ kotlin {
 
             // Feature flags API used for simple default binding in app
             implementation(projects.common.featureFlags)
-
+            implementation(projects.common.di)
+            implementation(projects.common.presentation)
             // Design system theme
             implementation(projects.foundation.designSystem)
+            implementation(projects.foundation.config)
+
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
