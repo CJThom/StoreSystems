@@ -23,7 +23,7 @@ class CollectNavigationViewModel :
     override fun handleEvents(event: CollectNavigationContract.Event) {
         when (event) {
             is CollectNavigationContract.Event.Outcome -> handleOutcome(event.outcome)
-            is CollectNavigationContract.Event.PopBack -> pop(event.count)
+            is CollectNavigationContract.Event.PopBack -> pop()
         }
     }
 

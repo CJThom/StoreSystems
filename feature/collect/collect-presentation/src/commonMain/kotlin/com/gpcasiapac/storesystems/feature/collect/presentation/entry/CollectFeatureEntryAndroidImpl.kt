@@ -54,11 +54,7 @@ class CollectFeatureEntryAndroidImpl : CollectFeatureEntry {
             sceneStrategy = sceneStrategy,
             backStack = state.stack,
             onBack = {
-                collectNavigationViewModel.setEvent(
-                    CollectNavigationContract.Event.PopBack(
-                        1
-                    )
-                )
+                collectNavigationViewModel.setEvent(CollectNavigationContract.Event.PopBack)
             },
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),

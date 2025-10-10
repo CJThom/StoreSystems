@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
+package com.gpcasiapac.storesystems.app.collect.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
@@ -19,7 +19,7 @@ class CollectAppNavigationViewModel :
         when (event) {
             is CollectAppNavContract.Event.FromLogin -> handleLoginExternalOutcome(event.outcome)
             is CollectAppNavContract.Event.FromCollect -> handleExternalCollectOutcome(event.outcome)
-            is CollectAppNavContract.Event.PopBack -> pop(event.count)
+            is CollectAppNavContract.Event.PopBack -> pop()
         }
     }
 

@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.navigation.globalpattern
+package com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample
 
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent

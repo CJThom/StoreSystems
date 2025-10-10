@@ -31,13 +31,6 @@ val collectDataModule = module {
     singleOf(::OrderSelectionRepositoryImpl) { bind<OrderSelectionRepository>() }
 }
 
-val collectDataModuleList: List<Module>
-    get() = listOf(
-        collectDataModule,
-        collectDataDatabaseModule,
-        daoModule
-    )
-
 object CollectDataModuleProvider : ModuleProvider {
     override fun modules(): List<Module> =
         listOf(

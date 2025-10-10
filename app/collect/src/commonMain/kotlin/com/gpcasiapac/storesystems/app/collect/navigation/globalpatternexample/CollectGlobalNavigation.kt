@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.navigation.globalpattern
+package com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState

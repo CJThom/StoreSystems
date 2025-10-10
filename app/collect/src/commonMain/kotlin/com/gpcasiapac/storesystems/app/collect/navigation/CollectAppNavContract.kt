@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.navigation.hostpattern
+package com.gpcasiapac.storesystems.app.collect.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
@@ -19,6 +19,6 @@ object CollectAppNavContract {
     sealed interface Event : ViewEvent {
         data class FromLogin(val outcome: LoginExternalOutcome) : Event
         data class FromCollect(val outcome: CollectExternalOutcome) : Event
-        data class PopBack(val count: Int = 1) : Event
+        data object PopBack : Event
     }
 }

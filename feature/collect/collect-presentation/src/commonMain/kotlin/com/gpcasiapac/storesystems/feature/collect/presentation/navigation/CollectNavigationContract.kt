@@ -13,7 +13,7 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 object CollectNavigationContract {
     sealed interface Event : ViewEvent {
         data class Outcome(val outcome: CollectOutcome) : Event
-        data class PopBack(val count: Int = 1) : Event
+        data object PopBack : Event
     }
 
     sealed interface Effect : ViewSideEffect {

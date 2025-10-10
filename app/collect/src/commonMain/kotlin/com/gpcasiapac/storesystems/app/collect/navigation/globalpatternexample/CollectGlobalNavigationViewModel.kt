@@ -1,7 +1,7 @@
-package com.gpcasiapac.storesystems.app.collect.navigation.globalpattern
+package com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample
 
 import androidx.navigation3.runtime.NavKey
-import com.gpcasiapac.storesystems.app.collect.navigation.hostpattern.CollectAppNavContract
+import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.OrderFulfilment

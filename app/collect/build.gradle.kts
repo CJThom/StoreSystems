@@ -32,7 +32,6 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
-            implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.androidx.compose)
         }
@@ -61,6 +60,7 @@ kotlin {
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
+            implementation(projects.common.di)
 
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
