@@ -28,7 +28,7 @@ class OrderFulfilmentScreenStateProvider : PreviewParameterProvider<OrderFulfilm
                 isLoading = false,
                 error = null,
 
-                visibleProductListItemCount = 2,
+                wantsExpandedProductList = false,
 
                 // Collecting
                 collectingType = CollectingType.STANDARD,

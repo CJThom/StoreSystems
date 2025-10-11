@@ -43,7 +43,7 @@ object OrderFulfilmentScreenContract {
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
 
         // Product list
-        val visibleProductListItemCount: Int,
+        val wantsExpandedProductList: Boolean = false,
     ) : ViewState
 
 

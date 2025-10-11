@@ -21,8 +21,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-private const val COLLAPSED_PRODUCT_LIST_COUNT = 2
-
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
@@ -79,7 +77,7 @@ class OrderFulfilmentScreenViewModel(
                     isEnabled = true
                 )
             ),
-            visibleProductListItemCount = COLLAPSED_PRODUCT_LIST_COUNT
+            wantsExpandedProductList = false
         )
 
     }
@@ -166,6 +164,8 @@ class OrderFulfilmentScreenViewModel(
                 setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit ${event.id} not implemented") }
             }
 
+
+
             // Final action
             is OrderFulfilmentScreenContract.Event.Confirm -> {
                 confirm()
@@ -193,14 +193,9 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun toggleProductListExpansion() {
-        val totalItemCount = viewState.value.collectOrderWithCustomerWithLineItemsState?.lineItemList?.size ?: 0
         setState {
             copy(
-                visibleProductListItemCount = if (visibleProductListItemCount == totalItemCount) {
-                    COLLAPSED_PRODUCT_LIST_COUNT
-                } else {
-                    totalItemCount
-                }
+                wantsExpandedProductList = !wantsExpandedProductList
             )
         }
     }
@@ -216,7 +211,7 @@ class OrderFulfilmentScreenViewModel(
                             collectOrderListItemStateList = emptyList(),
                             isLoading = false,
                             error = null,
-                            visibleProductListItemCount = orderState?.lineItemList?.size?.coerceAtMost(COLLAPSED_PRODUCT_LIST_COUNT) ?: 0
+                            wantsExpandedProductList = false
                         )
                     }
                 }

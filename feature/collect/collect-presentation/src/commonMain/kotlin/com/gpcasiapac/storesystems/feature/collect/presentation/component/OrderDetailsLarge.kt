@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -8,24 +9,20 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.OrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderLineItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderWithCustomerWithLineItemsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleLineItemList
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -40,32 +37,22 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  *
  * @param orderState The state object containing all necessary order information.
  * @param modifier The modifier to be applied to the root Column of the component.
- * @param visibleLineItemListCount The number of line items to display from the product list.
- *   Defaults to showing all items in the list.
  * @param isProductListExpanded A boolean indicating whether the product list is in an
  *   expanded state. This is used by the underlying [com.gpcasiapac.storesystems.feature.collect.presentation.components.ListSection] to potentially change its UI.
  * @param onViewMoreClick An optional lambda that is invoked when the user requests to see
  *   more or fewer items in the product list. If null, the expand/collapse functionality
  *   is disabled, and the button will not be shown.
  */
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun OrderDetailsLarge(
     orderState: CollectOrderWithCustomerWithLineItemsState,
+    visibleList: List<CollectOrderLineItemState>,
+    isProductListExpanded: Boolean,
+    onViewMoreClick: (() -> Unit)?,
+    useGrid: Boolean,
     modifier: Modifier = Modifier,
-    visibleLineItemListCount: Int = orderState.lineItemList.size,
-    isProductListExpanded: Boolean = true,
-    onViewMoreClick: (() -> Unit)? = null,
 ) {
-
-//    val useColumns =
-//        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val useColumns =
-        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
-
-    if (useColumns) {
+    if (!useGrid) {
         Column(
             modifier = modifier,
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
@@ -76,10 +63,10 @@ fun OrderDetailsLarge(
 
             ProductListSection(
                 modifier = Modifier,
-                lineItemList = orderState.lineItemList.take(visibleLineItemListCount),
+                lineItemList = visibleList,
                 isProductListExpanded = isProductListExpanded,
                 onViewMoreClick = onViewMoreClick,
-                useGrid = !useColumns
+                useGrid = useGrid
             )
         }
     } else {
@@ -97,10 +84,10 @@ fun OrderDetailsLarge(
 
             ProductListSection(
                 modifier = Modifier.weight(1f),
-                lineItemList = orderState.lineItemList.take(visibleLineItemListCount),
+                lineItemList = visibleList,
                 isProductListExpanded = isProductListExpanded,
                 onViewMoreClick = onViewMoreClick,
-                useGrid = !useColumns
+                useGrid = useGrid
             )
         }
     }
@@ -134,7 +121,9 @@ private fun ProductListSection(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(Dimens.Space.medium),
+        modifier = modifier
+            .padding(Dimens.Space.medium)
+            .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         HeaderMedium(
@@ -152,8 +141,7 @@ private fun ProductListSection(
                 lineItemList.forEach { lineItem ->
                     ProductDetails(
                         modifier = Modifier
-                            .weight(1f)
-                            ,
+                            .weight(1f),
                         description = lineItem.productDescription,
                         sku = lineItem.productNumber,
                         quantity = lineItem.quantity,
@@ -195,7 +183,10 @@ private fun OrderDetailsLargePreview() {
         Surface {
             OrderDetailsLarge(
                 orderState = sampleCollectOrderWithCustomerWithLineItemsState(),
-                 onViewMoreClick = {}
+                visibleList = sampleLineItemList,
+                isProductListExpanded = false,
+                onViewMoreClick = {},
+                useGrid = false
             )
         }
     }

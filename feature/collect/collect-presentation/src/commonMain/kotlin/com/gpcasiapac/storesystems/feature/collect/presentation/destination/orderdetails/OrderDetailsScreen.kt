@@ -18,18 +18,21 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun OrderDetailsScreen(
     state: OrderDetailsScreenContract.State,
@@ -84,9 +87,23 @@ fun OrderDetailsScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                OrderDetailsLarge(
-                    orderState = state.order
+                val adaptiveInfo = currentWindowAdaptiveInfo()
+                val window = adaptiveInfo.windowSizeClass
+                val isMediumPlus = window.isWidthAtLeastBreakpoint(
+                    WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
                 )
+                val useGrid = isMediumPlus
+
+                // Safe call, as we've already established that state.order is not null.
+                state.order.let { order ->
+                    OrderDetailsLarge(
+                        orderState = order,
+                        visibleList = order.lineItemList,
+                        isProductListExpanded = true,
+                        onViewMoreClick = null,
+                        useGrid = useGrid
+                    )
+                }
             }
         }
     }
