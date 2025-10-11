@@ -37,6 +37,14 @@ val sampleLineItemList = listOf(
         productDescription = "Product 3 Description",
         quantity = 10,
         unitPrice = 100.00
+    ),
+    CollectOrderLineItemState(
+        lineNumber = 4,
+        sku = "SKU-003",
+        productNumber = "PROD-003",
+        productDescription = "Product 3 Description",
+        quantity = 10,
+        unitPrice = 100.00
     )
 )
 /**

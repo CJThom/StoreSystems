@@ -4,12 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
@@ -22,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
@@ -29,6 +35,13 @@ import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSma
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+
+object ProductDetailsDefaults {
+    val minWidth = 250.dp
+    val contentPadding = PaddingValues(Dimens.Space.medium)
+    val imageSize = 100.dp
+}
 
 /**
  * A product details card component that displays product information including
@@ -47,22 +60,24 @@ fun ProductDetails(
     quantity: Int,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
+    minWidth: Dp = ProductDetailsDefaults.minWidth,
+    contentPadding: PaddingValues = ProductDetailsDefaults.contentPadding
 ) {
 
     Row(
         modifier = modifier
+            .widthIn(min = minWidth)
             .padding(contentPadding)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
 
         ProductImageContainer(
-            modifier = Modifier.size(100.dp)
+            modifier = Modifier.size(ProductDetailsDefaults.imageSize)
         )
 
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.height(IntrinsicSize.Max),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
         ) {
 
@@ -82,6 +97,8 @@ fun ProductDetails(
                 isLoading = isLoading,
             )
 
+            Spacer(Modifier.weight(1f))
+
             DetailItemSmallChip(
                 value = quantity.toString(),
                 imageVector = Icons.Outlined.ShoppingCart, // TODO: Get Deployed Code Icon,
@@ -92,10 +109,6 @@ fun ProductDetails(
     }
 }
 
-@Composable
-private fun ProductTitle(productName: String) {
-
-}
 
 /**
  * Product image container with light gray background matching the design
@@ -118,7 +131,7 @@ private fun ProductImageContainer(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(MaterialTheme.shapes.small)
-                .background(Color.Gray)
+                .placeholder(true)
         )
     }
 }

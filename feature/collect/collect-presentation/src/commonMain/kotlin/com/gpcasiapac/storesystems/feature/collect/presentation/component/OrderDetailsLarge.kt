@@ -3,12 +3,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -57,9 +57,13 @@ fun OrderDetailsLarge(
     isProductListExpanded: Boolean = true,
     onViewMoreClick: (() -> Unit)? = null,
 ) {
+
+//    val useColumns =
+//        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val useColumns =
-        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
     if (useColumns) {
         Column(
@@ -147,7 +151,9 @@ private fun ProductListSection(
             ) {
                 lineItemList.forEach { lineItem ->
                     ProductDetails(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            ,
                         description = lineItem.productDescription,
                         sku = lineItem.productNumber,
                         quantity = lineItem.quantity,
@@ -188,7 +194,8 @@ private fun OrderDetailsLargePreview() {
     GPCTheme {
         Surface {
             OrderDetailsLarge(
-                orderState = sampleCollectOrderWithCustomerWithLineItemsState()
+                orderState = sampleCollectOrderWithCustomerWithLineItemsState(),
+                 onViewMoreClick = {}
             )
         }
     }

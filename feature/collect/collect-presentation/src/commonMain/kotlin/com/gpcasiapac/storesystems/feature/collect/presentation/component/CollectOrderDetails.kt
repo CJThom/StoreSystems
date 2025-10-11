@@ -2,9 +2,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BackHand
@@ -37,7 +40,7 @@ fun CollectOrderDetails(
 ) {
 
     Column(
-        modifier = modifier.padding(contendPadding),
+        modifier = modifier.height(IntrinsicSize.Min).padding(contendPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall),
     ) {
 
@@ -70,6 +73,8 @@ fun CollectOrderDetails(
             }
 
         }
+
+        Spacer(Modifier.weight(1f))
 
         DetailItemSmallChip(
             value = pickedAt.toTimeAgoString(),
