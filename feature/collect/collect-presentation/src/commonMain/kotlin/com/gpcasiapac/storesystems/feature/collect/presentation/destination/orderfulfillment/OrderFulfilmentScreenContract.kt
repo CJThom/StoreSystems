@@ -7,7 +7,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayState
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -29,9 +29,10 @@ object OrderFulfilmentScreenContract {
         val collectionTypeOptionList: List<CollectionTypeSectionDisplayState>,
 
         // Account flow
-        val representativeSearchText: String,
-        val recentRepresentativeList: List<Representative>,
-        val selectedRepresentativeIdList: Set<String>,
+        val isAccountCollectingFeatureEnabled: Boolean,
+        val representativeSearchQuery: String,
+        val representativeList: List<Representative>,
+        val selectedRepresentativeIds: Set<String>,
 
         // Courier flow
         val courierName: String,
@@ -60,8 +61,8 @@ object OrderFulfilmentScreenContract {
         data class CollectingChanged(val type: CollectingType) : Event
 
         // Account flow
-        data class RepresentativeSearchChanged(val text: String) : Event
-        data class RepresentativeChecked(val representativeId: String, val checked: Boolean) : Event
+        data class RepresentativeSearchQueryChanged(val query: String) : Event
+        data class RepresentativeSelected(val id: String, val isSelected: Boolean) : Event
         data object ClearRepresentativeSelection : Event
 
         // Courier flow

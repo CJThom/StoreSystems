@@ -12,7 +12,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSelectionRe
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSectionDisplayState
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
@@ -56,13 +56,14 @@ class OrderFulfilmentScreenViewModel(
                     label = CollectingType.COURIER.name,
                 )
             ),
-            representativeSearchText = "",
-            recentRepresentativeList = listOf(
+            isAccountCollectingFeatureEnabled = true, // Feature Toggle
+            representativeSearchQuery = "",
+            representativeList = listOf(
                 Representative("rep-1", "John Doe", "#9288180049912"),
                 Representative("rep-2", "Custa Ma", "#9288180049912"),
                 Representative("rep-3", "Alice Smith", "#9288180049912"),
             ),
-            selectedRepresentativeIdList = emptySet(),
+            selectedRepresentativeIds = emptySet(),
             courierName = "",
             signatureStrokes = emptyList(),
             isCorrespondenceSectionVisible = false,
@@ -124,16 +125,16 @@ class OrderFulfilmentScreenViewModel(
             }
 
             // Account flow
-            is OrderFulfilmentScreenContract.Event.RepresentativeSearchChanged -> {
-                setState { copy(representativeSearchText = event.text) }
+            is OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged -> {
+                setState { copy(representativeSearchQuery = event.query) }
             }
 
-            is OrderFulfilmentScreenContract.Event.RepresentativeChecked -> {
-                onRepresentativeChecked(event.representativeId, event.checked)
+            is OrderFulfilmentScreenContract.Event.RepresentativeSelected -> {
+                onRepresentativeChecked(event.id, event.isSelected)
             }
 
             is OrderFulfilmentScreenContract.Event.ClearRepresentativeSelection -> {
-                setState { copy(selectedRepresentativeIdList = emptySet()) }
+                setState { copy(selectedRepresentativeIds = emptySet()) }
             }
 
             // Courier flow
@@ -267,18 +268,18 @@ class OrderFulfilmentScreenViewModel(
         setState {
             copy(
                 collectingType = type,
-                representativeSearchText = if (type == CollectingType.ACCOUNT) representativeSearchText else "",
-                selectedRepresentativeIdList = if (type == CollectingType.ACCOUNT) selectedRepresentativeIdList else emptySet(),
+                representativeSearchQuery = if (type == CollectingType.ACCOUNT) representativeSearchQuery else "",
+                selectedRepresentativeIds = if (type == CollectingType.ACCOUNT) selectedRepresentativeIds else emptySet(),
                 courierName = if (type == CollectingType.COURIER) courierName else "",
             )
         }
     }
 
-    private fun onRepresentativeChecked(representativeId: String, checked: Boolean) {
+    private fun onRepresentativeChecked(representativeId: String, isSelected: Boolean) {
         setState {
-            val newSet = selectedRepresentativeIdList.toMutableSet()
-            if (checked) newSet.add(representativeId) else newSet.remove(representativeId)
-            copy(selectedRepresentativeIdList = newSet)
+            val newSet = selectedRepresentativeIds.toMutableSet()
+            if (isSelected) newSet.add(representativeId) else newSet.remove(representativeId)
+            copy(selectedRepresentativeIds = newSet)
         }
     }
 
@@ -310,7 +311,7 @@ class OrderFulfilmentScreenViewModel(
         }
         when (s.collectingType) {
             CollectingType.ACCOUNT -> {
-                if (s.selectedRepresentativeIdList.isEmpty()) {
+                if (s.selectedRepresentativeIds.isEmpty()) {
                     setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please select at least one representative") }
                     return
                 }

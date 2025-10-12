@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,15 +30,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CollectionTypeSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -151,7 +151,7 @@ fun OrderFulfilmentScreen(
                     )
                 }
 
-                VerticalDivider(                )
+                VerticalDivider()
 
                 // Right, scrollable column for actions
                 Column(
@@ -214,7 +214,13 @@ private fun ActionsContent(
                 )
             )
         },
-    )
+    ) { selectedType ->
+        CollectionTypeContent(
+            state = state,
+            selectedType = selectedType,
+            onEventSent = onEventSent
+        )
+    }
 
     HorizontalDivider()
 
@@ -241,6 +247,46 @@ private fun ActionsContent(
                 )
             }
         )
+    }
+}
+
+@Composable
+private fun CollectionTypeContent(
+    state: OrderFulfilmentScreenContract.State,
+    selectedType: CollectingType,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+) {
+    when (selectedType) {
+        CollectingType.ACCOUNT -> {
+            if (state.isAccountCollectingFeatureEnabled) {
+                AccountCollectionContent(
+                    searchQuery = state.representativeSearchQuery,
+                    onSearchQueryChange = { query ->
+                        onEventSent(OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(query))
+                    },
+                    representatives = state.representativeList,
+                    selectedRepresentativeIds = state.selectedRepresentativeIds,
+                    onRepresentativeSelected = { id, isSelected ->
+                        onEventSent(OrderFulfilmentScreenContract.Event.RepresentativeSelected(id, isSelected))
+                    },
+                    isLoading = state.isLoading
+                )
+            }
+        }
+
+        CollectingType.COURIER -> {
+            CourierCollectionContent(
+                courierName = state.courierName,
+                onCourierNameChange = { name ->
+                    onEventSent(OrderFulfilmentScreenContract.Event.CourierNameChanged(name))
+                },
+                isLoading = state.isLoading
+            )
+        }
+
+        else -> {
+            // No additional UI for STANDARD
+        }
     }
 }
 
