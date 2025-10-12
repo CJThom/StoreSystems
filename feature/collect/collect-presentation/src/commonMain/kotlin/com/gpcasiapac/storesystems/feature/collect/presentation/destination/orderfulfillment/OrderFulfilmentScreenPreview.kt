@@ -12,7 +12,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.samp
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderWithCustomerWithLineItemsState
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
-class OrderFulfilmentScreenStateProvider : PreviewParameterProvider<OrderFulfilmentScreenContract.State> {
+class OrderFulfilmentScreenStateProvider :
+    PreviewParameterProvider<OrderFulfilmentScreenContract.State> {
     override val values: Sequence<OrderFulfilmentScreenContract.State>
         get() {
             val orders = sampleCollectOrderListItemStateList().take(3)
@@ -67,6 +68,7 @@ class OrderFulfilmentScreenStateProvider : PreviewParameterProvider<OrderFulfilm
                 signatureStrokes = emptyList(),
 
                 // Correspondence
+                isCorrespondenceSectionVisible = false,
                 correspondenceOptionList = listOf(
                     CorrespondenceItemDisplayParam(
                         id = "email",

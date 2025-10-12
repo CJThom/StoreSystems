@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -102,7 +103,9 @@ private fun ProductListSection(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(Dimens.Space.medium),
+        modifier = modifier
+            .padding(Dimens.Space.medium)
+            .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         HeaderMedium(

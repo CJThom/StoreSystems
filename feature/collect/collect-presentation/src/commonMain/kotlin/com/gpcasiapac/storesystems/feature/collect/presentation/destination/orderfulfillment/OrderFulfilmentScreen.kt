@@ -1,12 +1,15 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,12 +25,14 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
@@ -106,7 +111,8 @@ fun OrderFulfilmentScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(padding),
+                    .padding(padding)
+                    .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
             ) {
                 OrderDetailsContent(
@@ -130,13 +136,13 @@ fun OrderFulfilmentScreen(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+                    .padding(padding)
+                    .animateContentSize(),
             ) {
                 // Left, scrollable column for order details
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.60f)
                         .verticalScroll(rememberScrollState())
                 ) {
                     OrderDetailsContent(
@@ -145,10 +151,12 @@ fun OrderFulfilmentScreen(
                     )
                 }
 
+                VerticalDivider(                )
+
                 // Right, scrollable column for actions
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.40f)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                 ) {
@@ -220,18 +228,20 @@ private fun ActionsContent(
         image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
     )
 
-    HorizontalDivider()
+    if (state.isCorrespondenceSectionVisible) {
+        HorizontalDivider()
 
-    CorrespondenceSection(
-        correspondenceOptionList = state.correspondenceOptionList,
-        onCheckedChange = { id ->
-            onEventSent(
-                OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                    id = id
+        CorrespondenceSection(
+            correspondenceOptionList = state.correspondenceOptionList,
+            onCheckedChange = { id ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                        id = id
+                    )
                 )
-            )
-        }
-    )
+            }
+        )
+    }
 }
 
 

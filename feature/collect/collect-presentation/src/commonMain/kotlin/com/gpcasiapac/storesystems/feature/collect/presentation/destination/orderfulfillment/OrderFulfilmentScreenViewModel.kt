@@ -65,6 +65,7 @@ class OrderFulfilmentScreenViewModel(
             selectedRepresentativeIdList = emptySet(),
             courierName = "",
             signatureStrokes = emptyList(),
+            isCorrespondenceSectionVisible = false,
             correspondenceOptionList = listOf(
                 CorrespondenceItemDisplayParam(
                     id = "email",

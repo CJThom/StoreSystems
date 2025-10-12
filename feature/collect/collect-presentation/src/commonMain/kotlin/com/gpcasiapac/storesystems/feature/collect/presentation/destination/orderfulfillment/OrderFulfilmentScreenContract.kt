@@ -41,6 +41,7 @@ object OrderFulfilmentScreenContract {
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
+        val isCorrespondenceSectionVisible: Boolean,
 
         // Product list
         val visibleProductListItemCount: Int,
