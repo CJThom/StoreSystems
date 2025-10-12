@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,10 +22,13 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
@@ -45,7 +49,7 @@ import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
@@ -55,7 +59,10 @@ fun OrderFulfilmentScreen(
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollState = rememberScrollState()
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val useColumns =
+        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -95,88 +102,138 @@ fun OrderFulfilmentScreen(
             SnackbarHost(snackbarHostState)
         }
     ) { padding ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-        ) {
-            if (state.collectOrderWithCustomerWithLineItemsState != null) {
-                OrderDetailsLarge(
-                    orderState = state.collectOrderWithCustomerWithLineItemsState,
-                    visibleLineItemListCount = state.visibleProductListItemCount,
-                    isProductListExpanded = state.visibleProductListItemCount > 2,
-                    onViewMoreClick = {
-                        onEventSent(OrderFulfilmentScreenContract.Event.ToggleProductListExpansion)
-                    }
-                )
-            } else {
-
-                MultiOrderListSection(
+        if (useColumns) {
+            // Single-column, scrollable layout for smaller screens
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(padding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+            ) {
+                OrderDetailsContent(
                     state = state,
                     onEventSent = onEventSent
                 )
-
+                HorizontalDivider()
+                ActionsContent(
+                    state = state,
+                    onEventSent = onEventSent
+                )
+                HorizontalDivider()
+                ActionButton(
+                    modifier = Modifier.padding(Dimens.Space.medium),
+                    title = { Text(text = "Confirm") },
+                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
+                )
             }
-
-            HorizontalDivider()
-
-            CollectionTypeSection(
-                title = stringResource(Res.string.who_is_collecting),
-                value = state.collectingType,
-                optionList = state.collectionTypeOptionList,
-                onValueChange = { collectionType ->
-                    onEventSent(
-                        OrderFulfilmentScreenContract.Event.CollectingChanged(
-                            collectionType
-                        )
-                    )
-                },
-            )
-
-            HorizontalDivider()
-
-            SignaturePreviewImage(
-                onSignClick = {
-                    onEventSent(OrderFulfilmentScreenContract.Event.Sign)
-                },
-                onRetakeClick = {
-                    onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
-                },
-                image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
-            )
-
-            HorizontalDivider()
-
-            CorrespondenceSection(
-                correspondenceOptionList = state.correspondenceOptionList,
-                onCheckedChange = { id ->
-                    onEventSent(
-                        OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                            id = id
-                        )
+        } else {
+            // Two-column layout for larger screens
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+            ) {
+                // Left, scrollable column for order details
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    OrderDetailsContent(
+                        state = state,
+                        onEventSent = onEventSent
                     )
                 }
-            )
 
-            HorizontalDivider()
-
-            ActionButton(
-                modifier = Modifier.padding(Dimens.Space.medium),
-                title = {
-                    Text(
-                        text = "Confirm",
+                // Right, scrollable column for actions
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+                ) {
+                    ActionsContent(
+                        state = state,
+                        onEventSent = onEventSent
                     )
-                },
-                onClick = {
-                    onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
-                },
-            )
-
+                    HorizontalDivider()
+                    ActionButton(
+                        modifier = Modifier.padding(Dimens.Space.medium),
+                        title = { Text(text = "Confirm") },
+                        onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun OrderDetailsContent(
+    state: OrderFulfilmentScreenContract.State,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+) {
+    if (state.collectOrderWithCustomerWithLineItemsState != null) {
+        OrderDetailsLarge(
+            orderState = state.collectOrderWithCustomerWithLineItemsState,
+            visibleLineItemListCount = state.visibleProductListItemCount,
+            isProductListExpanded = state.visibleProductListItemCount > 2,
+            onViewMoreClick = {
+                onEventSent(OrderFulfilmentScreenContract.Event.ToggleProductListExpansion)
+            }
+        )
+    } else {
+        MultiOrderListSection(
+            state = state,
+            onEventSent = onEventSent
+        )
+    }
+}
+
+@Composable
+private fun ActionsContent(
+    state: OrderFulfilmentScreenContract.State,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+) {
+    CollectionTypeSection(
+        title = stringResource(Res.string.who_is_collecting),
+        value = state.collectingType,
+        optionList = state.collectionTypeOptionList,
+        onValueChange = { collectionType ->
+            onEventSent(
+                OrderFulfilmentScreenContract.Event.CollectingChanged(
+                    collectionType
+                )
+            )
+        },
+    )
+
+    HorizontalDivider()
+
+    SignaturePreviewImage(
+        onSignClick = {
+            onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+        },
+        onRetakeClick = {
+            onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+        },
+        image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
+    )
+
+    HorizontalDivider()
+
+    CorrespondenceSection(
+        correspondenceOptionList = state.correspondenceOptionList,
+        onCheckedChange = { id ->
+            onEventSent(
+                OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                    id = id
+                )
+            )
+        }
+    )
 }
 
 
@@ -222,269 +279,6 @@ private fun MultiOrderListSection(
     }
 }
 
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun OrderFulfilmentScreen(
-//    state: OrderFulfilmentScreenContract.State,
-//    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-//    effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
-//    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
-//) {
-//
-//    val snackbarHostState = remember { SnackbarHostState() }
-//
-//    LaunchedEffect(effectFlow) {
-//        effectFlow?.collectLatest { effect ->
-//            when (effect) {
-//                is OrderFulfilmentScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
-//                    effect.message, duration = SnackbarDuration.Short
-//                )
-//
-//                is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-//                    effect.error, duration = SnackbarDuration.Long
-//                )
-//
-//                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
-//            }
-//        }
-//    }
-//
-//
-//    Scaffold(
-//        topBar = {
-//            MBoltAppBar(
-//                title = {
-//                    TopBarTitle("Order Confirmation")
-//                },
-//                navigationIcon = {
-//                    IconButton(onClick = {
-//                        onEventSent(OrderFulfilmentScreenContract.Event.Back)
-//                    }) {
-//                        Icon(
-//                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-//                            contentDescription = "Back",
-//                            tint = MaterialTheme.colorScheme.onPrimary
-//                        )
-//                    }
-//                })
-//        }, snackbarHost = {
-//            SnackbarHost(snackbarHostState)
-//        }
-//    ) { padding ->
-//
-//        LazyVerticalGrid(
-//            columns = GridCells.Adaptive(minSize = 340.dp), // Each item needs at least 340dp
-//            modifier = Modifier.padding(padding),
-//            contentPadding = PaddingValues(bottom = Dimens.Space.medium), // Add padding here
-//            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-//        ) {
-//            if (state.collectOrderWithCustomerWithLineItemsState != null) {
-//
-//                item(span = { GridItemSpan(maxLineSpan) }) {
-//
-//
-//                    OrderDetails(
-//                        invoiceNumber = state.collectOrderWithCustomerWithLineItemsState.order.invoiceNumber,
-//                        webOrderNumber = state.collectOrderWithCustomerWithLineItemsState.order.webOrderNumber,
-//                        createdAt = state.collectOrderWithCustomerWithLineItemsState.order.pickedAt, // TODO: get Order date
-//                        pickedAt = state.collectOrderWithCustomerWithLineItemsState.order.pickedAt,
-//                    )
-//
-//                }
-//
-//                item(span = { GridItemSpan(maxLineSpan) }) {
-//                    HorizontalDivider()
-//                }
-//
-//                item(span = { GridItemSpan(maxLineSpan) }) {
-//                    CustomerDetails(
-//                        customerName = state.collectOrderWithCustomerWithLineItemsState.customer.name,
-//                        customerNumber = state.collectOrderWithCustomerWithLineItemsState.customer.customerNumber,
-//                        phoneNumber = state.collectOrderWithCustomerWithLineItemsState.customer.mobileNumber,
-//                        customerType = state.collectOrderWithCustomerWithLineItemsState.customer.type,
-//                        modifier = Modifier
-//                    )
-//                }
-//
-//                item(span = { GridItemSpan(maxLineSpan) }) {
-//                    HorizontalDivider()
-//                }
-//
-//
-//                item(span = { GridItemSpan(maxLineSpan) }) {
-//                    HeaderMedium(
-//                        text = "Product List",
-//                        isLoading = state.isLoading,
-//                        contentPadding = PaddingValues(horizontal = Dimens.Space.medium)
-//                    )
-//                }
-//
-//                items(
-//                    items = state.collectOrderWithCustomerWithLineItemsState.lineItemList.take(4),
-//                    key = { it.lineNumber }
-//                ) { lineItem ->
-//                    ProductDetails(
-//                        description = lineItem.productDescription,
-//                        sku = lineItem.productNumber,
-//                        quantity = lineItem.quantity,
-//                        // contentPadding = PaddingValues()
-//                    )
-//                }
-//
-//                item(span = { GridItemSpan(maxLineSpan) }) {
-//                    OutlinedButton(
-//                        onClick = {},
-//                        modifier = Modifier.fillMaxWidth(),
-//                    ) {
-//                        Text(
-//                            text = if (true) {
-//                                "VIEW LESS"
-//                            } else {
-//                                "VIEW MORE"
-//                            },
-//                        )
-//                    }
-//                }
-//
-//
-////                HorizontalDivider()
-////
-////                // SINGLE ORDER VIEW
-////                item(span = { GridItemSpan(maxLineSpan) }) {
-////                    SingleOrderContent(
-////                        orderState = state.collectOrderWithCustomerWithLineItemsState,
-////                        isProductListExpanded = state.visibleProductListItemCount > 2,
-////                        visibleLineItemListCount = state.visibleProductListItemCount,
-////                        onViewMoreClick = {
-////                            onEventSent(OrderFulfilmentScreenContract.Event.ToggleProductListExpansion)
-////                        }
-////                    )
-////                }
-//
-//            } else {
-//                // MULTI-ORDER VIEW (GRID)
-//                // Use the lazy 'items' builder instead of forEach
-//                item {
-//                    HeaderMedium(
-//                        text = "Order List",
-//                        isLoading = state.isLoading,
-//                        contentPadding = PaddingValues(
-//                            start = Dimens.Space.medium,
-//                            top = Dimens.Space.medium,
-//                            end = Dimens.Space.medium
-//                        )
-//                    )
-//                }
-//
-//                items(
-//                    items = state.collectOrderListItemStateList,
-//                    key = { it.invoiceNumber } // For performance
-//                ) { collectOrderState ->
-//                    OutlinedCard(
-//                        // Add padding per item for grid spacing
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(horizontal = Dimens.Space.medium),
-//                        onClick = {
-//                            onEventSent(
-//                                OrderFulfilmentScreenContract.Event.OrderClicked(
-//                                    collectOrderState.invoiceNumber
-//                                )
-//                            )
-//                        }
-//                    ) {
-//                        CollectOrderDetails(
-//                            customerName = collectOrderState.customerName,
-//                            customerType = collectOrderState.customerType,
-//                            invoiceNumber = collectOrderState.invoiceNumber,
-//                            webOrderNumber = collectOrderState.webOrderNumber,
-//                            pickedAt = collectOrderState.pickedAt,
-//                            isLoading = state.isLoading,
-//                            contendPadding = PaddingValues(Dimens.Space.medium),
-//                        )
-//                    }
-//                }
-//            }
-//
-//            // The rest of the sections now span the full width of the grid
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-//                HorizontalDivider()
-//            }
-//
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-//                CollectionTypeSection(
-//                    title = stringResource(Res.string.who_is_collecting),
-//                    value = state.collectingType,
-//                    optionList = state.collectionTypeOptionList,
-//                    onValueChange = { collectionType ->
-//                        onEventSent(
-//                            OrderFulfilmentScreenContract.Event.CollectingChanged(
-//                                collectionType
-//                            )
-//                        )
-//                    },
-//                )
-//            }
-//
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-//                HorizontalDivider()
-//            }
-//
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-////                SignatureSection(
-////                    onSignClick = {
-////                        onEventSent(OrderFulfilmentScreenContract.Event.Sign)
-////                    },
-////                    onRetakeClick = {
-////                        onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
-////                    },
-////                    signatureStrokes = state.signatureStrokes
-////                )
-//                SignaturePreviewImage(
-//                    onSignClick = {
-//                        onEventSent(OrderFulfilmentScreenContract.Event.Sign)
-//                    },
-//                    onRetakeClick = {
-//                        onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
-//                    },
-//                    image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
-//                )
-//            }
-//
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-//                HorizontalDivider()
-//            }
-//
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-//                CorrespondenceSection(
-//                    correspondenceOptionList = state.correspondenceOptionList,
-//                    onCheckedChange = { id ->
-//                        onEventSent(
-//                            OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-//                                id = id
-//                            )
-//                        )
-//                    }
-//                )
-//            }
-//
-//            item(span = { GridItemSpan(maxLineSpan) }) {
-//                ActionButton(
-//                    modifier = Modifier.padding(horizontal = Dimens.Space.medium),
-//                    title = {
-//                        Text(
-//                            text = "Confirm",
-//                        )
-//                    },
-//                    onClick = {
-//                        onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
-//                    },
-//                )
-//            }
-//        }
-//    }
-//}
 
 @Preview(
     name = "Order Fulfilment",

@@ -5,20 +5,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
@@ -35,8 +31,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * customer details, and a list of products. This component is designed to be reusable
  * and configurable for different screen requirements.
  *
- * On large screens, the layout adapts to show order/customer details and the product list
- * side-by-side.
+ * On large screens, the product list adapts to show items in a grid.
  *
  * @param orderState The state object containing all necessary order information.
  * @param modifier The modifier to be applied to the root Column of the component.
@@ -57,52 +52,25 @@ fun OrderDetailsLarge(
     isProductListExpanded: Boolean = true,
     onViewMoreClick: (() -> Unit)? = null,
 ) {
-
-//    val useColumns =
-//        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val useColumns =
-        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    val useGridForProducts =
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
-    if (useColumns) {
-        Column(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-        ) {
-            OrderAndCustomerDetails(orderState = orderState)
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
+        OrderAndCustomerDetails(orderState = orderState)
 
-            HorizontalDivider()
+        HorizontalDivider()
 
-            ProductListSection(
-                modifier = Modifier,
-                lineItemList = orderState.lineItemList.take(visibleLineItemListCount),
-                isProductListExpanded = isProductListExpanded,
-                onViewMoreClick = onViewMoreClick,
-                useGrid = !useColumns
-            )
-        }
-    } else {
-        Row(
-            modifier = modifier,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-            ) {
-                OrderAndCustomerDetails(orderState = orderState)
-            }
-
-            VerticalDivider()
-
-            ProductListSection(
-                modifier = Modifier.weight(1f),
-                lineItemList = orderState.lineItemList.take(visibleLineItemListCount),
-                isProductListExpanded = isProductListExpanded,
-                onViewMoreClick = onViewMoreClick,
-                useGrid = !useColumns
-            )
-        }
+        ProductListSection(
+            modifier = Modifier,
+            lineItemList = orderState.lineItemList.take(visibleLineItemListCount),
+            isProductListExpanded = isProductListExpanded,
+            onViewMoreClick = onViewMoreClick,
+            useGrid = useGridForProducts
+        )
     }
 }
 
@@ -152,8 +120,7 @@ private fun ProductListSection(
                 lineItemList.forEach { lineItem ->
                     ProductDetails(
                         modifier = Modifier
-                            .weight(1f)
-                            ,
+                            .weight(1f),
                         description = lineItem.productDescription,
                         sku = lineItem.productNumber,
                         quantity = lineItem.quantity,
@@ -195,7 +162,7 @@ private fun OrderDetailsLargePreview() {
         Surface {
             OrderDetailsLarge(
                 orderState = sampleCollectOrderWithCustomerWithLineItemsState(),
-                 onViewMoreClick = {}
+                onViewMoreClick = {}
             )
         }
     }
