@@ -59,10 +59,9 @@ fun OrderFulfilmentScreen(
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass // TODO: Use BoxWithConstraints() to adapt to this screen size only
     val useColumns =
         !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -79,7 +78,6 @@ fun OrderFulfilmentScreen(
             }
         }
     }
-
 
     Scaffold(
         topBar = {
