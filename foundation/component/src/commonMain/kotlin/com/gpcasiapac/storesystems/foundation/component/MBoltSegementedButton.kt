@@ -29,10 +29,12 @@ fun SingleChoiceSegmentedButtonRowScope.MBoltSegmentedButton(
     isActive: Boolean,
     index: Int,
     count: Int,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     SegmentedButton(
+        modifier = modifier,
         /* TODO Remove Colors once updated to newer compose version with outline variant fix. */
         colors = SegmentedButtonDefaults.colors(
             activeContentColor = MaterialTheme.colorScheme.onSecondaryContainer,

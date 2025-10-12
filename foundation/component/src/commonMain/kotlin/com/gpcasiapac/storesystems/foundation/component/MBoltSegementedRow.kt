@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.foundation.component
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,9 +22,10 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltSegmentedButtonRow(
     selectionMapper: (T) -> R,
     equals: (T, R) -> Boolean = { a, b -> a == b },
 ) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
         optionList.forEachIndexed { index, option ->
             MBoltSegmentedButton(
+                modifier = Modifier.weight(1f),
                 label = option.label,
                 icon = option.icon,
                 isActive = equals(option, selected),
@@ -38,4 +40,3 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltSegmentedButtonRow(
         }
     }
 }
-
