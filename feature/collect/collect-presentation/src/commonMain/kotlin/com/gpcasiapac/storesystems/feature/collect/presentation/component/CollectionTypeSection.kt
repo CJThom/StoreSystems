@@ -36,6 +36,7 @@ data class CollectionTypeSectionDisplayState(
     override val enabled: Boolean,
 ) : MBoltSegmentedRowOptionDisplayParam
 
+// TODO: Create reusable component
 @Composable
 fun CollectionTypeSection(
     title: String,

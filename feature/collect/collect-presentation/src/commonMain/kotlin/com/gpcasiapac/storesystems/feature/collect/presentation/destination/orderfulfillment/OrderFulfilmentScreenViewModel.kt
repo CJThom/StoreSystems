@@ -37,6 +37,10 @@ class OrderFulfilmentScreenViewModel(
             collectOrderListItemStateList = listOf(CollectOrderListItemState.placeholder()),
             isLoading = false,
             error = null,
+            featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
+                isAccountCollectingFeatureEnabled = false,
+                isCorrespondenceSectionVisible = false,
+            ),
             collectingType = CollectingType.STANDARD,
             collectionTypeOptionList = listOf(
                 CollectionTypeSectionDisplayState(
@@ -56,7 +60,6 @@ class OrderFulfilmentScreenViewModel(
                     label = CollectingType.COURIER.name,
                 )
             ),
-            isAccountCollectingFeatureEnabled = true, // Feature Toggle
             representativeSearchQuery = "",
             representativeList = listOf(
                 Representative("rep-1", "John Doe", "#9288180049912"),
@@ -66,7 +69,6 @@ class OrderFulfilmentScreenViewModel(
             selectedRepresentativeIds = emptySet(),
             courierName = "",
             signatureStrokes = emptyList(),
-            isCorrespondenceSectionVisible = false,
             correspondenceOptionList = listOf(
                 CorrespondenceItemDisplayParam(
                     id = "email",
@@ -85,6 +87,7 @@ class OrderFulfilmentScreenViewModel(
         )
 
     }
+
     override suspend fun awaitReadiness(): Boolean {
         // This placeholder screen has no special readiness requirement
         return true
@@ -172,11 +175,17 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.Confirm -> {
                 confirm()
             }
+
             is OrderFulfilmentScreenContract.Event.ToggleProductListExpansion -> {
                 toggleProductListExpansion()
             }
+
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(event.invoiceNumber) }
+                setEffect {
+                    OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
+                        event.invoiceNumber
+                    )
+                }
             }
         }
     }
@@ -195,7 +204,8 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun toggleProductListExpansion() {
-        val totalItemCount = viewState.value.collectOrderWithCustomerWithLineItemsState?.lineItemList?.size ?: 0
+        val totalItemCount =
+            viewState.value.collectOrderWithCustomerWithLineItemsState?.lineItemList?.size ?: 0
         setState {
             copy(
                 visibleProductListItemCount = if (visibleProductListItemCount == totalItemCount) {
@@ -218,10 +228,13 @@ class OrderFulfilmentScreenViewModel(
                             collectOrderListItemStateList = emptyList(),
                             isLoading = false,
                             error = null,
-                            visibleProductListItemCount = orderState?.lineItemList?.size?.coerceAtMost(COLLAPSED_PRODUCT_LIST_COUNT) ?: 0
+                            visibleProductListItemCount = orderState?.lineItemList?.size?.coerceAtMost(
+                                COLLAPSED_PRODUCT_LIST_COUNT
+                            ) ?: 0
                         )
                     }
                 }
+
                 is OrderSelectionResult.Multi -> {
                     setState {
                         copy(

@@ -23,13 +23,13 @@ object OrderFulfilmentScreenContract {
         val isLoading: Boolean,
 
         val error: String?,
+        val featureFlags: FeatureFlags,
 
         // Who's collecting
         val collectingType: CollectingType,
         val collectionTypeOptionList: List<CollectionTypeSectionDisplayState>,
 
         // Account flow
-        val isAccountCollectingFeatureEnabled: Boolean,
         val representativeSearchQuery: String,
         val representativeList: List<Representative>,
         val selectedRepresentativeIds: Set<String>,
@@ -42,19 +42,24 @@ object OrderFulfilmentScreenContract {
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
-        val isCorrespondenceSectionVisible: Boolean,
 
         // Product list
         val visibleProductListItemCount: Int,
-    ) : ViewState
+    ) : ViewState{
 
+        data class FeatureFlags(
+            val isAccountCollectingFeatureEnabled: Boolean,
+            val isCorrespondenceSectionVisible: Boolean
+        )
+
+    }
 
     sealed interface Event : ViewEvent {
         // Data loading
         data object Refresh : Event
 
         // Errors & navigation
-        data object ClearError : Event
+        data object ClearError : Event/**/
         data object Back : Event
 
         // Collecting selector

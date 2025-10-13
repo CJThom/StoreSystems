@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -19,9 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
 @Composable
 fun SignaturePreviewImage(
@@ -42,65 +46,77 @@ fun SignaturePreviewImage(
             contentPadding = PaddingValues()
         )
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-            shape = RoundedCornerShape(Dimens.Space.small)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
-            if (image != null) {
-                Column(modifier = Modifier.padding(Dimens.Space.medium)) {
+            Card(
+                modifier = Modifier.size(height = 200.dp, width = 350.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            ) {
+                if (image != null) {
                     // Show signature preview
                     Base64ImageView(image)
 
-                    // Buttons row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+                } else {
+                    // Show sign button when no signature
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        OutlinedButton(
-                            onClick = onRetakeClick,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(0.dp, 0.dp, Dimens.Space.small, 0.dp)
-                        ) {
-                            Text("RETAKE")
-                        }
                         Button(
-                            onClick = onSignClick,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, Dimens.Space.small),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                            onClick = onSignClick
                         ) {
-                            Text("VIEW")
+                            Text(text = "SIGN")
                         }
                     }
                 }
-            } else {
-                // Show sign button when no signature
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    contentAlignment = Alignment.Center
+            }
+            // Buttons row
+            if (image != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                 ) {
+                    OutlinedButton(
+                        onClick = onRetakeClick,
+                        modifier = Modifier.weight(1f),
+                        //shape = RoundedCornerShape(0.dp, 0.dp, Dimens.Space.small, 0.dp)
+                    ) {
+                        Text("RETAKE")
+                    }
                     Button(
                         onClick = onSignClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(20.dp)
+                        modifier = Modifier.weight(1f),
+                        // shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, Dimens.Space.small),
                     ) {
-                        Text(
-                            text = "SIGN",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium)
-                        )
+                        Text("VIEW")
                     }
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SignaturePreviewImagePreview() {
+    GPCTheme {
+        SignaturePreviewImage(
+            image = "dummy_base64_string",
+            onSignClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SignaturePreviewImageNullImagePreview() {
+    GPCTheme {
+        SignaturePreviewImage(
+            image = null,
+            onSignClick = {}
+        )
     }
 }

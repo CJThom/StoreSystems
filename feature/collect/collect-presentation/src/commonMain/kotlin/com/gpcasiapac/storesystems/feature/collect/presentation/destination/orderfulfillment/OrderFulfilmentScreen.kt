@@ -234,7 +234,7 @@ private fun ActionsContent(
         image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
     )
 
-    if (state.isCorrespondenceSectionVisible) {
+    if (state.featureFlags.isCorrespondenceSectionVisible) {
         HorizontalDivider()
 
         CorrespondenceSection(
@@ -258,7 +258,7 @@ private fun CollectionTypeContent(
 ) {
     when (selectedType) {
         CollectingType.ACCOUNT -> {
-            if (state.isAccountCollectingFeatureEnabled) {
+            if (state.featureFlags.isAccountCollectingFeatureEnabled) {
                 AccountCollectionContent(
                     searchQuery = state.representativeSearchQuery,
                     onSearchQueryChange = { query ->

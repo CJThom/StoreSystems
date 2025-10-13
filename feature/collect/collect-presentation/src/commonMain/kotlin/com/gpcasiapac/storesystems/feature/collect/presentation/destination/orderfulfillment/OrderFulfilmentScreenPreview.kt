@@ -35,6 +35,10 @@ class OrderFulfilmentScreenStateProvider :
                 isLoading = false,
                 error = null,
 
+                featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
+                    isAccountCollectingFeatureEnabled = true,
+                    isCorrespondenceSectionVisible = true
+                ),
                 visibleProductListItemCount = 2,
 
                 // Collecting
@@ -59,7 +63,7 @@ class OrderFulfilmentScreenStateProvider :
                 ),
 
                 // Account flow
-                isAccountCollectingFeatureEnabled = true,
+
                 representativeSearchQuery = "",
                 representativeList = representativeList,
                 selectedRepresentativeIds = emptySet(),
@@ -71,7 +75,6 @@ class OrderFulfilmentScreenStateProvider :
                 signatureStrokes = emptyList(),
 
                 // Correspondence
-                isCorrespondenceSectionVisible = false,
                 correspondenceOptionList = listOf(
                     CorrespondenceItemDisplayParam(
                         id = "email",
@@ -109,7 +112,7 @@ class OrderFulfilmentScreenStateProvider :
             )
             
             val accountFlowFeatureOff = accountFlow.copy(
-                isAccountCollectingFeatureEnabled = false
+                featureFlags = accountFlow.featureFlags.copy(isAccountCollectingFeatureEnabled = false)
             )
 
             val courierFlow = base.copy(
