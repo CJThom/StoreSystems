@@ -20,12 +20,9 @@ class ObserveOrderSelectionResultUseCase(
                     }
                 }
                 else -> {
-                    getCollectOrderWithCustomerListFlowUseCase().map { allOrders ->
-                        val selectedOrders = if (selectionSet.isNotEmpty()) {
-                            allOrders.filter { it.order.invoiceNumber in selectionSet }
-                        } else {
-                            allOrders
-                        }
+                    // When selectionSet is empty, this efficiently gets all orders.
+                    // When it's populated, it gets only the selected ones.
+                    getCollectOrderWithCustomerListFlowUseCase(selectionSet).map { selectedOrders ->
                         OrderSelectionResult.Multi(selectedOrders)
                     }
                 }

@@ -5,14 +5,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
-import com.gpcasiapac.storesystems.common.persistence.db.RoomDbFinalizer
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.CustomerTypeConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.TimeConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 import kotlinx.coroutines.Dispatchers
 
 @Database(
@@ -21,8 +22,9 @@ import kotlinx.coroutines.Dispatchers
         CollectOrderCustomerEntity::class,
         CollectOrderLineItemEntity::class,
         CollectWorkOrderEntity::class,
+        CollectWorkOrderItemEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(
@@ -32,6 +34,7 @@ import kotlinx.coroutines.Dispatchers
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun collectOrderDao(): CollectOrderDao
+    abstract fun workOrderDao(): WorkOrderDao
 }
 
 @Suppress("KotlinNoActualForExpect")
@@ -48,7 +51,7 @@ fun getRoomDatabase(
     builder: RoomDatabase.Builder<AppDatabase>
 ): AppDatabase {
     return builder
-        .fallbackToDestructiveMigrationOnDowngrade(true)
+        .fallbackToDestructiveMigration(true)
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
 }

@@ -5,55 +5,71 @@ import androidx.room.useWriterConnection
 import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toRelation
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.CollectOrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
+import com.gpcasiapac.storesystems.feature.collect.data.util.randomUUID
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderSummary
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlin.time.Clock
 
 class OrderRepositoryImpl(
     private val collectOrderDao: CollectOrderDao,
+    private val workOrderDao: WorkOrderDao,
     private val database: AppDatabase,
     private val orderNetworkDataSource: OrderNetworkDataSource,
 ) : OrderRepository {
 
-    // TODO: In Progress: Improve this with Dao query
     override fun getCollectOrderWithCustomerWithLineItemsListFlow(orderQuery: OrderQuery): Flow<List<CollectOrderWithCustomerWithLineItems>> {
         return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationListFlow()
             .map { orderEntityList ->
-            val collectOrderList: List<CollectOrderWithCustomerWithLineItems> = orderEntityList.toDomain()
-            val query = orderQuery.searchText.trim().lowercase()
-            if (query.isEmpty()) collectOrderList else collectOrderList.filter { o ->
-                val name = if (o.customer.customerType == CustomerType.B2B) {
-                    o.customer.accountName.orEmpty()
-                } else StringUtils.fullName(o.customer.firstName, o.customer.lastName)
-                name.lowercase().contains(query) ||
-                        o.order.invoiceNumber.lowercase().contains(query) ||
-                        ((o.order.webOrderNumber ?: "").lowercase().contains(query))
+                val collectOrderList: List<CollectOrderWithCustomerWithLineItems> =
+                    orderEntityList.toDomain()
+                val query = orderQuery.searchText.trim().lowercase()
+                if (query.isEmpty()) collectOrderList else collectOrderList.filter { o ->
+                    val name = if (o.customer.customerType == CustomerType.B2B) {
+                        o.customer.accountName.orEmpty()
+                    } else StringUtils.fullName(o.customer.firstName, o.customer.lastName)
+                    name.lowercase().contains(query) ||
+                            o.order.invoiceNumber.lowercase().contains(query) ||
+                            ((o.order.webOrderNumber ?: "").lowercase().contains(query))
+                }
             }
-        }
     }
 
     override fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?> {
-        return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber = invoiceNumber).map { it.toDomain() }
+        return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber = invoiceNumber)
+            .map { it.toDomain() }
     }
 
     override fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>> {
         return collectOrderDao.getCollectOrderWithCustomerRelationListFlow().map { it.toDomain() }
     }
+
+    override fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>> {
+        val flow = if (invoiceNumbers.isEmpty()) {
+            collectOrderDao.getCollectOrderWithCustomerRelationListFlow()
+        } else {
+            collectOrderDao.getCollectOrderWithCustomerRelationListFlow(invoiceNumbers)
+        }
+        return flow.map { it.toDomain() }
+    }
+
 
     override suspend fun refreshOrders(): Result<Unit> = runCatching {
         val collectOrderDtoList: List<CollectOrderDto> = orderNetworkDataSource.fetchOrders()
@@ -84,8 +100,8 @@ class OrderRepositoryImpl(
                 )
             }
         }
-
     }
+
 
     override suspend fun saveSignature(
         signature: String,
@@ -94,76 +110,144 @@ class OrderRepositoryImpl(
         collectOrderDao.updateSignature(signature, invoiceNumber)
     }
 
-    // TODO: In Progress: Improve this with Dao query
-    override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> { // TODO: Should this return a flow?
-        return emptyList()
-//        val q = text.trim()
-//        if (q.isEmpty()) return emptyList()
-//
-//        fun escapeLike(input: String): String {
-//            if (input.isEmpty()) return input
-//            val escape = '!'
-//            val sb = StringBuilder(input.length * 2)
-//            for (c in input) {
-//                when (c) {
-//                    escape, '%', '_' -> sb.append(escape).append(c)
-//                    else -> sb.append(c)
-//                }
-//            }
-//            return sb.toString()
-//        }
-//
-//        val prefix = escapeLike(q) + "%"
-//        val nameLimit = 5
-//        val numberLimit = 5
-//        val totalLimit = 8
-//
-//        val names = collectOrderDao.getNameSuggestionsPrefix(prefix, nameLimit)
-//        val invoices = collectOrderDao.getInvoiceSuggestionsPrefix(prefix, numberLimit)
-//        val webs = collectOrderDao.getWebOrderSuggestionsPrefix(prefix, numberLimit)
-//
-//        val suggestions = buildList<OrderSearchSuggestion> {
-//            names.forEach { add(OrderSearchSuggestion(it, OrderSearchSuggestionType.NAME)) }
-//            invoices.forEach { add(OrderSearchSuggestion(it, OrderSearchSuggestionType.ORDER_NUMBER)) }
-//            webs.forEach { add(OrderSearchSuggestion(it, OrderSearchSuggestionType.ORDER_NUMBER)) }
-//        }
-//            .distinctBy { it.type to it.text }
-//            .take(totalLimit)
-//            .toMutableList()
-//
-//        // Optional PHONE suggestion heuristic: only if looks like a real phone number and not duplicating an order number
-//        val digits = q.filter { it.isDigit() }
-//        val looksLikePhone = digits.length in 8..15 && (q.all { it.isDigit() || it in "+ -()" })
-//        val clashesWithOrderNumber = suggestions.any {
-//            it.type == OrderSearchSuggestionType.ORDER_NUMBER && it.text.equals(
-//                q,
-//                ignoreCase = true
-//            )
-//        }
-//        if (looksLikePhone && !clashesWithOrderNumber) {
-//            suggestions += OrderSearchSuggestion(q, OrderSearchSuggestionType.PHONE)
-//        }
-//
-//        return suggestions
+    override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> {
+        return emptyList() // Original implementation was commented out, restoring to empty list.
     }
 
     override fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>> {
-        return collectOrderDao.getSelectedInvoiceNumbers(userRefId).map { it.toSet() }
+        return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
+            .map { workOrderWithOrders ->
+                workOrderWithOrders?.orders?.map { it.invoiceNumber }?.toSet() ?: emptySet()
+            }
     }
 
     override suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String) {
-        collectOrderDao.setSelectedInvoiceNumbers(userRefId, orderIdList)
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                val existingOpenWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+                if (existingOpenWorkOrder != null) {
+                    workOrderDao.deleteWorkOrder(existingOpenWorkOrder.workOrderId)
+                }
+
+                if (orderIdList.isNotEmpty()) {
+                    createWorkOrderInternal(userRefId, orderIdList)
+                }
+            }
+        }
     }
 
     override suspend fun addSelectedId(orderId: String, userRefId: String) {
-        collectOrderDao.addSelectedInvoiceNumber(CollectWorkOrderEntity(userRefId, orderId))
+        var openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+        if (openWorkOrder == null) {
+            openWorkOrder = createWorkOrderInternal(userRefId, emptyList())
+        }
+
+        workOrderDao.insertItem(
+            CollectWorkOrderItemEntity(
+                workOrderId = openWorkOrder.workOrderId,
+                invoiceNumber = orderId
+            )
+        )
     }
 
     override suspend fun removeSelectedId(orderId: String, userRefId: String) {
-        collectOrderDao.removeSelectedInvoiceNumber(userRefId, orderId)
+        val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+        if (openWorkOrder != null) {
+            database.useWriterConnection { transactor ->
+                transactor.immediateTransaction {
+                    workOrderDao.deleteWorkOrderItem(openWorkOrder.workOrderId, orderId)
+                    val remainingItems =
+                        workOrderDao.getWorkOrderItemCount(openWorkOrder.workOrderId)
+                    if (remainingItems == 0) {
+                        workOrderDao.deleteWorkOrder(openWorkOrder.workOrderId)
+                    }
+                }
+            }
+        }
     }
 
     override suspend fun clear(userRefId: String) {
-        collectOrderDao.clearSelectedInvoiceNumbers(userRefId)
+        val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+        if (openWorkOrder != null) {
+            workOrderDao.deleteWorkOrder(openWorkOrder.workOrderId)
+        }
     }
+
+    override suspend fun createWorkOrder(
+        userId: String,
+        invoiceNumbers: List<String>
+    ): Result<String> = runCatching {
+        val workOrder = createWorkOrderInternal(userId, invoiceNumbers)
+        workOrder.workOrderId
+    }
+
+    private suspend fun createWorkOrderInternal(
+        userId: String,
+        invoiceNumbers: List<String>
+    ): CollectWorkOrderEntity {
+        val workOrderId = randomUUID()
+        val now = Clock.System.now()
+        val workOrder = CollectWorkOrderEntity(
+            workOrderId = workOrderId,
+            userId = userId,
+            createdAt = now,
+            submittedAt = null,
+            signature = null,
+            signedAt = null,
+            signedByName = null
+        )
+        val workOrderItems = invoiceNumbers.map { invoice ->
+            CollectWorkOrderItemEntity(
+                workOrderId = workOrderId,
+                invoiceNumber = invoice
+            )
+        }
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.insertWorkOrder(workOrder)
+                workOrderDao.insertItems(workOrderItems)
+            }
+        }
+        return workOrder
+    }
+
+
+    override suspend fun attachSignatureToWorkOrder(
+        workOrderId: String,
+        signature: String,
+        signedByName: String?
+    ): Result<Unit> = runCatching {
+        val now = Clock.System.now()
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.attachSignature(workOrderId, signature, now, signedByName)
+
+                // Compatibility
+                val workOrderWithOrders = workOrderDao.getWorkOrder(workOrderId)
+                val invoiceNumbers = workOrderWithOrders?.orders?.map { it.invoiceNumber }
+                if (!invoiceNumbers.isNullOrEmpty()) {
+                    collectOrderDao.updateSignature(signature, invoiceNumbers)
+                }
+            }
+        }
+    }
+
+    override fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>> {
+        return workOrderDao.observeOpenWorkOrdersForUser(userRefId).map { list ->
+            list.map {
+                WorkOrderSummary(
+                    id = it.workOrder.workOrderId,
+                    status = it.workOrder.status,
+                    createdAt = it.workOrder.createdAt,
+                    orderCount = it.orders.size
+                )
+            }
+        }
+    }
+
+    override suspend fun submitWorkOrder(workOrderId: String): Result<Unit> =
+        runCatching {
+            val now = Clock.System.now()
+            workOrderDao.markSubmitted(workOrderId, now)
+        }
 }

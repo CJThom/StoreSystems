@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.repository
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderSummary
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -22,6 +23,9 @@ interface OrderRepository {
     fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
 
     fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>>
+
+    fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>>
+
 
     /**
      * Lightweight, indexed search suggestions from the DB.
@@ -49,4 +53,20 @@ interface OrderRepository {
 
     /** Clear the selection. */
     suspend fun clear(userRefId: String)
+
+    // Work order lifecycle
+    suspend fun createWorkOrder(
+        userId: String,
+        invoiceNumbers: List<String>
+    ): Result<String> // returns workOrderId
+
+    suspend fun attachSignatureToWorkOrder(
+        workOrderId: String,
+        signature: String,        // keep String (compat with your current model)
+        signedByName: String?
+    ): Result<Unit>
+
+    fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>>
+
+    suspend fun submitWorkOrder(workOrderId: String): Result<Unit>
 }
