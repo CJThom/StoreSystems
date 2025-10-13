@@ -8,6 +8,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrde
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toRelation
@@ -146,5 +147,23 @@ class OrderRepositoryImpl(
 //        return suggestions
     }
 
+    override fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>> {
+        return collectOrderDao.getSelectedInvoiceNumbers(userRefId).map { it.toSet() }
+    }
 
+    override suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String) {
+        collectOrderDao.setSelectedInvoiceNumbers(userRefId, orderIdList)
+    }
+
+    override suspend fun addSelectedId(orderId: String, userRefId: String) {
+        collectOrderDao.addSelectedInvoiceNumber(CollectWorkOrderEntity(userRefId, orderId))
+    }
+
+    override suspend fun removeSelectedId(orderId: String, userRefId: String) {
+        collectOrderDao.removeSelectedInvoiceNumber(userRefId, orderId)
+    }
+
+    override suspend fun clear(userRefId: String) {
+        collectOrderDao.clearSelectedInvoiceNumbers(userRefId)
+    }
 }

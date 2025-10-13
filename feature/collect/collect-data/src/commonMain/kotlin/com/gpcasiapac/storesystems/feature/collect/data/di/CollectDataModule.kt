@@ -6,9 +6,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrde
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.MockOrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.data.repository.OrderRepositoryImpl
-import com.gpcasiapac.storesystems.feature.collect.data.repository.OrderSelectionRepositoryImpl
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderSelectionRepository
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -26,9 +24,6 @@ val collectDataModule = module {
 
     // Repository bindings (real implementations backed by DB + network).
     singleOf(::OrderRepositoryImpl) { bind<OrderRepository>() }
-
-    // Selection repository (in-memory for now; swap to persistent later)
-    singleOf(::OrderSelectionRepositoryImpl) { bind<OrderSelectionRepository>() }
 }
 
 object CollectDataModuleProvider : ModuleProvider {

@@ -1,10 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection
 
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderSelectionRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
 class RemoveOrderSelectionUseCase(
-    private val orderSelectionRepository: OrderSelectionRepository,
+    private val orderRepository: OrderRepository,
 ) {
-    suspend operator fun invoke(orderId: String, userRefId: String? = null) =
-        orderSelectionRepository.removeSelectedId(orderId, userRefId)
+    suspend operator fun invoke(orderId: String, userRefId: String) =
+        orderRepository.removeSelectedId(orderId, userRefId)
 }

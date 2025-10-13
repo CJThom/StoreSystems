@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
@@ -78,4 +79,26 @@ interface CollectOrderDao {
 
     @Query("UPDATE collect_orders SET signature = :signature WHERE invoice_number IN (:invoiceNumbers)")
     suspend fun updateSignature(signature: String, invoiceNumbers: List<String>)
+
+    @Query("SELECT invoice_number FROM collect_work_orders WHERE user_id = :userId")
+    fun getSelectedInvoiceNumbers(userId: String): Flow<List<String>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addSelectedInvoiceNumber(workOrder: CollectWorkOrderEntity)
+
+    @Query("DELETE FROM collect_work_orders WHERE user_id = :userId AND invoice_number = :invoiceNumber")
+    suspend fun removeSelectedInvoiceNumber(userId: String, invoiceNumber: String)
+
+    @Query("DELETE FROM collect_work_orders WHERE user_id = :userId")
+    suspend fun clearSelectedInvoiceNumbers(userId: String)
+
+    @Transaction
+    suspend fun setSelectedInvoiceNumbers(userId: String, invoiceNumbers: List<String>) {
+        clearSelectedInvoiceNumbers(userId)
+        val workOrders = invoiceNumbers.map { CollectWorkOrderEntity(userId, it) }
+        insertWorkOrders(workOrders)
+    }
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertWorkOrders(workOrders: List<CollectWorkOrderEntity>)
 }

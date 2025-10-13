@@ -11,8 +11,8 @@ class ObserveOrderSelectionResultUseCase(
     private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
     private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
 ) {
-    operator fun invoke(): Flow<OrderSelectionResult> {
-        return observeOrderSelectionUseCase().flatMapLatest { selectionSet ->
+    operator fun invoke(userRefId: String): Flow<OrderSelectionResult> {
+        return observeOrderSelectionUseCase(userRefId).flatMapLatest { selectionSet ->
             when {
                 selectionSet.size == 1 -> {
                     getCollectOrderWithCustomerWithLineItemsFlowUseCase(selectionSet.first()).map { order ->

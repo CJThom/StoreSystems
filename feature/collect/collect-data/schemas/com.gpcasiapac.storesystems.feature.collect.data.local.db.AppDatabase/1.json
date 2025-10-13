@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a762dfaf59b129e01f19d1697ad9f389",
+    "identityHash": "e59b2401ef37f24c7a9c57b8de64627c",
     "entities": [
       {
         "tableName": "collect_orders",
@@ -178,11 +178,60 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "collect_work_orders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` TEXT NOT NULL, `invoice_number` TEXT NOT NULL, PRIMARY KEY(`user_id`, `invoice_number`), FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "invoiceNumber",
+            "columnName": "invoice_number",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "user_id",
+            "invoice_number"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_collect_work_orders_invoice_number",
+            "unique": false,
+            "columnNames": [
+              "invoice_number"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_collect_work_orders_invoice_number` ON `${TABLE_NAME}` (`invoice_number`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "collect_orders",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "invoice_number"
+            ],
+            "referencedColumns": [
+              "invoice_number"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a762dfaf59b129e01f19d1697ad9f389')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e59b2401ef37f24c7a9c57b8de64627c')"
     ]
   }
 }

@@ -1,11 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection
 
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderSelectionRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
 class ObserveOrderSelectionUseCase(
-    private val orderSelectionRepository: OrderSelectionRepository,
+    private val orderRepository: OrderRepository,
 ) {
-    operator fun invoke(userRefId: String? = null): Flow<Set<String>> =
-        orderSelectionRepository.getSelectedIdListFlow(userRefId)
+    operator fun invoke(userRefId: String): Flow<Set<String>> =
+        orderRepository.getSelectedIdListFlow(userRefId)
 }

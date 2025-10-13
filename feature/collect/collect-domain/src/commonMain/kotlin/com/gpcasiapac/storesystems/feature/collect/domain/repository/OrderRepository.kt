@@ -34,4 +34,19 @@ interface OrderRepository {
     suspend fun refreshOrders(): Result<Unit>
 
     suspend fun saveSignature(signature: String, invoiceNumber: List<String>): Result<Unit>
+
+    /** Observe the set of selected order IDs for the given user scope. */
+    fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>>
+
+    /** Replace the entire set of selected IDs. */
+    suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
+
+    /** Add a single order ID to the selection. */
+    suspend fun addSelectedId(orderId: String, userRefId: String)
+
+    /** Remove a single order ID from the selection. */
+    suspend fun removeSelectedId(orderId: String, userRefId: String)
+
+    /** Clear the selection. */
+    suspend fun clear(userRefId: String)
 }

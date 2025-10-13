@@ -87,6 +87,7 @@ class SignatureScreenViewModel(
                         isSigned = event.strokes.isNotEmpty()
                     )
                 }
+
             }
 
             is SignatureScreenContract.Event.ClearError -> clearError()
@@ -125,7 +126,7 @@ class SignatureScreenViewModel(
     }
 
     private suspend fun observeOrderSelectionResult() {
-        observeOrderSelectionResultUseCase().collectLatest { result ->
+        observeOrderSelectionResultUseCase("mock").collectLatest { result ->
             when (result) {
                 is OrderSelectionResult.Single -> {
                     val orderState = result.order?.toState()

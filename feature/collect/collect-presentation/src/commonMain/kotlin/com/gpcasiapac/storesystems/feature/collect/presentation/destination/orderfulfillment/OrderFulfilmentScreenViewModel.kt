@@ -162,6 +162,8 @@ class OrderFulfilmentScreenViewModel(
                 clearSignature()
             }
 
+
+
             // Correspondence
             is OrderFulfilmentScreenContract.Event.ToggleCorrespondence -> {
                 onCorrespondenceToggled(event.id)
@@ -218,7 +220,7 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private suspend fun observeOrderSelectionResult() {
-        observeOrderSelectionResultUseCase().collectLatest { result ->
+        observeOrderSelectionResultUseCase("mock").collectLatest { result ->
             when (result) {
                 is OrderSelectionResult.Single -> {
                     val orderState = result.order?.toState()

@@ -12,12 +12,15 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrde
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
+import kotlinx.coroutines.Dispatchers
 
 @Database(
     entities = [
         CollectOrderEntity::class,
         CollectOrderCustomerEntity::class,
         CollectOrderLineItemEntity::class,
+        CollectWorkOrderEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -36,8 +39,16 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
 
+//fun getRoomDatabase(
+//    builder: RoomDatabase.Builder<AppDatabase>
+//): AppDatabase {
+//    return RoomDbFinalizer.finalize(builder)
+//}
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<AppDatabase>
 ): AppDatabase {
-    return RoomDbFinalizer.finalize(builder)
+    return builder
+        .fallbackToDestructiveMigrationOnDowngrade(true)
+        .setQueryCoroutineContext(Dispatchers.IO)
+        .build()
 }
