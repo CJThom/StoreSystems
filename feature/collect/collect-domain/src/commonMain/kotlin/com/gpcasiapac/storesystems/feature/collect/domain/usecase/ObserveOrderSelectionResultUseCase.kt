@@ -20,8 +20,6 @@ class ObserveOrderSelectionResultUseCase(
                     }
                 }
                 else -> {
-                    // When selectionSet is empty, this efficiently gets all orders.
-                    // When it's populated, it gets only the selected ones.
                     getCollectOrderWithCustomerListFlowUseCase(selectionSet).map { selectedOrders ->
                         OrderSelectionResult.Multi(selectedOrders)
                     }

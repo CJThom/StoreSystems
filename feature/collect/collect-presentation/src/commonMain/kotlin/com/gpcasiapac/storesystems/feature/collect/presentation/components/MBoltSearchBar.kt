@@ -3,7 +3,10 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -27,6 +30,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -100,35 +105,53 @@ fun MBoltSearchBar(
                 )
             }
         ) {
-            // Search results content
-            if (searchResults.isEmpty() && query.isNotEmpty()) {
-                // Empty state
-                ListItem(
-                    headlineContent = { 
-                        Text(
-                            "No results found",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ) 
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Dimens.Space.medium)
-                )
-            } else {
-                searchResults.forEach { result ->
-                    ListItem(
-                        headlineContent = { Text(result) },
-                        modifier = Modifier
-                            .clickable { onResultClick(result) }
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = Dimens.Space.medium,
-                                vertical = Dimens.Space.extraSmall
+            Column(modifier = Modifier.fillMaxHeight(),verticalArrangement = Arrangement.SpaceBetween) {
+                // Search results content
+                Box {
+                    if (searchResults.isEmpty() && query.isNotEmpty()) {
+                        // Empty state
+                        ListItem(
+                            headlineContent = {
+                                Text(
+                                    "No results found",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Dimens.Space.medium)
+                        )
+                    } else {
+                        searchResults.forEach { result ->
+                            ListItem(
+                                headlineContent = { Text(result) },
+                                modifier = Modifier
+                                    .clickable { onResultClick(result) }
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.extraSmall
+                                    )
                             )
-                    )
+                        }
+                    }
                 }
+                MultiSelectBottomBar(
+                    selectedCount = 2,
+                    isSelectAllChecked = false,
+                    onSelectAllToggle = { checked ->
+                       // onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                    },
+                    onCancelClick = {
+                        //onEventSent(OrderListScreenContract.Event.CancelSelection)
+                    },
+                    onSelectClick = {
+                       // onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                    }
+                )
             }
+
         }
     }
 }

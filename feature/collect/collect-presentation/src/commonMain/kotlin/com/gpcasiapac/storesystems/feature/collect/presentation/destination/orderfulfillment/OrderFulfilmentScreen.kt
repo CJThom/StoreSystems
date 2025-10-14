@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,22 +25,21 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
@@ -66,13 +67,16 @@ fun OrderFulfilmentScreen(
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
 ) {
 
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass // TODO: Use BoxWithConstraints() to adapt to this screen size only
+    val windowSizeClass =
+        currentWindowAdaptiveInfo().windowSizeClass // TODO: Use BoxWithConstraints() to adapt to this screen size only
     val useColumns =
         !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
     // Back confirmation dialog state; set via Effect.ShowSaveDiscardDialog
-    val dialogSpec = remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
+    val dialogSpec =
+        remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -309,12 +313,21 @@ private fun CollectionTypeContent(
                 AccountCollectionContent(
                     searchQuery = state.representativeSearchQuery,
                     onSearchQueryChange = { query ->
-                        onEventSent(OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(query))
+                        onEventSent(
+                            OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(
+                                query
+                            )
+                        )
                     },
                     representatives = state.representativeList,
                     selectedRepresentativeIds = state.selectedRepresentativeIds,
                     onRepresentativeSelected = { id, isSelected ->
-                        onEventSent(OrderFulfilmentScreenContract.Event.RepresentativeSelected(id, isSelected))
+                        onEventSent(
+                            OrderFulfilmentScreenContract.Event.RepresentativeSelected(
+                                id,
+                                isSelected
+                            )
+                        )
                     },
                     isLoading = state.isLoading
                 )

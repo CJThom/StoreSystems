@@ -66,6 +66,7 @@ interface OrderRepository {
         signedByName: String?
     ): Result<Unit>
 
+    // TODO: remove?
     fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>>
 
     suspend fun submitWorkOrder(workOrderId: String): Result<Unit>

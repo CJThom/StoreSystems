@@ -5,6 +5,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderReposi
 class AddOrderSelectionUseCase(
     private val orderRepository: OrderRepository,
 ) {
-    suspend operator fun invoke(orderId: String, userRefId: String) =
-        orderRepository.addSelectedId(orderId, userRefId)
+
+    suspend operator fun invoke(orderId: String, userRefId: String) {
+        return orderRepository.addSelectedId(orderId, userRefId)
+    }
+
 }
