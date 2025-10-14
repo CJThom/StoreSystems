@@ -37,8 +37,16 @@ object OrderListScreenContract {
 
         // Selection mode
         val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
-        val selectedOrderIdList: Set<String>,
+        val selectedOrderIdList: Set<String>,                                // derived UI-checked = (existing - pendingRemove) ∪ pendingAdd
         val isSelectAllChecked: Boolean,
+
+        // Normalized selection-editing model (lives entirely in ViewState)
+        val existingDraftIdSet: Set<String>,                                 // snapshot of persisted IDs at entry into multi-select
+        val pendingAddIdSet: Set<String>,                                    // newly selected in this session (not yet persisted)
+        val pendingRemoveIdSet: Set<String>,                                 // previously persisted but unchecked in this session (not yet removed)
+
+        // Confirm dialog summary (computed from the three sets when needed)
+        val confirmSummary: ConfirmSummary?,
 
         // Derived / info
         val orderCount: Int,                                                    // number of orders ready to collect (from DB or filtered list)
@@ -53,6 +61,16 @@ object OrderListScreenContract {
         // Error
         val error: String?,
     ) : ViewState
+
+    @Immutable
+    data class ConfirmSummary(
+        val currentCount: Int,
+        val addCount: Int,
+        val removeCount: Int,
+        val projectedCount: Int,
+        val addedPreview: List<String> = emptyList(),
+        val removedPreview: List<String> = emptyList()
+    )
 
     sealed interface Event : ViewEvent {
         // User-driven refresh (initial load happens in onStart)
@@ -90,6 +108,10 @@ object OrderListScreenContract {
         data class SelectAll(val checked: Boolean) : Event
         data object CancelSelection : Event
         data object ConfirmSelection : Event
+        // Dialog actions for multi-select confirmation
+        data object ConfirmSelectionStay : Event
+        data object ConfirmSelectionProceed : Event
+        data object DismissConfirmSelectionDialog : Event
 
         // Submissions / item actions
         data class SubmitOrder(val orderId: String) : Event
@@ -114,6 +136,14 @@ object OrderListScreenContract {
         // Search bar animations
         data object ExpandSearchBar : Effect
         data object CollapseSearchBar : Effect
+
+        // Multi-select confirmation dialog trigger (content comes from State.confirmSummary)
+        data class ShowMultiSelectConfirmDialog(
+            val title: String = "Confirm selection",
+            val cancelLabel: String = "Cancel",
+            val stayLabel: String = "Select",
+            val proceedLabel: String = "Select and proceed",
+        ) : Effect
 
         sealed interface Outcome : Effect {
             data class OrderSelected(val orderId: String) : Outcome

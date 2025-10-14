@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
@@ -62,6 +63,10 @@ class OrderListScreenViewModel(
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
+            existingDraftIdSet = emptySet(),
+            pendingAddIdSet = emptySet(),
+            pendingRemoveIdSet = emptySet(),
+            confirmSummary = null,
             orderCount = 0,
             isSubmitting = false,
             submittedCollectOrder = null,
@@ -178,6 +183,15 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.ConfirmSelection -> {
                 handleConfirmSelection()
+            }
+            is OrderListScreenContract.Event.ConfirmSelectionStay -> {
+                onConfirmSelectionStay()
+            }
+            is OrderListScreenContract.Event.ConfirmSelectionProceed -> {
+                onConfirmSelectionProceed()
+            }
+            is OrderListScreenContract.Event.DismissConfirmSelectionDialog -> {
+                setState { copy(confirmSummary = null) }
             }
 
             is OrderListScreenContract.Event.DismissSnackbar -> {
@@ -308,64 +322,95 @@ class OrderListScreenViewModel(
     }
 
     private fun handleCancelSelection() {
-        viewModelScope.launch { clearOrderSelectionUseCase(userRefId) }
+        // Exit multi-select without touching the DB; clear in-memory pending sets
         setState {
             copy(
                 isMultiSelectionEnabled = false,
                 selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false
+                isSelectAllChecked = false,
+                pendingAddIdSet = emptySet(),
+                pendingRemoveIdSet = emptySet(),
+                confirmSummary = null
             )
         }
     }
 
     private fun handleConfirmSelection() {
-        val selected = viewState.value.selectedOrderIdList.toList()
-        viewModelScope.launch {
-            setOrderSelectionUseCase(selected, userRefId)
-            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selected) }
-        }
+        val s = viewState.value
+        val current = s.existingDraftIdSet.size
+        val add = s.pendingAddIdSet.size
+        val remove = s.pendingRemoveIdSet.size
+        val projected = current - remove + add
         setState {
             copy(
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false
+                confirmSummary = OrderListScreenContract.ConfirmSummary(
+                    currentCount = current,
+                    addCount = add,
+                    removeCount = remove,
+                    projectedCount = projected,
+                    addedPreview = s.pendingAddIdSet.take(5),
+                    removedPreview = s.pendingRemoveIdSet.take(5),
+                )
             )
         }
+        setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
     }
 
     private fun handleOrderChecked(orderId: String, checked: Boolean) {
         setState {
-            val newSet = selectedOrderIdList.toMutableSet().apply {
-                if (checked) {
-                    add(orderId)
+            var add = pendingAddIdSet.toMutableSet()
+            var remove = pendingRemoveIdSet.toMutableSet()
+            val persisted = existingDraftIdSet
+            if (checked) {
+                if (orderId in remove) {
+                    remove.remove(orderId)
+                } else if (orderId !in persisted) {
+                    add.add(orderId)
+                }
+            } else {
+                if (orderId in persisted) {
+                    remove.add(orderId)
                 } else {
-                    remove(orderId)
+                    add.remove(orderId)
                 }
             }
-            val visibleIdList = filteredCollectOrderListItemStateList.map { it.invoiceNumber }.toSet()
-            val isAllSelected = visibleIdList.isNotEmpty() && visibleIdList.all { it in newSet }
+            val selected = (persisted - remove) union add
+            val visibleIds = filteredCollectOrderListItemStateList.map { it.invoiceNumber }.toSet()
+            val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in selected }
             copy(
-                selectedOrderIdList = newSet,
-                isSelectAllChecked = isAllSelected
+                pendingAddIdSet = add,
+                pendingRemoveIdSet = remove,
+                selectedOrderIdList = selected,
+                isSelectAllChecked = allSelected
             )
-        }
-        viewModelScope.launch {
-            if (checked) addOrderSelectionUseCase(orderId, userRefId) else removeOrderSelectionUseCase(orderId, userRefId)
         }
     }
 
     private fun handleSelectAll(checked: Boolean) {
         val current = viewState.value
-        val visibleIdList = current.filteredCollectOrderListItemStateList.map { it.invoiceNumber }
-        val newSet = if (checked) {
-            current.selectedOrderIdList + visibleIdList
-        } else {
-            current.selectedOrderIdList - visibleIdList.toSet()
-        }
-        viewModelScope.launch { setOrderSelectionUseCase(newSet.toList(), userRefId) }
+        val visibleIds = current.filteredCollectOrderListItemStateList.map { it.invoiceNumber }.toSet()
         setState {
+            var add = pendingAddIdSet.toMutableSet()
+            var remove = pendingRemoveIdSet.toMutableSet()
+            val persisted = existingDraftIdSet
+            if (checked) {
+                // Add all visible that are not already selected
+                val currentlySelected = (persisted - remove) union add
+                val toAdd = visibleIds - currentlySelected
+                add.addAll(toAdd.filterNot { it in persisted })
+                // If any visible were marked for removal, undo that
+                remove.removeAll(visibleIds)
+            } else {
+                // Deselect: mark persisted visible for removal, drop any pending adds among visibles
+                val persistedVisible = visibleIds.intersect(persisted)
+                remove.addAll(persistedVisible)
+                add.removeAll(visibleIds)
+            }
+            val selected = (persisted - remove) union add
             copy(
-                selectedOrderIdList = newSet.toSet(),
+                pendingAddIdSet = add,
+                pendingRemoveIdSet = remove,
+                selectedOrderIdList = selected,
                 isSelectAllChecked = checked
             )
         }
@@ -386,20 +431,84 @@ class OrderListScreenViewModel(
         }
     }
 
-    private fun handleToggleSelectionMode(enabled: Boolean) {
-        viewModelScope.launch { clearOrderSelectionUseCase(userRefId) }
-        setState {
-            if (enabled) {
+    private fun onConfirmSelectionStay() {
+        val s = viewState.value
+        val toAdd = s.pendingAddIdSet
+        val toRemove = s.pendingRemoveIdSet
+        if (toAdd.isEmpty() && toRemove.isEmpty()) {
+            setEffect { OrderListScreenContract.Effect.ShowToast("Nothing to update") }
+            setState { copy(confirmSummary = null) }
+            return
+        }
+        viewModelScope.launch {
+            // Commit adds and removals
+            toAdd.forEach { addOrderSelectionUseCase(it, userRefId) }
+            toRemove.forEach { removeOrderSelectionUseCase(it, userRefId) }
+            val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
+            val selected = newExisting
+            setState {
                 copy(
-                    isMultiSelectionEnabled = true,
+                    isMultiSelectionEnabled = false,
+                    existingDraftIdSet = newExisting,
+                    pendingAddIdSet = emptySet(),
+                    pendingRemoveIdSet = emptySet(),
                     selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false
+                    isSelectAllChecked = false,
+                    confirmSummary = null
                 )
-            } else {
+            }
+            setEffect { OrderListScreenContract.Effect.ShowToast("Selection saved") }
+        }
+    }
+
+    private fun onConfirmSelectionProceed() {
+        val s = viewState.value
+        val toAdd = s.pendingAddIdSet
+        val toRemove = s.pendingRemoveIdSet
+        viewModelScope.launch {
+            toAdd.forEach { addOrderSelectionUseCase(it, userRefId) }
+            toRemove.forEach { removeOrderSelectionUseCase(it, userRefId) }
+            val finalIds = ((s.existingDraftIdSet + toAdd) - toRemove).toList()
+            setState {
+                copy(
+                    isMultiSelectionEnabled = false,
+                    existingDraftIdSet = finalIds.toSet(),
+                    pendingAddIdSet = emptySet(),
+                    pendingRemoveIdSet = emptySet(),
+                    selectedOrderIdList = emptySet(),
+                    isSelectAllChecked = false,
+                    confirmSummary = null
+                )
+            }
+            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(finalIds) }
+        }
+    }
+
+    private fun handleToggleSelectionMode(enabled: Boolean) {
+        if (enabled) {
+            viewModelScope.launch {
+                val persisted = observeOrderSelectionUseCase(userRefId).first()
+                setState {
+                    copy(
+                        isMultiSelectionEnabled = true,
+                        existingDraftIdSet = persisted,
+                        pendingAddIdSet = emptySet(),
+                        pendingRemoveIdSet = emptySet(),
+                        selectedOrderIdList = persisted,
+                        isSelectAllChecked = false,
+                        confirmSummary = null
+                    )
+                }
+            }
+        } else {
+            setState {
                 copy(
                     isMultiSelectionEnabled = false,
                     selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false
+                    isSelectAllChecked = false,
+                    pendingAddIdSet = emptySet(),
+                    pendingRemoveIdSet = emptySet(),
+                    confirmSummary = null
                 )
             }
         }
@@ -463,7 +572,7 @@ class OrderListScreenViewModel(
                 val allSelected =
                     isMultiSelectionEnabled && filteredIds.isNotEmpty() && filteredIds.size == newSelected.size
                 newStateBase.copy(
-                    filteredCollectOrderListItemStateList = collectOrderStateList,
+                    filteredCollectOrderListItemStateList = filtered,
                     selectedOrderIdList = newSelected,
                     isSelectAllChecked = allSelected
                 )

@@ -51,6 +51,12 @@ interface OrderRepository {
     /** Remove a single order ID from the selection. */
     suspend fun removeSelectedId(orderId: String, userRefId: String)
 
+    /** Append a batch of order IDs to the current draft (creates draft if missing). */
+    suspend fun appendSelectedIds(orderIdList: List<String>, userRefId: String)
+
+    /** Remove a batch of order IDs from the current draft. */
+    suspend fun removeSelectedIds(orderIdList: List<String>, userRefId: String)
+
     /** Clear the selection. */
     suspend fun clear(userRefId: String)
 

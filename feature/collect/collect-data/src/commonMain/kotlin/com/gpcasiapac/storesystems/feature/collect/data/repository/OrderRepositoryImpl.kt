@@ -181,6 +181,52 @@ class OrderRepositoryImpl(
         }
     }
 
+    override suspend fun appendSelectedIds(orderIdList: List<String>, userRefId: String) {
+        if (orderIdList.isEmpty()) return
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                var openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+                if (openWorkOrder == null) {
+                    val workOrderId = randomUUID()
+                    val now = Clock.System.now()
+                    val newWorkOrder = CollectWorkOrderEntity(
+                        workOrderId = workOrderId,
+                        userId = userRefId,
+                        createdAt = now,
+                        submittedAt = null,
+                        signature = null,
+                        signedAt = null,
+                        signedByName = null
+                    )
+                    workOrderDao.insertWorkOrder(newWorkOrder)
+                    openWorkOrder = newWorkOrder
+                }
+                val items = orderIdList.map { id ->
+                    CollectWorkOrderItemEntity(
+                        workOrderId = openWorkOrder.workOrderId,
+                        invoiceNumber = id
+                    )
+                }
+                workOrderDao.insertItems(items)
+            }
+        }
+    }
+
+    override suspend fun removeSelectedIds(orderIdList: List<String>, userRefId: String) {
+        if (orderIdList.isEmpty()) return
+        val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+        if (openWorkOrder == null) return
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.deleteItemsForWorkOrder(openWorkOrder.workOrderId, orderIdList)
+                val remainingItems = workOrderDao.getWorkOrderItemCount(openWorkOrder.workOrderId)
+                if (remainingItems == 0) {
+                    workOrderDao.deleteWorkOrder(openWorkOrder.workOrderId)
+                }
+            }
+        }
+    }
+
     override suspend fun clear(userRefId: String) {
         val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
         if (openWorkOrder != null) {

@@ -66,4 +66,7 @@ interface WorkOrderDao {
 
     @Query("SELECT COUNT(invoice_number) FROM work_order_items WHERE work_order_id = :workOrderId")
     suspend fun getWorkOrderItemCount(workOrderId: String): Int
+
+    @Query("DELETE FROM work_order_items WHERE work_order_id = :workOrderId AND invoice_number IN (:invoiceNumbers)")
+    suspend fun deleteItemsForWorkOrder(workOrderId: String, invoiceNumbers: List<String>)
 }

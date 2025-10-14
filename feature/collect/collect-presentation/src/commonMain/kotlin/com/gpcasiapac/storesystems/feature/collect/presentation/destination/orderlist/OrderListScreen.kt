@@ -29,6 +29,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -74,6 +80,9 @@ fun OrderListScreen(
     // Search bar state management
     val searchBarState = rememberSearchBarState(initialValue =if(state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
 
+    // Dialog state for multi-select confirmation
+    val confirmDialogSpec = remember { mutableStateOf<OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
+
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
@@ -101,6 +110,9 @@ fun OrderListScreen(
                     scope.launch {
                         searchBarState.animateToExpanded()
                     }
+                }
+                is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
+                    confirmDialogSpec.value = effect
                 }
             }
         }
@@ -275,7 +287,46 @@ fun OrderListScreen(
                 }
             }
         }
+        // Confirmation dialog
+    val spec = confirmDialogSpec.value
+    if (spec != null) {
+        val summary = state.confirmSummary
+        AlertDialog(
+            onDismissRequest = {
+                confirmDialogSpec.value = null
+                onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+            },
+            title = { Text(spec.title) },
+            text = {
+                val msg = if (summary != null) {
+                    "Currently in draft: ${summary.currentCount}\n" +
+                    "To add: ${summary.addCount}\n" +
+                    "To remove: ${summary.removeCount}\n" +
+                    "After applying: ${summary.projectedCount}"
+                } else "Review your changes."
+                Text(msg)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDialogSpec.value = null
+                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
+                }) { Text(spec.proceedLabel) }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    TextButton(onClick = {
+                        confirmDialogSpec.value = null
+                        onEventSent(OrderListScreenContract.Event.ConfirmSelectionStay)
+                    }) { Text(spec.stayLabel) }
+                    TextButton(onClick = {
+                        confirmDialogSpec.value = null
+                        onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+                    }) { Text(spec.cancelLabel) }
+                }
+            }
+        )
     }
+}
 }
 
 @Preview(
@@ -286,7 +337,7 @@ fun OrderListScreen(
     heightDp = 720
 )
 @Composable
-private fun OrderListScreenPreview(
+fun OrderListScreenPreview(
     @PreviewParameter(OrderListScreenStateProvider::class) state: OrderListScreenContract.State
 ) {
     GPCTheme {
