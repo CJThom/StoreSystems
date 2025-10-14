@@ -69,4 +69,17 @@ interface OrderRepository {
     fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>>
 
     suspend fun submitWorkOrder(workOrderId: String): Result<Unit>
+
+    // Progress/persistence helpers for Save/Discard behavior
+    /** True if the draft has progress worth keeping (multi-selection or signature). */
+    suspend fun hasProgress(workOrderId: String): Boolean
+
+    /** Observe progress state for a draft; useful to decide showing Save/Discard. */
+    fun observeHasProgress(workOrderId: String): Flow<Boolean>
+
+    /** Delete the draft if no progress; returns true if deleted. */
+    suspend fun discardIfNoProgress(workOrderId: String): Boolean
+
+    /** Delete a draft explicitly (Discard choice). */
+    suspend fun clearWorkOrderById(workOrderId: String)
 }

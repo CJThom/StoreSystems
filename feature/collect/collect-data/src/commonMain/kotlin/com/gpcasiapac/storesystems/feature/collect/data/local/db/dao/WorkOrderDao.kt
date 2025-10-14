@@ -32,22 +32,24 @@ interface WorkOrderDao {
     )
     suspend fun attachSignature(id: String, signature: String, signedAt: Instant, signedBy: String?)
 
-    @Query("UPDATE work_orders SET status = 'SUBMITTED', submitted_at = :now WHERE work_order_id = :id")
-    suspend fun markSubmitted(id: String, now: Instant)
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE work_order_id = :id")
     suspend fun getWorkOrder(id: String): WorkOrderWithOrders?
 
     @Transaction
-    @Query("SELECT * FROM work_orders WHERE user_id = :userId AND status = 'OPEN' ORDER BY created_at DESC")
+    @Query("SELECT * FROM work_orders WHERE work_order_id = :id")
+    fun observeWorkOrder(id: String): Flow<WorkOrderWithOrders?>
+
+    @Transaction
+    @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC")
     fun observeOpenWorkOrdersForUser(userId: String): Flow<List<WorkOrderWithOrders>>
 
     @Transaction
-    @Query("SELECT * FROM work_orders WHERE user_id = :userId AND status = 'OPEN' ORDER BY created_at DESC LIMIT 1")
+    @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1")
     fun observeLatestOpenWorkOrderForUser(userId: String): Flow<WorkOrderWithOrders?>
 
-    @Query("SELECT * FROM work_orders WHERE user_id = :userId AND status = 'OPEN' ORDER BY created_at DESC LIMIT 1")
+    @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1")
     suspend fun getOpenWorkOrderForUser(userId: String): CollectWorkOrderEntity?
 
     @Query("DELETE FROM work_orders WHERE work_order_id = :workOrderId")
@@ -55,6 +57,12 @@ interface WorkOrderDao {
 
     @Query("DELETE FROM work_order_items WHERE work_order_id = :workOrderId AND invoice_number = :invoiceNumber")
     suspend fun deleteWorkOrderItem(workOrderId: String, invoiceNumber: String)
+
+    @Query("DELETE FROM work_order_items WHERE work_order_id = :workOrderId")
+    suspend fun deleteAllItemsForWorkOrder(workOrderId: String)
+
+    @Query("SELECT invoice_number FROM work_order_items WHERE work_order_id = :workOrderId")
+    fun observeSelectedInvoiceNumbers(workOrderId: String): Flow<List<String>>
 
     @Query("SELECT COUNT(invoice_number) FROM work_order_items WHERE work_order_id = :workOrderId")
     suspend fun getWorkOrderItemCount(workOrderId: String): Int

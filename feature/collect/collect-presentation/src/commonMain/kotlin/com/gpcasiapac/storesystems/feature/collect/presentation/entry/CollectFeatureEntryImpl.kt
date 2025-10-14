@@ -122,6 +122,14 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                         is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
                             CollectOutcome.NavigateToOrderDetails(effect.invoiceNumber)
                         )
+
+                        is OrderFulfilmentScreenContract.Effect.Outcome.SaveAndExit -> onOutcome(
+                            CollectOutcome.Back
+                        )
+
+                        is OrderFulfilmentScreenContract.Effect.Outcome.DiscardAndExit -> onOutcome(
+                            CollectOutcome.Back
+                        )
                     }
                 }
             }

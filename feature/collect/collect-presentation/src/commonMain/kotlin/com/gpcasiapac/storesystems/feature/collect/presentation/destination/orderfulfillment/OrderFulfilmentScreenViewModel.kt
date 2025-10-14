@@ -119,7 +119,27 @@ class OrderFulfilmentScreenViewModel(
             }
 
             is OrderFulfilmentScreenContract.Event.Back -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Back }
+                val s = viewState.value
+                val isMulti = s.collectOrderListItemStateList.size > 1
+                val hasSignature = s.signatureStrokes.isNotEmpty()
+                val hasProgress = isMulti || hasSignature
+                if (hasProgress) {
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog() }
+                } else {
+                    setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Back }
+                }
+            }
+
+            is OrderFulfilmentScreenContract.Event.ConfirmBackSave -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.SaveAndExit }
+            }
+
+            is OrderFulfilmentScreenContract.Event.ConfirmBackDiscard -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.DiscardAndExit }
+            }
+
+            is OrderFulfilmentScreenContract.Event.CancelBackDialog -> {
+                // no-op; UI should simply dismiss the dialog
             }
 
             // Collecting selector

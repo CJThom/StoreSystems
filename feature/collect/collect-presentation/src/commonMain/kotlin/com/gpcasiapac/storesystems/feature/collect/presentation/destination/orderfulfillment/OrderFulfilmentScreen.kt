@@ -29,6 +29,9 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Modifier
 import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
@@ -68,6 +71,9 @@ fun OrderFulfilmentScreen(
     val useColumns =
         !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
+    // Back confirmation dialog state; set via Effect.ShowSaveDiscardDialog
+    val dialogSpec = remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
+
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
@@ -78,6 +84,10 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
                     effect.error, duration = SnackbarDuration.Long
                 )
+
+                is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
+                    dialogSpec.value = effect
+                }
 
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
@@ -173,6 +183,43 @@ fun OrderFulfilmentScreen(
                 }
             }
         }
+    }
+
+    // Global dialog after content so it overlays UI
+    val spec = dialogSpec.value
+    if (spec != null) {
+        AlertDialog(
+            onDismissRequest = {
+                dialogSpec.value = null
+                onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
+            },
+            title = { Text(spec.title) },
+            text = { Text(spec.message) },
+            confirmButton = {
+                TextButton(onClick = {
+                    dialogSpec.value = null
+                    onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
+                }) {
+                    Text(spec.saveLabel)
+                }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    TextButton(onClick = {
+                        dialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
+                    }) {
+                        Text(spec.discardLabel)
+                    }
+                    TextButton(onClick = {
+                        dialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
+                    }) {
+                        Text(spec.cancelLabel)
+                    }
+                }
+            }
+        )
     }
 }
 

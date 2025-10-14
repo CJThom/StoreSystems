@@ -61,6 +61,10 @@ object OrderFulfilmentScreenContract {
         // Errors & navigation
         data object ClearError : Event/**/
         data object Back : Event
+        // Back confirmation dialog actions
+        data object ConfirmBackSave : Event
+        data object ConfirmBackDiscard : Event
+        data object CancelBackDialog : Event
 
         // Collecting selector
         data class CollectingChanged(val type: CollectingType) : Event
@@ -96,12 +100,22 @@ object OrderFulfilmentScreenContract {
     sealed interface Effect : ViewSideEffect {
         data class ShowToast(val message: String) : Effect
         data class ShowError(val error: String) : Effect
+        // Ask UI to present a 3-button dialog for unsaved progress
+        data class ShowSaveDiscardDialog(
+            val title: String = "Unsaved progress",
+            val message: String = "You have unsaved changes. Save as draft or discard?",
+            val saveLabel: String = "Save",
+            val discardLabel: String = "Discard",
+            val cancelLabel: String = "Cancel",
+        ) : Effect
 
         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
             data object SignatureRequested: Outcome
             data class NavigateToOrderDetails(val invoiceNumber: String) : Outcome
+            data object SaveAndExit : Outcome
+            data object DiscardAndExit : Outcome
         }
     }
 }
