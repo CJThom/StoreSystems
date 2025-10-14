@@ -133,9 +133,6 @@ fun DrawCanvas(
 
     Canvas(
         modifier = modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .nestedScroll(scrollConnection)
             .background(background)
             .border(border, shape)
             .pointerInput(Unit) {

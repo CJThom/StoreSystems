@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -30,9 +31,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.DrawCanvas
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.UniformAspectBox
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -49,6 +56,10 @@ fun SignatureScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
+
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val isLandscape =
+        adaptiveInfo.windowSizeClass.minHeightDp < WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND
 
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
@@ -90,83 +101,189 @@ fun SignatureScreen(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
+                .fillMaxSize(),
         ) {
-            // Content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-            ) {
-                // Customer Details Card
-                CustomerDetails(
-                    customerName = "Customer Name",
-                    customerNumber = "Customer Number",
-                    phoneNumber = "Phone Number",
-                    customerType = CustomerType.B2C
-                )
-                HorizontalDivider()
+            // Content with orientation-aware layout
+            if (isLandscape) {
+                // Landscape: Row-based layout
                 Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = Dimens.Space.medium),
+                    modifier = Modifier
+                        .fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                 ) {
-                    Text(
-                        "Please sign here",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    OutlinedButton(
-                        enabled = state.signatureStrokes.isNotEmpty(),
-                        onClick = {
-                            onEventSent(SignatureScreenContract.Event.ClearSignature)
-                        }
+                    // Left side content (Customer details + controls)
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = Dimens.Space.medium),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                     ) {
+                        // Customer Details Card
+                        CustomerDetails(
+                            customerName = "Customer Name",
+                            customerNumber = "Customer Number",
+                            phoneNumber = "Phone Number",
+                            customerType = CustomerType.B2C
+                        )
+                        HorizontalDivider()
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear")
-                            Text("Clear All")
+                            Text(
+                                "Please sign here",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            OutlinedButton(
+                                enabled = state.signatureStrokes.isNotEmpty(),
+                                onClick = {
+                                    onEventSent(SignatureScreenContract.Event.ClearSignature)
+                                }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear")
+                                    Text("Clear All")
+                                }
+                            }
+                        }
+
+                        // Confirm Button
+                        Button(
+                            onClick = {
+                                if (state.signatureBitmap != null) {
+                                    onEventSent(SignatureScreenContract.Event.StartCapture)
+                                }
+                            },
+                            enabled = !state.isLoading && state.signatureBitmap != null,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            if (state.isLoading) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Text(
+                                    text = "SAVE SIGNATURE",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
+
+                    // Right side: DrawCanvas with 16:9 ratio
+                    UniformAspectBox { w, h ->
+                        DrawCanvas(
+                            onComplete = { image ->
+                                onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
+                            },
+                            modifier = Modifier
+                                .width(w)
+                                .height(h),
+//                                .width(380.dp)
+//                                .height(214.dp),
+                            strokes = state.signatureStrokes,
+                            onStrokesChange = { strokes ->
+                                onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                            },
+                            strokeColor = Color.Black,
+                        )
+                    }
                 }
-
-                DrawCanvas(
-                    onComplete = { image ->
-                        onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
-                    },
+            } else {
+                // Portrait: Column-based layout (original)
+                Column(
                     modifier = Modifier
-                        .weight(1f),
-                    strokes = state.signatureStrokes,
-                    onStrokesChange = { strokes ->
-                        onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
-                    },
-                    strokeColor = Color.Black,
-                )
-
-                // Confirm Button
-                Button(
-                    onClick = {
-                        if (state.signatureBitmap != null) {
-                            onEventSent(SignatureScreenContract.Event.StartCapture)
-                        }
-                    },
-                    enabled = !state.isLoading && state.signatureBitmap != null,
-                    modifier = Modifier
-                        .padding(Dimens.Space.medium)
-                        .fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
                 ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
+                    // Customer Details Card
+                    CustomerDetails(
+                        customerName = "Customer Name",
+                        customerNumber = "Customer Number",
+                        phoneNumber = "Phone Number",
+                        customerType = CustomerType.B2C
+                    )
+                    HorizontalDivider()
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = Dimens.Space.medium),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
                         Text(
-                            text = "SAVE SIGNATURE",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Medium
+                            "Please sign here",
+                            style = MaterialTheme.typography.titleLarge
                         )
+                        OutlinedButton(
+                            enabled = state.signatureStrokes.isNotEmpty(),
+                            onClick = {
+                                onEventSent(SignatureScreenContract.Event.ClearSignature)
+                            }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                                Text("Clear All")
+                            }
+                        }
+                    }
+
+
+                    // DrawCanvas with 16:9 fixed dimensions
+                    UniformAspectBox { w, h ->
+                        DrawCanvas(
+                            onComplete = { image ->
+                                onEventSent(
+                                    SignatureScreenContract.Event.SignatureCompleted(
+                                        image
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .width(w)
+                                .height(h),
+
+                            strokes = state.signatureStrokes,
+                            onStrokesChange = { strokes ->
+                                onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                            },
+                            strokeColor = Color.Black,
+                        )
+                    }
+
+                    // Confirm Button
+                    Button(
+                        onClick = {
+                            if (state.signatureBitmap != null) {
+                                onEventSent(SignatureScreenContract.Event.StartCapture)
+                            }
+                        },
+                        enabled = !state.isLoading && state.signatureBitmap != null,
+                        modifier = Modifier
+                            .padding(Dimens.Space.medium)
+                            .fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text(
+                                text = "SAVE SIGNATURE",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }

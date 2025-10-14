@@ -140,7 +140,6 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
             }
 
             entry<CollectFeatureDestination.Signature>(
-                metadata = ListDetailSceneStrategy.extraPane(),
             ) {
                 SignatureScreenDestination { outcome ->
                     when (outcome) {
