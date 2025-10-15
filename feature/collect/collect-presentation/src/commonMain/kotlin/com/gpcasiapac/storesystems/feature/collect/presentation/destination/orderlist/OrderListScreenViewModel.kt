@@ -11,6 +11,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQu
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 class OrderListScreenViewModel(
     private val observeMainOrdersUseCase: ObserveMainOrdersUseCase,
     private val observeSearchOrdersUseCase: ObserveSearchOrdersUseCase,
+    private val observeOrderCountUseCase: ObserveOrderCountUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
@@ -105,7 +107,6 @@ class OrderListScreenViewModel(
                             isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
                         copy(
                             orders = items,
-                            orderCount = items.size,
                             isLoading = false,
                             error = null,
                             selectedOrderIdList = newSelected,
@@ -126,8 +127,27 @@ class OrderListScreenViewModel(
                 if (!active || t.isEmpty()) flowOf(emptyList()) else observeSearchOrdersUseCase(t)
             }.map { list -> list.toListItemState() }
              .collectLatest { results ->
-                 setState { copy(searchResults = results) }
+                 setState {
+                     // maintain selection sanity against visible search results when active
+                     val visibleIds = results.map { it.invoiceNumber }.toSet()
+                     val newSelected =
+                         if (isMultiSelectionEnabled) selectedOrderIdList.intersect(visibleIds) else emptySet()
+                     val allSelected =
+                         isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
+                     copy(
+                         searchResults = results,
+                         selectedOrderIdList = newSelected,
+                         isSelectAllChecked = allSelected,
+                     )
+                 }
              }
+        }
+
+        viewModelScope.launch {
+            // Observe total order count from DB (independent of filters/search)
+            observeOrderCountUseCase().collectLatest { count ->
+                setState { copy(orderCount = count) }
+            }
         }
 
         viewModelScope.launch {
@@ -178,6 +198,8 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SearchBarBackPressed -> {
+                // Collapse and mark search inactive to stop the search pipeline
+                setState { copy(isSearchActive = false) }
                 setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
             }
 
@@ -311,6 +333,8 @@ class OrderListScreenViewModel(
     }
 
     private fun handleSearchOnExpandedChange(expand: Boolean) {
+        // Keep state in sync with the UI expansion so the search pipeline can run
+        setState { copy(isSearchActive = expand) }
         if (expand) {
             setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
         } else {
@@ -419,7 +443,11 @@ class OrderListScreenViewModel(
 
     private fun handleSelectAll(checked: Boolean) {
         val current = viewState.value
-        val visibleIds = current.orders.map { it.invoiceNumber }.toSet()
+        val visibleIds = if (current.isSearchActive && current.searchText.isNotBlank()) {
+            current.searchResults.map { it.invoiceNumber }.toSet()
+        } else {
+            current.orders.map { it.invoiceNumber }.toSet()
+        }
         setState {
             var add = pendingAddIdSet.toMutableSet()
             var remove = pendingRemoveIdSet.toMutableSet()

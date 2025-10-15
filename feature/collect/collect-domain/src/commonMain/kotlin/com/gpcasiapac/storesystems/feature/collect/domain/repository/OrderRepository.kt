@@ -26,6 +26,8 @@ data class SearchQuery(
 )
 
 interface OrderRepository {
+    /** Observe the total count of orders in the DB (independent of filters/search). */
+    fun observeOrderCount(): Flow<Int>
     /**
      * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
      */

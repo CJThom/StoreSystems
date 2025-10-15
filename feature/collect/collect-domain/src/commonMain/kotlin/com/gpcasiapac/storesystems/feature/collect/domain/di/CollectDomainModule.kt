@@ -8,6 +8,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearch
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
@@ -25,6 +26,7 @@ val collectDomainModule = module {
     factoryOf(::GetOrderSearchSuggestionListUseCase)
     factoryOf(::ObserveMainOrdersUseCase)
     factoryOf(::ObserveSearchOrdersUseCase)
+    factoryOf(::ObserveOrderCountUseCase)
 
     factoryOf(::GetCollectOrderWithCustomerListFlowUseCase)
     factoryOf(::ObserveOrderSelectionResultUseCase)

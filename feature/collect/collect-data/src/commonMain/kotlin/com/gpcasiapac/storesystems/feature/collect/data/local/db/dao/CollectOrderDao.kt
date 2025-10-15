@@ -28,6 +28,9 @@ interface CollectOrderDao {
     @Query("SELECT COUNT(*) FROM collect_orders")
     suspend fun getCount(): Int
 
+    @Query("SELECT COUNT(*) FROM collect_orders")
+    fun observeCount(): Flow<Int>
+
     @Transaction
     @Query("SELECT * FROM collect_orders ORDER BY picked_at DESC")
     fun getCollectOrderWithCustomerWithLineItemsRelationListFlow(): Flow<List<CollectOrderWithCustomerWithLineItemsRelation>>
@@ -69,6 +72,8 @@ interface CollectOrderDao {
         WHERE (
           invoice_number LIKE :q ESCAPE '!' COLLATE NOCASE OR
           (web_order_number IS NOT NULL AND web_order_number LIKE :q ESCAPE '!'
+            COLLATE NOCASE) OR
+          (sales_order_number IS NOT NULL AND sales_order_number LIKE :q ESCAPE '!'
             COLLATE NOCASE) OR
           invoice_number IN (
              SELECT invoice_number FROM collect_order_customers WHERE (

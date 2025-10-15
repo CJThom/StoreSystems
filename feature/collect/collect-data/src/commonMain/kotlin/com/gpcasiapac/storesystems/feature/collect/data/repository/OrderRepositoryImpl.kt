@@ -93,6 +93,8 @@ class OrderRepositoryImpl(
             .map { it.toDomain() }
     }
 
+    override fun observeOrderCount(): Flow<Int> = collectOrderDao.observeCount()
+
 
     override suspend fun refreshOrders(): Result<Unit> = runCatching {
         val collectOrderDtoList: List<CollectOrderDto> = orderNetworkDataSource.fetchOrders()

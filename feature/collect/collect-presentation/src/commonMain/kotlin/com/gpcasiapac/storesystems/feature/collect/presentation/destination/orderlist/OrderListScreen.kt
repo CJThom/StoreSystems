@@ -200,6 +200,31 @@ fun OrderListScreen(
                                 onEventSent(OrderListScreenContract.Event.ClearSearch)
                             },
                             searchResults = state.orderSearchSuggestionList.map { it.text },
+                            searchOrderItems = state.searchResults,
+                            isMultiSelectionEnabled = state.isMultiSelectionEnabled,
+                            selectedOrderIdList = state.selectedOrderIdList,
+                            isSelectAllChecked = state.isSelectAllChecked,
+                            isRefreshing = state.isRefreshing,
+                            onOpenOrder = { id ->
+                                onEventSent(OrderListScreenContract.Event.OpenOrder(id))
+                            },
+                            onCheckedChange = { orderId, checked ->
+                                onEventSent(
+                                    OrderListScreenContract.Event.OrderChecked(
+                                        orderId = orderId,
+                                        checked = checked
+                                    )
+                                )
+                            },
+                            onSelectAllToggle = { checked ->
+                                onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                            },
+                            onCancelSelection = {
+                                onEventSent(OrderListScreenContract.Event.CancelSelection)
+                            },
+                            onSelectClick = {
+                                onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             placeholderText = "Search by Order #, Name, Phone"
                         )
@@ -264,6 +289,11 @@ fun OrderListScreen(
         },
     ) { padding ->
 
+        val visibleItems = if (state.isSearchActive && state.searchText.isNotBlank()) {
+            state.searchResults
+        } else {
+            state.orders
+        }
 
         LazyVerticalGrid(
             state = lazyGridState,
