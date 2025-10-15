@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails
 
 import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
@@ -6,7 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 
-object OrderDetailsScreenContract {
+object WorkOrderDetailsScreenContract {
 
     @Immutable
     data class State(
@@ -18,7 +18,6 @@ object OrderDetailsScreenContract {
     sealed interface Event : ViewEvent {
         data class Refresh(val invoiceNumber: String) : Event
         data object Back : Event
-        data object Select : Event
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -26,7 +25,6 @@ object OrderDetailsScreenContract {
         data class ShowError(val error: String) : Effect
         sealed interface Outcome : Effect {
             data object Back : Outcome
-            data class Selected(val invoiceNumber: String) : Outcome
         }
     }
 }

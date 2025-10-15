@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -9,18 +9,17 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class OrderDetailsScreenViewModel(
+class WorkOrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
-    private val setOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase,
     private val invoiceNumber: String
 ) : MVIViewModel<
-        OrderDetailsScreenContract.Event,
-        OrderDetailsScreenContract.State,
-        OrderDetailsScreenContract.Effect>() {
+        WorkOrderDetailsScreenContract.Event,
+        WorkOrderDetailsScreenContract.State,
+        WorkOrderDetailsScreenContract.Effect>() {
 
-    override fun setInitialState(): OrderDetailsScreenContract.State {
-        return OrderDetailsScreenContract.State(
+    override fun setInitialState(): WorkOrderDetailsScreenContract.State {
+        return WorkOrderDetailsScreenContract.State(
             order = null,
             isLoading = true,
             error = null
@@ -33,30 +32,16 @@ class OrderDetailsScreenViewModel(
         }
     }
 
-    override fun handleEvents(event: OrderDetailsScreenContract.Event) {
+    override fun handleEvents(event: WorkOrderDetailsScreenContract.Event) {
         when (event) {
-            is OrderDetailsScreenContract.Event.Refresh -> {
+            is WorkOrderDetailsScreenContract.Event.Refresh -> {
                 viewModelScope.launch {
                     fetchOrders(successToast = "Orders refreshed")
                 }
             }
 
-            is OrderDetailsScreenContract.Event.Back -> {
-                setEffect { OrderDetailsScreenContract.Effect.Outcome.Back }
-            }
-
-            is OrderDetailsScreenContract.Event.Select -> {
-                viewModelScope.launch {
-                    runCatching {
-                        setOrderSelectionUseCase(listOf(invoiceNumber), "mock")
-                    }.onSuccess {
-                        setEffect { OrderDetailsScreenContract.Effect.Outcome.Selected(invoiceNumber) }
-                    }.onFailure { t ->
-                        val msg = t.message ?: "Failed to select order. Please try again."
-                        setState { copy(error = msg) }
-                        setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
-                    }
-                }
+            is WorkOrderDetailsScreenContract.Event.Back -> {
+                setEffect { WorkOrderDetailsScreenContract.Effect.Outcome.Back }
             }
         }
     }
@@ -66,7 +51,7 @@ class OrderDetailsScreenViewModel(
         getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoiceNumber).catch { throwable ->
             val errorMessage = throwable.message ?: "An unknown error occurred"
             setState { copy(isLoading = false, error = errorMessage) }
-            setEffect { OrderDetailsScreenContract.Effect.ShowError(errorMessage) }
+            setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(errorMessage) }
         }.collectLatest { order ->
             if (order != null) {
                 setState {
@@ -78,7 +63,7 @@ class OrderDetailsScreenViewModel(
             } else {
                 val errorMessage = "Order not found"
                 setState { copy(isLoading = false, error = errorMessage) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowError(errorMessage) }
+                setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(errorMessage) }
             }
         }
 
@@ -95,7 +80,7 @@ class OrderDetailsScreenViewModel(
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowToast(successToast) }
+                setEffect { WorkOrderDetailsScreenContract.Effect.ShowToast(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
@@ -105,7 +90,7 @@ class OrderDetailsScreenViewModel(
                         error = msg
                     )
                 }
-                setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
+                setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(msg) }
             }
         )
     }

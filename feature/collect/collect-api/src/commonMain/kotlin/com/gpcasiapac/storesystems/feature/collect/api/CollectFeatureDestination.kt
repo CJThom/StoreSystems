@@ -6,13 +6,17 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface CollectFeatureDestination : NavKey {
     @Serializable
+
     data object Orders : CollectFeatureDestination
+
+    @Serializable
+    data class OrderDetails(val invoiceNumber: String): CollectFeatureDestination
 
     @Serializable
     data object OrderFulfilment : CollectFeatureDestination
 
     @Serializable
-    data class OrderDetails(val invoiceNumber: String): CollectFeatureDestination
+    data class WorkOrderDetails(val invoiceNumber: String): CollectFeatureDestination
 
     @Serializable
     data object Signature : CollectFeatureDestination

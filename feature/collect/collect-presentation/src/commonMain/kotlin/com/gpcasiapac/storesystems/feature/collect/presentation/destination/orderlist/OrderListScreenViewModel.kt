@@ -151,10 +151,8 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
-                viewModelScope.launch {
-                    setOrderSelectionUseCase(listOf(event.orderId), userRefId)
-                    setEffect { OrderSelected(event.orderId) }
-                }
+                // Single-tap now navigates to OrderDetails without persisting selection; selection happens on OrderDetails SELECT
+                setEffect { OrderSelected(event.orderId) }
             }
 
             is OrderListScreenContract.Event.ClearError -> {
@@ -254,7 +252,7 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.DraftBarViewClicked -> {
                 val ids = viewState.value.existingDraftIdSet.toList()
                 if (ids.isNotEmpty()) {
-                    setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(ids) }
+                    setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
                 } else {
                     setEffect { OrderListScreenContract.Effect.ShowToast("No draft to view") }
                 }
@@ -458,7 +456,7 @@ class OrderListScreenViewModel(
         val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
         viewModelScope.launch {
             setOrderSelectionUseCase(selectedOrderIdList, userRefId)
-            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(selectedOrderIdList) }
+            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
         setState {
             copy(
@@ -518,7 +516,7 @@ class OrderListScreenViewModel(
                     confirmSummary = null
                 )
             }
-            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(finalIds) }
+            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
     }
 

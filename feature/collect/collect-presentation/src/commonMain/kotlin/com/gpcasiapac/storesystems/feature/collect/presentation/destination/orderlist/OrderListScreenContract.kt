@@ -153,8 +153,8 @@ object OrderListScreenContract {
         ) : Effect
 
         sealed interface Outcome : Effect {
-            data class OrderSelected(val orderId: String) : Outcome
-            data class OrdersSelected(val orderIds: List<String>) : Outcome
+            data class OrderSelected(val invoiceNumber: String) : Outcome
+            data object OrdersSelected : Outcome
             data object Back : Outcome
             data object Logout : Outcome
         }

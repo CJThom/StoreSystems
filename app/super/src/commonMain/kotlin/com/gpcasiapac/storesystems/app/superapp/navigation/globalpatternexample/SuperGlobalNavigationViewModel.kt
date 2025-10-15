@@ -105,7 +105,7 @@ class SuperGlobalNavigationViewModel :
             CollectOutcome.SignatureRequested -> TODO()
             is CollectOutcome.SignatureSaved -> TODO()
             CollectOutcome.Logout -> TODO()
-            is CollectOutcome.NavigateToOrderDetails -> TODO()
+            is CollectOutcome.WorkOrderItemSelected -> TODO()
         }
     }
 

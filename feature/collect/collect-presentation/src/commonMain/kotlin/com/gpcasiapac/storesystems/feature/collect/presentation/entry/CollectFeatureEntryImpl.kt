@@ -19,6 +19,8 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails.WorkOrderDetailsScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails.WorkOrderDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
@@ -87,17 +89,31 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                 OrderListScreenDestination { outcome ->
                     when (outcome) {
                         is OrderListScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
-                            CollectOutcome.OrderSelected(outcome.orderId)
+                            CollectOutcome.OrderSelected(outcome.invoiceNumber)
                         )
 
                         is OrderListScreenContract.Effect.Outcome.OrdersSelected -> {
-                            outcome.orderIds.firstOrNull()?.let { id ->
-                                onOutcome(CollectOutcome.OrderSelected(id))
-                            }
+                            onOutcome(CollectOutcome.OpenOrderFulfilment)
                         }
 
                         is OrderListScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is OrderListScreenContract.Effect.Outcome.Logout -> onOutcome(CollectOutcome.Logout)
+                    }
+                }
+            }
+
+            entry<CollectFeatureDestination.OrderDetails>(
+                metadata = ListDetailSceneStrategy.detailPane(),
+            ) { destination ->
+
+                OrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
+                    when (outcome) {
+                        is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
+                            CollectOutcome.Back
+                        )
+                        is OrderDetailsScreenContract.Effect.Outcome.Selected -> onOutcome(
+                            CollectOutcome.OpenOrderFulfilment
+                        )
                     }
                 }
             }
@@ -120,7 +136,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                         )
 
                         is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
-                            CollectOutcome.NavigateToOrderDetails(effect.invoiceNumber)
+                            CollectOutcome.WorkOrderItemSelected(effect.invoiceNumber)
                         )
 
                         is OrderFulfilmentScreenContract.Effect.Outcome.SaveAndExit -> onOutcome(
@@ -134,13 +150,13 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                 }
             }
 
-            entry<CollectFeatureDestination.OrderDetails>(
+            entry<CollectFeatureDestination.WorkOrderDetails>(
                 metadata = ListDetailSceneStrategy.detailPane(),
             ) { destination ->
 
-                OrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
+                WorkOrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
                     when (outcome) {
-                        is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
+                        is WorkOrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
                             CollectOutcome.Back
                         )
                     }

@@ -1,6 +1,5 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,37 +23,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
-import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderDetailsScreen(
-    state: OrderDetailsScreenContract.State,
-    onEventSent: (event: OrderDetailsScreenContract.Event) -> Unit,
-    effectFlow: Flow<OrderDetailsScreenContract.Effect>?,
-    onOutcome: (outcome: OrderDetailsScreenContract.Effect.Outcome) -> Unit,
+fun WorkOrderDetailsScreen(
+    state: WorkOrderDetailsScreenContract.State,
+    onEventSent: (event: WorkOrderDetailsScreenContract.Event) -> Unit,
+    effectFlow: Flow<WorkOrderDetailsScreenContract.Effect>?,
+    onOutcome: (outcome: WorkOrderDetailsScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderDetailsScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
+                is WorkOrderDetailsScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
                     effect.message, duration = SnackbarDuration.Short
                 )
-
-                is OrderDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
+                is WorkOrderDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
                     effect.error
                 )
-
-                is OrderDetailsScreenContract.Effect.Outcome -> onOutcome(effect)
+                is WorkOrderDetailsScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }
@@ -67,7 +58,7 @@ fun OrderDetailsScreen(
             MBoltAppBar(
                 title = { TopBarTitle("Order Details") },
                 navigationIcon = {
-                    IconButton(onClick = { onEventSent(OrderDetailsScreenContract.Event.Back) }) {
+                    IconButton(onClick = { onEventSent(WorkOrderDetailsScreenContract.Event.Back) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -77,30 +68,14 @@ fun OrderDetailsScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            FlexibleBottomAppBar(
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(
-                    onClick = {
-                        onEventSent(OrderDetailsScreenContract.Event.Select)
-                    }
-                ) {
-                    Text("SELECT")
-                }
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (state.error != null) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(text = state.error)
             }
         } else if (state.order != null) {
@@ -114,39 +89,5 @@ fun OrderDetailsScreen(
                 )
             }
         }
-    }
-}
-
-@Preview
-@Composable
-private fun OrderDetailsScreenPreview() {
-    GPCTheme {
-        OrderDetailsScreen(
-            state = OrderDetailsScreenContract.State(
-                isLoading = false,
-                error = null,
-                order = CollectOrderWithCustomerWithLineItemsState.placeholder()
-            ),
-            onEventSent = {},
-            effectFlow = null,
-            onOutcome = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun OrderDetailsScreenLoadingPreview() {
-    GPCTheme {
-        OrderDetailsScreen(
-            state = OrderDetailsScreenContract.State(
-                isLoading = true,
-                error = null,
-                order = null
-            ),
-            onEventSent = {},
-            effectFlow = null,
-            onOutcome = {}
-        )
     }
 }

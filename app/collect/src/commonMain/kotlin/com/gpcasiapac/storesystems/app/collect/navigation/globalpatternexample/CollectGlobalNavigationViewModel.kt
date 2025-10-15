@@ -53,9 +53,19 @@ class CollectGlobalNavigationViewModel :
 
     private fun handleCollectOutcome(outcome: CollectOutcome) {
         when (outcome) {
-            is CollectOutcome.OrderSelected -> pushOrReplaceTop(OrderFulfilment)
+            is CollectOutcome.OrderSelected -> {
+                // From order list, open Order Details for the tapped order
+                pushOrReplaceTop(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber))
+            }
+
+            is CollectOutcome.OpenOrderFulfilment -> {
+                // From Order Details SELECT, navigate to fulfilment and remove details from back stack
+                pop()
+                push(OrderFulfilment)
+            }
 
             is CollectOutcome.Back -> pop()
+
             is CollectOutcome.Logout -> {
                 replaceTop(LoginFeatureDestination.Login)
             }
@@ -65,8 +75,10 @@ class CollectGlobalNavigationViewModel :
             }
 
             is CollectOutcome.SignatureSaved -> pop()
-            is CollectOutcome.NavigateToOrderDetails -> {
-                push(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber))
+
+            is CollectOutcome.WorkOrderItemSelected -> {
+                // From fulfilment, open a parked/selected work order item details
+                pushOrReplaceTop(CollectFeatureDestination.WorkOrderDetails(outcome.invoiceNumber))
             }
         }
     }
