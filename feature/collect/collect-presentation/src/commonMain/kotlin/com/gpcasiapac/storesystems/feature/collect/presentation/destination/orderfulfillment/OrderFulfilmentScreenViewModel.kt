@@ -8,24 +8,23 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSelectionResult
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
-private const val COLLAPSED_PRODUCT_LIST_COUNT = 2
 
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
+    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
+    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -33,7 +32,6 @@ class OrderFulfilmentScreenViewModel(
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
-            collectOrderWithCustomerWithLineItemsState = CollectOrderWithCustomerWithLineItemsState.placeholder(),
             collectOrderListItemStateList = listOf(CollectOrderListItemState.placeholder()),
             isLoading = false,
             error = null,
@@ -82,8 +80,7 @@ class OrderFulfilmentScreenViewModel(
                     detail = "Send invoice to printer",
                     isEnabled = true
                 )
-            ),
-            visibleProductListItemCount = COLLAPSED_PRODUCT_LIST_COUNT
+            )
         )
 
     }
@@ -98,9 +95,9 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Observe selection from repository and current order list to render single vs multi
+        // Observe selected order IDs and map to list of orders to render
         viewModelScope.launch {
-            observeOrderSelectionResult()
+            observeSelectedOrdersList()
         }
     }
 
@@ -198,9 +195,6 @@ class OrderFulfilmentScreenViewModel(
                 confirm()
             }
 
-            is OrderFulfilmentScreenContract.Event.ToggleProductListExpansion -> {
-                toggleProductListExpansion()
-            }
 
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
                 setEffect {
@@ -225,50 +219,22 @@ class OrderFulfilmentScreenViewModel(
         }
     }
 
-    private fun toggleProductListExpansion() {
-        val totalItemCount =
-            viewState.value.collectOrderWithCustomerWithLineItemsState?.lineItemList?.size ?: 0
-        setState {
-            copy(
-                visibleProductListItemCount = if (visibleProductListItemCount == totalItemCount) {
-                    COLLAPSED_PRODUCT_LIST_COUNT
-                } else {
-                    totalItemCount
-                }
-            )
-        }
-    }
 
-    private suspend fun observeOrderSelectionResult() {
-        observeOrderSelectionResultUseCase("mock").collectLatest { result ->
-            when (result) {
-                is OrderSelectionResult.Single -> {
-                    val orderState = result.order?.toState()
-                    setState {
-                        copy(
-                            collectOrderWithCustomerWithLineItemsState = orderState,
-                            collectOrderListItemStateList = emptyList(),
-                            isLoading = false,
-                            error = null,
-                            visibleProductListItemCount = orderState?.lineItemList?.size?.coerceAtMost(
-                                COLLAPSED_PRODUCT_LIST_COUNT
-                            ) ?: 0
-                        )
-                    }
-                }
-
-                is OrderSelectionResult.Multi -> {
-                    setState {
-                        copy(
-                            collectOrderWithCustomerWithLineItemsState = null,
-                            collectOrderListItemStateList = result.orderList.toListItemState(),
-                            isLoading = false,
-                            error = null
-                        )
-                    }
+    private suspend fun observeSelectedOrdersList() {
+        observeOrderSelectionUseCase("mock")
+            .flatMapLatest { ids ->
+                getCollectOrderWithCustomerListFlowUseCase(ids)
+            }
+            .collectLatest { orders ->
+                val listState = orders.toListItemState()
+                setState {
+                    copy(
+                        collectOrderListItemStateList = listState,
+                        isLoading = false,
+                        error = null
+                    )
                 }
             }
-        }
     }
 
     private suspend fun fetchOrders(successToast: String) {

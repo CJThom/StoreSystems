@@ -9,14 +9,12 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 
 object OrderFulfilmentScreenContract {
 
     @Immutable
     data class State(
-        val collectOrderWithCustomerWithLineItemsState: CollectOrderWithCustomerWithLineItemsState?,
         val collectOrderListItemStateList: List<CollectOrderListItemState>,
 
         // Loading / refreshing
@@ -42,9 +40,6 @@ object OrderFulfilmentScreenContract {
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
-
-        // Product list
-        val visibleProductListItemCount: Int,
     ) : ViewState{
 
         data class FeatureFlags(
@@ -90,8 +85,6 @@ object OrderFulfilmentScreenContract {
         // Final action
         data object Confirm : Event
 
-        // Product list
-        data object ToggleProductListExpansion : Event
 
         // Order item click
         data class OrderClicked(val invoiceNumber: String) : Event

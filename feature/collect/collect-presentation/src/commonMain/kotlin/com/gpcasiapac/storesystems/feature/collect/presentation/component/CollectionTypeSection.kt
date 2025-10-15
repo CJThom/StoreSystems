@@ -82,7 +82,7 @@ fun CollectionTypeSectionPreview() {
                 onValueChange = {
 
                 },
-                title = "Who's Collecting",
+                title = "Who's Collecting?",
                 optionList = listOf(
                     CollectionTypeSectionDisplayState(
                         collectingType = CollectingType.STANDARD,

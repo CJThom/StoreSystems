@@ -232,21 +232,10 @@ private fun OrderDetailsContent(
     state: OrderFulfilmentScreenContract.State,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
 ) {
-    if (state.collectOrderWithCustomerWithLineItemsState != null) {
-        OrderDetailsLarge(
-            orderState = state.collectOrderWithCustomerWithLineItemsState,
-            visibleLineItemListCount = state.visibleProductListItemCount,
-            isProductListExpanded = state.visibleProductListItemCount > 2,
-            onViewMoreClick = {
-                onEventSent(OrderFulfilmentScreenContract.Event.ToggleProductListExpansion)
-            }
-        )
-    } else {
-        MultiOrderListSection(
-            state = state,
-            onEventSent = onEventSent
-        )
-    }
+    MultiOrderListSection(
+        state = state,
+        onEventSent = onEventSent
+    )
 }
 
 @Composable
@@ -282,7 +271,7 @@ private fun ActionsContent(
         onRetakeClick = {
             onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
         },
-        image = state.collectOrderWithCustomerWithLineItemsState?.order?.signature
+        image = null
     )
 
     if (state.featureFlags.isCorrespondenceSectionVisible) {

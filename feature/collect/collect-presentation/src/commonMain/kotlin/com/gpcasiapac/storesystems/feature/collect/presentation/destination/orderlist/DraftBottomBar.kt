@@ -73,7 +73,7 @@ fun DraftBottomBar(
                 ) {
 
                     Text(
-                        text = "Collections in progress",
+                        text = "Collection in progress",
                         style = MaterialTheme.typography.labelSmall,
                         //    color = MaterialTheme.colorScheme.onSurface
                     )
