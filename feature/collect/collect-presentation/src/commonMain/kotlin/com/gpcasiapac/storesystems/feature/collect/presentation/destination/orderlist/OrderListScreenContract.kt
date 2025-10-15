@@ -17,8 +17,8 @@ object OrderListScreenContract {
     @Immutable
     data class State(
         // Data
-        val collectOrderListItemStateList: List<CollectOrderListItemState>,                                   // full dataset observed
-        val filteredCollectOrderListItemStateList: List<CollectOrderListItemState>,                           // single list rendered (optional if DB-side)
+        val orders: List<CollectOrderListItemState>,
+        val searchResults: List<CollectOrderListItemState>,
 
         // Loading / refreshing
         val isLoading: Boolean,
@@ -29,9 +29,8 @@ object OrderListScreenContract {
         val isSearchActive: Boolean,                                        // search bar expanded with suggestions
         val orderSearchSuggestionList: List<OrderSearchSuggestion>,                // the overlay list items
 
-        // Filter chips & toggles
+        // Filters & sort
         val customerTypeFilterList: Set<CustomerType>,
-        val appliedFilterChipList: List<FilterChip>,                     // e.g., phone chip from screenshots
         val isFilterSheetOpen: Boolean,
         val sortOption: SortOption,
 
@@ -54,9 +53,6 @@ object OrderListScreenContract {
         // Submission / transient UI
         val isSubmitting: Boolean,                                          // e.g., "Submitting order..." snackbar
         val submittedCollectOrder: CollectOrderListItemState?,
-
-        // Suggestions from old shape (kept for compatibility if used elsewhere)
-        val searchHintResultList: List<CollectOrderListItemState>,
 
         // Error
         val error: String?,

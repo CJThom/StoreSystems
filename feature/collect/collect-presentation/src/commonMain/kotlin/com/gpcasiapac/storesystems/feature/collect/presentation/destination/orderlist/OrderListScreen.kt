@@ -307,7 +307,7 @@ fun OrderListScreen(
                 )
             }
             items(
-                items = state.collectOrderListItemStateList,
+                items = state.orders,
                 key = { it.invoiceNumber }) { collectOrderState ->
                 CheckboxCard(
                     modifier = Modifier.padding(

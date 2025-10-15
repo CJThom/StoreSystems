@@ -14,6 +14,17 @@ data class OrderQuery(
     val searchText: String = "",
 )
 
+// Main-list query for filters + sort
+data class MainOrderQuery(
+    val customerTypes: Set<com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType>,
+    val sort: com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption,
+)
+
+// Search-only query for debounced search text
+data class SearchQuery(
+    val text: String,
+)
+
 interface OrderRepository {
     /**
      * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
@@ -26,6 +37,10 @@ interface OrderRepository {
 
     fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>>
 
+    // New reactive streams for main list and search results
+    fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
+
+    fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>>
 
     /**
      * Lightweight, indexed search suggestions from the DB.

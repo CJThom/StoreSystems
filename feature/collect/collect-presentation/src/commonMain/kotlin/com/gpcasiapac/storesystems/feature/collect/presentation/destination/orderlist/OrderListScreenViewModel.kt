@@ -7,9 +7,10 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
@@ -29,10 +30,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
-    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
+    private val observeMainOrdersUseCase: ObserveMainOrdersUseCase,
+    private val observeSearchOrdersUseCase: ObserveSearchOrdersUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
@@ -49,15 +53,14 @@ class OrderListScreenViewModel(
         val placeholders = CollectOrderListItemState.placeholderList(count = 10)
         
         return OrderListScreenContract.State(
-            collectOrderListItemStateList = placeholders,
-            filteredCollectOrderListItemStateList = placeholders,
+            orders = placeholders,
+            searchResults = emptyList(),
             isLoading = true,
             isRefreshing = true,
             searchText = "",
             isSearchActive = false,
             orderSearchSuggestionList = emptyList(),
             customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
-            appliedFilterChipList = emptyList(),
             isFilterSheetOpen = false,
             sortOption = SortOption.TIME_WAITING_DESC,
             isMultiSelectionEnabled = false,
@@ -70,7 +73,6 @@ class OrderListScreenViewModel(
             orderCount = 0,
             isSubmitting = false,
             submittedCollectOrder = null,
-            searchHintResultList = emptyList(),
             error = null,
         )
     }
@@ -86,8 +88,46 @@ class OrderListScreenViewModel(
 
     override fun onStart() {
 
+        // Main list pipeline: respond to filter/sort changes
         viewModelScope.launch {
-            observeOrderList()
+            viewState
+                .map { state -> MainOrderQuery(state.customerTypeFilterList, state.sortOption) }
+                .distinctUntilChanged()
+                .flatMapLatest { query -> observeMainOrdersUseCase(query) }
+                .map { list -> list.toListItemState() }
+                .collectLatest { items ->
+                    setState {
+                        // maintain selection sanity against visible main list
+                        val visibleIds = items.map { it.invoiceNumber }.toSet()
+                        val newSelected =
+                            if (isMultiSelectionEnabled) selectedOrderIdList.intersect(visibleIds) else emptySet()
+                        val allSelected =
+                            isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
+                        copy(
+                            orders = items,
+                            orderCount = items.size,
+                            isLoading = false,
+                            error = null,
+                            selectedOrderIdList = newSelected,
+                            isSelectAllChecked = allSelected,
+                        )
+                    }
+                }
+        }
+
+        // Search results pipeline: debounced and independent of main list
+        viewModelScope.launch {
+            QueryFlow.build(
+                input = viewState.map { it.searchText to it.isSearchActive },
+                debounce = SearchDebounce(millis = 150),
+                keySelector = { (text, active) -> if (active) text.trim() else "" }
+            ).flatMapLatest { (text, active) ->
+                val t = text.trim()
+                if (!active || t.isEmpty()) flowOf(emptyList()) else observeSearchOrdersUseCase(t)
+            }.map { list -> list.toListItemState() }
+             .collectLatest { results ->
+                 setState { copy(searchResults = results) }
+             }
         }
 
         viewModelScope.launch {
@@ -310,50 +350,24 @@ class OrderListScreenViewModel(
     private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
         setState {
             val updated = customerTypeFilterList.toMutableSet().apply {
-                if (checked) {
-                    add(type)
-                } else {
-                    remove(type)
-                }
+                if (checked) add(type) else remove(type)
             }
-            val base = copy(customerTypeFilterList = updated)
-            val filtered = applyFiltersTo(collectOrderListItemStateList, base)
-            base.copy(filteredCollectOrderListItemStateList = filtered)
+            copy(customerTypeFilterList = updated)
         }
     }
 
     private fun handleApplyFilters(filterChipList: List<FilterChip>) {
-        setState {
-            val newFilterChipList: List<FilterChip> =
-                (appliedFilterChipList + filterChipList).distinctBy { it.type to it.value }
-            val base = copy(
-                appliedFilterChipList = newFilterChipList,
-                isFilterSheetOpen = false
-            )
-            val filteredCollectOrderListItemStateList: List<CollectOrderListItemState> =
-                applyFiltersTo(collectOrderListItemStateList, base)
-            base.copy(filteredCollectOrderListItemStateList = filteredCollectOrderListItemStateList)
-        }
+        // Chips removed; close the sheet only
+        setState { copy(isFilterSheetOpen = false) }
     }
 
     private fun handleRemoveFilterChip(filterChip: FilterChip) {
-        setState {
-            val newFilterChipList: List<FilterChip> =
-                appliedFilterChipList.filterNot { it == filterChip }
-            val base = copy(appliedFilterChipList = newFilterChipList)
-            val filteredCollectOrderListItemStateList: List<CollectOrderListItemState> =
-                applyFiltersTo(collectOrderListItemStateList, base)
-            base.copy(filteredCollectOrderListItemStateList = filteredCollectOrderListItemStateList)
-        }
+        // No-op: chips removed; DB-side filters only
     }
 
     private fun handleResetFilters() {
-        setState {
-            val base = copy(appliedFilterChipList = emptyList())
-            val filteredCollectOrderListItemStateList: List<CollectOrderListItemState> =
-                applyFiltersTo(collectOrderListItemStateList, base)
-            base.copy(filteredCollectOrderListItemStateList = filteredCollectOrderListItemStateList)
-        }
+        // No-op for now; could reset to default filters if needed
+        setState { copy(isFilterSheetOpen = false) }
     }
 
     private fun handleCancelSelection() {
@@ -392,7 +406,7 @@ class OrderListScreenViewModel(
                 }
             }
             val selected = (persisted - remove) union add
-            val visibleIds = filteredCollectOrderListItemStateList.map { it.invoiceNumber }.toSet()
+            val visibleIds = orders.map { it.invoiceNumber }.toSet()
             val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in selected }
             copy(
                 pendingAddIdSet = add,
@@ -405,7 +419,7 @@ class OrderListScreenViewModel(
 
     private fun handleSelectAll(checked: Boolean) {
         val current = viewState.value
-        val visibleIds = current.filteredCollectOrderListItemStateList.map { it.invoiceNumber }.toSet()
+        val visibleIds = current.orders.map { it.invoiceNumber }.toSet()
         setState {
             var add = pendingAddIdSet.toMutableSet()
             var remove = pendingRemoveIdSet.toMutableSet()
@@ -552,46 +566,6 @@ class OrderListScreenViewModel(
 
     }
 
-    private suspend fun observeOrderList() {
-
-        val queryFlow: Flow<OrderQuery> = QueryFlow.build(
-            input = viewState.map { viewState ->
-                OrderQuery(viewState.searchText)
-            },
-            debounce = SearchDebounce(millis = 150),
-            keySelector = { query ->
-                query.searchText
-            }
-        )
-
-        // TODO: Query stuff
-        queryFlow.flatMapLatest { query ->
-            getCollectOrderWithCustomerListFlowUseCase()
-        }.collectLatest { orders ->
-            val collectOrderStateList = orders.toListItemState()
-            setState {
-                val newStateBase = copy(
-                    collectOrderListItemStateList = collectOrderStateList,
-                    orderCount = orders.size,
-                    isLoading = false,
-                    error = null,
-                )
-                val filtered = applyFiltersTo(collectOrderStateList, newStateBase)
-                // Maintain selection consistency when list changes
-                val filteredIds = filtered.map { it.invoiceNumber }.toSet()
-                val newSelected =
-                    if (isMultiSelectionEnabled) selectedOrderIdList.intersect(filteredIds) else emptySet()
-                val allSelected =
-                    isMultiSelectionEnabled && filteredIds.isNotEmpty() && filteredIds.size == newSelected.size
-                newStateBase.copy(
-                    filteredCollectOrderListItemStateList = filtered,
-                    selectedOrderIdList = newSelected,
-                    isSelectAllChecked = allSelected
-                )
-            }
-        }
-
-    }
 
     // Suggestions pipeline: debounce user input and fetch lightweight suggestions from repository
     private suspend fun getOrderSearchSuggestionList() {
@@ -619,41 +593,5 @@ class OrderListScreenViewModel(
 
     }
 
-    // TODO: Fix AI slop?
-    private fun applyFiltersTo(
-        collectOrderListItemStateList: List<CollectOrderListItemState>,
-        state: OrderListScreenContract.State,
-    ): List<CollectOrderListItemState> {
-        // Base: customer type filter
-        var result =
-            collectOrderListItemStateList.filter { it.customerType in state.customerTypeFilterList }
-
-        // Apply chips as AND conditions
-        val chips = state.appliedFilterChipList
-        if (chips.isNotEmpty()) {
-            result = result.filter { order ->
-                chips.all { chip ->
-                    when (chip.type) {
-                        OrderSearchSuggestionType.NAME -> {
-                            order.customerName.contains(chip.value, ignoreCase = true)
-                        }
-
-                        OrderSearchSuggestionType.ORDER_NUMBER -> {
-                            order.invoiceNumber.contains(chip.value, ignoreCase = true) ||
-                                    (order.webOrderNumber?.contains(
-                                        chip.value,
-                                        ignoreCase = true
-                                    ) == true)
-                        }
-
-                        // No phone field on Order yet; keep as no-op so it doesn't exclude everything
-                        OrderSearchSuggestionType.PHONE -> true
-                    }
-                }
-            }
-        }
-
-        return result
-    }
 
 }

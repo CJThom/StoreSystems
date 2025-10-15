@@ -1,0 +1,17 @@
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * Observe the main orders list driven by filters (e.g., CustomerType) and sort.
+ * Thin wrapper around repository to keep VM decoupled and testable.
+ */
+class ObserveMainOrdersUseCase(
+    private val orderRepository: OrderRepository,
+) {
+    operator fun invoke(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>> =
+        orderRepository.observeMainOrders(query)
+}

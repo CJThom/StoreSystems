@@ -10,6 +10,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectO
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -38,6 +39,49 @@ interface CollectOrderDao {
     @Transaction
     @Query("SELECT * FROM collect_orders WHERE invoice_number IN (:invoiceNumbers) ORDER BY picked_at DESC")
     fun getCollectOrderWithCustomerRelationListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomerRelation>>
+
+    // Main list: filtered by customer types and sorted by option (placeholder for name sort)
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM collect_orders
+        WHERE invoice_number IN (
+           SELECT invoice_number FROM collect_order_customers
+           WHERE customer_type IN (:customerTypes)
+        )
+        ORDER BY
+          CASE WHEN :sort = 'TIME_WAITING_ASC' THEN picked_at END ASC,
+          CASE WHEN :sort = 'TIME_WAITING_DESC' THEN picked_at END DESC,
+          CASE WHEN :sort = 'NAME_ASC' THEN invoice_number END ASC,
+          CASE WHEN :sort = 'NAME_DESC' THEN invoice_number END DESC
+        """
+    )
+    fun observeOrdersForMainList(
+        customerTypes: Set<CustomerType>,
+        sort: String,
+    ): Flow<List<CollectOrderWithCustomerRelation>>
+
+    // Search list: filtered only by search text across order and customer fields
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM collect_orders
+        WHERE (
+          invoice_number LIKE :q ESCAPE '!' COLLATE NOCASE OR
+          (web_order_number IS NOT NULL AND web_order_number LIKE :q ESCAPE '!'
+            COLLATE NOCASE) OR
+          invoice_number IN (
+             SELECT invoice_number FROM collect_order_customers WHERE (
+               (account_name IS NOT NULL AND account_name LIKE :q ESCAPE '!' COLLATE NOCASE)
+               OR ((first_name || ' ' || last_name) LIKE :q ESCAPE '!' COLLATE NOCASE)
+               OR (phone IS NOT NULL AND phone LIKE :q ESCAPE '!' COLLATE NOCASE)
+             )
+          )
+        )
+        ORDER BY picked_at DESC
+        """
+    )
+    fun observeOrdersForSearch(q: String): Flow<List<CollectOrderWithCustomerRelation>>
 
 
     @Transaction

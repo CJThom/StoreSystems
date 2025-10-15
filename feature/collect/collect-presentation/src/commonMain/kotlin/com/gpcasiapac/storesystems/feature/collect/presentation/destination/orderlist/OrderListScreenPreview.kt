@@ -14,15 +14,14 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             val orders = sampleCollectOrderListItemStateList()
 
             val base = OrderListScreenContract.State(
-                collectOrderListItemStateList = orders,
-                filteredCollectOrderListItemStateList = orders,
+                orders = orders,
+                searchResults = emptyList(),
                 isLoading = false,
                 isRefreshing = false,
                 searchText = "",
                 isSearchActive = false,
                 orderSearchSuggestionList = emptyList(),
                 customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
-                appliedFilterChipList = emptyList(),
                 isFilterSheetOpen = false,
                 sortOption = SortOption.TIME_WAITING_DESC,
                 isMultiSelectionEnabled = false,
@@ -35,7 +34,6 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 orderCount = orders.size,
                 isSubmitting = false,
                 submittedCollectOrder = null,
-                searchHintResultList = emptyList(),
                 error = null,
             )
 
@@ -57,23 +55,17 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             )
 
             val withFilters = base.copy(
-                appliedFilterChipList = listOf(
-                    FilterChip(label = "INV-100", type = OrderSearchSuggestionType.ORDER_NUMBER),
-                    FilterChip(label = "Jane", type = OrderSearchSuggestionType.NAME),
-                ),
                 customerTypeFilterList = setOf(CustomerType.B2C),
-                filteredCollectOrderListItemStateList = orders.filter { it.customerType == CustomerType.B2C }
+                orders = orders.filter { it.customerType == CustomerType.B2C }
             )
 
             val loading = base.copy(
                 isLoading = true,
-                collectOrderListItemStateList = orders,
-                filteredCollectOrderListItemStateList = emptyList()
+                orders = orders
             )
             val refreshing = base.copy(
                 isRefreshing = true,
-                collectOrderListItemStateList = orders,
-                filteredCollectOrderListItemStateList = emptyList()
+                orders = orders
             )
             val error = base.copy(error = "Failed to load orders")
 

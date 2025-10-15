@@ -24,7 +24,10 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSugge
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderSummary
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.SearchQuery
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 
@@ -68,6 +71,26 @@ class OrderRepositoryImpl(
             collectOrderDao.getCollectOrderWithCustomerRelationListFlow(invoiceNumbers)
         }
         return flow.map { it.toDomain() }
+    }
+
+    // New: observe main orders via DB-side filter + sort
+    override fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>> {
+        val types = query.customerTypes
+        if (types.isEmpty()) return flowOf(emptyList())
+        val sort = query.sort.name
+        return collectOrderDao
+            .observeOrdersForMainList(types, sort)
+            .map { it.toDomain() }
+    }
+
+    // New: observe search orders via DB-side search only
+    override fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>> {
+        val text = query.text.trim()
+        if (text.isEmpty()) return flowOf(emptyList())
+        val q = "%${escapeForLike(text)}%"
+        return collectOrderDao
+            .observeOrdersForSearch(q)
+            .map { it.toDomain() }
     }
 
 
@@ -398,5 +421,12 @@ class OrderRepositoryImpl(
             return true
         }
         return false
+    }
+
+    private fun escapeForLike(input: String): String {
+        return input
+            .replace("!", "!!")
+            .replace("%", "!%")
+            .replace("_", "!_")
     }
 }
