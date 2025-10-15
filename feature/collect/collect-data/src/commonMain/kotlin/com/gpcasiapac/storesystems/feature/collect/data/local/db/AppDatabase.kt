@@ -50,8 +50,12 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<AppDatabase>
 ): AppDatabase {
-    return builder
+    val db = builder
         .fallbackToDestructiveMigration(true)
         .setQueryCoroutineContext(Dispatchers.IO)
+        .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
         .build()
+    // Note: We rely on Room to configure journal mode at open.
+    // Avoid manual warm-up here to keep commonMain platform-agnostic.
+    return db
 }

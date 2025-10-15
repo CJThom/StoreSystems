@@ -45,6 +45,9 @@ object OrderListScreenContract {
         val pendingAddIdSet: Set<String>,                                    // newly selected in this session (not yet persisted)
         val pendingRemoveIdSet: Set<String>,                                 // previously persisted but unchecked in this session (not yet removed)
 
+        // Draft bottom bar visibility
+        val isDraftBarVisible: Boolean,
+
         // Confirm dialog summary (computed from the three sets when needed)
         val confirmSummary: ConfirmSummary?,
 
@@ -112,6 +115,10 @@ object OrderListScreenContract {
         data object ConfirmSelectionStay : Event
         data object ConfirmSelectionProceed : Event
         data object DismissConfirmSelectionDialog : Event
+
+        // Draft bottom bar actions
+        data object DraftBarDeleteClicked : Event
+        data object DraftBarViewClicked : Event
 
         // Submissions / item actions
         data class SubmitOrder(val orderId: String) : Event

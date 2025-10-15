@@ -34,11 +34,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -59,7 +63,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
-
+//DraftBottomBar(
+//count = state.existingDraftIdSet.size,
+//onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
+//onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
+//)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListScreen(
@@ -68,6 +76,9 @@ fun OrderListScreen(
     effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
 ) {
+    // Shared animation flags and timings
+    val multiFlags = rememberMultiSelectTransitionFlags(state.isMultiSelectionEnabled)
+    val timings = DefaultFabBarTimings
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val lazyGridState = rememberLazyGridState()
@@ -121,10 +132,11 @@ fun OrderListScreen(
 
 
     Scaffold(
+
         containerColor = MaterialTheme.colorScheme.surface,
-        snackbarHost = {
-            SnackbarHost(snackbarHostState)
-        },
+//        snackbarHost = {
+//            SnackbarHost(snackbarHostState)
+//        },
         topBar = {
             MBoltAppBar(
                 scrollBehavior = scrollBehavior,
@@ -187,11 +199,35 @@ fun OrderListScreen(
                 }
             )
         },
+        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButton = {
+
+            AnimatedVisibility(
+                visible = !state.isMultiSelectionEnabled && state.isDraftBarVisible,
+                enter = fabEnterSpec(multiFlags, timings),
+                exit = fabExitSpec(timings)
+            ) {
+                DraftBottomBar(
+                    count = state.existingDraftIdSet.size,
+                    onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
+                    onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
+                )
+//                FloatingActionButton(onClick = { /* TODO: Draft action */ }) {
+//                    Icon(
+//                        imageVector = Icons.Default.CloudCircle,
+//                        contentDescription = "Drafts"
+//                    )
+//                }
+            }
+        },
         bottomBar = {
+            // Multi-select action bar
+
+
             AnimatedVisibility(
                 visible = state.isMultiSelectionEnabled,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
+                enter = barEnterSpec(multiFlags, timings),
+                exit = barExitSpec(timings)
             ) {
                 MultiSelectBottomBar(
                     selectedCount = state.selectedOrderIdList.size,
@@ -207,6 +243,7 @@ fun OrderListScreen(
                     }
                 )
             }
+
         },
     ) { padding ->
         LazyVerticalGrid(
@@ -348,4 +385,100 @@ fun OrderListScreenPreview(
             onOutcome = {}
         )
     }
+}
+
+
+// ---------------- Animation helpers (FAB <-> Bottom Bar coordination) ----------------
+private data class MultiSelectTransitionFlags(
+    val isEnteringMulti: Boolean,
+    val isExitingMulti: Boolean,
+)
+
+@androidx.compose.runtime.Composable
+private fun rememberMultiSelectTransitionFlags(isMultiSelectionEnabled: Boolean): MultiSelectTransitionFlags {
+    var previous by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(isMultiSelectionEnabled) }
+    val entering = !previous && isMultiSelectionEnabled
+    val exiting = previous && !isMultiSelectionEnabled
+    androidx.compose.runtime.LaunchedEffect(isMultiSelectionEnabled) { previous = isMultiSelectionEnabled }
+    return MultiSelectTransitionFlags(entering, exiting)
+}
+
+private data class FabBarTimings(
+    val fabEnterDuration: Int = 180,
+    val fabExitDuration: Int = 120,
+    val barEnterDuration: Int = 250,
+    val barExitDuration: Int = 200,
+    val staggerGap: Int = 50,
+    // Buffer so FAB waits even after bar fully exits (layout settles)
+    val extraDelayAfterBarExitForFab: Int = 200,
+    // Buffer so BAR waits even after fab fully exits (avoid FAB moving while BAR enters)
+    val extraDelayAfterFabExitForBar: Int = 400,
+)
+
+private val DefaultFabBarTimings = FabBarTimings()
+
+private fun fabEnterSpec(
+    flags: MultiSelectTransitionFlags,
+    t: FabBarTimings,
+): androidx.compose.animation.EnterTransition {
+    val delay = if (flags.isExitingMulti) t.barExitDuration + t.staggerGap + t.extraDelayAfterBarExitForFab else 0
+    return androidx.compose.animation.scaleIn(
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = t.fabEnterDuration,
+            delayMillis = delay
+        ),
+        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+    ) + androidx.compose.animation.fadeIn(
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = t.fabEnterDuration,
+            delayMillis = delay
+        )
+    )
+}
+
+private fun fabExitSpec(
+    t: FabBarTimings,
+): androidx.compose.animation.ExitTransition {
+    return androidx.compose.animation.scaleOut(
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = t.fabExitDuration),
+        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+    ) + androidx.compose.animation.fadeOut(
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = t.fabExitDuration)
+    )
+}
+
+private fun barEnterSpec(
+    flags: MultiSelectTransitionFlags,
+    t: FabBarTimings,
+): androidx.compose.animation.EnterTransition {
+    val delay = if (flags.isEnteringMulti) t.fabExitDuration + t.staggerGap + t.extraDelayAfterFabExitForBar else 0
+    return androidx.compose.animation.expandVertically(
+        expandFrom = androidx.compose.ui.Alignment.Bottom,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = t.barEnterDuration,
+            delayMillis = delay
+        )
+    ) + androidx.compose.animation.slideInVertically(
+        initialOffsetY = { it },
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = t.barEnterDuration,
+            delayMillis = delay
+        )
+    )
+}
+
+private fun barExitSpec(
+    t: FabBarTimings,
+): androidx.compose.animation.ExitTransition {
+    return androidx.compose.animation.shrinkVertically(
+        shrinkTowards = androidx.compose.ui.Alignment.Bottom,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = t.barExitDuration
+        )
+    ) + androidx.compose.animation.slideOutVertically(
+        targetOffsetY = { it },
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = t.barExitDuration
+        )
+    )
 }

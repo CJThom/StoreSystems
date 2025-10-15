@@ -66,6 +66,7 @@ class OrderListScreenViewModel(
             existingDraftIdSet = emptySet(),
             pendingAddIdSet = emptySet(),
             pendingRemoveIdSet = emptySet(),
+            isDraftBarVisible = false,
             confirmSummary = null,
             orderCount = 0,
             isSubmitting = false,
@@ -97,6 +98,21 @@ class OrderListScreenViewModel(
 
         viewModelScope.launch {
             getOrderSearchSuggestionList()
+        }
+
+        // Observe current draft selection to control the floating draft bar visibility
+        // Delay slightly to avoid racing Room's initial database configuration on first open.
+        viewModelScope.launch {
+            delay(150)
+            observeOrderSelectionUseCase(userRefId).collectLatest { persistedSet ->
+                setState {
+                    val showBar = persistedSet.isNotEmpty() && !isMultiSelectionEnabled
+                    copy(
+                        existingDraftIdSet = persistedSet,
+                        isDraftBarVisible = showBar
+                    )
+                }
+            }
         }
 
     }
@@ -220,6 +236,28 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.ToggleSelectionMode -> {
                 handleToggleSelectionMode(event.enabled)
+            }
+
+            is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
+                viewModelScope.launch {
+                    clearOrderSelectionUseCase(userRefId)
+                    setState {
+                        copy(
+                            isDraftBarVisible = false,
+                            existingDraftIdSet = emptySet(),
+                            selectedOrderIdList = if (!isMultiSelectionEnabled) emptySet() else selectedOrderIdList
+                        )
+                    }
+                }
+            }
+
+            is OrderListScreenContract.Event.DraftBarViewClicked -> {
+                val ids = viewState.value.existingDraftIdSet.toList()
+                if (ids.isNotEmpty()) {
+                    setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected(ids) }
+                } else {
+                    setEffect { OrderListScreenContract.Effect.ShowToast("No draft to view") }
+                }
             }
 
         }
