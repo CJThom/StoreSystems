@@ -23,7 +23,7 @@ kotlin {
 
             // MVI base and feature contracts
             implementation(projects.common.presentation)
-            implementation(projects.common.featureFlags)
+            implementation(project(":external:feature-flags:api"))
             implementation(projects.common.kotlin)
             implementation(projects.common.di)
             implementation(projects.feature.login.loginApi)

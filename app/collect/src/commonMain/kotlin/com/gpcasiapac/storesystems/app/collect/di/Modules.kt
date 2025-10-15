@@ -2,8 +2,7 @@ package com.gpcasiapac.storesystems.app.collect.di
 
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavigationViewModel
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample.CollectGlobalNavigationViewModel
-import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
-import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
+import com.gpcasiapac.storesystems.external.feature_flags.data.FeatureFlagsFactory
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
 import com.gpcasiapac.storesystems.core.identity.domain.di.IdentityDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.data.di.CollectDataModuleProvider
@@ -40,10 +39,7 @@ fun getAppModules(): List<Module> {
 // TODO: Idk what this is
 val appModule = module {
     single<FeatureFlags> {
-        object : FeatureFlags {
-            override fun <T> get(key: FlagKey<T>): T = key.default
-            override fun <T> observe(key: FlagKey<T>): Flow<T> = flowOf(key.default)
-        }
+        FeatureFlagsFactory.createNoOp()
     }
 }
 

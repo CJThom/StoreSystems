@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.feature.login.api
 
-import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
+import com.gpcasiapac.storesystems.external.feature_flags.api.FlagKey
 
 /**
  * Type-safe keys for toggling Login feature behavior.

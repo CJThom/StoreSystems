@@ -1,6 +1,5 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.navigation
 
-import com.gpcasiapac.storesystems.common.feature_flags.FeatureFlags
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination

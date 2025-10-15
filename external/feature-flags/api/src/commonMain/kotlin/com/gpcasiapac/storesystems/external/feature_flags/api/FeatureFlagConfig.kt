@@ -1,0 +1,3 @@
+package com.gpcasiapac.storesystems.external.feature_flags.api
+
+interface FeatureFlagConfig
