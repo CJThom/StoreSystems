@@ -1,52 +1,73 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
+import androidx.compose.material3.FloatingToolbarDefaults.exitAlwaysScrollBehavior
+import androidx.compose.material3.FloatingToolbarExitDirection.Companion.Bottom
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSearchBarState
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
@@ -63,12 +84,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.animation.togetherWith
+
 //DraftBottomBar(
 //count = state.existingDraftIdSet.size,
 //onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
 //onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
 //)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OrderListScreen(
     state: OrderListScreenContract.State,
@@ -77,8 +100,8 @@ fun OrderListScreen(
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
 ) {
     // Shared animation flags and timings
-    val multiFlags = rememberMultiSelectTransitionFlags(state.isMultiSelectionEnabled)
-    val timings = DefaultFabBarTimings
+//    val multiFlags = rememberMultiSelectTransitionFlags(state.isMultiSelectionEnabled)
+//    val timings = DefaultFabBarTimings
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val lazyGridState = rememberLazyGridState()
@@ -89,10 +112,12 @@ fun OrderListScreen(
     val scope = rememberCoroutineScope()
 
     // Search bar state management
-    val searchBarState = rememberSearchBarState(initialValue =if(state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
+    val searchBarState =
+        rememberSearchBarState(initialValue = if (state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
 
     // Dialog state for multi-select confirmation
-    val confirmDialogSpec = remember { mutableStateOf<OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
+    val confirmDialogSpec =
+        remember { mutableStateOf<OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -122,6 +147,7 @@ fun OrderListScreen(
                         searchBarState.animateToExpanded()
                     }
                 }
+
                 is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
                     confirmDialogSpec.value = effect
                 }
@@ -129,10 +155,10 @@ fun OrderListScreen(
         }
     }
 
-
-
+    val exitAlwaysScrollBehavior =
+        exitAlwaysScrollBehavior(exitDirection = Bottom)
     Scaffold(
-
+        modifier = Modifier.nestedScroll(exitAlwaysScrollBehavior),
         containerColor = MaterialTheme.colorScheme.surface,
 //        snackbarHost = {
 //            SnackbarHost(snackbarHostState)
@@ -180,7 +206,11 @@ fun OrderListScreen(
                                 onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
                             },
                             onExpandedChange = { isExpanded ->
-                                onEventSent(OrderListScreenContract.Event.SearchOnExpandedChange(isExpanded))
+                                onEventSent(
+                                    OrderListScreenContract.Event.SearchOnExpandedChange(
+                                        isExpanded
+                                    )
+                                )
                             },
                             onBackPressed = {
                                 onEventSent(OrderListScreenContract.Event.SearchBarBackPressed)
@@ -201,51 +231,62 @@ fun OrderListScreen(
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-
-            AnimatedVisibility(
-                visible = !state.isMultiSelectionEnabled && state.isDraftBarVisible,
-                enter = fabEnterSpec(multiFlags, timings),
-                exit = fabExitSpec(timings)
-            ) {
-                DraftBottomBar(
-                    count = state.existingDraftIdSet.size,
-                    onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
-                    onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
-                )
-//                FloatingActionButton(onClick = { /* TODO: Draft action */ }) {
-//                    Icon(
-//                        imageVector = Icons.Default.CloudCircle,
-//                        contentDescription = "Drafts"
-//                    )
-//                }
-            }
         },
         bottomBar = {
-            // Multi-select action bar
-
-
-            AnimatedVisibility(
-                visible = state.isMultiSelectionEnabled,
-                enter = barEnterSpec(multiFlags, timings),
-                exit = barExitSpec(timings)
-            ) {
-                MultiSelectBottomBar(
-                    selectedCount = state.selectedOrderIdList.size,
-                    isSelectAllChecked = state.isSelectAllChecked,
-                    onSelectAllToggle = { checked ->
-                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
-                    },
-                    onCancelClick = {
-                        onEventSent(OrderListScreenContract.Event.CancelSelection)
-                    },
-                    onSelectClick = {
-                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
-                    }
-                )
+            // Switch between Multi-select, Draft bar, or none using AnimatedContent
+            val bottomBarKey = when {
+                state.isMultiSelectionEnabled -> "MULTI"
+                !state.isMultiSelectionEnabled && state.isDraftBarVisible -> "DRAFT"
+                else -> "NONE"
             }
+            AnimatedContent(
+                targetState = bottomBarKey,
+                transitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = androidx.compose.animation.slideInVertically(
+                            initialOffsetY = { it }
+                        ),
+                        initialContentExit = slideOutVertically(
+                            targetOffsetY = { it }
+                        )
+                    )
+                },
+                label = "BottomBarTransition"
+            ) { key ->
+                when (key) {
+                    "MULTI" -> {
+                        MultiSelectBottomBar(
+                            selectedCount = state.selectedOrderIdList.size,
+                            isSelectAllChecked = state.isSelectAllChecked,
+                            onSelectAllToggle = { checked ->
+                                onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                            },
+                            onCancelClick = {
+                                onEventSent(OrderListScreenContract.Event.CancelSelection)
+                            },
+                            onSelectClick = {
+                                onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                            }
+                        )
+                    }
 
+                    "DRAFT" -> {
+                        DraftBottomBar(
+                            count = state.existingDraftIdSet.size,
+                            onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
+                            onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
+                        )
+                    }
+
+                    else -> {
+                        // No bottom bar
+                    }
+                }
+            }
         },
     ) { padding ->
+
+
         LazyVerticalGrid(
             state = lazyGridState,
             columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
@@ -287,7 +328,9 @@ fun OrderListScreen(
                     }
                 )
             }
-            items(items = state.collectOrderListItemStateList, key = { it.invoiceNumber }) { collectOrderState ->
+            items(
+                items = state.collectOrderListItemStateList,
+                key = { it.invoiceNumber }) { collectOrderState ->
                 CheckboxCard(
                     modifier = Modifier.padding(
                         horizontal = Dimens.Space.medium,
@@ -324,46 +367,47 @@ fun OrderListScreen(
                 }
             }
         }
+
         // Confirmation dialog
-    val spec = confirmDialogSpec.value
-    if (spec != null) {
-        val summary = state.confirmSummary
-        AlertDialog(
-            onDismissRequest = {
-                confirmDialogSpec.value = null
-                onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
-            },
-            title = { Text(spec.title) },
-            text = {
-                val msg = if (summary != null) {
-                    "Currently in draft: ${summary.currentCount}\n" +
-                    "To add: ${summary.addCount}\n" +
-                    "To remove: ${summary.removeCount}\n" +
-                    "After applying: ${summary.projectedCount}"
-                } else "Review your changes."
-                Text(msg)
-            },
-            confirmButton = {
-                TextButton(onClick = {
+        val spec = confirmDialogSpec.value
+        if (spec != null) {
+            val summary = state.confirmSummary
+            AlertDialog(
+                onDismissRequest = {
                     confirmDialogSpec.value = null
-                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
-                }) { Text(spec.proceedLabel) }
-            },
-            dismissButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+                },
+                title = { Text(spec.title) },
+                text = {
+                    val msg = if (summary != null) {
+                        "Currently in draft: ${summary.currentCount}\n" +
+                                "To add: ${summary.addCount}\n" +
+                                "To remove: ${summary.removeCount}\n" +
+                                "After applying: ${summary.projectedCount}"
+                    } else "Review your changes."
+                    Text(msg)
+                },
+                confirmButton = {
                     TextButton(onClick = {
                         confirmDialogSpec.value = null
-                        onEventSent(OrderListScreenContract.Event.ConfirmSelectionStay)
-                    }) { Text(spec.stayLabel) }
-                    TextButton(onClick = {
-                        confirmDialogSpec.value = null
-                        onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
-                    }) { Text(spec.cancelLabel) }
+                        onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
+                    }) { Text(spec.proceedLabel) }
+                },
+                dismissButton = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                        TextButton(onClick = {
+                            confirmDialogSpec.value = null
+                            onEventSent(OrderListScreenContract.Event.ConfirmSelectionStay)
+                        }) { Text(spec.stayLabel) }
+                        TextButton(onClick = {
+                            confirmDialogSpec.value = null
+                            onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+                        }) { Text(spec.cancelLabel) }
+                    }
                 }
-            }
-        )
+            )
+        }
     }
-}
 }
 
 @Preview(
@@ -394,12 +438,18 @@ private data class MultiSelectTransitionFlags(
     val isExitingMulti: Boolean,
 )
 
-@androidx.compose.runtime.Composable
+@Composable
 private fun rememberMultiSelectTransitionFlags(isMultiSelectionEnabled: Boolean): MultiSelectTransitionFlags {
-    var previous by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(isMultiSelectionEnabled) }
+    var previous by androidx.compose.runtime.remember {
+        mutableStateOf(
+            isMultiSelectionEnabled
+        )
+    }
     val entering = !previous && isMultiSelectionEnabled
     val exiting = previous && !isMultiSelectionEnabled
-    androidx.compose.runtime.LaunchedEffect(isMultiSelectionEnabled) { previous = isMultiSelectionEnabled }
+    androidx.compose.runtime.LaunchedEffect(isMultiSelectionEnabled) {
+        previous = isMultiSelectionEnabled
+    }
     return MultiSelectTransitionFlags(entering, exiting)
 }
 
@@ -421,15 +471,16 @@ private fun fabEnterSpec(
     flags: MultiSelectTransitionFlags,
     t: FabBarTimings,
 ): androidx.compose.animation.EnterTransition {
-    val delay = if (flags.isExitingMulti) t.barExitDuration + t.staggerGap + t.extraDelayAfterBarExitForFab else 0
+    val delay =
+        if (flags.isExitingMulti) t.barExitDuration + t.staggerGap + t.extraDelayAfterBarExitForFab else 0
     return androidx.compose.animation.scaleIn(
-        animationSpec = androidx.compose.animation.core.tween(
+        animationSpec = tween(
             durationMillis = t.fabEnterDuration,
             delayMillis = delay
         ),
         transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
     ) + androidx.compose.animation.fadeIn(
-        animationSpec = androidx.compose.animation.core.tween(
+        animationSpec = tween(
             durationMillis = t.fabEnterDuration,
             delayMillis = delay
         )
@@ -440,10 +491,10 @@ private fun fabExitSpec(
     t: FabBarTimings,
 ): androidx.compose.animation.ExitTransition {
     return androidx.compose.animation.scaleOut(
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = t.fabExitDuration),
+        animationSpec = tween(durationMillis = t.fabExitDuration),
         transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
     ) + androidx.compose.animation.fadeOut(
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = t.fabExitDuration)
+        animationSpec = tween(durationMillis = t.fabExitDuration)
     )
 }
 
@@ -451,16 +502,17 @@ private fun barEnterSpec(
     flags: MultiSelectTransitionFlags,
     t: FabBarTimings,
 ): androidx.compose.animation.EnterTransition {
-    val delay = if (flags.isEnteringMulti) t.fabExitDuration + t.staggerGap + t.extraDelayAfterFabExitForBar else 0
+    val delay =
+        if (flags.isEnteringMulti) t.fabExitDuration + t.staggerGap + t.extraDelayAfterFabExitForBar else 0
     return androidx.compose.animation.expandVertically(
-        expandFrom = androidx.compose.ui.Alignment.Bottom,
-        animationSpec = androidx.compose.animation.core.tween(
+        expandFrom = Alignment.Bottom,
+        animationSpec = tween(
             durationMillis = t.barEnterDuration,
             delayMillis = delay
         )
     ) + androidx.compose.animation.slideInVertically(
         initialOffsetY = { it },
-        animationSpec = androidx.compose.animation.core.tween(
+        animationSpec = tween(
             durationMillis = t.barEnterDuration,
             delayMillis = delay
         )
@@ -471,13 +523,13 @@ private fun barExitSpec(
     t: FabBarTimings,
 ): androidx.compose.animation.ExitTransition {
     return androidx.compose.animation.shrinkVertically(
-        shrinkTowards = androidx.compose.ui.Alignment.Bottom,
-        animationSpec = androidx.compose.animation.core.tween(
+        shrinkTowards = Alignment.Bottom,
+        animationSpec = tween(
             durationMillis = t.barExitDuration
         )
-    ) + androidx.compose.animation.slideOutVertically(
+    ) + slideOutVertically(
         targetOffsetY = { it },
-        animationSpec = androidx.compose.animation.core.tween(
+        animationSpec = tween(
             durationMillis = t.barExitDuration
         )
     )
