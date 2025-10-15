@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.entry
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
@@ -119,7 +120,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
             }
 
             entry<CollectFeatureDestination.OrderFulfilment>(
-                metadata = ListDetailSceneStrategy.detailPane(),
+                metadata = ListDetailSceneStrategy.listPane(),
             ) {
                 OrderFulfilmentScreenDestination { effect ->
                     when (effect) {

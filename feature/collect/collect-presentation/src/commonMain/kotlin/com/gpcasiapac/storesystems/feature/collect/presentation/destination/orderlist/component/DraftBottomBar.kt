@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -46,10 +46,10 @@ fun DraftBottomBar(
     ) {
         HorizontalFloatingToolbar(
             modifier = Modifier
-                .clickable(true, onClick = onView)
                 .align(Alignment.Center)
                 .navigationBarsPadding()
-                .padding(Dimens.Space.medium),
+                .padding(Dimens.Space.medium)
+                .clickable(true, onClick = onView),
             expanded = true,
             colors = FloatingToolbarDefaults.standardFloatingToolbarColors(
                 toolbarContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

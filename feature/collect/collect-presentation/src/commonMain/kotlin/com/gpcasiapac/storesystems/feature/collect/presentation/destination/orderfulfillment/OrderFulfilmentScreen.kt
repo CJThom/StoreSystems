@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,7 +25,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -38,7 +36,6 @@ import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.OrderDetailsLarge
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
@@ -119,73 +116,29 @@ fun OrderFulfilmentScreen(
             SnackbarHost(snackbarHostState)
         }
     ) { padding ->
-        if (useColumns) {
-            // Single-column, scrollable layout for smaller screens
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(padding)
-                    .animateContentSize(),
-                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-            ) {
-                OrderDetailsContent(
-                    state = state,
-                    onEventSent = onEventSent
-                )
-                HorizontalDivider()
-                ActionsContent(
-                    state = state,
-                    onEventSent = onEventSent
-                )
-                HorizontalDivider()
-                ActionButton(
-                    modifier = Modifier.padding(Dimens.Space.medium),
-                    title = { Text(text = "Confirm") },
-                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
-                )
-            }
-        } else {
-            // Two-column layout for larger screens
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .animateContentSize(),
-            ) {
-                // Left, scrollable column for order details
-                Column(
-                    modifier = Modifier
-                        .weight(0.60f)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    OrderDetailsContent(
-                        state = state,
-                        onEventSent = onEventSent
-                    )
-                }
-
-                VerticalDivider()
-
-                // Right, scrollable column for actions
-                Column(
-                    modifier = Modifier
-                        .weight(0.40f)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-                ) {
-                    ActionsContent(
-                        state = state,
-                        onEventSent = onEventSent
-                    )
-                    HorizontalDivider()
-                    ActionButton(
-                        modifier = Modifier.padding(Dimens.Space.medium),
-                        title = { Text(text = "Confirm") },
-                        onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
-                    )
-                }
-            }
+        // Single-column, scrollable layout for smaller screens
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(padding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        ) {
+            OrderDetailsContent(
+                state = state,
+                onEventSent = onEventSent
+            )
+            HorizontalDivider()
+            ActionsContent(
+                state = state,
+                onEventSent = onEventSent
+            )
+            HorizontalDivider()
+            ActionButton(
+                modifier = Modifier.padding(Dimens.Space.medium),
+                title = { Text(text = "Confirm") },
+                onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
+            )
         }
     }
 
