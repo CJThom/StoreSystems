@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.app.superapp.di
 import com.gpcasiapac.storesystems.app.superapp.navigation.SuperAppShellViewModel
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabsHostViewModel
 import com.gpcasiapac.storesystems.app.superapp.navigation.globalpatternexample.SuperGlobalNavigationViewModel
+import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.external.feature_flags.data.FeatureFlagsFactory
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
 import com.gpcasiapac.storesystems.core.identity.domain.di.IdentityDomainModuleProvider

@@ -1,4 +1,7 @@
-import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlagService
+package com.gpcasiapac.storesystems.external.feature_flags.data.internal
+
+import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
+import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlagConfig
 import com.gpcasiapac.storesystems.external.feature_flags.api.FlagKey
 import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContext
 import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContextBuilder
@@ -12,22 +15,36 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-class LDFeatureFlagServiceImpl : FeatureFlagService<LDFeatureConfig> {
+/**
+ * JVM/Desktop implementation of LaunchDarkly feature flags using LaunchDarkly Server SDK.
+ */
+internal actual class LaunchDarklyFeatureFlags actual constructor(
+    private val config: FeatureFlagConfig.LaunchDarkly,
+    private val contextBuilder: MultiContextBuilder.() -> Unit
+) : FeatureFlags {
 
     private var ldClient: LDClient? = null
     private var ldContext: LDContext? = null
     private var ldConfig: LDConfig? = null
+    
+    init {
+        initialize()
+    }
 
-    override fun initialize(
-        config: LDFeatureConfig,
-        contextBuilder: MultiContextBuilder.() -> Unit
-    ): Boolean {
+    private fun initialize(): Boolean {
         ldConfig = LDConfig.Builder()
             .build()
         val multiContext = MultiContextBuilder().apply(contextBuilder).build()
         ldContext = createContext(multiContext)
+        
+        val ldFeatureConfig = LDFeatureConfig(
+            apiKey = config.apiKey,
+            initializationTimeoutMs = config.initializationTimeoutMs,
+            environment = config.environment
+        )
+        
         ldClient = LDClient(
-            config.apiKey, ldConfig,
+            ldFeatureConfig.apiKey, ldConfig,
         )
         return ldClient != null && ldClient!!.isInitialized
     }
@@ -70,29 +87,29 @@ class LDFeatureFlagServiceImpl : FeatureFlagService<LDFeatureConfig> {
         }
     }
 
-    override fun getFeatureBoolean(key: FlagKey<Boolean>): Boolean {
+    override fun isEnabled(key: FlagKey<Boolean>): Boolean {
         if (ldContext == null) return key.default
         return ldClient?.boolVariation(key.name, ldContext, key.default) ?: return key.default
     }
 
-    override fun getFeatureString(key: FlagKey<String>): String {
+    override fun getString(key: FlagKey<String>): String {
         if (ldContext == null) return key.default
         return ldClient?.stringVariation(key.name, ldContext, key.default) ?: return key.default
     }
 
-    override fun getFeatureInt(key: FlagKey<Int>): Int {
+    override fun getInt(key: FlagKey<Int>): Int {
         if (ldContext == null) return key.default
         return ldClient?.intVariation(key.name, ldContext, key.default) ?: return key.default
     }
 
-    override fun getFeatureDouble(key: FlagKey<Double>): Double {
+    override fun getDouble(key: FlagKey<Double>): Double {
         if (ldContext == null) return key.default
         return ldClient?.doubleVariation(key.name, ldContext, key.default) ?: return key.default
     }
 
-    override fun observeFeatureString(key: FlagKey<String>): Flow<String> = callbackFlow {
+    override fun observeBoolean(key: FlagKey<Boolean>): Flow<Boolean> = callbackFlow {
         val listener = FlagChangeListener {
-            val actualValue = getFeatureString(key)
+            val actualValue = isEnabled(key)
             trySend(actualValue)
         }
         ldClient?.flagTracker?.addFlagChangeListener(listener)
@@ -101,9 +118,9 @@ class LDFeatureFlagServiceImpl : FeatureFlagService<LDFeatureConfig> {
         }
     }
 
-    override fun observeFeatureInt(key: FlagKey<Int>): Flow<Int> = callbackFlow {
+    override fun observeString(key: FlagKey<String>): Flow<String> = callbackFlow {
         val listener = FlagChangeListener {
-            val actualValue = getFeatureInt(key)
+            val actualValue = getString(key)
             trySend(actualValue)
         }
         ldClient?.flagTracker?.addFlagChangeListener(listener)
@@ -112,9 +129,9 @@ class LDFeatureFlagServiceImpl : FeatureFlagService<LDFeatureConfig> {
         }
     }
 
-    override fun observeFeatureDouble(key: FlagKey<Double>): Flow<Double> = callbackFlow {
+    override fun observeInt(key: FlagKey<Int>): Flow<Int> = callbackFlow {
         val listener = FlagChangeListener {
-            val actualValue = getFeatureDouble(key)
+            val actualValue = getInt(key)
             trySend(actualValue)
         }
         ldClient?.flagTracker?.addFlagChangeListener(listener)
@@ -123,10 +140,9 @@ class LDFeatureFlagServiceImpl : FeatureFlagService<LDFeatureConfig> {
         }
     }
 
-
-    override fun observeFeatureBoolean(key: FlagKey<Boolean>): Flow<Boolean> = callbackFlow {
+    override fun observeDouble(key: FlagKey<Double>): Flow<Double> = callbackFlow {
         val listener = FlagChangeListener {
-            val actualValue = getFeatureBoolean(key)
+            val actualValue = getDouble(key)
             trySend(actualValue)
         }
         ldClient?.flagTracker?.addFlagChangeListener(listener)

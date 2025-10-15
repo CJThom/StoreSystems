@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.app.collect.di
 
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavigationViewModel
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample.CollectGlobalNavigationViewModel
+import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.external.feature_flags.data.FeatureFlagsFactory
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
 import com.gpcasiapac.storesystems.core.identity.domain.di.IdentityDomainModuleProvider
