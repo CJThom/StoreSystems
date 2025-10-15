@@ -5,9 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FabPosition
@@ -33,8 +30,6 @@ import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTopAppBarState
@@ -67,6 +62,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.DraftBottomBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 
 //DraftBottomBar(
 //count = state.existingDraftIdSet.size,
@@ -350,42 +346,27 @@ fun OrderListScreen(
             }
         }
 
+
         // Confirmation dialog
         val spec = confirmDialogSpec.value
         if (spec != null) {
-            val summary = state.confirmSummary
-            AlertDialog(
-                onDismissRequest = {
+            MultiSelectConfirmDialog(
+                spec = spec,
+                onProceed = {
+                    confirmDialogSpec.value = null
+                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
+                },
+                onSelect = {
+                    confirmDialogSpec.value = null
+                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionStay)
+                },
+                onCancel = {
                     confirmDialogSpec.value = null
                     onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
                 },
-                title = { Text(spec.title) },
-                text = {
-                    val msg = if (summary != null) {
-                        "Currently in draft: ${summary.currentCount}\n" +
-                                "To add: ${summary.addCount}\n" +
-                                "To remove: ${summary.removeCount}\n" +
-                                "After applying: ${summary.projectedCount}"
-                    } else "Review your changes."
-                    Text(msg)
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        confirmDialogSpec.value = null
-                        onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
-                    }) { Text(spec.proceedLabel) }
-                },
-                dismissButton = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
-                        TextButton(onClick = {
-                            confirmDialogSpec.value = null
-                            onEventSent(OrderListScreenContract.Event.ConfirmSelectionStay)
-                        }) { Text(spec.stayLabel) }
-                        TextButton(onClick = {
-                            confirmDialogSpec.value = null
-                            onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
-                        }) { Text(spec.cancelLabel) }
-                    }
+                onDismissRequest = {
+                    confirmDialogSpec.value = null
+                    onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
                 }
             )
         }

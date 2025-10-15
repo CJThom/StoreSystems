@@ -48,9 +48,6 @@ object OrderListScreenContract {
         // Draft bottom bar visibility
         val isDraftBarVisible: Boolean,
 
-        // Confirm dialog summary (computed from the three sets when needed)
-        val confirmSummary: ConfirmSummary?,
-
         // Derived / info
         val orderCount: Int,                                                    // number of orders ready to collect (from DB or filtered list)
 
@@ -65,15 +62,6 @@ object OrderListScreenContract {
         val error: String?,
     ) : ViewState
 
-    @Immutable
-    data class ConfirmSummary(
-        val currentCount: Int,
-        val addCount: Int,
-        val removeCount: Int,
-        val projectedCount: Int,
-        val addedPreview: List<String> = emptyList(),
-        val removedPreview: List<String> = emptyList()
-    )
 
     sealed interface Event : ViewEvent {
         // User-driven refresh (initial load happens in onStart)
@@ -144,11 +132,11 @@ object OrderListScreenContract {
         data object ExpandSearchBar : Effect
         data object CollapseSearchBar : Effect
 
-        // Multi-select confirmation dialog trigger (content comes from State.confirmSummary)
+        // Multi-select confirmation dialog trigger
         data class ShowMultiSelectConfirmDialog(
             val title: String = "Confirm selection",
             val cancelLabel: String = "Cancel",
-            val stayLabel: String = "Select",
+            val selectOnlyLabel: String = "Select only",
             val proceedLabel: String = "Select and proceed",
         ) : Effect
 

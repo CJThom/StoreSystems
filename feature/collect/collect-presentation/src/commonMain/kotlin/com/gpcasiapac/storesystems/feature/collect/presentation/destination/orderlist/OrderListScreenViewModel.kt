@@ -67,7 +67,6 @@ class OrderListScreenViewModel(
             pendingAddIdSet = emptySet(),
             pendingRemoveIdSet = emptySet(),
             isDraftBarVisible = false,
-            confirmSummary = null,
             orderCount = 0,
             isSubmitting = false,
             submittedCollectOrder = null,
@@ -205,7 +204,7 @@ class OrderListScreenViewModel(
                 onConfirmSelectionProceed()
             }
             is OrderListScreenContract.Event.DismissConfirmSelectionDialog -> {
-                setState { copy(confirmSummary = null) }
+                // no-op
             }
 
             is OrderListScreenContract.Event.DismissSnackbar -> {
@@ -366,29 +365,11 @@ class OrderListScreenViewModel(
                 isSelectAllChecked = false,
                 pendingAddIdSet = emptySet(),
                 pendingRemoveIdSet = emptySet(),
-                confirmSummary = null
             )
         }
     }
 
     private fun handleConfirmSelection() {
-        val s = viewState.value
-        val current = s.existingDraftIdSet.size
-        val add = s.pendingAddIdSet.size
-        val remove = s.pendingRemoveIdSet.size
-        val projected = current - remove + add
-        setState {
-            copy(
-                confirmSummary = OrderListScreenContract.ConfirmSummary(
-                    currentCount = current,
-                    addCount = add,
-                    removeCount = remove,
-                    projectedCount = projected,
-                    addedPreview = s.pendingAddIdSet.take(5),
-                    removedPreview = s.pendingRemoveIdSet.take(5),
-                )
-            )
-        }
         setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
     }
 
@@ -473,7 +454,6 @@ class OrderListScreenViewModel(
         val toRemove = s.pendingRemoveIdSet
         if (toAdd.isEmpty() && toRemove.isEmpty()) {
             setEffect { OrderListScreenContract.Effect.ShowToast("Nothing to update") }
-            setState { copy(confirmSummary = null) }
             return
         }
         viewModelScope.launch {
@@ -489,8 +469,7 @@ class OrderListScreenViewModel(
                     pendingAddIdSet = emptySet(),
                     pendingRemoveIdSet = emptySet(),
                     selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false,
-                    confirmSummary = null
+                    isSelectAllChecked = false
                 )
             }
             setEffect { OrderListScreenContract.Effect.ShowToast("Selection saved") }
@@ -512,8 +491,7 @@ class OrderListScreenViewModel(
                     pendingAddIdSet = emptySet(),
                     pendingRemoveIdSet = emptySet(),
                     selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false,
-                    confirmSummary = null
+                    isSelectAllChecked = false
                 )
             }
             setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
@@ -531,8 +509,7 @@ class OrderListScreenViewModel(
                         pendingAddIdSet = emptySet(),
                         pendingRemoveIdSet = emptySet(),
                         selectedOrderIdList = persisted,
-                        isSelectAllChecked = false,
-                        confirmSummary = null
+                        isSelectAllChecked = false
                     )
                 }
             }
@@ -543,8 +520,7 @@ class OrderListScreenViewModel(
                     selectedOrderIdList = emptySet(),
                     isSelectAllChecked = false,
                     pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet(),
-                    confirmSummary = null
+                    pendingRemoveIdSet = emptySet()
                 )
             }
         }

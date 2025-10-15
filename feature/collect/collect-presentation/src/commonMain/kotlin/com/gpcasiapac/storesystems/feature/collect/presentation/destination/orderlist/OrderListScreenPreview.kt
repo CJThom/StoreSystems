@@ -32,7 +32,6 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 pendingAddIdSet = emptySet(),
                 pendingRemoveIdSet = emptySet(),
                 isDraftBarVisible = false,
-                confirmSummary = null,
                 orderCount = orders.size,
                 isSubmitting = false,
                 submittedCollectOrder = null,
