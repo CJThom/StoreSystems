@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -32,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
@@ -42,6 +50,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Heade
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
+import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -124,7 +133,7 @@ fun OrderFulfilmentScreen(
                 .padding(padding),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
-            OrderDetailsContent(
+            MultiOrderListSection(
                 state = state,
                 onEventSent = onEventSent
             )
@@ -180,16 +189,6 @@ fun OrderFulfilmentScreen(
     }
 }
 
-@Composable
-private fun OrderDetailsContent(
-    state: OrderFulfilmentScreenContract.State,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
-) {
-    MultiOrderListSection(
-        state = state,
-        onEventSent = onEventSent
-    )
-}
 
 @Composable
 private fun ActionsContent(
@@ -308,31 +307,73 @@ private fun MultiOrderListSection(
         )
     )
 
-    state.collectOrderListItemStateList.forEach { collectOrderState ->
-        OutlinedCard(
-            // Add padding per item for grid spacing
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.Space.medium),
-            onClick = {
-                onEventSent(
-                    OrderFulfilmentScreenContract.Event.OrderClicked(
-                        collectOrderState.invoiceNumber
+    val items = state.collectOrderListItemStateList
+    if (items.isEmpty()) {
+        EmptyOrderPlaceholderCard()
+    } else {
+        items.forEach { collectOrderState ->
+            CheckboxCard(
+                // Add padding per item for grid spacing
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.Space.medium),
+                isChecked = false,
+                isCheckable = false,
+                onCheckedChange = {
+
+                },
+                onClick = {
+                    onEventSent(
+                        OrderFulfilmentScreenContract.Event.OrderClicked(
+                            collectOrderState.invoiceNumber
+                        )
                     )
+                }
+            ) {
+                CollectOrderDetails(
+                    customerName = collectOrderState.customerName,
+                    customerType = collectOrderState.customerType,
+                    invoiceNumber = collectOrderState.invoiceNumber,
+                    webOrderNumber = collectOrderState.webOrderNumber,
+                    pickedAt = collectOrderState.pickedAt,
+                    isLoading = state.isLoading,
+                    contendPadding = PaddingValues(Dimens.Space.medium),
                 )
             }
-        ) {
-            CollectOrderDetails(
-                customerName = collectOrderState.customerName,
-                customerType = collectOrderState.customerType,
-                invoiceNumber = collectOrderState.invoiceNumber,
-                webOrderNumber = collectOrderState.webOrderNumber,
-                pickedAt = collectOrderState.pickedAt,
-                isLoading = state.isLoading,
-                contendPadding = PaddingValues(Dimens.Space.medium),
-            )
         }
     }
+}
+
+// Placeholder card shown when there are no orders
+@Composable
+private fun EmptyOrderPlaceholderCard() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(Dimens.Space.medium)
+            .heightIn(min = 100.dp)
+            .dashedBorder(color = MaterialTheme.colorScheme.outlineVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Scan to add",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+// Utility to draw a simple dashed rectangle border
+private fun Modifier.dashedBorder(
+    color: androidx.compose.ui.graphics.Color,
+    strokeWidthPx: Float = 2f,
+    intervals: FloatArray = floatArrayOf(12f, 8f)
+): Modifier = this.drawBehind {
+    val stroke = Stroke(
+        width = strokeWidthPx,
+        pathEffect = PathEffect.dashPathEffect(intervals, 0f)
+    )
+    drawRect(color = color, style = stroke)
 }
 
 
@@ -355,3 +396,4 @@ private fun OrderFulfilmentScreenPreview(
             onOutcome = {})
     }
 }
+
