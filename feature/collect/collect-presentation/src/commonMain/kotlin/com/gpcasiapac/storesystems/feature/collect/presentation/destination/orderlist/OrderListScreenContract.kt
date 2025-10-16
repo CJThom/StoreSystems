@@ -18,16 +18,10 @@ object OrderListScreenContract {
     data class State(
         // Data
         val orders: List<CollectOrderListItemState>,
-        val searchResults: List<CollectOrderListItemState>,
 
         // Loading / refreshing
         val isLoading: Boolean,
         val isRefreshing: Boolean,
-
-        // Search
-        val searchText: String,
-        val isSearchActive: Boolean,                                        // search bar expanded with suggestions
-        val orderSearchSuggestionList: List<OrderSearchSuggestion>,                // the overlay list items
 
         // Filters & sort
         val customerTypeFilterList: Set<CustomerType>,
@@ -70,15 +64,6 @@ object OrderListScreenContract {
 
         // Errors
         data object ClearError : Event
-
-        // Search & suggestions
-        data class SearchTextChanged(val text: String) : Event
-        data class SearchOnExpandedChange(val expand: Boolean) : Event
-        data object ClearSearch : Event
-        data object SearchBarBackPressed : Event
-        data class SearchResultClicked(val result: String) : Event
-        data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
-
 
         // Filters & sort
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event
@@ -124,10 +109,6 @@ object OrderListScreenContract {
         data class Haptic(val type: HapticType) : Effect
         data class OpenDialer(val phoneNumber: String) : Effect
         data class CopyToClipboard(val label: String, val text: String) : Effect
-        
-        // Search bar animations
-        data object ExpandSearchBar : Effect
-        data object CollapseSearchBar : Effect
 
         // Multi-select confirmation dialog trigger
         data class ShowMultiSelectConfirmDialog(

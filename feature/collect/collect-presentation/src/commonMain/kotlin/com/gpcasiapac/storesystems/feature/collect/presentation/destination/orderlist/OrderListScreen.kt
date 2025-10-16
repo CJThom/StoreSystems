@@ -82,7 +82,9 @@ import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 @Composable
 fun OrderListScreen(
     state: OrderListScreenContract.State,
+    searchState: com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.State,
     onEventSent: (event: OrderListScreenContract.Event) -> Unit,
+    onSearchEventSent: (com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event) -> Unit,
     effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
 ) {
@@ -110,8 +112,18 @@ fun OrderListScreen(
 
 
     // Search bar state management
-    val searchBarState =
-        rememberSearchBarState(initialValue = if (state.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
+    val searchBarState = rememberSearchBarState(initialValue = if (searchState.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
+
+    // Keep search bar animation in sync with SearchViewModel
+    LaunchedEffect(searchState.isSearchActive) {
+        scope.launch {
+            if (searchState.isSearchActive) {
+                searchBarState.animateToExpanded()
+            } else {
+                searchBarState.animateToCollapsed()
+            }
+        }
+    }
 
     // Dialog state for multi-select confirmation
     val confirmDialogSpec =
@@ -134,17 +146,6 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.Haptic -> TODO()
                 is OrderListScreenContract.Effect.OpenDialer -> TODO()
                 is OrderListScreenContract.Effect.ShowSnackbar -> TODO()
-                is OrderListScreenContract.Effect.CollapseSearchBar -> {
-                    scope.launch {
-                        searchBarState.animateToCollapsed()
-                    }
-                }
-
-                is OrderListScreenContract.Effect.ExpandSearchBar -> {
-                    scope.launch {
-                        searchBarState.animateToExpanded()
-                    }
-                }
 
                 is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
                     confirmDialogSpec.value = effect
@@ -212,32 +213,28 @@ fun OrderListScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MBoltSearchBar(
-                            query = state.searchText,
+                            query = searchState.searchText,
                             onQueryChange = { query ->
-                                onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
+                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchTextChanged(query))
                             },
                             searchBarState = searchBarState,
                             onSearch = { query ->
-                                onEventSent(OrderListScreenContract.Event.SearchTextChanged(query))
+                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchTextChanged(query))
                             },
                             onExpandedChange = { isExpanded ->
-                                onEventSent(
-                                    OrderListScreenContract.Event.SearchOnExpandedChange(
-                                        isExpanded
-                                    )
-                                )
+                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchOnExpandedChange(isExpanded))
                             },
                             onBackPressed = {
-                                onEventSent(OrderListScreenContract.Event.SearchBarBackPressed)
+                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchBarBackPressed)
                             },
                             onResultClick = { result ->
-                                onEventSent(OrderListScreenContract.Event.SearchResultClicked(result))
+                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchResultClicked(result))
                             },
                             onClearClick = {
-                                onEventSent(OrderListScreenContract.Event.ClearSearch)
+                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.ClearSearch)
                             },
-                            searchResults = state.orderSearchSuggestionList.map { it.text },
-                            searchOrderItems = state.searchResults,
+                            searchResults = searchState.orderSearchSuggestionList.map { it.text },
+                            searchOrderItems = searchState.searchResults,
                             isMultiSelectionEnabled = state.isMultiSelectionEnabled,
                             selectedOrderIdList = state.selectedOrderIdList,
                             isSelectAllChecked = state.isSelectAllChecked,
@@ -439,7 +436,9 @@ fun OrderListScreenPreview(
     GPCTheme {
         OrderListScreen(
             state = state,
+            searchState = com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.State.empty(),
             onEventSent = {},
+            onSearchEventSent = {},
             effectFlow = null,
             onOutcome = {}
         )

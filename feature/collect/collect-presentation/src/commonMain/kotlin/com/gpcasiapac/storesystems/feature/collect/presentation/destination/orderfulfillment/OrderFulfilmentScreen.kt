@@ -66,6 +66,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
@@ -144,7 +145,10 @@ fun OrderFulfilmentScreen(
         ) {
             MultiOrderListSection(
                 state = state,
-                onEventSent = onEventSent
+                onEventSent = onEventSent,
+                onLookupClick = {
+                // TODO:
+                }
             )
             HorizontalDivider()
             ActionsContent(
@@ -304,7 +308,8 @@ private fun CollectionTypeContent(
 @Composable
 private fun MultiOrderListSection(
     state: OrderFulfilmentScreenContract.State,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    onLookupClick: () -> Unit
 ) {
     HeaderMedium(
         text = "Order List",
@@ -318,7 +323,7 @@ private fun MultiOrderListSection(
 
     val items = state.collectOrderListItemStateList
     if (items.isEmpty()) {
-        EmptyOrderPlaceholderCard()
+        EmptyOrderPlaceholderCard(onLookupClick)
     } else {
         items.forEach { collectOrderState ->
             CheckboxCard(
@@ -357,8 +362,9 @@ private fun MultiOrderListSection(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun EmptyOrderPlaceholderCard(
+    onLookupClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
 ) {
     Box(
         modifier = modifier
@@ -386,7 +392,7 @@ private fun EmptyOrderPlaceholderCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedButton(
-                onClick = { /* TODO: Lookup action */ },
+                onClick = onLookupClick,
                 modifier = Modifier
                     .placeholder(isLoading)
                     .height(ButtonDefaults.ExtraSmallContainerHeight),
@@ -438,3 +444,111 @@ private fun OrderFulfilmentScreenPreview(
     }
 }
 
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+fun OrderFulfilmentScreen(
+    state: OrderFulfilmentScreenContract.State,
+    searchState: SearchContract.State,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    onSearchEventSent: (event: SearchContract.Event) -> Unit,
+    effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
+    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
+) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val useColumns = !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+
+    val dialogSpec = remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
+
+    LaunchedEffect(effectFlow) {
+        effectFlow?.collectLatest { effect ->
+            when (effect) {
+                is OrderFulfilmentScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
+                    effect.message, duration = SnackbarDuration.Short
+                )
+                is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
+                    effect.error, duration = SnackbarDuration.Long
+                )
+                is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
+                    dialogSpec.value = effect
+                }
+                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            MBoltAppBar(
+                title = { TopBarTitle("Order Confirmation") },
+                navigationIcon = {
+                    IconButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Back) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(padding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        ) {
+            MultiOrderListSection(
+                state = state,
+                onEventSent = onEventSent,
+                onLookupClick = { onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true)) }
+            )
+            HorizontalDivider()
+            ActionsContent(
+                state = state,
+                onEventSent = onEventSent
+            )
+            HorizontalDivider()
+            ActionButton(
+                modifier = Modifier.padding(Dimens.Space.medium),
+                title = { Text(text = "Confirm") },
+                onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
+            )
+        }
+    }
+
+    val spec = dialogSpec.value
+    if (spec != null) {
+        AlertDialog(
+            onDismissRequest = {
+                dialogSpec.value = null
+                onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
+            },
+            title = { Text(spec.title) },
+            text = { Text(spec.message) },
+            confirmButton = {
+                TextButton(onClick = {
+                    dialogSpec.value = null
+                    onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
+                }) { Text(spec.saveLabel) }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    TextButton(onClick = {
+                        dialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
+                    }) { Text(spec.discardLabel) }
+                    TextButton(onClick = {
+                        dialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
+                    }) { Text(spec.cancelLabel) }
+                }
+            }
+        )
+    }
+}
