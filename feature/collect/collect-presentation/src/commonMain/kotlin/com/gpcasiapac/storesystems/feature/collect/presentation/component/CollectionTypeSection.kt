@@ -125,7 +125,7 @@ fun CollectionTypeSectionAccountPreview() {
             CollectionTypeSection(
                 value = CollectingType.ACCOUNT,
                 onValueChange = {},
-                title = "Who's Collecting",
+                title = "Who's Collecting?",
                 optionList = listOf(
                     CollectionTypeSectionDisplayState(
                         collectingType = CollectingType.STANDARD,
@@ -175,7 +175,7 @@ fun CollectionTypeSectionCourierPreview() {
             CollectionTypeSection(
                 value = CollectingType.COURIER,
                 onValueChange = {},
-                title = "Who's Collecting",
+                title = "Who's Collecting?",
                 optionList = listOf(
                     CollectionTypeSectionDisplayState(
                         collectingType = CollectingType.STANDARD,

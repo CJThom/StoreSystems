@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">My awesome app</string>
     <string name="title">Some title</string>
-    <string name="who_is_collecting">Who's Collecting</string>
+    <string name="who_is_collecting">Who's Collecting?</string>
 </resources>
