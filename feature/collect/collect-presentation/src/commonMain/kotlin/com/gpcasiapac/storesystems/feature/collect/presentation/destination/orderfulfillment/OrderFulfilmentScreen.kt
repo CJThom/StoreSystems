@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,11 +30,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.SearchBarValue
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -56,9 +60,12 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Collec
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchExpandedOverlay
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
@@ -72,136 +79,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
-
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
-@Composable
-fun OrderFulfilmentScreen(
-    state: OrderFulfilmentScreenContract.State,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
-    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
-) {
-
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass =
-        currentWindowAdaptiveInfo().windowSizeClass // TODO: Use BoxWithConstraints() to adapt to this screen size only
-    val useColumns =
-        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
-    // Back confirmation dialog state; set via Effect.ShowSaveDiscardDialog
-    val dialogSpec =
-        remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
-
-    LaunchedEffect(effectFlow) {
-        effectFlow?.collectLatest { effect ->
-            when (effect) {
-                is OrderFulfilmentScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
-                    effect.message, duration = SnackbarDuration.Short
-                )
-
-                is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-                    effect.error, duration = SnackbarDuration.Long
-                )
-
-                is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
-                    dialogSpec.value = effect
-                }
-
-                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
-            }
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            MBoltAppBar(
-                title = {
-                    TopBarTitle("Order Confirmation")
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        onEventSent(OrderFulfilmentScreenContract.Event.Back)
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                })
-        }, snackbarHost = {
-            SnackbarHost(snackbarHostState)
-        }
-    ) { padding ->
-        // Single-column, scrollable layout for smaller screens
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-        ) {
-            MultiOrderListSection(
-                state = state,
-                onEventSent = onEventSent,
-                onLookupClick = {
-                // TODO:
-                }
-            )
-            HorizontalDivider()
-            ActionsContent(
-                state = state,
-                onEventSent = onEventSent
-            )
-            HorizontalDivider()
-            ActionButton(
-                modifier = Modifier.padding(Dimens.Space.medium),
-                title = { Text(text = "Confirm") },
-                onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
-            )
-        }
-    }
-
-    // Global dialog after content so it overlays UI
-    val spec = dialogSpec.value
-    if (spec != null) {
-        AlertDialog(
-            onDismissRequest = {
-                dialogSpec.value = null
-                onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-            },
-            title = { Text(spec.title) },
-            text = { Text(spec.message) },
-            confirmButton = {
-                TextButton(onClick = {
-                    dialogSpec.value = null
-                    onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
-                }) {
-                    Text(spec.saveLabel)
-                }
-            },
-            dismissButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
-                    TextButton(onClick = {
-                        dialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
-                    }) {
-                        Text(spec.discardLabel)
-                    }
-                    TextButton(onClick = {
-                        dialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                    }) {
-                        Text(spec.cancelLabel)
-                    }
-                }
-            }
-        )
-    }
-}
-
 
 @Composable
 private fun ActionsContent(
@@ -311,15 +188,15 @@ private fun MultiOrderListSection(
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
     onLookupClick: () -> Unit
 ) {
-    HeaderMedium(
-        text = "Order List",
-        isLoading = state.isLoading,
-        contentPadding = PaddingValues(
-            start = Dimens.Space.medium,
-            top = Dimens.Space.medium,
-            end = Dimens.Space.medium
-        )
-    )
+//    HeaderMedium(
+//        text = "Order List",
+//        isLoading = state.isLoading,
+//        contentPadding = PaddingValues(
+//            start = Dimens.Space.medium,
+//            top = Dimens.Space.medium,
+//            end = Dimens.Space.medium
+//        )
+//    )
 
     val items = state.collectOrderListItemStateList
     if (items.isEmpty()) {
@@ -438,7 +315,14 @@ private fun OrderFulfilmentScreenPreview(
     GPCTheme {
         OrderFulfilmentScreen(
             state = state,
+            searchState = SearchContract.State(
+                searchText = "",
+                searchResults = emptyList(),
+                orderSearchSuggestionList = emptyList(),
+                isSearchActive = false
+            ),
             onEventSent = {},
+            onSearchEventSent = {},
             effectFlow = null,
             onOutcome = {})
     }
@@ -450,9 +334,9 @@ private fun OrderFulfilmentScreenPreview(
 @Composable
 fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
-    searchState: SearchContract.State,
+    searchState: SearchContract.State?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    onSearchEventSent: (event: SearchContract.Event) -> Unit,
+    onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
 ) {
@@ -461,6 +345,26 @@ fun OrderFulfilmentScreen(
     val useColumns = !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
     val dialogSpec = remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
+
+    // Search bar state management for the expanded overlay
+    val searchBarState = rememberSearchBarState(
+        initialValue = SearchBarValue.Collapsed
+    )
+
+//    val searchBarState = rememberSearchBarState(
+//        initialValue = if (searchState.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed
+//    )
+
+    // Keep search bar animation in sync with SearchViewModel
+    if (searchState != null) {
+        LaunchedEffect(searchState.isSearchActive) {
+            if (searchState.isSearchActive) {
+                searchBarState.animateToExpanded()
+            } else {
+                searchBarState.animateToCollapsed()
+            }
+        }
+    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -496,30 +400,143 @@ fun OrderFulfilmentScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-        ) {
-            MultiOrderListSection(
-                state = state,
-                onEventSent = onEventSent,
-                onLookupClick = { onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true)) }
-            )
-            HorizontalDivider()
-            ActionsContent(
-                state = state,
-                onEventSent = onEventSent
-            )
-            HorizontalDivider()
-            ActionButton(
-                modifier = Modifier.padding(Dimens.Space.medium),
-                title = { Text(text = "Confirm") },
-                onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
-            )
-        }
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(padding)
+//        ) {
+            // Main content
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+            ) {
+                HeaderMedium(
+                    text = "Order List",
+                    isLoading = state.isLoading,
+                    contentPadding = PaddingValues(
+                        start = Dimens.Space.medium,
+                        top = Dimens.Space.medium,
+                        end = Dimens.Space.medium
+                    )
+                )
+                if(searchState != null && onSearchEventSent != null) {
+                    MBoltSearchBar(
+                        query = searchState.searchText,
+                        onQueryChange = { query ->
+                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+                        },
+                        searchBarState = searchBarState,
+                        onSearch = { query ->
+                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+                        },
+                        onExpandedChange = { isExpanded ->
+                            onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(isExpanded))
+                        },
+                        onBackPressed = {
+                            onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
+                        },
+                        onResultClick = { result ->
+                            onSearchEventSent(SearchContract.Event.SearchResultClicked(result))
+                        },
+                        onClearClick = {
+                            onSearchEventSent(SearchContract.Event.ClearSearch)
+                        },
+                        searchResults = searchState.orderSearchSuggestionList.map { it.text },
+                        searchOrderItems = searchState.searchResults,
+                        isMultiSelectionEnabled = false,
+                        selectedOrderIdList = emptySet(),
+                        isSelectAllChecked = false,
+                        isRefreshing = false,
+                        onOpenOrder = { id ->
+                            //  onEventSent(OrderListScreenContract.Event.OpenOrder(id))
+                        },
+                        onCheckedChange = { orderId, checked ->
+//                        onEventSent(
+//                            OrderListScreenContract.Event.OrderChecked(
+//                                orderId = orderId,
+//                                checked = checked
+//                            )
+//                        )
+                        },
+                        onSelectAllToggle = { checked ->
+                            // onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                        },
+                        onCancelSelection = {
+                            //  onEventSent(OrderListScreenContract.Event.CancelSelection)
+                        },
+                        onEnterSelectionMode = {
+//                        onEventSent(
+//                            OrderListScreenContract.Event.ToggleSelectionMode(
+//                                enabled = true
+//                            )
+//                        )
+                        },
+                        onSelectClick = {
+                            //  onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholderText = "Search by Order #, Name, Phone",
+                        collapsedShape = CircleShape,
+                        collapsedColors = SearchBarDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            inputFieldColors = SearchBarDefaults.inputFieldColors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                            )
+                        )
+                    )
+                }
+                MultiOrderListSection(
+                    state = state,
+                    onEventSent = onEventSent,
+                    onLookupClick = {
+                        if(onSearchEventSent != null) {
+                            onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true))
+                        }
+                    }
+                )
+
+                HorizontalDivider()
+                ActionsContent(
+                    state = state,
+                    onEventSent = onEventSent
+                )
+                HorizontalDivider()
+                ActionButton(
+                    modifier = Modifier.padding(Dimens.Space.medium),
+                    title = { Text(text = "Confirm") },
+                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
+                )
+            }
+
+//            // Search overlay (expanded only; no persistent collapsed bar)
+//            MBoltSearchExpandedOverlay(
+//                query = searchState.searchText,
+//                onQueryChange = { q -> onSearchEventSent(SearchContract.Event.SearchTextChanged(q)) },
+//                searchBarState = searchBarState,
+//                onSearch = { q -> onSearchEventSent(SearchContract.Event.SearchTextChanged(q)) },
+//                onExpandedChange = { expanded -> onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(expanded)) },
+//                onBackPressed = { onSearchEventSent(SearchContract.Event.SearchBarBackPressed) },
+//                onClearClick = { onSearchEventSent(SearchContract.Event.ClearSearch) },
+//                searchOrderItems = searchState.searchResults,
+//                isMultiSelectionEnabled = false,
+//                selectedOrderIdList = emptySet(),
+//                isSelectAllChecked = false,
+//                isRefreshing = state.isLoading,
+//                onOpenOrder = { id -> onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id)) },
+//                onCheckedChange = { _, _ -> },
+//                onSelectAllToggle = {},
+//                onCancelSelection = {},
+//                onEnterSelectionMode = {},
+//                onSelectClick = {},
+//                modifier = Modifier.fillMaxWidth(),
+//                placeholderText = "Search by Order #, Name, Phone"
+//            )
+      //  }
     }
 
     val spec = dialogSpec.value

@@ -2,7 +2,11 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -23,16 +28,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
@@ -67,10 +76,13 @@ fun MBoltSearchBar(
     onCheckedChange: (String, Boolean) -> Unit,
     onSelectAllToggle: (Boolean) -> Unit,
     onCancelSelection: () -> Unit,
-    onEnterSelectionMode: () -> Unit = {},
+    onEnterSelectionMode: () -> Unit,
     onSelectClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholderText: String = "Search..."
+    placeholderText: String = "Search...",
+    // Style overrides for collapsed bar (optional)
+    collapsedShape: Shape = MaterialTheme.shapes.small,
+    collapsedColors: SearchBarColors = SearchBarDefaults.colors(),
 ) {
 
     // TODO: Somehow sync this with the onExpandedChange of the SearchBarInputField
@@ -101,7 +113,8 @@ fun MBoltSearchBar(
         SearchBar(
             modifier = Modifier.padding(Dimens.Space.medium),
             state = searchBarState,
-            shape = MaterialTheme.shapes.small,
+            shape = collapsedShape,
+            colors = collapsedColors,
             inputField = {
                 SearchBarInputField(
                     query = query,
@@ -111,7 +124,7 @@ fun MBoltSearchBar(
                     placeholderText = placeholderText,
                     onSearch = onSearch,
                     onBackPressed = onBackPressed,
-                    onClearClick = onClearClick
+                    onClearClick = onClearClick,
                 )
             }
         )
@@ -121,7 +134,7 @@ fun MBoltSearchBar(
             ExpandedFullScreenSearchBar(
                 modifier = Modifier,
                 state = searchBarState,
-                collapsedShape = MaterialTheme.shapes.small,
+                collapsedShape = collapsedShape,
                 colors = SearchBarDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     inputFieldColors = SearchBarDefaults.inputFieldColors(
@@ -143,7 +156,7 @@ fun MBoltSearchBar(
                     )
                 }
             ) {
-                
+
                 LazyVerticalGrid(
                     state = lazyGridState,
                     columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
@@ -152,8 +165,8 @@ fun MBoltSearchBar(
                     stickyHeader {
                         androidx.compose.animation.AnimatedVisibility(
                             visible = searchOrderItems.isNotEmpty(),
-                            enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.tween(250)) + androidx.compose.animation.fadeIn(),
-                            exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.tween(200)) + androidx.compose.animation.fadeOut(),
+                            enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
+                            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(),
                             label = "SearchToolbarVisibility"
                         ) {
                             OrderListToolbar(
@@ -244,6 +257,11 @@ private fun SearchBarInputField(
     onBackPressed: () -> Unit,
     onClearClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors = SearchBarDefaults.inputFieldColors(
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
+    ),
 ) {
     SearchBarDefaults.InputField(
         query = query,
@@ -251,7 +269,8 @@ private fun SearchBarInputField(
         onSearch = onSearch,
         expanded = isExpanded,
         onExpandedChange = onExpandedChange,
-        modifier = modifier.background(MaterialTheme.colorScheme.surface),
+        modifier = modifier,
+        //   modifier = modifier.background(MaterialTheme.colorScheme.surface),
         placeholder = {
             Text(
                 text = placeholderText,
@@ -293,13 +312,15 @@ private fun SearchBarInputField(
                 }
             }
         },
-        colors = SearchBarDefaults.inputFieldColors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            disabledContainerColor = MaterialTheme.colorScheme.surface
-        )
+        colors = colors
+//        colors = SearchBarDefaults.inputFieldColors(
+//           // focusedContainerColor = MaterialTheme.colorScheme.surface,
+//           // unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+//            disabledContainerColor = MaterialTheme.colorScheme.surface
+//        )
     )
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(name = "Search Bar - Collapsed")
@@ -327,10 +348,11 @@ fun MBoltSearchBarCollapsedPreview() {
             isRefreshing = false,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
+            placeholderText = "Search by Order #, Name, Phone",
         )
     }
 }
@@ -362,6 +384,7 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
             isRefreshing = false,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
@@ -394,6 +417,7 @@ fun MBoltSearchBarExpandedOrdersPreview() {
             isRefreshing = false,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
@@ -427,6 +451,7 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
             isRefreshing = false,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
@@ -461,6 +486,7 @@ fun MBoltSearchBarExpandedSelectAllPreview() {
             isRefreshing = false,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
@@ -491,6 +517,7 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
             isRefreshing = false,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
@@ -524,10 +551,171 @@ fun MBoltSearchBarExpandedRefreshingPreview() {
             isRefreshing = true,
             onOpenOrder = {},
             onCheckedChange = { _, _ -> },
+            onEnterSelectionMode = {},
             onSelectAllToggle = {},
             onCancelSelection = {},
             onSelectClick = {},
             placeholderText = "Search by Order #, Name, Phone"
         )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MBoltSearchExpandedOverlay(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    searchBarState: SearchBarState,
+    onSearch: (String) -> Unit,
+    onExpandedChange: (Boolean) -> Unit,
+    onBackPressed: () -> Unit,
+    onClearClick: () -> Unit,
+    // Full search results as order items for the expanded grid
+    searchOrderItems: List<CollectOrderListItemState>,
+    isMultiSelectionEnabled: Boolean,
+    selectedOrderIdList: Set<String>,
+    isSelectAllChecked: Boolean,
+    isRefreshing: Boolean,
+    onOpenOrder: (String) -> Unit,
+    onCheckedChange: (String, Boolean) -> Unit,
+    onSelectAllToggle: (Boolean) -> Unit,
+    onCancelSelection: () -> Unit,
+    onEnterSelectionMode: () -> Unit = {},
+    onSelectClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    placeholderText: String = "Search..."
+) {
+    // Keep parent informed of expansion state
+    LaunchedEffect(searchBarState.currentValue) {
+        onExpandedChange(searchBarState.currentValue == SearchBarValue.Expanded)
+    }
+
+    // Search results content (orders grid)
+    val lazyGridState = rememberLazyGridState()
+    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
+        lazyGridState = lazyGridState,
+        stickyHeaderIndex = 0
+    )
+
+    // Auto-scroll to prevent sticky header overlap when it appears
+    LaunchedEffect(searchOrderItems.isNotEmpty()) {
+        if (searchOrderItems.isNotEmpty()) {
+            if (lazyGridState.firstVisibleItemIndex == 0 && lazyGridState.firstVisibleItemScrollOffset == 0) {
+                lazyGridState.animateScrollToItem(0)
+            }
+        }
+    }
+
+    Box(modifier = modifier) {
+        Surface {
+            ExpandedFullScreenSearchBar(
+                modifier = Modifier,
+                state = searchBarState,
+                collapsedShape = MaterialTheme.shapes.small,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    inputFieldColors = SearchBarDefaults.inputFieldColors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
+                    )
+                ),
+                inputField = {
+                    SearchBarInputField(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                        onExpandedChange = onExpandedChange,
+                        placeholderText = placeholderText,
+                        onSearch = onSearch,
+                        onBackPressed = onBackPressed,
+                        onClearClick = onClearClick,
+                    )
+                }
+            ) {
+                LazyVerticalGrid(
+                    state = lazyGridState,
+                    columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
+                ) {
+                    // Toolbar in sticky header with animated visibility
+                    stickyHeader {
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = searchOrderItems.isNotEmpty(),
+                            enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
+                            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(),
+                            label = "SearchToolbarVisibility"
+                        ) {
+                            OrderListToolbar(
+                                isMultiSelectionEnabled = isMultiSelectionEnabled,
+                                customerTypeFilterList = emptySet(),
+                                onToggleCustomerType = { _, _ -> },
+                                onSelectAction = onEnterSelectionMode,
+                                selectedCount = selectedOrderIdList.size,
+                                isSelectAllChecked = isSelectAllChecked,
+                                onSelectAllToggle = onSelectAllToggle,
+                                onCancelClick = onCancelSelection,
+                                onSelectClick = onSelectClick,
+                                isLoading = isRefreshing,
+                                scrollBehavior = stickyHeaderScrollBehavior,
+                            )
+                        }
+                    }
+
+                    if (searchOrderItems.isEmpty() && query.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        "No results found",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Dimens.Space.medium)
+                            )
+                        }
+                    } else {
+                        items(
+                            items = searchOrderItems,
+                            key = { it.invoiceNumber }
+                        ) { collectOrderState ->
+                            CheckboxCard(
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.small
+                                    )
+                                    .animateItem()
+                                    .animateContentSize(),
+                                isCheckable = isMultiSelectionEnabled,
+                                isChecked = selectedOrderIdList.contains(collectOrderState.invoiceNumber),
+                                onClick = { onOpenOrder(collectOrderState.invoiceNumber) },
+                                onCheckedChange = { isChecked ->
+                                    onCheckedChange(collectOrderState.invoiceNumber, isChecked)
+                                }
+                            ) {
+                                CollectOrderDetails(
+                                    customerName = collectOrderState.customerName,
+                                    customerType = collectOrderState.customerType,
+                                    invoiceNumber = collectOrderState.invoiceNumber,
+                                    webOrderNumber = collectOrderState.webOrderNumber,
+                                    pickedAt = collectOrderState.pickedAt,
+                                    isLoading = isRefreshing,
+                                    contendPadding = PaddingValues(
+                                        start = Dimens.Space.medium,
+                                        top = Dimens.Space.medium,
+                                        bottom = Dimens.Space.medium,
+                                        end = if (isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

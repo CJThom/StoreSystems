@@ -62,6 +62,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
+import com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -82,9 +83,9 @@ import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 @Composable
 fun OrderListScreen(
     state: OrderListScreenContract.State,
-    searchState: com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.State,
+    searchState: SearchContract.State,
     onEventSent: (event: OrderListScreenContract.Event) -> Unit,
-    onSearchEventSent: (com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event) -> Unit,
+    onSearchEventSent: (SearchContract.Event) -> Unit,
     effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
 ) {
@@ -112,7 +113,9 @@ fun OrderListScreen(
 
 
     // Search bar state management
-    val searchBarState = rememberSearchBarState(initialValue = if (searchState.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
+//    val searchBarState = rememberSearchBarState(initialValue = if (searchState.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
+    val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
+
 
     // Keep search bar animation in sync with SearchViewModel
     LaunchedEffect(searchState.isSearchActive) {
@@ -215,23 +218,23 @@ fun OrderListScreen(
                         MBoltSearchBar(
                             query = searchState.searchText,
                             onQueryChange = { query ->
-                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchTextChanged(query))
+                                onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
                             },
                             searchBarState = searchBarState,
                             onSearch = { query ->
-                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchTextChanged(query))
+                                onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
                             },
                             onExpandedChange = { isExpanded ->
-                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchOnExpandedChange(isExpanded))
+                                onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(isExpanded))
                             },
                             onBackPressed = {
-                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchBarBackPressed)
+                                onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
                             },
                             onResultClick = { result ->
-                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.SearchResultClicked(result))
+                                onSearchEventSent(SearchContract.Event.SearchResultClicked(result))
                             },
                             onClearClick = {
-                                onSearchEventSent(com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Event.ClearSearch)
+                                onSearchEventSent(SearchContract.Event.ClearSearch)
                             },
                             searchResults = searchState.orderSearchSuggestionList.map { it.text },
                             searchOrderItems = searchState.searchResults,
@@ -436,7 +439,7 @@ fun OrderListScreenPreview(
     GPCTheme {
         OrderListScreen(
             state = state,
-            searchState = com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.State.empty(),
+            searchState = SearchContract.State.empty(),
             onEventSent = {},
             onSearchEventSent = {},
             effectFlow = null,
