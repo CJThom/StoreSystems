@@ -56,7 +56,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Sticky
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.FilterBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectBottomBar
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -231,6 +230,13 @@ fun OrderListScreen(
                             onCancelSelection = {
                                 onEventSent(OrderListScreenContract.Event.CancelSelection)
                             },
+                            onEnterSelectionMode = {
+                                onEventSent(
+                                    OrderListScreenContract.Event.ToggleSelectionMode(
+                                        enabled = true
+                                    )
+                                )
+                            },
                             onSelectClick = {
                                 onEventSent(OrderListScreenContract.Event.ConfirmSelection)
                             },
@@ -266,21 +272,6 @@ fun OrderListScreen(
                 label = "BottomBarTransition"
             ) { key ->
                 when (key) {
-                    "MULTI" -> {
-                        MultiSelectBottomBar(
-                            selectedCount = state.selectedOrderIdList.size,
-                            isSelectAllChecked = state.isSelectAllChecked,
-                            onSelectAllToggle = { checked ->
-                                onEventSent(OrderListScreenContract.Event.SelectAll(checked))
-                            },
-                            onCancelClick = {
-                                onEventSent(OrderListScreenContract.Event.CancelSelection)
-                            },
-                            onSelectClick = {
-                                onEventSent(OrderListScreenContract.Event.ConfirmSelection)
-                            }
-                        )
-                    }
 
                     "DRAFT" -> {
                         DraftBottomBar(
@@ -324,38 +315,45 @@ fun OrderListScreen(
                 }
             }
             stickyHeader {
-                OrderListToolbar(
-                    isMultiSelectionEnabled = state.isMultiSelectionEnabled,
-                    customerTypeFilterList = state.customerTypeFilterList,
-                    selectedCount = state.selectedOrderIdList.size,
-                    isSelectAllChecked = state.isSelectAllChecked,
-                    isLoading = state.isRefreshing,
-                    scrollBehavior = stickyHeaderScrollBehavior,
-                    onToggleCustomerType = { type, checked ->
-                        onEventSent(
-                            OrderListScreenContract.Event.ToggleCustomerType(
-                                type = type,
-                                checked = checked
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = state.orders.isNotEmpty(),
+                    enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.tween(250)) + androidx.compose.animation.fadeIn(),
+                    exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.tween(200)) + androidx.compose.animation.fadeOut(),
+                    label = "OrderListToolbarVisibility"
+                ) {
+                    OrderListToolbar(
+                        isMultiSelectionEnabled = state.isMultiSelectionEnabled,
+                        customerTypeFilterList = state.customerTypeFilterList,
+                        selectedCount = state.selectedOrderIdList.size,
+                        isSelectAllChecked = state.isSelectAllChecked,
+                        isLoading = state.isRefreshing,
+                        scrollBehavior = stickyHeaderScrollBehavior,
+                        onToggleCustomerType = { type, checked ->
+                            onEventSent(
+                                OrderListScreenContract.Event.ToggleCustomerType(
+                                    type = type,
+                                    checked = checked
+                                )
                             )
-                        )
-                    },
-                    onSelectAction = {
-                        onEventSent(
-                            OrderListScreenContract.Event.ToggleSelectionMode(
-                                enabled = true
+                        },
+                        onSelectAction = {
+                            onEventSent(
+                                OrderListScreenContract.Event.ToggleSelectionMode(
+                                    enabled = true
+                                )
                             )
-                        )
-                    },
-                    onSelectAllToggle = { checked ->
-                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
-                    },
-                    onCancelClick = {
-                        onEventSent(OrderListScreenContract.Event.CancelSelection)
-                    },
-                    onSelectClick = {
-                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
-                    },
-                )
+                        },
+                        onSelectAllToggle = { checked ->
+                            onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                        },
+                        onCancelClick = {
+                            onEventSent(OrderListScreenContract.Event.CancelSelection)
+                        },
+                        onSelectClick = {
+                            onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                        },
+                    )
+                }
             }
             items(
                 items = state.orders,

@@ -3,17 +3,15 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -28,6 +26,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSearchBarState
@@ -37,7 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectBottomBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -67,6 +67,7 @@ fun MBoltSearchBar(
     onCheckedChange: (String, Boolean) -> Unit,
     onSelectAllToggle: (Boolean) -> Unit,
     onCancelSelection: () -> Unit,
+    onEnterSelectionMode: () -> Unit = {},
     onSelectClick: () -> Unit,
     modifier: Modifier = Modifier,
     placeholderText: String = "Search..."
@@ -77,6 +78,13 @@ fun MBoltSearchBar(
     LaunchedEffect(searchBarState.currentValue) {
         onExpandedChange(searchBarState.currentValue == SearchBarValue.Expanded)
     }
+
+    // Search results content (orders grid)
+    val lazyGridState = rememberLazyGridState()
+    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
+        lazyGridState = lazyGridState,
+        stickyHeaderIndex = 0
+    )
 
     Box(modifier = modifier) {
         // Collapsed search bar (lives in TopBar)
@@ -98,41 +106,62 @@ fun MBoltSearchBar(
             }
         )
 
-        // Expanded full-screen search bar (opens in new window)
-        ExpandedFullScreenSearchBar(
-            modifier = Modifier,
-            state = searchBarState,
-            collapsedShape = MaterialTheme.shapes.small,
-            colors = SearchBarDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                inputFieldColors = SearchBarDefaults.inputFieldColors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    disabledContainerColor = MaterialTheme.colorScheme.surface
-                )
-            ),
-            inputField = {
-                SearchBarInputField(
-                    query = query,
-                    onQueryChange = onQueryChange,
-                    isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
-                    onExpandedChange = onExpandedChange,
-                    placeholderText = placeholderText,
-                    onSearch = onSearch,
-                    onBackPressed = onBackPressed,
-                    onClearClick = onClearClick,
-                )
-            }
-        ) {
-            Column(
-                modifier = Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+        Surface {
+            // Expanded full-screen search bar (opens in new window)
+            ExpandedFullScreenSearchBar(
+                modifier = Modifier,
+                state = searchBarState,
+                collapsedShape = MaterialTheme.shapes.small,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    inputFieldColors = SearchBarDefaults.inputFieldColors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
+                    )
+                ),
+                inputField = {
+                    SearchBarInputField(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                        onExpandedChange = onExpandedChange,
+                        placeholderText = placeholderText,
+                        onSearch = onSearch,
+                        onBackPressed = onBackPressed,
+                        onClearClick = onClearClick,
+                    )
+                }
             ) {
-                // Search results content (orders grid)
+                
                 LazyVerticalGrid(
+                    state = lazyGridState,
                     columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
-                    contentPadding = PaddingValues(vertical = Dimens.Space.small),
                 ) {
+                    // Toolbar in sticky header with animated visibility
+                    stickyHeader {
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = searchOrderItems.isNotEmpty(),
+                            enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.tween(250)) + androidx.compose.animation.fadeIn(),
+                            exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.tween(200)) + androidx.compose.animation.fadeOut(),
+                            label = "SearchToolbarVisibility"
+                        ) {
+                            OrderListToolbar(
+                                isMultiSelectionEnabled = isMultiSelectionEnabled,
+                                customerTypeFilterList = emptySet(),
+                                onToggleCustomerType = { _, _ -> },
+                                onSelectAction = onEnterSelectionMode,
+                                selectedCount = selectedOrderIdList.size,
+                                isSelectAllChecked = isSelectAllChecked,
+                                onSelectAllToggle = onSelectAllToggle,
+                                onCancelClick = onCancelSelection,
+                                onSelectClick = onSelectClick,
+                                isLoading = isRefreshing,
+                                scrollBehavior = stickyHeaderScrollBehavior,
+                            )
+                        }
+                    }
+
                     if (searchOrderItems.isEmpty() && query.isNotEmpty()) {
                         // Show the empty state inside the grid, spanning full width
                         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -187,15 +216,7 @@ fun MBoltSearchBar(
                         }
                     }
                 }
-                MultiSelectBottomBar(
-                    selectedCount = selectedOrderIdList.size,
-                    isSelectAllChecked = isSelectAllChecked,
-                    onSelectAllToggle = onSelectAllToggle,
-                    onCancelClick = onCancelSelection,
-                    onSelectClick = onSelectClick
-                )
             }
-
         }
     }
 }
