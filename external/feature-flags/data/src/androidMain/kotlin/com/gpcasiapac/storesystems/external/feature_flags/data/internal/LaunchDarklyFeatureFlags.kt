@@ -1,12 +1,11 @@
 package com.gpcasiapac.storesystems.external.feature_flags.data.internal
 
 import android.app.Application
-import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlagConfig
+import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.external.feature_flags.api.FlagKey
 import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContext
 import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContextBuilder
-import com.gpcasiapac.storesystems.external.feature_flags.data.LDFeatureConfig
 import com.launchdarkly.sdk.ContextKind
 import com.launchdarkly.sdk.LDContext
 import com.launchdarkly.sdk.android.FeatureFlagChangeListener
@@ -15,37 +14,37 @@ import com.launchdarkly.sdk.android.LDConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import org.koin.java.KoinJavaComponent.inject
 
 /**
  * Android implementation of LaunchDarkly feature flags using LaunchDarkly Android Client SDK.
  */
-internal actual class LaunchDarklyFeatureFlags actual constructor(
+class LaunchDarklyFeatureFlagsAndroidImpl(
+    private val application: Application,
     private val config: FeatureFlagConfig.LaunchDarkly,
-    private val contextBuilder: MultiContextBuilder.() -> Unit
 ) : FeatureFlags {
 
     private var ldClient: LDClient? = null
     private var ldConfig: LDConfig? = null
-    
-    // TODO: Need to get Android Application context - this will need to be injected
-    // For now using a placeholder approach
-    private val context: Application by inject(Application::class.java)
-    
-    init {
-        initialize()
-    }
 
-    private fun initialize(): Boolean {
+    override fun initialize(contextBuilder: MultiContextBuilder.() -> Unit): Boolean {
         ldConfig = LDConfig.Builder(LDConfig.Builder.AutoEnvAttributes.Enabled)
             .mobileKey(config.apiKey)
             .build()
         val multiContext = MultiContextBuilder().apply(contextBuilder).build()
         val ldContext = createContext(multiContext)
         ldClient = LDClient.init(
-            context, ldConfig, ldContext, config.initializationTimeoutMs
+            application,
+            ldConfig,
+            ldContext,
+            config.initializationTimeoutMs
         )
         return ldClient != null && ldClient!!.isInitialized
+    }
+
+    override fun updateContext(contextBuilder: MultiContextBuilder.() -> Unit) {
+        val multiContext = MultiContextBuilder().apply(contextBuilder).build()
+        val newContext = createContext(multiContext)
+        ldClient?.identify(newContext)
     }
 
     private fun createContext(multiContext: MultiContext): LDContext? {

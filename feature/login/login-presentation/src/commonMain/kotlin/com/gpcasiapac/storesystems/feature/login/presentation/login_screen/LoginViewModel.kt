@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
+import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContextBuilder
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
 import com.gpcasiapac.storesystems.feature.login.api.LoginService
 import kotlinx.coroutines.launch
@@ -12,6 +13,25 @@ class LoginViewModel(
     private val loginService: LoginService,
     private val flags: FeatureFlags
 ) : MVIViewModel<LoginScreenContract.Event, LoginScreenContract.State, LoginScreenContract.Effect>() {
+
+    private fun configureAnonymousContext(builder: MultiContextBuilder) {
+        builder.user("user_session", buildMap {
+            put("anonymous", true)
+        })
+        builder.device("device_information", buildMap {
+            put("model", "TC53e")
+        })
+    }
+
+    private fun configureUserContext(username: String, builder: MultiContextBuilder) {
+        builder.user("user_session", buildMap {
+            put("anonymous", false)
+            put("username", username)
+        })
+        builder.device("device_information", buildMap {
+            put("model", "TC53e")
+        })
+    }
 
     override fun setInitialState(): LoginScreenContract.State {
         return LoginScreenContract.State(
@@ -34,6 +54,9 @@ class LoginViewModel(
 
     override fun onStart() {
         // Initialize any startup logic here if needed
+        flags.initialize {
+            configureAnonymousContext(this)
+        }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -100,6 +123,9 @@ class LoginViewModel(
                         isLoading = false,
                         error = null
                     )
+                }
+                flags.updateContext {
+                    configureUserContext(viewState.value.username, this)
                 }
                 // Feature flag: if MFA is required, don't navigate to home yet
                 if (flags.isEnabled(LoginFlags.MfaRequired)) {

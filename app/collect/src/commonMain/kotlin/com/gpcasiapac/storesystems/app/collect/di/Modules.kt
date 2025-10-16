@@ -3,9 +3,9 @@ package com.gpcasiapac.storesystems.app.collect.di
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavigationViewModel
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample.CollectGlobalNavigationViewModel
 import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
-import com.gpcasiapac.storesystems.external.feature_flags.data.FeatureFlagsFactory
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
 import com.gpcasiapac.storesystems.core.identity.domain.di.IdentityDomainModuleProvider
+import com.gpcasiapac.storesystems.external.feature_flags.data.internal.featureFlagModule
 import com.gpcasiapac.storesystems.feature.collect.data.di.CollectDataModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.domain.di.CollectDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.CollectPresentationModuleProvider
@@ -33,15 +33,14 @@ fun getAppModules(): List<Module> {
     // TODO: Use ModuleProvider
     moduleList.add(collectAppNavigationModule)
     moduleList.add(appModule)
+    moduleList.addAll(featureFlagModule)
 
     return moduleList
 }
 
 // TODO: Idk what this is
 val appModule = module {
-    single<FeatureFlags> {
-        FeatureFlagsFactory.createNoOp()
-    }
+
 }
 
 

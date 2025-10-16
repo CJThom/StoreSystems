@@ -14,7 +14,7 @@ object LoginFlags {
 
     /** Demo: require MFA step after successful login (no real MFA flow yet). */
     object MfaRequired : FlagKey<Boolean> {
-        override val name: String = "feature.login.mfa_required"
+        override val name: String = "collectMfaRequired"
         override val default: Boolean = true
     }
 

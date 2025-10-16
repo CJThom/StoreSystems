@@ -18,35 +18,40 @@ import kotlinx.coroutines.flow.callbackFlow
 /**
  * JVM/Desktop implementation of LaunchDarkly feature flags using LaunchDarkly Server SDK.
  */
-internal actual class LaunchDarklyFeatureFlags actual constructor(
+class LaunchDarklyFeatureFlagsDesktopImpl(
     private val config: FeatureFlagConfig.LaunchDarkly,
-    private val contextBuilder: MultiContextBuilder.() -> Unit
 ) : FeatureFlags {
 
     private var ldClient: LDClient? = null
     private var ldContext: LDContext? = null
     private var ldConfig: LDConfig? = null
-    
-    init {
-        initialize()
-    }
 
-    private fun initialize(): Boolean {
+
+    override fun initialize(contextBuilder: MultiContextBuilder.() -> Unit): Boolean {
         ldConfig = LDConfig.Builder()
             .build()
         val multiContext = MultiContextBuilder().apply(contextBuilder).build()
         ldContext = createContext(multiContext)
-        
+
         val ldFeatureConfig = LDFeatureConfig(
             apiKey = config.apiKey,
             initializationTimeoutMs = config.initializationTimeoutMs,
             environment = config.environment
         )
-        
+
         ldClient = LDClient(
             ldFeatureConfig.apiKey, ldConfig,
         )
         return ldClient != null && ldClient!!.isInitialized
+    }
+
+    override fun updateContext(contextBuilder: MultiContextBuilder.() -> Unit) {
+        val multiContext = MultiContextBuilder().apply(contextBuilder).build()
+        val newContext = createContext(multiContext)
+        if (newContext == null) {
+            ldContext = newContext
+        }
+        ldClient?.identify(newContext)
     }
 
     private fun createContext(multiContext: MultiContext): LDContext? {

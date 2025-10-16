@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.external.feature_flags.data
 
 import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.external.feature_flags.api.FlagKey
+import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContextBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -10,6 +11,13 @@ import kotlinx.coroutines.flow.flowOf
  * Useful for testing, development, or when feature flags are not needed.
  */
 internal class NoOpFeatureFlags : FeatureFlags {
+    override fun initialize(contextBuilder: MultiContextBuilder.() -> Unit): Boolean {
+        return true
+    }
+
+    override fun updateContext(contextBuilder: MultiContextBuilder.() -> Unit) {
+    }
+
     override fun isEnabled(key: FlagKey<Boolean>): Boolean = key.default
     override fun getString(key: FlagKey<String>): String = key.default
     override fun getInt(key: FlagKey<Int>): Int = key.default
