@@ -5,6 +5,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,6 +69,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.DraftBottomBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectTopBar
 
 //DraftBottomBar(
 //count = state.existingDraftIdSet.size,
@@ -88,6 +95,7 @@ fun OrderListScreen(
         stickyHeaderIndex = 1
     )
     val scope = rememberCoroutineScope()
+
 
     // Search bar state management
     val searchBarState =
@@ -238,8 +246,8 @@ fun OrderListScreen(
         bottomBar = {
             // Switch between Multi-select, Draft bar, or none using AnimatedContent
             val bottomBarKey = when {
-                state.isMultiSelectionEnabled -> "MULTI"
-                !state.isMultiSelectionEnabled && state.isDraftBarVisible -> "DRAFT"
+                state.isMultiSelectionEnabled -> "NONE"
+                state.isDraftBarVisible -> "DRAFT"
                 else -> "NONE"
             }
             AnimatedContent(
@@ -289,12 +297,6 @@ fun OrderListScreen(
         },
     ) { padding ->
 
-        val visibleItems = if (state.isSearchActive && state.searchText.isNotBlank()) {
-            state.searchResults
-        } else {
-            state.orders
-        }
-
         LazyVerticalGrid(
             state = lazyGridState,
             columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
@@ -308,42 +310,75 @@ fun OrderListScreen(
             ),
         ) {
             item {
-                HeaderSection(
-                    ordersCount = state.orderCount,
-                    modifier = Modifier,
-                    isLoading = state.isRefreshing
-                )
+                AnimatedVisibility(
+                    visible = !state.isMultiSelectionEnabled,
+                    enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
+                    exit = shrinkVertically(animationSpec = tween(200)) + fadeOut()
+                ) {
+                    HeaderSection(
+                        ordersCount = state.orderCount,
+                        modifier = Modifier,
+                        isLoading = state.isRefreshing
+                    )
+                }
             }
             stickyHeader {
-                FilterBar(
-                    customerTypeFilterList = state.customerTypeFilterList,
-                    scrollBehavior = stickyHeaderScrollBehavior,
-                    isLoading = state.isRefreshing,
-                    onToggleCustomerType = { type, checked ->
-                        onEventSent(
-                            OrderListScreenContract.Event.ToggleCustomerType(
-                                type = type,
-                                checked = checked
-                            )
+                AnimatedContent(
+                    targetState = state.isMultiSelectionEnabled,
+                    label = "StickyHeaderFilterMulti",
+                ) { isMulti ->
+                    if (!isMulti) {
+                        FilterBar(
+                            customerTypeFilterList = state.customerTypeFilterList,
+                            scrollBehavior = stickyHeaderScrollBehavior,
+                            isLoading = state.isRefreshing,
+                            onToggleCustomerType = { type, checked ->
+                                onEventSent(
+                                    OrderListScreenContract.Event.ToggleCustomerType(
+                                        type = type,
+                                        checked = checked
+                                    )
+                                )
+                            },
+                            onSelectAction = {
+                                onEventSent(
+                                    OrderListScreenContract.Event.ToggleSelectionMode(
+                                        enabled = true
+                                    )
+                                )
+                            }
                         )
-                    },
-                    onSelectAction = {
-                        onEventSent(
-                            OrderListScreenContract.Event.ToggleSelectionMode(
-                                enabled = !state.isMultiSelectionEnabled
-                            )
+                    } else {
+                        MultiSelectTopBar(
+                            selectedCount = state.selectedOrderIdList.size,
+                            isSelectAllChecked = state.isSelectAllChecked,
+                            onSelectAllToggle = { checked ->
+                                onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                            },
+                            onCancelClick = {
+                                onEventSent(OrderListScreenContract.Event.CancelSelection)
+                            },
+                            onSelectClick = {
+                                onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                            },
+                            isLoading = state.isRefreshing,
+                            scrollBehavior = stickyHeaderScrollBehavior,
+                            forceLifted = true
                         )
                     }
-                )
+                }
             }
             items(
                 items = state.orders,
                 key = { it.invoiceNumber }) { collectOrderState ->
                 CheckboxCard(
-                    modifier = Modifier.padding(
-                        horizontal = Dimens.Space.medium,
-                        vertical = Dimens.Space.small
-                    ),
+                    modifier = Modifier
+                        .padding(
+                            horizontal = Dimens.Space.medium,
+                            vertical = Dimens.Space.small
+                        )
+                        .animateItem()
+                        .animateContentSize(),
                     isCheckable = state.isMultiSelectionEnabled,
                     isChecked = state.selectedOrderIdList.contains(collectOrderState.invoiceNumber),
                     onClick = {

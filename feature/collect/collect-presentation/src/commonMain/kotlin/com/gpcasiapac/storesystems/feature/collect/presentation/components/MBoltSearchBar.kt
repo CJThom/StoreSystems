@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -154,10 +155,13 @@ fun MBoltSearchBar(
                             key = { it.invoiceNumber }
                         ) { collectOrderState ->
                             CheckboxCard(
-                                modifier = Modifier.padding(
-                                    horizontal = Dimens.Space.medium,
-                                    vertical = Dimens.Space.small
-                                ),
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.small
+                                    )
+                                    .animateItem()
+                                    .animateContentSize(),
                                 isCheckable = isMultiSelectionEnabled,
                                 isChecked = selectedOrderIdList.contains(collectOrderState.invoiceNumber),
                                 onClick = { onOpenOrder(collectOrderState.invoiceNumber) },
