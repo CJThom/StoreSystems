@@ -86,6 +86,16 @@ fun MBoltSearchBar(
         stickyHeaderIndex = 0
     )
 
+    // Auto-scroll to prevent sticky header overlap when it appears
+    LaunchedEffect(searchOrderItems.isNotEmpty()) {
+        if (searchOrderItems.isNotEmpty()) {
+            if (lazyGridState.firstVisibleItemIndex == 0 && lazyGridState.firstVisibleItemScrollOffset == 0) {
+                // Scroll so that the sticky header sits at the top and doesn't cover content
+                lazyGridState.animateScrollToItem(0)
+            }
+        }
+    }
+
     Box(modifier = modifier) {
         // Collapsed search bar (lives in TopBar)
         SearchBar(

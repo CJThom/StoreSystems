@@ -8,4 +8,5 @@ import org.koin.dsl.module
 
 actual val collectDataDatabaseModule: Module = module {
     single<AppDatabase> { getRoomDatabase(getDatabaseBuilder(get())) }
+
 }

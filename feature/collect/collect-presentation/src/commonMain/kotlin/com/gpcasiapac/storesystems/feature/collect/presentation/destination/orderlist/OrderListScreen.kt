@@ -1,16 +1,15 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,16 +20,21 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Start
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.AssignmentInd
+import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingToolbarDefaults.exitAlwaysScrollBehavior
-import androidx.compose.material3.FloatingToolbarExitDirection.Companion.Bottom
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarDuration
@@ -54,8 +58,10 @@ import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.FilterBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.DraftBottomBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -66,10 +72,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.DraftBottomBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectTopBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 
 //DraftBottomBar(
 //count = state.existingDraftIdSet.size,
@@ -94,6 +96,16 @@ fun OrderListScreen(
         lazyGridState = lazyGridState,
         stickyHeaderIndex = 1
     )
+
+    // Auto-scroll to prevent sticky header overlap when it appears
+    LaunchedEffect(state.orders.isNotEmpty()) {
+        if (state.orders.isNotEmpty()) {
+            if (lazyGridState.firstVisibleItemIndex == 0 && lazyGridState.firstVisibleItemScrollOffset == 0) {
+                // Scroll so that the sticky header sits at the top and doesn't cover content
+                lazyGridState.animateScrollToItem(1)
+            }
+        }
+    }
     val scope = rememberCoroutineScope()
 
 
@@ -141,14 +153,31 @@ fun OrderListScreen(
         }
     }
 
-    val exitAlwaysScrollBehavior =
-        exitAlwaysScrollBehavior(exitDirection = Bottom)
+//    val exitAlwaysScrollBehavior =
+//        exitAlwaysScrollBehavior(exitDirection = Bottom)
     Scaffold(
-        modifier = Modifier.nestedScroll(exitAlwaysScrollBehavior),
+        //   modifier = Modifier.nestedScroll(exitAlwaysScrollBehavior),
         containerColor = MaterialTheme.colorScheme.surface,
-//        snackbarHost = {
-//            SnackbarHost(snackbarHostState)
-//        },
+
+        floatingActionButton = {
+            val showFab =
+                !state.isMultiSelectionEnabled && !state.isDraftBarVisible && state.existingDraftIdSet.isEmpty()
+
+            ExtendedFloatingActionButton(
+                text = { androidx.compose.material3.Text("New task") },
+                icon = {
+                    Icon(imageVector = Icons.Outlined.Add, contentDescription = "Start work order")
+                },
+                onClick = {
+                    onEventSent(OrderListScreenContract.Event.StartNewWorkOrderClicked)
+                },
+                expanded = true,
+//                modifier = Modifier.animateFloatingActionButton(
+//                    visible = showFab,
+//                    alignment = Alignment.BottomEnd
+//                )
+            )
+        },
         topBar = {
             MBoltAppBar(
                 scrollBehavior = scrollBehavior,
@@ -247,44 +276,22 @@ fun OrderListScreen(
                 }
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
-        floatingActionButton = {
-        },
         bottomBar = {
-            // Switch between Multi-select, Draft bar, or none using AnimatedContent
-            val bottomBarKey = when {
-                state.isMultiSelectionEnabled -> "NONE"
-                state.isDraftBarVisible -> "DRAFT"
-                else -> "NONE"
-            }
-            AnimatedContent(
-                targetState = bottomBarKey,
-                transitionSpec = {
-                    ContentTransform(
-                        targetContentEnter = androidx.compose.animation.slideInVertically(
-                            initialOffsetY = { it }
-                        ),
-                        initialContentExit = slideOutVertically(
-                            targetOffsetY = { it }
-                        )
-                    )
-                },
+            AnimatedVisibility(
+                visible = state.isDraftBarVisible && !state.isMultiSelectionEnabled,
+                enter = slideInVertically(
+                    animationSpec = tween(250),
+                    initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(
+                    animationSpec = tween(200),
+                    targetOffsetY = { it }) + fadeOut(),
                 label = "BottomBarTransition"
-            ) { key ->
-                when (key) {
-
-                    "DRAFT" -> {
-                        DraftBottomBar(
-                            count = state.existingDraftIdSet.size,
-                            onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
-                            onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
-                        )
-                    }
-
-                    else -> {
-                        // No bottom bar
-                    }
-                }
+            ) {
+                DraftBottomBar(
+                    count = state.existingDraftIdSet.size,
+                    onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
+                    onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
+                )
             }
         },
     ) { padding ->
@@ -315,39 +322,39 @@ fun OrderListScreen(
                 }
             }
             stickyHeader {
-                    OrderListToolbar(
-                        isMultiSelectionEnabled = state.isMultiSelectionEnabled,
-                        customerTypeFilterList = state.customerTypeFilterList,
-                        selectedCount = state.selectedOrderIdList.size,
-                        isSelectAllChecked = state.isSelectAllChecked,
-                        isLoading = state.isRefreshing,
-                        scrollBehavior = stickyHeaderScrollBehavior,
-                        onToggleCustomerType = { type, checked ->
-                            onEventSent(
-                                OrderListScreenContract.Event.ToggleCustomerType(
-                                    type = type,
-                                    checked = checked
-                                )
+                OrderListToolbar(
+                    isMultiSelectionEnabled = state.isMultiSelectionEnabled,
+                    customerTypeFilterList = state.customerTypeFilterList,
+                    selectedCount = state.selectedOrderIdList.size,
+                    isSelectAllChecked = state.isSelectAllChecked,
+                    isLoading = state.isRefreshing,
+                    scrollBehavior = stickyHeaderScrollBehavior,
+                    onToggleCustomerType = { type, checked ->
+                        onEventSent(
+                            OrderListScreenContract.Event.ToggleCustomerType(
+                                type = type,
+                                checked = checked
                             )
-                        },
-                        onSelectAction = {
-                            onEventSent(
-                                OrderListScreenContract.Event.ToggleSelectionMode(
-                                    enabled = true
-                                )
+                        )
+                    },
+                    onSelectAction = {
+                        onEventSent(
+                            OrderListScreenContract.Event.ToggleSelectionMode(
+                                enabled = true
                             )
-                        },
-                        onSelectAllToggle = { checked ->
-                            onEventSent(OrderListScreenContract.Event.SelectAll(checked))
-                        },
-                        onCancelClick = {
-                            onEventSent(OrderListScreenContract.Event.CancelSelection)
-                        },
-                        onSelectClick = {
-                            onEventSent(OrderListScreenContract.Event.ConfirmSelection)
-                        },
-                    )
-                }
+                        )
+                    },
+                    onSelectAllToggle = { checked ->
+                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                    },
+                    onCancelClick = {
+                        onEventSent(OrderListScreenContract.Event.CancelSelection)
+                    },
+                    onSelectClick = {
+                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                    },
+                )
+            }
             items(
                 items = state.orders,
                 key = { it.invoiceNumber }) { collectOrderState ->

@@ -65,12 +65,9 @@ class OrderRepositoryImpl(
     }
 
     override fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>> {
-        val flow = if (invoiceNumbers.isEmpty()) {
-            collectOrderDao.getCollectOrderWithCustomerRelationListFlow()
-        } else {
-            collectOrderDao.getCollectOrderWithCustomerRelationListFlow(invoiceNumbers)
-        }
-        return flow.map { it.toDomain() }
+        return collectOrderDao
+            .getCollectOrderWithCustomerRelationListFlow(invoiceNumbers)
+            .map { it.toDomain() }
     }
 
     // New: observe main orders via DB-side filter + sort

@@ -293,6 +293,10 @@ class OrderListScreenViewModel(
                 handleSubmitSelectedOrders()
             }
 
+            is OrderListScreenContract.Event.StartNewWorkOrderClicked -> {
+                handleStartNewWorkOrderClick()
+            }
+
             is OrderListScreenContract.Event.ToggleSelectionMode -> {
                 handleToggleSelectionMode(event.enabled)
             }
@@ -479,6 +483,20 @@ class OrderListScreenViewModel(
         val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
         viewModelScope.launch {
             setOrderSelectionUseCase(selectedOrderIdList, userRefId)
+            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
+        }
+        setState {
+            copy(
+                isMultiSelectionEnabled = false,
+                selectedOrderIdList = emptySet(),
+                isSelectAllChecked = false
+            )
+        }
+    }
+
+    private fun handleStartNewWorkOrderClick() {
+        viewModelScope.launch {
+            setOrderSelectionUseCase(emptyList(), userRefId)
             setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
         setState {
