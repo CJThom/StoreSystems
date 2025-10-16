@@ -315,12 +315,6 @@ fun OrderListScreen(
                 }
             }
             stickyHeader {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = state.orders.isNotEmpty(),
-                    enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.tween(250)) + androidx.compose.animation.fadeIn(),
-                    exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.tween(200)) + androidx.compose.animation.fadeOut(),
-                    label = "OrderListToolbarVisibility"
-                ) {
                     OrderListToolbar(
                         isMultiSelectionEnabled = state.isMultiSelectionEnabled,
                         customerTypeFilterList = state.customerTypeFilterList,
@@ -354,7 +348,6 @@ fun OrderListScreen(
                         },
                     )
                 }
-            }
             items(
                 items = state.orders,
                 key = { it.invoiceNumber }) { collectOrderState ->
