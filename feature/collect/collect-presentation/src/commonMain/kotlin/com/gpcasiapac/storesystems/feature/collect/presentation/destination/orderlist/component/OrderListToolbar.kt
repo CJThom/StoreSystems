@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
@@ -40,7 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLayoutDirection
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
@@ -78,7 +80,8 @@ fun OrderListToolbar(
     val isLifted = isMultiSelectionEnabled || (scrollBehavior?.isLifted ?: false)
 
     Surface(
-        modifier = modifier.fillMaxWidth().defaultMinSize(minHeight = FilterChipDefaults.Height + Dimens.Space.medium),
+        modifier = modifier.fillMaxWidth()
+            .defaultMinSize(minHeight = FilterChipDefaults.Height + Dimens.Space.medium),
         border = if (isLifted) MaterialTheme.borderStroke() else null,
         color = if (isLifted) MaterialTheme.colorScheme.surfaceContainer else Color.Transparent,
     ) {
@@ -241,7 +244,13 @@ private fun OrderListToolbarMultiSelectContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(contentPadding),
+            .padding(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current) - Dimens.Space.small
+            ),
+        // .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
