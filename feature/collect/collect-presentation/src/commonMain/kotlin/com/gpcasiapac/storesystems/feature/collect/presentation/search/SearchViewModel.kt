@@ -6,6 +6,11 @@ import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -20,11 +25,11 @@ class SearchViewModel(
     private val observeSearchOrdersUseCase: ObserveSearchOrdersUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     // Selection persistence dependencies
-    private val observeOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase,
-    private val setOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase,
-    private val addOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase,
-    private val removeOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase,
-    private val clearOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase,
+    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
+    private val setOrderSelectionUseCase: SetOrderSelectionUseCase,
+    private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
+    private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
+    private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
 ) : MVIViewModel<SearchContract.Event, SearchContract.State, SearchContract.Effect>() {
 
     private val userRefId = "mock"

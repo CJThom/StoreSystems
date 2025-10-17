@@ -70,11 +70,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 
-//DraftBottomBar(
-//count = state.existingDraftIdSet.size,
-//onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
-//onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
-//)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OrderListScreen(

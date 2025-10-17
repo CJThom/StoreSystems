@@ -25,7 +25,6 @@ val collectPresentationModule = module {
     viewModelOf(::CollectNavigationViewModel)
     viewModelOf(::SearchViewModel)
 
-    //factory<CollectFeatureEntry> { CollectFeatureEntryAndroidImpl() }
     singleOf(::CollectFeatureEntryImpl).bind<CollectFeatureEntry>()
 }
 
