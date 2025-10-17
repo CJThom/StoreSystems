@@ -66,8 +66,8 @@ kotlin {
             implementation(projects.core.identity.identityDomain)
             implementation(projects.core.identity.identityData)
 
-            implementation(project(":external:feature-flags:api"))
-            implementation(project(":external:feature-flags:data"))
+            implementation(projects.external.featureFlags.api)
+            implementation(projects.external.featureFlags.data)
             implementation(projects.common.di)
             implementation(projects.common.presentation)
 

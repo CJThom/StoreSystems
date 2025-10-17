@@ -79,8 +79,8 @@ kotlin {
             implementation(projects.core.identity.identityData)
 
             // Feature flags API used for simple default binding in app
-            implementation(project(":external:feature-flags:api"))
-            implementation(project(":external:feature-flags:data"))
+            implementation(projects.external.featureFlags.api)
+            implementation(projects.external.featureFlags.data)
             implementation(projects.common.di)
             implementation(projects.common.presentation)
             // Design system theme

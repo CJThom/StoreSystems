@@ -14,7 +14,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.presentation)
-            implementation(project(":external:feature-flags:api"))
+            implementation(projects.external.featureFlags.api)
             implementation(projects.common.kotlin)
             implementation(projects.core.identity.identityApi)
             implementation(libs.androidx.navigation3.runtime)
