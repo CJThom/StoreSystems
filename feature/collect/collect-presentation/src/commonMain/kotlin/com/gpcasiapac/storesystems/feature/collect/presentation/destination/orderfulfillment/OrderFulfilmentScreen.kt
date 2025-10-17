@@ -185,9 +185,6 @@ fun OrderFulfilmentScreen(
                     null
                 } else {
                     {
-//                        AnimatedVisibility(
-//                            visible = state.collectOrderListItemStateList.isNotEmpty()
-//                        ) {
                         MBoltSearchBar(
                             query = searchState.searchText,
                             onQueryChange = { query ->
@@ -261,7 +258,6 @@ fun OrderFulfilmentScreen(
                             ),
                             collapsedBorder = MaterialTheme.borderStroke()
                         )
-                        //   }
                     }
                 }
             )
@@ -465,13 +461,11 @@ private fun MultiOrderListSection(
         )
 
         if (searchContent != null) {
-            //   Spacer(Modifier.size(Dimens.Space.medium))
             searchContent()
         }
 
         val items = state.collectOrderListItemStateList
         if (items.isEmpty()) {
-            // Spacer(Modifier.size(Dimens.Space.medium))
             EmptyOrderPlaceholderCard(onLookupClick)
         } else {
             Column(
@@ -503,7 +497,7 @@ private fun MultiOrderListSection(
                             webOrderNumber = collectOrderState.webOrderNumber,
                             pickedAt = collectOrderState.pickedAt,
                             isLoading = state.isLoading,
-                            contendPadding = PaddingValues(Dimens.Space.medium),
+                          //  contendPadding = PaddingValues(Dimens.Space.medium),
                         )
                     }
                 }
