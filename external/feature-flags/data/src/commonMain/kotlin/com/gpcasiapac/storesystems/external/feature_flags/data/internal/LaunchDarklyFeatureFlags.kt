@@ -1,17 +1,17 @@
 package com.gpcasiapac.storesystems.external.feature_flags.data.internal
 
 import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlagConfig
+import com.gpcasiapac.storesystems.foundation.config.BuildConfig
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * Internal LaunchDarkly implementation of FeatureFlags.
- * Platform-specific implementations handle the actual LaunchDarkly SDK integration.
+ * Platform-specific Koin Module handle the actual feature flag SDK integration.
  */
 expect val featureFlagImplModule: Module
 
 val featureFlagModule = module {
     single<FeatureFlagConfig> {
-        FeatureFlagConfig.LaunchDarkly("", 3_000, "production")
+        FeatureFlagConfig.LaunchDarkly(BuildConfig.LAUNCHDARKLY_KEY, 3_000, BuildConfig.ENVIRONMENT)
     }
 } + featureFlagImplModule

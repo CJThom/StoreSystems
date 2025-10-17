@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.external.featureFlags.api)
             implementation(libs.koin.core)
+            implementation(projects.foundation.config)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         
