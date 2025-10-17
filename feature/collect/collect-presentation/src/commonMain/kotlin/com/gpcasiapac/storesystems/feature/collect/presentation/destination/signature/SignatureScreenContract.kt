@@ -15,8 +15,7 @@ object SignatureScreenContract {
         val isSigned: Boolean,
         val error: String?,
         val signatureStrokes: List<List<Offset>>,
-        val signatureBitmap: ImageBitmap? = null,
-        val invoiceNumbers: List<String> = emptyList(),
+        val signatureBitmap: ImageBitmap? = null
     ) : ViewState
 
     sealed interface Event : ViewEvent {

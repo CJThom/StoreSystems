@@ -30,7 +30,6 @@ interface OrderRepository {
 
     fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
 
-    fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>>
 
     // New reactive streams for main list and search results
     fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
@@ -53,6 +52,9 @@ interface OrderRepository {
 
     /** Observe the signature (Base64) for the latest open Work Order for the given user. */
     fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?>
+
+    /** Observe the latest open Work Order (without joining orders). */
+    fun observeLatestOpenWorkOrder(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder?>
 
     /** Observe the full latest open Work Order with its orders (signature included). */
     fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?>

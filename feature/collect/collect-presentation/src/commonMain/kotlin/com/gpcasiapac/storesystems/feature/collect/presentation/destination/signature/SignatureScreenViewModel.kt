@@ -2,10 +2,8 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSelectionResult
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
 import kotlinx.coroutines.delay
@@ -13,7 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class SignatureScreenViewModel(
-    private val observeOrderSelectionResultUseCase: ObserveOrderSelectionResultUseCase,
+    private val observeLatestOpenWorkOrderUseCase: ObserveLatestOpenWorkOrderUseCase,
     private val saveSignatureUseCase: SaveSignatureUseCase
 ) : MVIViewModel<
         SignatureScreenContract.Event,
@@ -25,8 +23,7 @@ class SignatureScreenViewModel(
             isLoading = false,
             isSigned = false,
             error = null,
-            signatureStrokes = emptyList(),
-            invoiceNumbers = emptyList()
+            signatureStrokes = emptyList()
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -40,7 +37,10 @@ class SignatureScreenViewModel(
 
     override fun onStart() {
         viewModelScope.launch {
-            observeOrderSelectionResult()
+            observeLatestOpenWorkOrderUseCase("mock").collectLatest {
+                // TODO: Add signature strokes
+                setState { copy() }
+            }
         }
     }
 
@@ -126,29 +126,6 @@ class SignatureScreenViewModel(
         }
     }
 
-    private suspend fun observeOrderSelectionResult() {
-        observeOrderSelectionResultUseCase("mock").collectLatest { result ->
-            when (result) {
-                is OrderSelectionResult.Single -> {
-                    val orderState = result.order?.toState()
-                    setState {
-                        copy(
-                            invoiceNumbers = result.order?.order?.invoiceNumber?.let { listOf(it) }
-                                .orEmpty()
-                        )
-                    }
-                }
-
-                is OrderSelectionResult.Multi -> {
-                    setState {
-                        copy(
-                            invoiceNumbers = result.orderList.map { it.order.invoiceNumber }
-                        )
-                    }
-                }
-            }
-        }
-    }
 
 
     private fun clearError() {

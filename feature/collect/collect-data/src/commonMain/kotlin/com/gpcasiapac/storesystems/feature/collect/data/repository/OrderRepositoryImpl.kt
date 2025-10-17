@@ -43,10 +43,9 @@ class OrderRepositoryImpl(
 
 
 
-    override fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>> {
-        return collectOrderDao
-            .getCollectOrderWithCustomerRelationListFlow(invoiceNumbers)
-            .map { it.toDomain() }
+    override fun observeLatestOpenWorkOrder(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder?> {
+        return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
+            .map { relation -> relation?.collectWorkOrderEntity?.toDomain() }
     }
 
     override fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?> {
