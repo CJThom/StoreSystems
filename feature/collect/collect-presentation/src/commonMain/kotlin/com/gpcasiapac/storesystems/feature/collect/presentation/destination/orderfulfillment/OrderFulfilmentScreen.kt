@@ -84,7 +84,8 @@ fun OrderFulfilmentScreen(
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
     onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
-    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
+    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
+    searchEffectFlow: Flow<SearchContract.Effect>? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -130,6 +131,22 @@ fun OrderFulfilmentScreen(
                 }
 
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+            }
+        }
+    }
+
+    // Collect search effects to show multi-select confirmation dialog from search Accept button
+    val searchConfirmDialogSpec = remember { mutableStateOf<SearchContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
+
+    LaunchedEffect(searchEffectFlow) {
+        searchEffectFlow?.collectLatest { effect ->
+            when (effect) {
+                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
+                    searchConfirmDialogSpec.value = effect
+                }
+                is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
+                    // Expansion is handled by searchState.isSearchActive syncing
+                }
             }
         }
     }
@@ -213,27 +230,27 @@ fun OrderFulfilmentScreen(
                             },
                             searchResults = searchState.orderSearchSuggestionList.map { it.text },
                             searchOrderItems = searchState.searchResults,
-                            isMultiSelectionEnabled = false,
-                            selectedOrderIdList = emptySet(),
-                            isSelectAllChecked = false,
-                            isRefreshing = false,
+                            isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
+                            selectedOrderIdList = searchState.selectedOrderIdList,
+                            isSelectAllChecked = searchState.isSelectAllChecked,
+                            isRefreshing = state.isLoading,
                             onOpenOrder = { id ->
-                                //  onEventSent(OrderListScreenContract.Event.OpenOrder(id))
+                                onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
                             },
-                            onCheckedChange = { _, _ ->
-                                // no-op
+                            onCheckedChange = { orderId, checked ->
+                                onSearchEventSent(SearchContract.Event.OrderChecked(orderId, checked))
                             },
-                            onSelectAllToggle = { _ ->
-                                // no-op
+                            onSelectAllToggle = { checked ->
+                                onSearchEventSent(SearchContract.Event.SelectAll(checked))
                             },
                             onCancelSelection = {
-                                // no-op
+                                onSearchEventSent(SearchContract.Event.CancelSelection)
                             },
                             onEnterSelectionMode = {
-                                // no-op
+                                onSearchEventSent(SearchContract.Event.ToggleSelectionMode(true))
                             },
                             onSelectClick = {
-                                // no-op
+                                onSearchEventSent(SearchContract.Event.ConfirmSelection)
                             },
                             modifier = Modifier.fillMaxWidth().then(
                                 if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
@@ -301,6 +318,35 @@ fun OrderFulfilmentScreen(
                                 onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
                             }) { Text(spec.cancelLabel) }
                         }
+                    }
+                )
+            }
+
+            // Search selection confirmation dialog
+            val searchSpec = searchConfirmDialogSpec.value
+            if (searchSpec != null && onSearchEventSent != null) {
+                com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog(
+                    spec = com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
+                        title = searchSpec.title,
+                        cancelLabel = searchSpec.cancelLabel,
+                        selectOnlyLabel = searchSpec.selectOnlyLabel,
+                        proceedLabel = searchSpec.proceedLabel
+                    ),
+                    onProceed = {
+                        searchConfirmDialogSpec.value = null
+                        onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                    },
+                    onSelect = {
+                        searchConfirmDialogSpec.value = null
+                        onSearchEventSent(SearchContract.Event.ConfirmSelectionStay)
+                    },
+                    onCancel = {
+                        searchConfirmDialogSpec.value = null
+                        onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
+                    },
+                    onDismissRequest = {
+                        searchConfirmDialogSpec.value = null
+                        onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
                     }
                 )
             }
@@ -546,12 +592,7 @@ private fun OrderFulfilmentScreenPreview(
     GPCTheme {
         OrderFulfilmentScreen(
             state = state,
-            searchState = SearchContract.State(
-                searchText = "",
-                searchResults = emptyList(),
-                orderSearchSuggestionList = emptyList(),
-                isSearchActive = false
-            ),
+            searchState = SearchContract.State.empty(),
             onEventSent = {},
             onSearchEventSent = {},
             effectFlow = null,

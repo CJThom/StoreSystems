@@ -16,6 +16,7 @@ fun OrderListScreenDestination(
         onEventSent = { event -> orderListScreenViewModel.setEvent(event) },
         onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderListScreenViewModel.effect,
-        onOutcome = onOutcome
+        onOutcome = onOutcome,
+        searchEffectFlow = searchViewModel.effect,
     )
 }

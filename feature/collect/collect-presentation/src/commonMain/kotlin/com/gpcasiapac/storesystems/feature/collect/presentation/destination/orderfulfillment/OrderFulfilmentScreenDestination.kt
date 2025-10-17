@@ -17,5 +17,6 @@ fun OrderFulfilmentScreenDestination(
         onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderFulfilmentScreenViewModel.effect,
         onOutcome = onOutcome,
+        searchEffectFlow = searchViewModel.effect,
     )
 }

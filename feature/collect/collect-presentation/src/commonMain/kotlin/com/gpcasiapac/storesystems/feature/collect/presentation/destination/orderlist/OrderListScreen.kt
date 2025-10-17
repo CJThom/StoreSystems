@@ -88,6 +88,7 @@ fun OrderListScreen(
     onSearchEventSent: (SearchContract.Event) -> Unit,
     effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
+    searchEffectFlow: Flow<SearchContract.Effect>? = null,
 ) {
     // Shared animation flags and timings
 //    val multiFlags = rememberMultiSelectTransitionFlags(state.isMultiSelectionEnabled)
@@ -152,6 +153,22 @@ fun OrderListScreen(
 
                 is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
                     confirmDialogSpec.value = effect
+                }
+            }
+        }
+    }
+
+    // Search dialog state for multi-select confirmation (from SearchViewModel)
+    val searchConfirmDialogSpec = remember { mutableStateOf<SearchContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
+
+    LaunchedEffect(searchEffectFlow) {
+        searchEffectFlow?.collectLatest { effect ->
+            when (effect) {
+                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
+                    searchConfirmDialogSpec.value = effect
+                }
+                is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
+                    // handled via searchState.isSearchActive syncing
                 }
             }
         }
@@ -238,36 +255,36 @@ fun OrderListScreen(
                             },
                             searchResults = searchState.orderSearchSuggestionList.map { it.text },
                             searchOrderItems = searchState.searchResults,
-                            isMultiSelectionEnabled = state.isMultiSelectionEnabled,
-                            selectedOrderIdList = state.selectedOrderIdList,
-                            isSelectAllChecked = state.isSelectAllChecked,
+                            isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
+                            selectedOrderIdList = searchState.selectedOrderIdList,
+                            isSelectAllChecked = searchState.isSelectAllChecked,
                             isRefreshing = state.isRefreshing,
                             onOpenOrder = { id ->
                                 onEventSent(OrderListScreenContract.Event.OpenOrder(id))
                             },
                             onCheckedChange = { orderId, checked ->
-                                onEventSent(
-                                    OrderListScreenContract.Event.OrderChecked(
+                                onSearchEventSent(
+                                    SearchContract.Event.OrderChecked(
                                         orderId = orderId,
                                         checked = checked
                                     )
                                 )
                             },
                             onSelectAllToggle = { checked ->
-                                onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                                onSearchEventSent(SearchContract.Event.SelectAll(checked))
                             },
                             onCancelSelection = {
-                                onEventSent(OrderListScreenContract.Event.CancelSelection)
+                                onSearchEventSent(SearchContract.Event.CancelSelection)
                             },
                             onEnterSelectionMode = {
-                                onEventSent(
-                                    OrderListScreenContract.Event.ToggleSelectionMode(
+                                onSearchEventSent(
+                                    SearchContract.Event.ToggleSelectionMode(
                                         enabled = true
                                     )
                                 )
                             },
                             onSelectClick = {
-                                onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                                onSearchEventSent(SearchContract.Event.ConfirmSelection)
                             },
                             modifier = Modifier.fillMaxWidth(),
                             placeholderText = "Search by Order #, Name, Phone"
@@ -399,7 +416,7 @@ fun OrderListScreen(
         }
 
 
-        // Confirmation dialog
+        // Confirmation dialog (main list)
         val spec = confirmDialogSpec.value
         if (spec != null) {
             MultiSelectConfirmDialog(
@@ -419,6 +436,37 @@ fun OrderListScreen(
                 onDismissRequest = {
                     confirmDialogSpec.value = null
                     onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+                }
+            )
+        }
+
+        // Confirmation dialog (search)
+        val searchSpec = searchConfirmDialogSpec.value
+        if (searchSpec != null) {
+            MultiSelectConfirmDialog(
+                spec = com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
+                    title = searchSpec.title,
+                    cancelLabel = searchSpec.cancelLabel,
+                    selectOnlyLabel = searchSpec.selectOnlyLabel,
+                    proceedLabel = searchSpec.proceedLabel
+                ),
+                onProceed = {
+                    searchConfirmDialogSpec.value = null
+                    onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                    // Also trigger proceed outcome on main VM to keep behavior
+                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
+                },
+                onSelect = {
+                    searchConfirmDialogSpec.value = null
+                    onSearchEventSent(SearchContract.Event.ConfirmSelectionStay)
+                },
+                onCancel = {
+                    searchConfirmDialogSpec.value = null
+                    onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
+                },
+                onDismissRequest = {
+                    searchConfirmDialogSpec.value = null
+                    onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
                 }
             )
         }
