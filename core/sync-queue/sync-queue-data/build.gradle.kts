@@ -3,6 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 kotlin {
@@ -10,10 +13,26 @@ kotlin {
     jvm()
     sourceSets {
         commonMain.dependencies {
+            api(project(":core:sync-queue:sync-queue-domain"))
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.koin.core)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.room.ktx)
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", libs.androidx.room.compiler)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+    generateKotlin = true
 }
 
 android {
