@@ -62,10 +62,10 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorde
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
@@ -96,8 +96,7 @@ fun OrderFulfilmentScreen(
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
     onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
-    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
-    searchEffectFlow: Flow<SearchContract.Effect>? = null,
+    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -115,10 +114,6 @@ fun OrderFulfilmentScreen(
     val searchBarState = rememberSearchBarState(
         initialValue = SearchBarValue.Collapsed
     )
-
-//    val searchBarState = rememberSearchBarState(
-//        initialValue = if (searchState.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed
-//    )
 
     // Keep search bar animation in sync with SearchViewModel
     if (searchState != null) {
@@ -176,24 +171,26 @@ fun OrderFulfilmentScreen(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(minSize = 320.dp),
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding,
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
             horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
+
+            item { Box(Modifier.size(Dimens.Space.medium)) }
+
             // Header
             item(span = { GridItemSpan(maxLineSpan) }) {
                 HeaderMedium(
                     text = "Order List",
                     isLoading = state.isLoading,
                     contentPadding = PaddingValues(
-                        start = Dimens.Space.medium,
-                        top = Dimens.Space.medium,
-                        end = Dimens.Space.medium
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.small
                     )
                 )
             }
 
             // Search bar (full span)
-            if (state.collectOrderListItemStateList.isNotEmpty() && (searchState != null && onSearchEventSent != null)) {
+            // Required hacky hiding to simulate 'Lookup' button expansion
+            if ((searchState != null && onSearchEventSent != null)) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     MBoltSearchBar(
                         query = searchState.searchText,
@@ -254,12 +251,10 @@ fun OrderFulfilmentScreen(
                                 if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
                             ),
                         placeholderText = "Search by Order #, Name, Phone",
-                        collapsedContentPadding = PaddingValues(horizontal = Dimens.Space.medium),
-//                        collapsedContentPadding = PaddingValues(
-//                            start = Dimens.Space.medium,
-//                            end = Dimens.Space.medium,
-//                            bottom = Dimens.Space.medium
-//                        ),
+                        collapsedContentPadding = PaddingValues(
+                            horizontal = Dimens.Space.medium,
+                            vertical = Dimens.Space.small
+                        ),
                         collapsedShape = CircleShape,
                         collapsedColors = SearchBarDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -274,9 +269,7 @@ fun OrderFulfilmentScreen(
                 }
             }
 
-            // Empty state
-            val itemsList = state.collectOrderListItemStateList
-            if (itemsList.isEmpty()) {
+            if (state.collectOrderListItemStateList.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     EmptyOrderPlaceholderCard(
                         onLookupClick = {
@@ -289,15 +282,16 @@ fun OrderFulfilmentScreen(
             } else {
                 // Orders grid
                 items(
-                    items = itemsList,
+                    items = state.collectOrderListItemStateList,
                     key = { it.invoiceNumber },
-                  //  span = { GridItemSpan(maxLineSpan) }
                 ) { collectOrderState ->
                     CheckboxCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Dimens.Space.medium)
-                            .animateItem(),
+                            .padding(
+                                horizontal = Dimens.Space.medium,
+                                vertical = Dimens.Space.small
+                            ).animateItem(),
                         isChecked = false,
                         isCheckable = false,
                         onCheckedChange = {},
@@ -366,15 +360,31 @@ fun OrderFulfilmentScreen(
                 }
             }
 
+            if(state.collectOrderListItemStateList.isNotEmpty()){
+                item { Box(Modifier.size(Dimens.Space.medium)) }
+            }
+
             // Divider and actions (full span)
-            item(span = { GridItemSpan(maxLineSpan) }) { HorizontalDivider() }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
             item(span = { GridItemSpan(maxLineSpan) }) {
                 ActionsContent(
                     state = state,
                     onEventSent = onEventSent
                 )
             }
-            item(span = { GridItemSpan(maxLineSpan) }) { HorizontalDivider() }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
             item(span = { GridItemSpan(maxLineSpan) }) {
                 ActionButton(
                     modifier = Modifier.padding(Dimens.Space.medium),
@@ -454,13 +464,14 @@ fun OrderFulfilmentScreen(
 @Composable
 private fun ActionsContent(
     state: OrderFulfilmentScreenContract.State,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
 
     // Compact layout: stack vertically
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         CollectionTypeSection(
@@ -552,7 +563,9 @@ private fun CollectionTypeContent(
                 onCourierNameChange = { name ->
                     onEventSent(OrderFulfilmentScreenContract.Event.CourierNameChanged(name))
                 },
-                isLoading = state.isLoading
+                isLoading = state.isLoading,
+                modifier = Modifier,
+                contentPadding = PaddingValues(bottom = Dimens.Space.medium)
             )
         }
 
@@ -679,7 +692,7 @@ private fun MultiOrderListSection(
 private fun EmptyOrderPlaceholderCard(
     onLookupClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(horizontal = Dimens.Space.medium),
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
     isLoading: Boolean = false,
 ) {
     Box(

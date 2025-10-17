@@ -1,6 +1,8 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
@@ -22,13 +24,16 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 internal fun CourierCollectionContent(
     courierName: String,
     onCourierNameChange: (String) -> Unit,
-    isLoading: Boolean = false
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     OutlinedTextField(
         value = courierName,
         onValueChange = onCourierNameChange,
         label = { Text("Courier name") },
-        modifier = Modifier
+        modifier = modifier
+            .padding(contentPadding)
             .fillMaxWidth()
             .placeholder(visible = isLoading),
         trailingIcon = {
