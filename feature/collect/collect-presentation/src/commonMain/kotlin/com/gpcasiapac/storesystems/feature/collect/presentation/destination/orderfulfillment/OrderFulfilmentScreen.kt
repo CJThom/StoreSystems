@@ -310,7 +310,8 @@ fun OrderFulfilmentScreen(
                     CheckboxCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Dimens.Space.medium),
+                            .padding(horizontal = Dimens.Space.medium)
+                            .animateItem(),
                         isChecked = false,
                         isCheckable = false,
                         onCheckedChange = {},
