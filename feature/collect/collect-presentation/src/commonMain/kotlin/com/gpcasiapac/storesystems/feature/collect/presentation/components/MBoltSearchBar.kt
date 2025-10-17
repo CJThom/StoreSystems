@@ -52,6 +52,7 @@ import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.BorderStroke
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,8 +82,10 @@ fun MBoltSearchBar(
     modifier: Modifier = Modifier,
     placeholderText: String = "Search...",
     // Style overrides for collapsed bar (optional)
+    collapsedContentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
     collapsedShape: Shape = MaterialTheme.shapes.small,
     collapsedColors: SearchBarColors = SearchBarDefaults.colors(),
+    collapsedBorder: BorderStroke? = null,
 ) {
 
     // TODO: Somehow sync this with the onExpandedChange of the SearchBarInputField
@@ -109,25 +112,32 @@ fun MBoltSearchBar(
     }
 
     Box(modifier = modifier) {
-        // Collapsed search bar (lives in TopBar)
-        SearchBar(
-            modifier = Modifier.padding(Dimens.Space.medium),
-            state = searchBarState,
+        // Collapsed search bar (embedded)
+        Surface(
+            modifier = Modifier.padding(collapsedContentPadding),
             shape = collapsedShape,
-            colors = collapsedColors,
-            inputField = {
-                SearchBarInputField(
-                    query = query,
-                    onQueryChange = onQueryChange,
-                    isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
-                    onExpandedChange = onExpandedChange,
-                    placeholderText = placeholderText,
-                    onSearch = onSearch,
-                    onBackPressed = onBackPressed,
-                    onClearClick = onClearClick,
-                )
-            }
-        )
+            color = Color.Transparent,
+            border = collapsedBorder,
+        ) {
+            SearchBar(
+                modifier = Modifier,
+                state = searchBarState,
+                shape = collapsedShape,
+                colors = collapsedColors,
+                inputField = {
+                    SearchBarInputField(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                        onExpandedChange = onExpandedChange,
+                        placeholderText = placeholderText,
+                        onSearch = onSearch,
+                        onBackPressed = onBackPressed,
+                        onClearClick = onClearClick,
+                    )
+                }
+            )
+        }
 
         Surface {
             // Expanded full-screen search bar (opens in new window)
