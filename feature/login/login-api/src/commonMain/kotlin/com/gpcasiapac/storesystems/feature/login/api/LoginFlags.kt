@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.feature.login.api
 
-import com.gpcasiapac.storesystems.common.feature_flags.FlagKey
+import com.gpcasiapac.storesystems.external.feature_flags.api.FlagKey
 
 /**
  * Type-safe keys for toggling Login feature behavior.
@@ -14,7 +14,7 @@ object LoginFlags {
 
     /** Demo: require MFA step after successful login (no real MFA flow yet). */
     object MfaRequired : FlagKey<Boolean> {
-        override val name: String = "feature.login.mfa_required"
+        override val name: String = "collectMfaRequired"
         override val default: Boolean = true
     }
 

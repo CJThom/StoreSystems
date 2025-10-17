@@ -44,8 +44,11 @@ include(":common:presentation")
 include(":common:networking")
 include(":common:persistence")
 include(":common:telemetry")
-include(":common:feature-flags")
 include(":common:scanning")
+
+// External modules
+include(":external:feature-flags:api")
+include(":external:feature-flags:data")
 
 // Foundation modules
 include(":foundation:design-system")
