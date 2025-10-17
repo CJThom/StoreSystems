@@ -10,23 +10,20 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
-    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
+    private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -99,9 +96,19 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Observe selected order IDs and map to list of orders to render
+        // Observe the latest open Work Order with its orders, update signature and the UI list
         viewModelScope.launch {
-            observeSelectedOrdersList()
+            observeLatestOpenWorkOrderWithOrdersUseCase(userRefId).collectLatest { wo ->
+                val listState = wo?.collectOrderWithCustomerList?.toListItemState().orEmpty()
+                setState {
+                    copy(
+                        collectOrderListItemStateList = listState,
+                        signatureBase64 = wo?.collectWorkOrder?.signature,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }
         }
     }
 
@@ -184,7 +191,6 @@ class OrderFulfilmentScreenViewModel(
             }
 
 
-
             // Correspondence
             is OrderFulfilmentScreenContract.Event.ToggleCorrespondence -> {
                 onCorrespondenceToggled(event.id)
@@ -203,9 +209,11 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.ConfirmSearchSelection -> {
                 setEffect { OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog() }
             }
+
             is OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed -> {
                 // No-op; SearchViewModel will handle persistence and collapse
             }
+
             is OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog -> {
                 // No-op; UI dismisses dialog
             }
@@ -239,23 +247,6 @@ class OrderFulfilmentScreenViewModel(
         }
     }
 
-
-    private suspend fun observeSelectedOrdersList() {
-        observeOrderSelectionUseCase("mock")
-            .flatMapLatest { ids ->
-                getCollectOrderWithCustomerListFlowUseCase(ids)
-            }
-            .collectLatest { orders ->
-                val listState = orders.toListItemState()
-                setState {
-                    copy(
-                        collectOrderListItemStateList = listState,
-                        isLoading = false,
-                        error = null
-                    )
-                }
-            }
-    }
 
     private suspend fun fetchOrders(successToast: String) {
         setState {

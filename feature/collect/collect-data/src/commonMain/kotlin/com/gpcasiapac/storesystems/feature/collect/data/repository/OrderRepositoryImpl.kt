@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.feature.collect.data.repository
 
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
-import com.gpcasiapac.storesystems.common.kotlin.util.StringUtils
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
@@ -19,16 +18,14 @@ import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetw
 import com.gpcasiapac.storesystems.feature.collect.data.util.randomUUID
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderSummary
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlin.time.Clock
 
 class OrderRepositoryImpl(
@@ -50,6 +47,23 @@ class OrderRepositoryImpl(
         return collectOrderDao
             .getCollectOrderWithCustomerRelationListFlow(invoiceNumbers)
             .map { it.toDomain() }
+    }
+
+    override fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?> {
+        return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
+            .map { it?.collectWorkOrderEntity?.signature }
+    }
+
+    override fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?> {
+        return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
+            .map { relation ->
+                relation?.let {
+                    com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers(
+                        collectWorkOrder = it.collectWorkOrderEntity.toDomain(),
+                        collectOrderWithCustomerList = it.collectOrderWithCustomerRelation.toDomain()
+                    )
+                }
+            }
     }
 
     // New: observe main orders via DB-side filter + sort
@@ -106,12 +120,6 @@ class OrderRepositoryImpl(
         }
     }
 
-    override suspend fun saveSignature(
-        signature: String,
-        invoiceNumber: List<String>
-    ): Result<Unit> = runCatching {
-        collectOrderDao.updateSignature(signature, invoiceNumber)
-    }
 
     override suspend fun attachSignatureToWorkOrder(
         workOrderId: String,
@@ -122,13 +130,21 @@ class OrderRepositoryImpl(
         database.useWriterConnection { transactor ->
             transactor.immediateTransaction {
                 workOrderDao.attachSignature(workOrderId, signature, now, signedByName)
+            }
+        }
+    }
 
-                // Compatibility
-                val workOrderWithOrders = workOrderDao.getWorkOrder(workOrderId)
-                val invoiceNumbers = workOrderWithOrders?.orders?.map { it.invoiceNumber }
-                if (!invoiceNumbers.isNullOrEmpty()) {
-                    collectOrderDao.updateSignature(signature, invoiceNumbers)
-                }
+    override suspend fun attachSignatureToLatestOpenWorkOrder(
+        userRefId: String,
+        signature: String,
+        signedByName: String?
+    ): Result<Unit> = runCatching {
+        val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+            ?: error("No open work order for user: $userRefId")
+        val now = Clock.System.now()
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.attachSignature(openWorkOrder.workOrderId, signature, now, signedByName)
             }
         }
     }
@@ -139,8 +155,11 @@ class OrderRepositoryImpl(
 
     override fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>> {
         return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
-            .map { workOrderWithOrders ->
-                workOrderWithOrders?.orders?.map { it.invoiceNumber }?.toSet() ?: emptySet()
+            .map { relation ->
+                relation?.collectOrderWithCustomerRelation
+                    ?.map { it.orderEntity.invoiceNumber }
+                    ?.toSet()
+                    ?: emptySet()
             }
     }
 

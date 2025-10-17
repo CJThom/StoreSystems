@@ -502,7 +502,7 @@ private fun ActionsContent(
             onRetakeClick = {
                 onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
             },
-            image = null
+            image = state.signatureBase64
         )
 
         if (state.featureFlags.isCorrespondenceSectionVisible) {

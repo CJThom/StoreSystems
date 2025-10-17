@@ -10,6 +10,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSe
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
@@ -32,6 +34,8 @@ val collectDomainModule = module {
     factoryOf(::ObserveOrderSelectionResultUseCase)
 
     factoryOf(::SaveSignatureUseCase)
+    factoryOf(::ObserveWorkOrderSignatureUseCase)
+    factoryOf(::ObserveLatestOpenWorkOrderWithOrdersUseCase)
     // Selection use cases
     factoryOf(::ObserveOrderSelectionUseCase)
     factoryOf(::SetOrderSelectionUseCase)

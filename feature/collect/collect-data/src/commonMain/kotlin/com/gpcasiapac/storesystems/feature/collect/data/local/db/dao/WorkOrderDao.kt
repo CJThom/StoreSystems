@@ -7,7 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrders
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrderWithCustomersRelation
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
 
@@ -35,19 +35,19 @@ interface WorkOrderDao {
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE work_order_id = :id")
-    suspend fun getWorkOrder(id: String): WorkOrderWithOrders?
+    suspend fun getWorkOrder(id: String): WorkOrderWithOrderWithCustomersRelation?
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE work_order_id = :id")
-    fun observeWorkOrder(id: String): Flow<WorkOrderWithOrders?>
+    fun observeWorkOrder(id: String): Flow<WorkOrderWithOrderWithCustomersRelation?>
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC")
-    fun observeOpenWorkOrdersForUser(userId: String): Flow<List<WorkOrderWithOrders>>
+    fun observeOpenWorkOrdersForUser(userId: String): Flow<List<WorkOrderWithOrderWithCustomersRelation>>
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1")
-    fun observeLatestOpenWorkOrderForUser(userId: String): Flow<WorkOrderWithOrders?>
+    fun observeLatestOpenWorkOrderForUser(userId: String): Flow<WorkOrderWithOrderWithCustomersRelation?>
 
     @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1")
     suspend fun getOpenWorkOrderForUser(userId: String): CollectWorkOrderEntity?

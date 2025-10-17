@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.feature.collect.domain.repository
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderSummary
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -48,10 +47,15 @@ interface OrderRepository {
      */
     suspend fun refreshOrders(): Result<Unit>
 
-    suspend fun saveSignature(signature: String, invoiceNumber: List<String>): Result<Unit>
 
     /** Observe the set of selected order IDs for the given user scope. */
     fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>>
+
+    /** Observe the signature (Base64) for the latest open Work Order for the given user. */
+    fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?>
+
+    /** Observe the full latest open Work Order with its orders (signature included). */
+    fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?>
 
     /** Replace the entire set of selected IDs. */
     suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
@@ -77,9 +81,16 @@ interface OrderRepository {
         invoiceNumbers: List<String>
     ): Result<String> // returns workOrderId
 
+    // TODO: Keep for Mutliple open WorkOrders
     suspend fun attachSignatureToWorkOrder(
         workOrderId: String,
         signature: String,        // keep String (compat with your current model)
+        signedByName: String?
+    ): Result<Unit>
+
+    suspend fun attachSignatureToLatestOpenWorkOrder(
+        userRefId: String,
+        signature: String,
         signedByName: String?
     ): Result<Unit>
 

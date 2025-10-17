@@ -57,8 +57,9 @@ class SignatureScreenViewModel(
                                 imageBitmapToBase64Encoded(imageBitmap = signatureBitmap)
                             // Call the use case with correct parameters
                             saveSignatureUseCase(
+                                userRefId = "mock",
                                 base64Signature = base64String,
-                                invoiceNumber = viewState.value.invoiceNumbers
+                                signedByName = null
                             )
 
                             // Set success effect

@@ -37,6 +37,8 @@ object OrderFulfilmentScreenContract {
 
         // Signature data (stores actual signature strokes for preview)
         val signatureStrokes: List<List<Offset>>,
+        // Signature image as Base64 (observed from Work Order)
+        val signatureBase64: String? = null,
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
