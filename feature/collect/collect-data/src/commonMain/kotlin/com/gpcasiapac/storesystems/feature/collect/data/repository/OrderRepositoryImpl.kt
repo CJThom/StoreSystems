@@ -38,31 +38,13 @@ class OrderRepositoryImpl(
     private val orderNetworkDataSource: OrderNetworkDataSource,
 ) : OrderRepository {
 
-    override fun getCollectOrderWithCustomerWithLineItemsListFlow(orderQuery: OrderQuery): Flow<List<CollectOrderWithCustomerWithLineItems>> {
-        return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationListFlow()
-            .map { orderEntityList ->
-                val collectOrderList: List<CollectOrderWithCustomerWithLineItems> =
-                    orderEntityList.toDomain()
-                val query = orderQuery.searchText.trim().lowercase()
-                if (query.isEmpty()) collectOrderList else collectOrderList.filter { o ->
-                    val name = if (o.customer.customerType == CustomerType.B2B) {
-                        o.customer.accountName.orEmpty()
-                    } else StringUtils.fullName(o.customer.firstName, o.customer.lastName)
-                    name.lowercase().contains(query) ||
-                            o.order.invoiceNumber.lowercase().contains(query) ||
-                            ((o.order.webOrderNumber ?: "").lowercase().contains(query))
-                }
-            }
-    }
 
     override fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?> {
         return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber = invoiceNumber)
             .map { it.toDomain() }
     }
 
-    override fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>> {
-        return collectOrderDao.getCollectOrderWithCustomerRelationListFlow().map { it.toDomain() }
-    }
+
 
     override fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>> {
         return collectOrderDao
@@ -124,12 +106,31 @@ class OrderRepositoryImpl(
         }
     }
 
-
     override suspend fun saveSignature(
         signature: String,
         invoiceNumber: List<String>
     ): Result<Unit> = runCatching {
         collectOrderDao.updateSignature(signature, invoiceNumber)
+    }
+
+    override suspend fun attachSignatureToWorkOrder(
+        workOrderId: String,
+        signature: String,
+        signedByName: String?
+    ): Result<Unit> = runCatching {
+        val now = Clock.System.now()
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.attachSignature(workOrderId, signature, now, signedByName)
+
+                // Compatibility
+                val workOrderWithOrders = workOrderDao.getWorkOrder(workOrderId)
+                val invoiceNumbers = workOrderWithOrders?.orders?.map { it.invoiceNumber }
+                if (!invoiceNumbers.isNullOrEmpty()) {
+                    collectOrderDao.updateSignature(signature, invoiceNumbers)
+                }
+            }
+        }
     }
 
     override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> {
@@ -295,132 +296,7 @@ class OrderRepositoryImpl(
     }
 
 
-    override suspend fun attachSignatureToWorkOrder(
-        workOrderId: String,
-        signature: String,
-        signedByName: String?
-    ): Result<Unit> = runCatching {
-        val now = Clock.System.now()
-        database.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                workOrderDao.attachSignature(workOrderId, signature, now, signedByName)
 
-                // Compatibility
-                val workOrderWithOrders = workOrderDao.getWorkOrder(workOrderId)
-                val invoiceNumbers = workOrderWithOrders?.orders?.map { it.invoiceNumber }
-                if (!invoiceNumbers.isNullOrEmpty()) {
-                    collectOrderDao.updateSignature(signature, invoiceNumbers)
-                }
-            }
-        }
-    }
-
-    override fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>> {
-        return workOrderDao.observeOpenWorkOrdersForUser(userRefId).map { list ->
-            list.map {
-                WorkOrderSummary(
-                    id = it.workOrder.workOrderId,
-                    status = "DRAFT", // decouple from DB status; progress saver only
-                    createdAt = it.workOrder.createdAt,
-                    orderCount = it.orders.size
-                )
-            }
-        }
-    }
-
-    override suspend fun submitWorkOrder(workOrderId: String): Result<Unit> =
-        runCatching {
-            // Progress saver semantics: on submit, hand off elsewhere and delete the draft
-            database.useWriterConnection { transactor ->
-                transactor.immediateTransaction {
-                    workOrderDao.deleteWorkOrder(workOrderId)
-                }
-            }
-        }
-
-    // =====================
-    // Work-order-scoped APIs (Option B support)
-    // These are additive and do not change existing interface methods.
-    // =====================
-
-    // Observe selected invoice ids for a specific draft
-    fun observeSelectedIdSetForWorkOrder(workOrderId: String): Flow<Set<String>> =
-        workOrderDao.observeSelectedInvoiceNumbers(workOrderId).map { it.toSet() }
-
-    // Replace all selected invoices for a given draft (does not drop the draft row)
-    suspend fun replaceSelectedIdsForWorkOrder(workOrderId: String, invoiceNumbers: List<String>) {
-        database.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                workOrderDao.deleteAllItemsForWorkOrder(workOrderId)
-                if (invoiceNumbers.isNotEmpty()) {
-                    val items = invoiceNumbers.map { invoice ->
-                        CollectWorkOrderItemEntity(workOrderId = workOrderId, invoiceNumber = invoice)
-                    }
-                    workOrderDao.insertItems(items)
-                }
-            }
-        }
-    }
-
-    // Add a single invoice to an existing draft
-    suspend fun addSelectedIdToWorkOrder(workOrderId: String, invoiceNumber: String) {
-        database.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                workOrderDao.insertItem(CollectWorkOrderItemEntity(workOrderId, invoiceNumber))
-            }
-        }
-    }
-
-    // Remove a single invoice from a draft; if it becomes empty, delete the draft
-    suspend fun removeSelectedIdFromWorkOrder(workOrderId: String, invoiceNumber: String) {
-        database.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                workOrderDao.deleteWorkOrderItem(workOrderId, invoiceNumber)
-                val remaining = workOrderDao.getWorkOrderItemCount(workOrderId)
-                if (remaining == 0) workOrderDao.deleteWorkOrder(workOrderId)
-            }
-        }
-    }
-
-    // Delete a draft explicitly
-    override suspend fun clearWorkOrderById(workOrderId: String) {
-        workOrderDao.deleteWorkOrder(workOrderId)
-    }
-
-    // =====================
-    // Progress helpers (Save/Discard logic)
-    // =====================
-    override suspend fun hasProgress(workOrderId: String): Boolean {
-        val draft = workOrderDao.getWorkOrder(workOrderId) ?: return false
-        val itemCount = draft.orders.size
-        val hasMultiSelection = itemCount > 1
-        val hasSignature = draft.workOrder.signature?.isNotBlank() == true
-        return hasMultiSelection || hasSignature
-    }
-
-    override fun observeHasProgress(workOrderId: String): Flow<Boolean> =
-        workOrderDao.observeWorkOrder(workOrderId).map { draft ->
-            if (draft == null) false
-            else {
-                val itemCount = draft.orders.size
-                val hasMultiSelection = itemCount > 1
-                val hasSignature = draft.workOrder.signature?.isNotBlank() == true
-                hasMultiSelection || hasSignature
-            }
-        }
-
-    override suspend fun discardIfNoProgress(workOrderId: String): Boolean {
-        val draft = workOrderDao.getWorkOrder(workOrderId) ?: return false
-        val itemCount = draft.orders.size
-        val hasMultiSelection = itemCount > 1
-        val hasSignature = draft.workOrder.signature?.isNotBlank() == true
-        val keep = hasMultiSelection || hasSignature
-        if (!keep) {
-            workOrderDao.deleteWorkOrder(workOrderId)
-            return true
-        }
-        return false
-    }
 
     private fun escapeForLike(input: String): String {
         return input

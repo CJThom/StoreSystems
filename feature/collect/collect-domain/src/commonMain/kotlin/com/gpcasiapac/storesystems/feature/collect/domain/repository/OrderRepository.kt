@@ -28,14 +28,8 @@ data class SearchQuery(
 interface OrderRepository {
     /** Observe the total count of orders in the DB (independent of filters/search). */
     fun observeOrderCount(): Flow<Int>
-    /**
-     * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
-     */
-    fun getCollectOrderWithCustomerWithLineItemsListFlow(orderQuery: OrderQuery): Flow<List<CollectOrderWithCustomerWithLineItems>>
 
     fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
-
-    fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>>
 
     fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>>
 
@@ -89,21 +83,4 @@ interface OrderRepository {
         signedByName: String?
     ): Result<Unit>
 
-    // TODO: remove?
-    fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>>
-
-    suspend fun submitWorkOrder(workOrderId: String): Result<Unit>
-
-    // Progress/persistence helpers for Save/Discard behavior
-    /** True if the draft has progress worth keeping (multi-selection or signature). */
-    suspend fun hasProgress(workOrderId: String): Boolean
-
-    /** Observe progress state for a draft; useful to decide showing Save/Discard. */
-    fun observeHasProgress(workOrderId: String): Flow<Boolean>
-
-    /** Delete the draft if no progress; returns true if deleted. */
-    suspend fun discardIfNoProgress(workOrderId: String): Boolean
-
-    /** Delete a draft explicitly (Discard choice). */
-    suspend fun clearWorkOrderById(workOrderId: String)
 }
