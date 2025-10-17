@@ -95,6 +95,9 @@ fun OrderFulfilmentScreen(
     val dialogSpec =
         remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
 
+    // Parent-driven confirm dialog for search selection (2-button)
+    val selectionConfirmDialogSpec = remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null) }
+
     // Search bar state management for the expanded overlay
     val searchBarState = rememberSearchBarState(
         initialValue = SearchBarValue.Collapsed
@@ -129,24 +132,10 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
                     dialogSpec.value = effect
                 }
-
+                is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
+                    selectionConfirmDialogSpec.value = effect
+                }
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
-            }
-        }
-    }
-
-    // Collect search effects to show multi-select confirmation dialog from search Accept button
-    val searchConfirmDialogSpec = remember { mutableStateOf<SearchContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
-
-    LaunchedEffect(searchEffectFlow) {
-        searchEffectFlow?.collectLatest { effect ->
-            when (effect) {
-                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
-                    searchConfirmDialogSpec.value = effect
-                }
-                is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
-                    // Expansion is handled by searchState.isSearchActive syncing
-                }
             }
         }
     }
@@ -250,7 +239,7 @@ fun OrderFulfilmentScreen(
                                 onSearchEventSent(SearchContract.Event.ToggleSelectionMode(true))
                             },
                             onSelectClick = {
-                                onSearchEventSent(SearchContract.Event.ConfirmSelection)
+                                onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
                             },
                             modifier = Modifier.fillMaxWidth().then(
                                 if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
@@ -322,31 +311,29 @@ fun OrderFulfilmentScreen(
                 )
             }
 
-            // Search selection confirmation dialog
-            val searchSpec = searchConfirmDialogSpec.value
-            if (searchSpec != null && onSearchEventSent != null) {
-                com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog(
-                    spec = com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
-                        title = searchSpec.title,
-                        cancelLabel = searchSpec.cancelLabel,
-                        selectOnlyLabel = searchSpec.selectOnlyLabel,
-                        proceedLabel = searchSpec.proceedLabel
-                    ),
-                    onProceed = {
-                        searchConfirmDialogSpec.value = null
-                        onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
-                    },
-                    onSelect = {
-                        searchConfirmDialogSpec.value = null
-                        onSearchEventSent(SearchContract.Event.ConfirmSelectionStay)
-                    },
-                    onCancel = {
-                        searchConfirmDialogSpec.value = null
-                        onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
-                    },
+            // Search selection confirmation dialog (parent-driven, 2-button)
+            val selectSpec = selectionConfirmDialogSpec.value
+            if (selectSpec != null) {
+                AlertDialog(
                     onDismissRequest = {
-                        searchConfirmDialogSpec.value = null
-                        onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
+                        selectionConfirmDialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+                    },
+                    title = { Text(selectSpec.title) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            selectionConfirmDialogSpec.value = null
+                            if (onSearchEventSent != null) {
+                                onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                            }
+                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
+                        }) { Text(selectSpec.confirmLabel) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            selectionConfirmDialogSpec.value = null
+                            onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+                        }) { Text(selectSpec.cancelLabel) }
                     }
                 )
             }

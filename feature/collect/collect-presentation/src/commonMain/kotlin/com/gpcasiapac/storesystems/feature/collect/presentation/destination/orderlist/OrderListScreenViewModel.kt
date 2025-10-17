@@ -197,6 +197,9 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.ConfirmSelection -> {
                 handleConfirmSelection()
             }
+            is OrderListScreenContract.Event.ConfirmSearchSelection -> {
+                setEffect { OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog() }
+            }
             is OrderListScreenContract.Event.ConfirmSelectionStay -> {
                 onConfirmSelectionStay()
             }

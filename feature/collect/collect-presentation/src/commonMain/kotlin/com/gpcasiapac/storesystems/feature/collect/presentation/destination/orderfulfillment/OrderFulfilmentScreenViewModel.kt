@@ -195,6 +195,16 @@ class OrderFulfilmentScreenViewModel(
                 confirm()
             }
 
+            // Search-origin selection confirmation
+            is OrderFulfilmentScreenContract.Event.ConfirmSearchSelection -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog() }
+            }
+            is OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed -> {
+                // No-op; SearchViewModel will handle persistence and collapse
+            }
+            is OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog -> {
+                // No-op; UI dismisses dialog
+            }
 
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
                 setEffect {

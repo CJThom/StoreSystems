@@ -85,6 +85,10 @@ object OrderFulfilmentScreenContract {
         // Final action
         data object Confirm : Event
 
+        // Search-origin selection confirmation
+        data object ConfirmSearchSelection : Event
+        data object ConfirmSearchSelectionProceed : Event
+        data object DismissConfirmSearchSelectionDialog : Event
 
         // Order item click
         data class OrderClicked(val invoiceNumber: String) : Event
@@ -99,6 +103,13 @@ object OrderFulfilmentScreenContract {
             val message: String = "You have unsaved changes. Save as draft or discard?",
             val saveLabel: String = "Save",
             val discardLabel: String = "Discard",
+            val cancelLabel: String = "Cancel",
+        ) : Effect
+
+        // Two-button confirm dialog for selection coming from Search in Fulfilment
+        data class ShowConfirmSelectionDialog(
+            val title: String = "Confirm selection",
+            val confirmLabel: String = "Confirm",
             val cancelLabel: String = "Cancel",
         ) : Effect
 

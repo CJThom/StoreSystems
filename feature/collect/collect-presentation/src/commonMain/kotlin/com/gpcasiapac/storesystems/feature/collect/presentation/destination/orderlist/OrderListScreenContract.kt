@@ -80,6 +80,8 @@ object OrderListScreenContract {
         data class SelectAll(val checked: Boolean) : Event
         data object CancelSelection : Event
         data object ConfirmSelection : Event
+        // Search-origin selection confirm
+        data object ConfirmSearchSelection : Event
         // Dialog actions for multi-select confirmation
         data object ConfirmSelectionStay : Event
         data object ConfirmSelectionProceed : Event
@@ -112,6 +114,14 @@ object OrderListScreenContract {
 
         // Multi-select confirmation dialog trigger
         data class ShowMultiSelectConfirmDialog(
+            val title: String = "Confirm selection",
+            val cancelLabel: String = "Cancel",
+            val selectOnlyLabel: String = "Select only",
+            val proceedLabel: String = "Select and proceed",
+        ) : Effect
+
+        // Search-origin multi-select confirmation dialog trigger
+        data class ShowSearchMultiSelectConfirmDialog(
             val title: String = "Confirm selection",
             val cancelLabel: String = "Cancel",
             val selectOnlyLabel: String = "Select only",

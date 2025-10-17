@@ -132,6 +132,8 @@ fun OrderListScreen(
     // Dialog state for multi-select confirmation
     val confirmDialogSpec =
         remember { mutableStateOf<OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
+    // Parent-driven search confirmation dialog spec
+    val searchConfirmDialogSpec = remember { mutableStateOf<com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -154,12 +156,19 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
                     confirmDialogSpec.value = effect
                 }
+                is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
+                    // Adapt to SearchContract dialog spec for reuse of common dialog UI
+                    searchConfirmDialogSpec.value = com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Effect.ShowMultiSelectConfirmDialog(
+                        title = effect.title,
+                        cancelLabel = effect.cancelLabel,
+                        selectOnlyLabel = effect.selectOnlyLabel,
+                        proceedLabel = effect.proceedLabel
+                    )
+                }
             }
         }
     }
 
-    // Search dialog state for multi-select confirmation (from SearchViewModel)
-    val searchConfirmDialogSpec = remember { mutableStateOf<SearchContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
 
     LaunchedEffect(searchEffectFlow) {
         searchEffectFlow?.collectLatest { effect ->
@@ -284,7 +293,7 @@ fun OrderListScreen(
                                 )
                             },
                             onSelectClick = {
-                                onSearchEventSent(SearchContract.Event.ConfirmSelection)
+                                onEventSent(OrderListScreenContract.Event.ConfirmSearchSelection)
                             },
                             modifier = Modifier.fillMaxWidth(),
                             placeholderText = "Search by Order #, Name, Phone"
