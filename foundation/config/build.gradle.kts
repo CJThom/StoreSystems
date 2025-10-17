@@ -70,6 +70,8 @@ buildConfig {
         val protocol = properties.getProperty("${environment}.protocol") ?: "http"
         val useMockData = properties.getProperty("${environment}.use_mock_data")?.toBoolean() ?: false
 
+        val launchDarklyKey = properties.getProperty("${environment}.launchdarkly_key") ?: secretProps.getProperty("launchdarkly_key")
+
         // Construct API_BASE_URL from components
         val apiBaseUrl = "$protocol://$host:$port/api"
 
@@ -85,6 +87,7 @@ buildConfig {
         buildConfigField("Int", "PORT", port)
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("Boolean", "USE_MOCK_DATA", useMockData)
+        buildConfigField("String", "LAUNCHDARKLY_KEY", "\"$launchDarklyKey\"")
 
     }
 }

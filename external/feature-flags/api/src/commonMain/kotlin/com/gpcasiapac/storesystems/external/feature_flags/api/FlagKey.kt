@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.common.feature_flags
+package com.gpcasiapac.storesystems.external.feature_flags.api
 
 /**
  * Simple type-safe feature flag key contract for KMP.

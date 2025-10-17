@@ -3,9 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -13,20 +10,30 @@ kotlin {
     jvm()
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.common.presentation)
+            implementation(libs.kotlinx.coroutines.core)
             implementation(projects.external.featureFlags.api)
-            implementation(projects.common.kotlin)
-            implementation(projects.core.identity.identityApi)
-            implementation(libs.androidx.navigation3.runtime)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(compose.runtime)
+            implementation(libs.koin.core)
+            implementation(projects.foundation.config)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
+        
+        androidMain.dependencies {
+            // Android-specific dependencies can be added here
+            implementation(libs.launchdarkly.android.client.sdk)
+
+        }
+        
+        jvmMain.dependencies {
+            // Desktop/JVM-specific dependencies can be added here
+            implementation(
+              libs.launchdarkly.java.server.sdk
+            )
+        }
     }
 }
 
 android {
-    namespace = "com.gpcasiapac.storesystems.feature.login.api"
+    namespace = "com.gpcasiapac.storesystems.external.feature_flags.data"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
