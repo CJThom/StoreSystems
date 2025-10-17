@@ -12,6 +12,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
@@ -25,10 +26,13 @@ class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
     private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
+    private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
         OrderFulfilmentScreenContract.Effect>() {
+
+    private val userRefId = "mock"
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -211,6 +215,12 @@ class OrderFulfilmentScreenViewModel(
                     OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
                         event.invoiceNumber
                     )
+                }
+            }
+
+            is OrderFulfilmentScreenContract.Event.DeselectOrder -> {
+                viewModelScope.launch {
+                    removeOrderSelectionUseCase(event.invoiceNumber, userRefId)
                 }
             }
         }

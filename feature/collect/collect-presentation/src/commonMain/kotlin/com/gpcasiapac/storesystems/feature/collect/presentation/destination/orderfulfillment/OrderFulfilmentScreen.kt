@@ -19,6 +19,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -27,6 +30,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -441,6 +447,7 @@ private fun CollectionTypeContent(
 }
 
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MultiOrderListSection(
     state: OrderFulfilmentScreenContract.State,
@@ -497,7 +504,51 @@ private fun MultiOrderListSection(
                             webOrderNumber = collectOrderState.webOrderNumber,
                             pickedAt = collectOrderState.pickedAt,
                             isLoading = state.isLoading,
-                          //  contendPadding = PaddingValues(Dimens.Space.medium),
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        onEventSent(
+                                            OrderFulfilmentScreenContract.Event.DeselectOrder(
+                                                collectOrderState.invoiceNumber
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = "Delete"
+                                    )
+                                }
+
+                                var showMenu = remember { mutableStateOf(false) }
+                                Box {
+                                    IconButton(
+                                        onClick = { showMenu.value = true },
+                                        modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.MoreVert,
+                                            contentDescription = "More"
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = showMenu.value,
+                                        onDismissRequest = { showMenu.value = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Select all for this customer") },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.SelectAll,
+                                                    contentDescription = "Select all"
+                                                )
+                                            },
+                                            onClick = { showMenu.value = false }
+                                        )
+                                    }
+                                }
+                            }
                         )
                     }
                 }

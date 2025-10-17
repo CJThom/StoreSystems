@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,11 +55,37 @@ fun CollectOrderDetails(
     pickedAt: Instant,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contendPadding: PaddingValues = PaddingValues( Dimens.Space.medium)
+    contendPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
+    actions: @Composable RowScope.() -> Unit = {
+        var showMenu = remember { mutableStateOf(false) }
+        Box {
+            IconButton(
+                onClick = { showMenu.value = true },
+                modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.MoreVert,
+                    contentDescription = "More"
+                )
+            }
+            DropdownMenu(
+                expanded = showMenu.value,
+                onDismissRequest = { showMenu.value = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Select all for this customer") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.SelectAll,
+                            contentDescription = "Select all"
+                        )
+                    },
+                    onClick = { showMenu.value = false }
+                )
+            }
+        }
+    }
 ) {
-
-    // Overflow menu on the right
-    var showMenu = remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier.height(IntrinsicSize.Min).padding(contendPadding),
@@ -112,48 +139,7 @@ fun CollectOrderDetails(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Primary small action button(s)
-                IconButton(
-                    onClick = { /*TODO*/ },
-                    colors = IconButtonDefaults.iconButtonColors(),
-                    modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Propane"
-                    )
-                }
-
-                Box {
-                    IconButton(
-                        onClick = { showMenu.value = true },
-                        modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.MoreVert,
-                            contentDescription = "More"
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = showMenu.value,
-                        onDismissRequest = { showMenu.value = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Select all for this customer") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.SelectAll,
-                                    contentDescription = "Select all"
-                                )
-                            },
-                            onClick = {
-                                showMenu.value = false
-                                // TODO: handle delete click
-                            }
-                        )
-                    }
-                }
+                actions()
             }
         }
     }

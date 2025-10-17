@@ -92,6 +92,9 @@ object OrderFulfilmentScreenContract {
 
         // Order item click
         data class OrderClicked(val invoiceNumber: String) : Event
+
+        // Deselect an order from Fulfilment item actions
+        data class DeselectOrder(val invoiceNumber: String) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
