@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Search
@@ -63,7 +65,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Collec
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
@@ -170,27 +172,10 @@ fun OrderFulfilmentScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(padding)
-//        ) {
-        // Main content
-//        Box(
-//            modifier = Modifier
-//                .padding(padding)
-//                .fillMaxSize()
-//        ) {
-        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+        LazyVerticalGrid(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(minSize = 320.dp),
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding,
-//                contentPadding = PaddingValues(
-//                    start = Dimens.Space.medium,
-//                    end = Dimens.Space.medium,
-//                    top = Dimens.Space.medium,
-//                    bottom = Dimens.Space.medium
-//                ),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
             horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
@@ -305,7 +290,8 @@ fun OrderFulfilmentScreen(
                 // Orders grid
                 items(
                     items = itemsList,
-                    key = { it.invoiceNumber }
+                    key = { it.invoiceNumber },
+                  //  span = { GridItemSpan(maxLineSpan) }
                 ) { collectOrderState ->
                     CheckboxCard(
                         modifier = Modifier
@@ -392,7 +378,11 @@ fun OrderFulfilmentScreen(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 ActionButton(
                     modifier = Modifier.padding(Dimens.Space.medium),
-                    title = { Text(text = "Confirm") },
+                    title = {
+                        Icon(imageVector = Icons.Outlined.DoneAll, contentDescription = "Done")
+                        Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
+                        Text(text = "CONFIRM", style = MaterialTheme.typography.labelLarge)
+                    },
                     onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
                 )
             }
@@ -466,129 +456,60 @@ private fun ActionsContent(
     state: OrderFulfilmentScreenContract.State,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val isExpandedWidth =
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
-    if (isExpandedWidth) {
-        // Wide layout: place sections side-by-side where appropriate
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-            ) {
-                // Left: Who is collecting
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-                ) {
-                    CollectionTypeSection(
-                        title = stringResource(Res.string.who_is_collecting),
-                        value = state.collectingType,
-                        optionList = state.collectionTypeOptionList,
-                        onValueChange = { collectionType ->
-                            onEventSent(
-                                OrderFulfilmentScreenContract.Event.CollectingChanged(
-                                    collectionType
-                                )
-                            )
-                        },
-                    ) { selectedType ->
-                        CollectionTypeContent(
-                            state = state,
-                            selectedType = selectedType,
-                            onEventSent = onEventSent
-                        )
-                    }
-                }
 
-                // Right: Signature preview
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-                ) {
-                    SignaturePreviewImage(
-                        onSignClick = {
-                            onEventSent(OrderFulfilmentScreenContract.Event.Sign)
-                        },
-                        onRetakeClick = {
-                            onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
-                        },
-                        image = null
+    // Compact layout: stack vertically
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
+        CollectionTypeSection(
+            title = stringResource(Res.string.who_is_collecting),
+            value = state.collectingType,
+            optionList = state.collectionTypeOptionList,
+            onValueChange = { collectionType ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.CollectingChanged(
+                        collectionType
                     )
-                }
-            }
-
-            // Full-width: Correspondence
-            if (state.featureFlags.isCorrespondenceSectionVisible) {
-                CorrespondenceSection(
-                    correspondenceOptionList = state.correspondenceOptionList,
-                    onCheckedChange = { id ->
-                        onEventSent(
-                            OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                                id = id
-                            )
-                        )
-                    }
                 )
-            }
+            },
+        ) { selectedType ->
+            CollectionTypeContent(
+                state = state,
+                selectedType = selectedType,
+                onEventSent = onEventSent
+            )
         }
-    } else {
-        // Compact layout: stack vertically
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-        ) {
-            CollectionTypeSection(
-                title = stringResource(Res.string.who_is_collecting),
-                value = state.collectingType,
-                optionList = state.collectionTypeOptionList,
-                onValueChange = { collectionType ->
-                    onEventSent(
-                        OrderFulfilmentScreenContract.Event.CollectingChanged(
-                            collectionType
-                        )
-                    )
-                },
-            ) { selectedType ->
-                CollectionTypeContent(
-                    state = state,
-                    selectedType = selectedType,
-                    onEventSent = onEventSent
-                )
-            }
 
+        HorizontalDivider()
+
+        SignaturePreviewImage(
+            onSignClick = {
+                onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+            },
+            onRetakeClick = {
+                onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+            },
+            image = null
+        )
+
+        if (state.featureFlags.isCorrespondenceSectionVisible) {
             HorizontalDivider()
 
-            SignaturePreviewImage(
-                onSignClick = {
-                    onEventSent(OrderFulfilmentScreenContract.Event.Sign)
-                },
-                onRetakeClick = {
-                    onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
-                },
-                image = null
-            )
-
-            if (state.featureFlags.isCorrespondenceSectionVisible) {
-                HorizontalDivider()
-
-                CorrespondenceSection(
-                    correspondenceOptionList = state.correspondenceOptionList,
-                    onCheckedChange = { id ->
-                        onEventSent(
-                            OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                                id = id
-                            )
+            CorrespondenceSection(
+                correspondenceOptionList = state.correspondenceOptionList,
+                onCheckedChange = { id ->
+                    onEventSent(
+                        OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                            id = id
                         )
-                    }
-                )
-            }
+                    )
+                }
+            )
         }
     }
+
 }
 
 @Composable
@@ -597,6 +518,7 @@ private fun CollectionTypeContent(
     selectedType: CollectingType,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
 ) {
+
     when (selectedType) {
         CollectingType.ACCOUNT -> {
             if (state.featureFlags.isAccountCollectingFeatureEnabled) {

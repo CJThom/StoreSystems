@@ -1,6 +1,7 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.components
+package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -16,7 +17,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -40,12 +40,12 @@ import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
@@ -53,6 +53,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,10 +112,14 @@ fun MBoltSearchBar(
         }
     }
 
-    Box(modifier = modifier) {
+    // Keyboard and focus controllers for IME dismissal on toolbar actions
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Box(modifier = Modifier) {
         // Collapsed search bar (embedded)
         Surface(
-            modifier = Modifier.padding(collapsedContentPadding),
+            modifier = modifier.padding(collapsedContentPadding),
             shape = collapsedShape,
             color = Color.Transparent,
             border = collapsedBorder,
@@ -173,7 +178,7 @@ fun MBoltSearchBar(
                 ) {
                     // Toolbar in sticky header with animated visibility
                     stickyHeader {
-                        androidx.compose.animation.AnimatedVisibility(
+                        AnimatedVisibility(
                             visible = searchOrderItems.isNotEmpty(),
                             enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
                             exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(),
@@ -183,7 +188,11 @@ fun MBoltSearchBar(
                                 isMultiSelectionEnabled = isMultiSelectionEnabled,
                                 customerTypeFilterList = emptySet(),
                                 onToggleCustomerType = { _, _ -> },
-                                onSelectAction = onEnterSelectionMode,
+                                onSelectAction = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus(force = true)
+                                    onEnterSelectionMode()
+                                },
                                 selectedCount = selectedOrderIdList.size,
                                 isSelectAllChecked = isSelectAllChecked,
                                 onSelectAllToggle = onSelectAllToggle,
@@ -409,7 +418,7 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
 fun MBoltSearchBarExpandedOrdersPreview() {
     GPCTheme {
         val items =
-            com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList()
+            sampleCollectOrderListItemStateList()
         MBoltSearchBar(
             query = "Jo",
             onQueryChange = {},
@@ -442,7 +451,7 @@ fun MBoltSearchBarExpandedOrdersPreview() {
 fun MBoltSearchBarExpandedMultiSelectPreview() {
     GPCTheme {
         val items =
-            com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList()
+            sampleCollectOrderListItemStateList()
         val selected = setOf(items[0].invoiceNumber, items[2].invoiceNumber)
         MBoltSearchBar(
             query = "Order",
@@ -476,7 +485,7 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
 fun MBoltSearchBarExpandedSelectAllPreview() {
     GPCTheme {
         val items =
-            com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList()
+            sampleCollectOrderListItemStateList()
                 .take(5)
         val allIds = items.map { it.invoiceNumber }.toSet()
         MBoltSearchBar(
@@ -542,7 +551,7 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
 fun MBoltSearchBarExpandedRefreshingPreview() {
     GPCTheme {
         val items =
-            com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList()
+            sampleCollectOrderListItemStateList()
                 .take(4)
         MBoltSearchBar(
             query = "Smith",
@@ -617,6 +626,10 @@ fun MBoltSearchExpandedOverlay(
         }
     }
 
+    // Keyboard and focus controllers for IME dismissal on toolbar actions
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Box(modifier = modifier) {
         Surface {
             ExpandedFullScreenSearchBar(
@@ -650,7 +663,7 @@ fun MBoltSearchExpandedOverlay(
                 ) {
                     // Toolbar in sticky header with animated visibility
                     stickyHeader {
-                        androidx.compose.animation.AnimatedVisibility(
+                        AnimatedVisibility(
                             visible = searchOrderItems.isNotEmpty(),
                             enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
                             exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(),
@@ -660,7 +673,11 @@ fun MBoltSearchExpandedOverlay(
                                 isMultiSelectionEnabled = isMultiSelectionEnabled,
                                 customerTypeFilterList = emptySet(),
                                 onToggleCustomerType = { _, _ -> },
-                                onSelectAction = onEnterSelectionMode,
+                                onSelectAction = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus(force = true)
+                                    onEnterSelectionMode()
+                                },
                                 selectedCount = selectedOrderIdList.size,
                                 isSelectAllChecked = isSelectAllChecked,
                                 onSelectAllToggle = onSelectAllToggle,

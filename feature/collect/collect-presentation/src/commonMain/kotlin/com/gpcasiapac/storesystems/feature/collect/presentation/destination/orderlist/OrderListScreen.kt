@@ -20,21 +20,15 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Start
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Assignment
-import androidx.compose.material.icons.outlined.AssignmentInd
-import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarDuration
@@ -53,11 +47,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.DraftBottomBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
@@ -118,6 +114,7 @@ fun OrderListScreen(
     val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
 
 
+
     // Keep search bar animation in sync with SearchViewModel
     LaunchedEffect(searchState.isSearchActive) {
         scope.launch {
@@ -128,6 +125,7 @@ fun OrderListScreen(
             }
         }
     }
+
 
     // Dialog state for multi-select confirmation
     val confirmDialogSpec =
@@ -183,6 +181,9 @@ fun OrderListScreen(
         }
     }
 
+    // Keyboard and focus controllers for IME dismissal on toolbar actions
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 //    val exitAlwaysScrollBehavior =
 //        exitAlwaysScrollBehavior(exitDirection = Bottom)
     Scaffold(
@@ -286,6 +287,8 @@ fun OrderListScreen(
                                 onSearchEventSent(SearchContract.Event.CancelSelection)
                             },
                             onEnterSelectionMode = {
+//                                focusManager.clearFocus(force = true)
+//                                keyboardController?.hide()
                                 onSearchEventSent(
                                     SearchContract.Event.ToggleSelectionMode(
                                         enabled = true
@@ -424,7 +427,6 @@ fun OrderListScreen(
             }
         }
 
-
         // Confirmation dialog (main list)
         val spec = confirmDialogSpec.value
         if (spec != null) {
@@ -453,7 +455,7 @@ fun OrderListScreen(
         val searchSpec = searchConfirmDialogSpec.value
         if (searchSpec != null) {
             MultiSelectConfirmDialog(
-                spec = com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
+                spec = OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
                     title = searchSpec.title,
                     cancelLabel = searchSpec.cancelLabel,
                     selectOnlyLabel = searchSpec.selectOnlyLabel,

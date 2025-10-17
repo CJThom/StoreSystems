@@ -1,8 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
@@ -67,7 +69,13 @@ fun CollectionTypeSection(
             equals = { a, b -> a.collectingType == b }
         )
 
-        content(value)
+        AnimatedContent(
+            targetState = value,
+            modifier = Modifier.fillMaxWidth()
+        ) { v ->
+            content(v)
+        }
+
     }
 }
 
