@@ -148,6 +148,19 @@ class OrderRepositoryImpl(
         }
     }
 
+    override suspend fun setCollectingType(
+        userRefId: String,
+        type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+    ): Result<Unit> = runCatching {
+        val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+            ?: error("No open work order for user: $userRefId")
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.setCollectingType(openWorkOrder.workOrderId, type)
+            }
+        }
+    }
+
     override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> {
         return emptyList() // Original implementation was commented out, restoring to empty list.
     }

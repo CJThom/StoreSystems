@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import kotlin.time.Instant
 
 @Entity(
@@ -27,6 +28,10 @@ data class CollectWorkOrderEntity(
 
     @ColumnInfo(name = "created_at")
     val createdAt: Instant,
+
+    // New: persist collecting type as enum in DB (Room supports enums)
+    @ColumnInfo(name = "collecting_type")
+    val collectingType: CollectingType = CollectingType.STANDARD,
 
     @ColumnInfo(name = "submitted_at")
     val submittedAt: Instant?, // TODO: remove?

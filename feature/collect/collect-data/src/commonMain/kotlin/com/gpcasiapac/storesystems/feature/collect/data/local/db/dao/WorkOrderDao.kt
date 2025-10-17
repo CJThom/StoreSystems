@@ -32,6 +32,15 @@ interface WorkOrderDao {
     )
     suspend fun attachSignature(id: String, signature: String, signedAt: Instant, signedBy: String?)
 
+    @Query(
+        """
+        UPDATE work_orders
+        SET collecting_type = :type
+        WHERE work_order_id = :id
+        """
+    )
+    suspend fun setCollectingType(id: String, type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType)
+
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE work_order_id = :id")

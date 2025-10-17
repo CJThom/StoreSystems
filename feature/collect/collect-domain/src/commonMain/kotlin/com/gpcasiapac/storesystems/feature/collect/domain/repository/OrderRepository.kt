@@ -96,4 +96,7 @@ interface OrderRepository {
         signedByName: String?
     ): Result<Unit>
 
+    // New: persist collecting type selection for the latest open Work Order
+    suspend fun setCollectingType(userRefId: String, type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType): Result<Unit>
+
 }

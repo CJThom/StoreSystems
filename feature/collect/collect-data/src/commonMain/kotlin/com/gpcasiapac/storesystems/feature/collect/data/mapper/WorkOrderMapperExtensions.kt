@@ -12,6 +12,7 @@ fun CollectWorkOrderEntity.toDomain(): CollectWorkOrder =
         createdAt = createdAt,
         signature = signature,
         signedAt = signedAt,
-        signedByName = signedByName
+        signedByName = signedByName,
+        collectingType = collectingType,
     )
 

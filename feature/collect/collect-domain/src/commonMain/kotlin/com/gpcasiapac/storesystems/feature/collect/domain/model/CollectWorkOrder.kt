@@ -9,5 +9,6 @@ data class CollectWorkOrder(
     val createdAt: Instant,
     val signature: String?,
     val signedAt: Instant?,
-    val signedByName: String?
+    val signedByName: String?,
+    val collectingType: CollectingType,
 )

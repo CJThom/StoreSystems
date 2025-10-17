@@ -18,18 +18,25 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 
 
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
+    private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
         OrderFulfilmentScreenContract.Effect>() {
 
     private val userRefId = "mock"
+
+    // Debounced persistence of collecting type
+    private var collectingTypeSaveJob: Job? = null
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -104,6 +111,7 @@ class OrderFulfilmentScreenViewModel(
                     copy(
                         collectOrderListItemStateList = listState,
                         signatureBase64 = wo?.collectWorkOrder?.signature,
+                        collectingType = wo?.collectWorkOrder?.collectingType ?: CollectingType.STANDARD,
                         isLoading = false,
                         error = null
                     )
@@ -277,6 +285,8 @@ class OrderFulfilmentScreenViewModel(
     private fun onCollectingChanged(type: CollectingType) {
         val current = viewState.value
         if (current.collectingType == type) return
+
+        // Optimistic UI update
         setState {
             copy(
                 collectingType = type,
@@ -284,6 +294,16 @@ class OrderFulfilmentScreenViewModel(
                 selectedRepresentativeIds = if (type == CollectingType.ACCOUNT) selectedRepresentativeIds else emptySet(),
                 courierName = if (type == CollectingType.COURIER) courierName else "",
             )
+        }
+
+        // Debounced DB update to keep Work Order as source of truth
+        collectingTypeSaveJob?.cancel()
+        collectingTypeSaveJob = viewModelScope.launch {
+            delay(250)
+            setWorkOrderCollectingTypeUseCase(userRefId, type)
+                .onFailure { t ->
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError(t.message ?: "Failed to save collecting type") }
+                }
         }
     }
 
