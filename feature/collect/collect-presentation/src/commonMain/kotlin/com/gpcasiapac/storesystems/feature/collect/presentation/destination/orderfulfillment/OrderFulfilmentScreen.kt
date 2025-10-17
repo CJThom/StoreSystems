@@ -13,26 +13,26 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -82,7 +82,11 @@ import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
@@ -95,14 +99,15 @@ fun OrderFulfilmentScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val useColumns =
-        !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
     val dialogSpec =
         remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
 
     // Parent-driven confirm dialog for search selection (2-button)
-    val selectionConfirmDialogSpec = remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null) }
+    val selectionConfirmDialogSpec = remember {
+        mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null)
+    }
 
     // Search bar state management for the expanded overlay
     val searchBarState = rememberSearchBarState(
@@ -138,9 +143,11 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
                     dialogSpec.value = effect
                 }
+
                 is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
                     selectionConfirmDialogSpec.value = effect
                 }
+
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
@@ -169,178 +176,286 @@ fun OrderFulfilmentScreen(
 //                .padding(padding)
 //        ) {
         // Main content
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+//        Box(
+//            modifier = Modifier
+//                .padding(padding)
+//                .fillMaxSize()
+//        ) {
+        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(minSize = 320.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
+//                contentPadding = PaddingValues(
+//                    start = Dimens.Space.medium,
+//                    end = Dimens.Space.medium,
+//                    top = Dimens.Space.medium,
+//                    bottom = Dimens.Space.medium
+//                ),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
+            // Header
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HeaderMedium(
+                    text = "Order List",
+                    isLoading = state.isLoading,
+                    contentPadding = PaddingValues(
+                        start = Dimens.Space.medium,
+                        top = Dimens.Space.medium,
+                        end = Dimens.Space.medium
+                    )
+                )
+            }
 
-
-            MultiOrderListSection(
-                state = state,
-                onEventSent = onEventSent,
-
-                onLookupClick = {
-                    if (onSearchEventSent != null) {
-                        onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true))
-                    }
-                },
-                searchContent = if (searchState == null || onSearchEventSent == null) {
-                    null
-                } else {
-                    {
-                        MBoltSearchBar(
-                            query = searchState.searchText,
-                            onQueryChange = { query ->
-                                onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                            },
-                            searchBarState = searchBarState,
-                            onSearch = { query ->
-                                onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                            },
-                            onExpandedChange = { isExpanded ->
-                                onSearchEventSent(
-                                    SearchContract.Event.SearchOnExpandedChange(
-                                        isExpanded
-                                    )
+            // Search bar (full span)
+            if (state.collectOrderListItemStateList.isNotEmpty() && (searchState != null && onSearchEventSent != null)) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    MBoltSearchBar(
+                        query = searchState.searchText,
+                        onQueryChange = { query ->
+                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+                        },
+                        searchBarState = searchBarState,
+                        onSearch = { query ->
+                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+                        },
+                        onExpandedChange = { isExpanded ->
+                            onSearchEventSent(
+                                SearchContract.Event.SearchOnExpandedChange(
+                                    isExpanded
                                 )
-                            },
-                            onBackPressed = {
-                                onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
-                            },
-                            onResultClick = { result ->
-                                onSearchEventSent(
-                                    SearchContract.Event.SearchResultClicked(
-                                        result
-                                    )
+                            )
+                        },
+                        onBackPressed = {
+                            onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
+                        },
+                        onResultClick = { result ->
+                            onSearchEventSent(
+                                SearchContract.Event.SearchResultClicked(
+                                    result
                                 )
-                            },
-                            onClearClick = {
-                                onSearchEventSent(SearchContract.Event.ClearSearch)
-                            },
-                            searchResults = searchState.orderSearchSuggestionList.map { it.text },
-                            searchOrderItems = searchState.searchResults,
-                            isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
-                            selectedOrderIdList = searchState.selectedOrderIdList,
-                            isSelectAllChecked = searchState.isSelectAllChecked,
-                            isRefreshing = state.isLoading,
-                            onOpenOrder = { id ->
-                                onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
-                            },
-                            onCheckedChange = { orderId, checked ->
-                                onSearchEventSent(SearchContract.Event.OrderChecked(orderId, checked))
-                            },
-                            onSelectAllToggle = { checked ->
-                                onSearchEventSent(SearchContract.Event.SelectAll(checked))
-                            },
-                            onCancelSelection = {
-                                onSearchEventSent(SearchContract.Event.CancelSelection)
-                            },
-                            onEnterSelectionMode = {
-                                onSearchEventSent(SearchContract.Event.ToggleSelectionMode(true))
-                            },
-                            onSelectClick = {
-                                onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
-                            },
-                            modifier = Modifier.fillMaxWidth().then(
+                            )
+                        },
+                        onClearClick = {
+                            onSearchEventSent(SearchContract.Event.ClearSearch)
+                        },
+                        searchResults = searchState.orderSearchSuggestionList.map { it.text },
+                        searchOrderItems = searchState.searchResults,
+                        isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
+                        selectedOrderIdList = searchState.selectedOrderIdList,
+                        isSelectAllChecked = searchState.isSelectAllChecked,
+                        isRefreshing = state.isLoading,
+                        onOpenOrder = { id ->
+                            onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
+                        },
+                        onCheckedChange = { orderId, checked ->
+                            onSearchEventSent(SearchContract.Event.OrderChecked(orderId, checked))
+                        },
+                        onSelectAllToggle = { checked ->
+                            onSearchEventSent(SearchContract.Event.SelectAll(checked))
+                        },
+                        onCancelSelection = {
+                            onSearchEventSent(SearchContract.Event.CancelSelection)
+                        },
+                        onEnterSelectionMode = {
+                            onSearchEventSent(SearchContract.Event.ToggleSelectionMode(true))
+                        },
+                        onSelectClick = {
+                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
                                 if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
                             ),
-                            placeholderText = "Search by Order #, Name, Phone",
-                            collapsedContentPadding = PaddingValues(
-                                start = Dimens.Space.medium,
-                                end = Dimens.Space.medium,
-                                bottom = Dimens.Space.medium
-                            ),
-                            collapsedShape = CircleShape,
-                            collapsedColors = SearchBarDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                inputFieldColors = SearchBarDefaults.inputFieldColors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                        placeholderText = "Search by Order #, Name, Phone",
+                        collapsedContentPadding = PaddingValues(horizontal = Dimens.Space.medium),
+//                        collapsedContentPadding = PaddingValues(
+//                            start = Dimens.Space.medium,
+//                            end = Dimens.Space.medium,
+//                            bottom = Dimens.Space.medium
+//                        ),
+                        collapsedShape = CircleShape,
+                        collapsedColors = SearchBarDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            inputFieldColors = SearchBarDefaults.inputFieldColors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                            )
+                        ),
+                        collapsedBorder = MaterialTheme.borderStroke()
+                    )
+                }
+            }
+
+            // Empty state
+            val itemsList = state.collectOrderListItemStateList
+            if (itemsList.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    EmptyOrderPlaceholderCard(
+                        onLookupClick = {
+                            if (onSearchEventSent != null) {
+                                onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true))
+                            }
+                        }
+                    )
+                }
+            } else {
+                // Orders grid
+                items(
+                    items = itemsList,
+                    key = { it.invoiceNumber }
+                ) { collectOrderState ->
+                    CheckboxCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.Space.medium),
+                        isChecked = false,
+                        isCheckable = false,
+                        onCheckedChange = {},
+                        onClick = {
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.OrderClicked(
+                                    collectOrderState.invoiceNumber
                                 )
-                            ),
-                            collapsedBorder = MaterialTheme.borderStroke()
+                            )
+                        }
+                    ) {
+                        CollectOrderDetails(
+                            customerName = collectOrderState.customerName,
+                            customerType = collectOrderState.customerType,
+                            invoiceNumber = collectOrderState.invoiceNumber,
+                            webOrderNumber = collectOrderState.webOrderNumber,
+                            pickedAt = collectOrderState.pickedAt,
+                            isLoading = state.isLoading,
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        onEventSent(
+                                            OrderFulfilmentScreenContract.Event.DeselectOrder(
+                                                collectOrderState.invoiceNumber
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = "Delete"
+                                    )
+                                }
+
+                                var showMenu = remember { mutableStateOf(false) }
+                                Box {
+                                    IconButton(
+                                        onClick = { showMenu.value = true },
+                                        modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.MoreVert,
+                                            contentDescription = "More"
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = showMenu.value,
+                                        onDismissRequest = { showMenu.value = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Select all for this customer") },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.SelectAll,
+                                                    contentDescription = "Select all"
+                                                )
+                                            },
+                                            onClick = { showMenu.value = false }
+                                        )
+                                    }
+                                }
+                            }
                         )
                     }
                 }
-            )
-
-
-
-            HorizontalDivider()
-            ActionsContent(
-                state = state,
-                onEventSent = onEventSent
-            )
-            HorizontalDivider()
-            ActionButton(
-                modifier = Modifier.padding(Dimens.Space.medium),
-                title = { Text(text = "Confirm") },
-                onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
-            )
-
-            // Save/Discard dialog
-            val spec = dialogSpec.value
-            if (spec != null) {
-                AlertDialog(
-                    onDismissRequest = {
-                        dialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                    },
-                    title = { Text(spec.title) },
-                    text = { Text(spec.message) },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            dialogSpec.value = null
-                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
-                        }) { Text(spec.saveLabel) }
-                    },
-                    dismissButton = {
-                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
-                            TextButton(onClick = {
-                                dialogSpec.value = null
-                                onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
-                            }) { Text(spec.discardLabel) }
-                            TextButton(onClick = {
-                                dialogSpec.value = null
-                                onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                            }) { Text(spec.cancelLabel) }
-                        }
-                    }
-                )
             }
 
-            // Search selection confirmation dialog (parent-driven, 2-button)
-            val selectSpec = selectionConfirmDialogSpec.value
-            if (selectSpec != null) {
-                AlertDialog(
-                    onDismissRequest = {
-                        selectionConfirmDialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-                    },
-                    title = { Text(selectSpec.title) },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            selectionConfirmDialogSpec.value = null
-                            if (onSearchEventSent != null) {
-                                onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
-                            }
-                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
-                        }) { Text(selectSpec.confirmLabel) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            selectionConfirmDialogSpec.value = null
-                            onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-                        }) { Text(selectSpec.cancelLabel) }
-                    }
+            // Divider and actions (full span)
+            item(span = { GridItemSpan(maxLineSpan) }) { HorizontalDivider() }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                ActionsContent(
+                    state = state,
+                    onEventSent = onEventSent
+                )
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) { HorizontalDivider() }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                ActionButton(
+                    modifier = Modifier.padding(Dimens.Space.medium),
+                    title = { Text(text = "Confirm") },
+                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
                 )
             }
         }
+
+        // Save/Discard dialog
+        val spec = dialogSpec.value
+        if (spec != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    dialogSpec.value = null
+                    onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
+                },
+                title = { Text(spec.title) },
+                text = { Text(spec.message) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        dialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
+                    }) { Text(spec.saveLabel) }
+                },
+                dismissButton = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                        TextButton(onClick = {
+                            dialogSpec.value = null
+                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
+                        }) { Text(spec.discardLabel) }
+                        TextButton(onClick = {
+                            dialogSpec.value = null
+                            onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
+                        }) { Text(spec.cancelLabel) }
+                    }
+                }
+            )
+        }
+
+        // Search selection confirmation dialog (parent-driven, 2-button)
+        val selectSpec = selectionConfirmDialogSpec.value
+        if (selectSpec != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    selectionConfirmDialogSpec.value = null
+                    onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+                },
+                title = { Text(selectSpec.title) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        selectionConfirmDialogSpec.value = null
+                        if (onSearchEventSent != null) {
+                            onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                        }
+                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
+                    }) { Text(selectSpec.confirmLabel) }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        selectionConfirmDialogSpec.value = null
+                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+                    }) { Text(selectSpec.cancelLabel) }
+                }
+            )
+        }
     }
+    //  }
 
 }
 
@@ -350,50 +465,128 @@ private fun ActionsContent(
     state: OrderFulfilmentScreenContract.State,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
 ) {
-    CollectionTypeSection(
-        title = stringResource(Res.string.who_is_collecting),
-        value = state.collectingType,
-        optionList = state.collectionTypeOptionList,
-        onValueChange = { collectionType ->
-            onEventSent(
-                OrderFulfilmentScreenContract.Event.CollectingChanged(
-                    collectionType
-                )
-            )
-        },
-    ) { selectedType ->
-        CollectionTypeContent(
-            state = state,
-            selectedType = selectedType,
-            onEventSent = onEventSent
-        )
-    }
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val isExpandedWidth =
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
-    HorizontalDivider()
+    if (isExpandedWidth) {
+        // Wide layout: place sections side-by-side where appropriate
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+            ) {
+                // Left: Who is collecting
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+                ) {
+                    CollectionTypeSection(
+                        title = stringResource(Res.string.who_is_collecting),
+                        value = state.collectingType,
+                        optionList = state.collectionTypeOptionList,
+                        onValueChange = { collectionType ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.CollectingChanged(
+                                    collectionType
+                                )
+                            )
+                        },
+                    ) { selectedType ->
+                        CollectionTypeContent(
+                            state = state,
+                            selectedType = selectedType,
+                            onEventSent = onEventSent
+                        )
+                    }
+                }
 
-    SignaturePreviewImage(
-        onSignClick = {
-            onEventSent(OrderFulfilmentScreenContract.Event.Sign)
-        },
-        onRetakeClick = {
-            onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
-        },
-        image = null
-    )
-
-    if (state.featureFlags.isCorrespondenceSectionVisible) {
-        HorizontalDivider()
-
-        CorrespondenceSection(
-            correspondenceOptionList = state.correspondenceOptionList,
-            onCheckedChange = { id ->
-                onEventSent(
-                    OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                        id = id
+                // Right: Signature preview
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+                ) {
+                    SignaturePreviewImage(
+                        onSignClick = {
+                            onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+                        },
+                        onRetakeClick = {
+                            onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+                        },
+                        image = null
                     )
+                }
+            }
+
+            // Full-width: Correspondence
+            if (state.featureFlags.isCorrespondenceSectionVisible) {
+                CorrespondenceSection(
+                    correspondenceOptionList = state.correspondenceOptionList,
+                    onCheckedChange = { id ->
+                        onEventSent(
+                            OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                                id = id
+                            )
+                        )
+                    }
                 )
             }
-        )
+        }
+    } else {
+        // Compact layout: stack vertically
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        ) {
+            CollectionTypeSection(
+                title = stringResource(Res.string.who_is_collecting),
+                value = state.collectingType,
+                optionList = state.collectionTypeOptionList,
+                onValueChange = { collectionType ->
+                    onEventSent(
+                        OrderFulfilmentScreenContract.Event.CollectingChanged(
+                            collectionType
+                        )
+                    )
+                },
+            ) { selectedType ->
+                CollectionTypeContent(
+                    state = state,
+                    selectedType = selectedType,
+                    onEventSent = onEventSent
+                )
+            }
+
+            HorizontalDivider()
+
+            SignaturePreviewImage(
+                onSignClick = {
+                    onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+                },
+                onRetakeClick = {
+                    onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+                },
+                image = null
+            )
+
+            if (state.featureFlags.isCorrespondenceSectionVisible) {
+                HorizontalDivider()
+
+                CorrespondenceSection(
+                    correspondenceOptionList = state.correspondenceOptionList,
+                    onCheckedChange = { id ->
+                        onEventSent(
+                            OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                                id = id
+                            )
+                        )
+                    }
+                )
+            }
+        }
     }
 }
 
