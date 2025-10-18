@@ -11,4 +11,5 @@ data class CollectWorkOrder(
     val signedAt: Instant?,
     val signedByName: String?,
     val collectingType: CollectingType,
+    val courierName: String,
 )

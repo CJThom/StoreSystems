@@ -99,4 +99,7 @@ interface OrderRepository {
     // New: persist collecting type selection for the latest open Work Order
     suspend fun setCollectingType(userRefId: String, type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType): Result<Unit>
 
+    // New: persist courier name for the latest open Work Order
+    suspend fun setCourierName(userRefId: String, name: String): Result<Unit>
+
 }

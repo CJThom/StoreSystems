@@ -41,6 +41,15 @@ interface WorkOrderDao {
     )
     suspend fun setCollectingType(id: String, type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType)
 
+    @Query(
+        """
+        UPDATE work_orders
+        SET courier_name = :name
+        WHERE work_order_id = :id
+        """
+    )
+    suspend fun setCourierName(id: String, name: String)
+
 
     @Transaction
     @Query("SELECT * FROM work_orders WHERE work_order_id = :id")

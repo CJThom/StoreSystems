@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 
 
 class OrderFulfilmentScreenViewModel(
@@ -28,6 +29,7 @@ class OrderFulfilmentScreenViewModel(
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
+    private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -35,8 +37,8 @@ class OrderFulfilmentScreenViewModel(
 
     private val userRefId = "mock"
 
-    // Debounced persistence of collecting type
-    private var collectingTypeSaveJob: Job? = null
+    // Shared keyed debouncer for persisting user edits
+    private val debouncer = com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer(viewModelScope)
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -112,6 +114,7 @@ class OrderFulfilmentScreenViewModel(
                         collectOrderListItemStateList = listState,
                         signatureBase64 = wo?.collectWorkOrder?.signature,
                         collectingType = wo?.collectWorkOrder?.collectingType ?: CollectingType.STANDARD,
+                        courierName = wo?.collectWorkOrder?.courierName ?: "",
                         isLoading = false,
                         error = null
                     )
@@ -178,7 +181,17 @@ class OrderFulfilmentScreenViewModel(
 
             // Courier flow
             is OrderFulfilmentScreenContract.Event.CourierNameChanged -> {
+                // Optimistic UI update
                 setState { copy(courierName = event.text) }
+
+                // Debounced persistence using screen preset
+                debouncer.submit(OrderFulfilmentScreenContract.Debounce.CourierName) {
+                    val s = viewState.value
+                    if (s.collectingType == CollectingType.COURIER) {
+                        setWorkOrderCourierNameUseCase(userRefId, s.courierName.trim())
+                            .onFailure { /* avoid spamming errors for text input */ }
+                    }
+                }
             }
 
             is OrderFulfilmentScreenContract.Event.ClearCourierName -> {
@@ -297,9 +310,9 @@ class OrderFulfilmentScreenViewModel(
         }
 
         // Debounced DB update to keep Work Order as source of truth
-        collectingTypeSaveJob?.cancel()
-        collectingTypeSaveJob = viewModelScope.launch {
-            delay(250)
+        debouncer.submit(
+            OrderFulfilmentScreenContract.Debounce.CollectingType
+        ) {
             setWorkOrderCollectingTypeUseCase(userRefId, type)
                 .onFailure { t ->
                     setEffect { OrderFulfilmentScreenContract.Effect.ShowError(t.message ?: "Failed to save collecting type") }

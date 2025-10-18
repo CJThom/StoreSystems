@@ -14,5 +14,6 @@ fun CollectWorkOrderEntity.toDomain(): CollectWorkOrder =
         signedAt = signedAt,
         signedByName = signedByName,
         collectingType = collectingType,
+        courierName = courierName,
     )
 

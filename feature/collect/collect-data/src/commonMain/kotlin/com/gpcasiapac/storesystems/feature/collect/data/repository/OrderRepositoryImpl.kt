@@ -161,6 +161,16 @@ class OrderRepositoryImpl(
         }
     }
 
+    override suspend fun setCourierName(userRefId: String, name: String): Result<Unit> = runCatching {
+        val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
+            ?: error("No open work order for user: $userRefId")
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                workOrderDao.setCourierName(openWorkOrder.workOrderId, name)
+            }
+        }
+    }
+
     override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> {
         return emptyList() // Original implementation was commented out, restoring to empty list.
     }

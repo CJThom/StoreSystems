@@ -33,6 +33,10 @@ data class CollectWorkOrderEntity(
     @ColumnInfo(name = "collecting_type")
     val collectingType: CollectingType = CollectingType.STANDARD,
 
+    // New: persisted courier name for COURIER collecting type
+    @ColumnInfo(name = "courier_name")
+    val courierName: String = "",
+
     @ColumnInfo(name = "submitted_at")
     val submittedAt: Instant?, // TODO: remove?
 
@@ -44,5 +48,4 @@ data class CollectWorkOrderEntity(
 
     @ColumnInfo(name = "signed_by_name")
     val signedByName: String? // TODO: Rename to customer/representative?
-
 )

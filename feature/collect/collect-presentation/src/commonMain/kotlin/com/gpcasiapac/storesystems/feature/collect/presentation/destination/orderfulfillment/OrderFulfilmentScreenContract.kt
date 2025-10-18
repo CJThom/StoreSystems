@@ -10,8 +10,12 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncePreset
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDefaults
 
 object OrderFulfilmentScreenContract {
+
 
     @Immutable
     data class State(
@@ -126,5 +130,20 @@ object OrderFulfilmentScreenContract {
             data object SaveAndExit : Outcome
             data object DiscardAndExit : Outcome
         }
+    }
+
+    /** Preset combinations to use at call sites for this screen. */
+    sealed class Debounce(
+        final override val key: DebounceKey,
+        final override val interval: DebouncerDefaults.Interval
+    ) : DebouncePreset {
+        data object CollectingType : Debounce(
+            DebounceKey.CollectingType,
+            DebouncerDefaults.Interval.Medium
+        )
+        data object CourierName : Debounce(
+            DebounceKey.CourierName,
+            DebouncerDefaults.Interval.Medium
+        )
     }
 }
