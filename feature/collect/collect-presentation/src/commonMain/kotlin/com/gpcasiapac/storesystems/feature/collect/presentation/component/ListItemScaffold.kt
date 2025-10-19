@@ -43,7 +43,6 @@ fun ListItemScaffold(
         modifier = modifier
             .height(IntrinsicSize.Min)
             .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall),
     ) {
         content()
 

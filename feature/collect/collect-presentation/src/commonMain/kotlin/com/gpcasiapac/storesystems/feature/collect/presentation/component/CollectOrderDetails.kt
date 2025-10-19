@@ -69,7 +69,7 @@ fun CollectOrderDetails(
             modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
         ) { dismiss ->
             DropdownMenuItem(
-                text = { Text("Select all for this customer") },
+                text = { Text("Select all by customer") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.SelectAll,
