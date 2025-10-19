@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,11 +47,12 @@ fun ToolbarFabContainer(
     onDelete: () -> Unit,
     onView: () -> Unit,
     modifier: Modifier = Modifier,
+    expanded: Boolean = true,
 ) {
 
 
     HorizontalFloatingToolbar(
-        expanded = hasDraft,
+        expanded = expanded,
         floatingActionButton = {
             Box(modifier = Modifier.fillMaxSize()) {
                 FloatingToolbarDefaults.VibrantFloatingActionButton(
@@ -339,6 +341,7 @@ fun DraftBottomBarNEwPreview() {
             onView = {},
             hasDraft = true,
             onNewTask = {},
+            expanded = true,
         )
     }
 }
@@ -353,6 +356,7 @@ fun ToolbarFabExpandedPreview() {
             onNewTask = {},
             onDelete = {},
             onView = {},
+            expanded = true,
         )
     }
 }
@@ -367,6 +371,7 @@ fun ToolbarFabExpanded2Preview() {
             onNewTask = {},
             onDelete = {},
             onView = {},
+            expanded = true,
         )
     }
 }
@@ -381,6 +386,7 @@ fun ToolbarFabCollapsedPreview() {
             onNewTask = {},
             onDelete = {},
             onView = {},
+            expanded = false,
         )
     }
 }
