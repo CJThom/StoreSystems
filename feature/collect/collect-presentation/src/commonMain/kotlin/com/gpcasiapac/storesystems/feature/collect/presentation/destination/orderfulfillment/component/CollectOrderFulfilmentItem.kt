@@ -17,6 +17,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Collec
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemToolbarScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Instant
 
@@ -98,7 +99,7 @@ private fun RowScope.FulfilmentToolbar(
 @Preview(name = "CollectOrderFulfilmentItem", showBackground = true)
 @Composable
 private fun CollectOrderFulfilmentItemPreview() {
-    com.gpcasiapac.storesystems.foundation.design_system.GPCTheme {
+    GPCTheme {
         CollectOrderFulfilmentItem(
             customerName = "ABC Motorsports PTY Limited",
             customerType = CustomerType.B2B,
