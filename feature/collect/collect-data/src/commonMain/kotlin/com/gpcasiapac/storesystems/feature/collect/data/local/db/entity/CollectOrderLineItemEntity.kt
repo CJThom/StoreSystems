@@ -30,5 +30,7 @@ data class CollectOrderLineItemEntity(
     @ColumnInfo(name = "quantity")
     val quantity: Int,
     @ColumnInfo(name = "unit_price")
-    val unitPrice: Double
+    val unitPrice: Double,
+    @ColumnInfo(name = "product_image_url")
+    val productImageUrl: String? = null,
 )

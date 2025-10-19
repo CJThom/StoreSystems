@@ -35,7 +35,8 @@ fun CollectOrderDto.toRelation(): CollectOrderWithCustomerWithLineItemsRelation 
                 productNumber = it.productNumber,
                 productDescription = it.productDescription,
                 quantity = it.quantity,
-                unitPrice = it.unitPrice
+                unitPrice = it.unitPrice,
+                productImageUrl = it.productImageUrl
             )
         }
     )

@@ -6,5 +6,6 @@ data class CollectOrderLineItem(
     val productNumber: String,
     val productDescription: String,
     val quantity: Int,
-    val unitPrice: Double
+    val unitPrice: Double,
+    val productImageUrl: String? = null,
 )

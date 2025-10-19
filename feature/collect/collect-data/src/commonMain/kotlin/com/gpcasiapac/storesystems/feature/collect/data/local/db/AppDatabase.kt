@@ -24,7 +24,7 @@ import kotlinx.coroutines.Dispatchers
         CollectWorkOrderEntity::class,
         CollectWorkOrderItemEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(

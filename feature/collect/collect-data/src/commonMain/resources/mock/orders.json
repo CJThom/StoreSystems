@@ -16,17 +16,19 @@
         "line_number": 1,
         "sku": "SKU-001",
         "product_number": "PROD-001",
-        "product_description": "Product 1 Description",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
         "quantity": 2,
-        "unit_price": 10.50
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
       },
       {
         "line_number": 2,
         "sku": "SKU-002",
         "product_number": "PROD-002",
-        "product_description": "Product 2 Description",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
         "quantity": 1,
-        "unit_price": 25.00
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
       }
     ]
   },
@@ -46,9 +48,10 @@
         "line_number": 1,
         "sku": "SKU-003",
         "product_number": "PROD-003",
-        "product_description": "Product 3 Description",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
         "quantity": 10,
-        "unit_price": 100.00
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
       }
     ]
   },
@@ -68,23 +71,25 @@
         "line_number": 1,
         "sku": "SKU-004",
         "product_number": "PROD-004",
-        "product_description": "Product 4 Description",
+        "product_description": "Ryco Oil Filter Z418",
         "quantity": 1,
-        "unit_price": 50.00
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
       },
       {
         "line_number": 2,
         "sku": "SKU-005",
         "product_number": "PROD-005",
-        "product_description": "Product 5 Description",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
         "quantity": 2,
-        "unit_price": 15.00
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
       },
       {
         "line_number": 3,
         "sku": "SKU-006",
         "product_number": "PROD-006",
-        "product_description": "Product 6 Description",
+        "product_description": "Bosch Aerotwin Wiper Blade 24\"",
         "quantity": 3,
         "unit_price": 75.00
       }
@@ -107,33 +112,37 @@
         "line_number": 1,
         "sku": "SKU-005",
         "product_number": "PROD-005",
-        "product_description": "Product 5 Description",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
         "quantity": 3,
-        "unit_price": 15.00
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
       },
       {
         "line_number": 2,
         "sku": "SKU-001",
         "product_number": "PROD-001",
-        "product_description": "Product 1 Description",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
         "quantity": 1,
-        "unit_price": 10.50
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
       },
       {
         "line_number": 3,
         "sku": "SKU-002",
         "product_number": "PROD-002",
-        "product_description": "Product 2 Description",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
         "quantity": 1,
-        "unit_price": 25.00
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
       },
       {
         "line_number": 4,
         "sku": "SKU-003",
         "product_number": "PROD-003",
-        "product_description": "Product 3 Description",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
         "quantity": 4,
-        "unit_price": 100.00
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
       }
     ]
   },
@@ -154,39 +163,43 @@
         "line_number": 1,
         "sku": "SKU-001",
         "product_number": "PROD-001",
-        "product_description": "Product 1 Description",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
         "quantity": 1,
-        "unit_price": 10.50
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
       },
       {
         "line_number": 2,
         "sku": "SKU-002",
         "product_number": "PROD-002",
-        "product_description": "Product 2 Description",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
         "quantity": 2,
-        "unit_price": 25.00
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
       },
       {
         "line_number": 3,
         "sku": "SKU-003",
         "product_number": "PROD-003",
-        "product_description": "Product 3 Description",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
         "quantity": 3,
-        "unit_price": 100.00
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
       },
       {
         "line_number": 4,
         "sku": "SKU-004",
         "product_number": "PROD-004",
-        "product_description": "Product 4 Description",
+        "product_description": "Ryco Oil Filter Z418",
         "quantity": 4,
-        "unit_price": 50.00
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
       },
       {
         "line_number": 5,
         "sku": "SKU-005",
         "product_number": "PROD-005",
-        "product_description": "Product 5 Description",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
         "quantity": 5,
         "unit_price": 15.00
       }
@@ -209,47 +222,52 @@
         "line_number": 1,
         "sku": "SKU-002",
         "product_number": "PROD-002",
-        "product_description": "Product 2 Description",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
         "quantity": 5,
-        "unit_price": 25.00
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
       },
       {
         "line_number": 2,
         "sku": "SKU-001",
         "product_number": "PROD-001",
-        "product_description": "Product 1 Description",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
         "quantity": 1,
-        "unit_price": 10.50
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
       },
       {
         "line_number": 3,
         "sku": "SKU-003",
         "product_number": "PROD-003",
-        "product_description": "Product 3 Description",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
         "quantity": 2,
-        "unit_price": 100.00
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
       },
       {
         "line_number": 4,
         "sku": "SKU-004",
         "product_number": "PROD-004",
-        "product_description": "Product 4 Description",
+        "product_description": "Ryco Oil Filter Z418",
         "quantity": 1,
-        "unit_price": 50.00
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
       },
       {
         "line_number": 5,
         "sku": "SKU-005",
         "product_number": "PROD-005",
-        "product_description": "Product 5 Description",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
         "quantity": 3,
-        "unit_price": 15.00
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
       },
       {
         "line_number": 6,
         "sku": "SKU-006",
         "product_number": "PROD-006",
-        "product_description": "Product 6 Description",
+        "product_description": "Bosch Aerotwin Wiper Blade 24\"",
         "quantity": 1,
         "unit_price": 75.00
       }
@@ -272,9 +290,10 @@
         "line_number": 1,
         "sku": "SKU-003",
         "product_number": "PROD-003",
-        "product_description": "Product 3 Description",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
         "quantity": 2,
-        "unit_price": 100.00
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
       }
     ]
   },
@@ -294,17 +313,19 @@
         "line_number": 1,
         "sku": "SKU-004",
         "product_number": "PROD-004",
-        "product_description": "Product 4 Description",
+        "product_description": "Ryco Oil Filter Z418",
         "quantity": 100,
-        "unit_price": 50.00
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
       },
       {
         "line_number": 2,
         "sku": "SKU-005",
         "product_number": "PROD-005",
-        "product_description": "Product 5 Description",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
         "quantity": 200,
-        "unit_price": 15.00
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
       }
     ]
   },
@@ -325,9 +346,10 @@
         "line_number": 1,
         "sku": "SKU-001",
         "product_number": "PROD-001",
-        "product_description": "Product 1 Description",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
         "quantity": 1,
-        "unit_price": 10.50
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
       }
     ]
   },
@@ -347,9 +369,10 @@
         "line_number": 1,
         "sku": "SKU-002",
         "product_number": "PROD-002",
-        "product_description": "Product 2 Description",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
         "quantity": 10,
-        "unit_price": 25.00
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
       }
     ]
   }

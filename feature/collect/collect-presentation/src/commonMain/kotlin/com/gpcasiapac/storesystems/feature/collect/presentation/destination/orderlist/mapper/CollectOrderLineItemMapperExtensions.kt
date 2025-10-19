@@ -11,7 +11,8 @@ internal fun CollectOrderLineItem.toState(): CollectOrderLineItemState {
         productNumber = this.productNumber,
         productDescription = this.productDescription,
         quantity = this.quantity,
-        unitPrice = this.unitPrice
+        unitPrice = this.unitPrice,
+        productImageUrl = this.productImageUrl
     )
 }
 

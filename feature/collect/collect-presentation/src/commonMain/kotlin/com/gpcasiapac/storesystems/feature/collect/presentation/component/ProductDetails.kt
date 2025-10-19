@@ -58,6 +58,7 @@ fun ProductDetails(
     description: String,
     sku: String,
     quantity: Int,
+    productImageUrl: String? = null,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     minWidth: Dp = ProductDetailsDefaults.minWidth,
@@ -82,6 +83,7 @@ fun ProductDetails(
         ProductDetailsContent(
             description = description,
             sku = sku,
+            productImageUrl = productImageUrl,
             isLoading = isLoading
         )
     }
@@ -93,7 +95,9 @@ fun ProductDetails(
  */
 @Composable
 private fun ProductImageContainer(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    imageUrl: String? = null,
+    contentDescription: String? = null
 ) {
 
     Box(
@@ -103,14 +107,23 @@ private fun ProductImageContainer(
             .padding(Dimens.Space.extraSmall),
         contentAlignment = Alignment.Center
     ) {
-        // Placeholder for product image
-        // In a real implementation, this would be an AsyncImage or Image composable
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(MaterialTheme.shapes.small)
-                .placeholder(true)
-        )
+        if (imageUrl.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.small)
+                    .placeholder(true)
+            )
+        } else {
+            coil3.compose.AsyncImage(
+                model = imageUrl,
+                contentDescription = contentDescription,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.small),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
+        }
     }
 }
 
@@ -149,6 +162,7 @@ private fun ProductDetailsLoadingPreview() {
 private fun ProductDetailsContent(
     description: String,
     sku: String,
+    productImageUrl: String?,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -158,7 +172,9 @@ private fun ProductDetailsContent(
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         ProductImageContainer(
-            modifier = Modifier.size(ProductDetailsDefaults.imageSize)
+            modifier = Modifier.size(ProductDetailsDefaults.imageSize),
+            imageUrl = productImageUrl,
+            contentDescription = description
         )
 
         Column(
