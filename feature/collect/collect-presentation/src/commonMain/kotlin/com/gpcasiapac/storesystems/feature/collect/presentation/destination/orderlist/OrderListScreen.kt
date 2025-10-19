@@ -8,9 +8,10 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,13 +20,15 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,13 +54,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.DraftBottomBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.ToolbarFabContainer
 import com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
@@ -93,6 +96,33 @@ fun OrderListScreen(
         stickyHeaderIndex = 1
     )
 
+
+    // Track FAB expanded/collapsed based on grid scroll direction
+    var fabExpanded by remember { mutableStateOf(true) }
+    LaunchedEffect(lazyGridState) {
+        var previous = 0
+        androidx.compose.runtime.snapshotFlow {
+            // Combine index and offset into a monotonically increasing value as we scroll down
+            lazyGridState.firstVisibleItemIndex * 100000 + lazyGridState.firstVisibleItemScrollOffset
+        }.collect { current ->
+            if (current > previous) {
+                // Scrolling down: collapse to icon-only
+                fabExpanded = false
+            } else if (current < previous) {
+                // Scrolling up: expand to show label
+                fabExpanded = true
+            }
+            previous = current
+        }
+    }
+    // Ensure FAB expands again when scrolling stops (idle state)
+    LaunchedEffect(lazyGridState) {
+        androidx.compose.runtime.snapshotFlow { lazyGridState.isScrollInProgress }
+            .collectLatest { inProgress ->
+                if (!inProgress) fabExpanded = true
+            }
+    }
+
     // Auto-scroll to prevent sticky header overlap when it appears
     LaunchedEffect(state.orders.isNotEmpty()) {
         if (state.orders.isNotEmpty()) {
@@ -108,7 +138,6 @@ fun OrderListScreen(
     // Search bar state management
 //    val searchBarState = rememberSearchBarState(initialValue = if (searchState.isSearchActive) SearchBarValue.Expanded else SearchBarValue.Collapsed)
     val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
-
 
 
     // Keep search bar animation in sync with SearchViewModel
@@ -127,7 +156,11 @@ fun OrderListScreen(
     val confirmDialogSpec =
         remember { mutableStateOf<OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
     // Parent-driven search confirmation dialog spec
-    val searchConfirmDialogSpec = remember { mutableStateOf<com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
+    val searchConfirmDialogSpec = remember {
+        mutableStateOf<com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Effect.ShowMultiSelectConfirmDialog?>(
+            null
+        )
+    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -150,14 +183,16 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
                     confirmDialogSpec.value = effect
                 }
+
                 is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
                     // Adapt to SearchContract dialog spec for reuse of common dialog UI
-                    searchConfirmDialogSpec.value = com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Effect.ShowMultiSelectConfirmDialog(
-                        title = effect.title,
-                        cancelLabel = effect.cancelLabel,
-                        selectOnlyLabel = effect.selectOnlyLabel,
-                        proceedLabel = effect.proceedLabel
-                    )
+                    searchConfirmDialogSpec.value =
+                        com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchContract.Effect.ShowMultiSelectConfirmDialog(
+                            title = effect.title,
+                            cancelLabel = effect.cancelLabel,
+                            selectOnlyLabel = effect.selectOnlyLabel,
+                            proceedLabel = effect.proceedLabel
+                        )
                 }
             }
         }
@@ -170,6 +205,7 @@ fun OrderListScreen(
                 is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
                     searchConfirmDialogSpec.value = effect
                 }
+
                 is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
                     // handled via searchState.isSearchActive syncing
                 }
@@ -185,24 +221,22 @@ fun OrderListScreen(
     Scaffold(
         //   modifier = Modifier.nestedScroll(exitAlwaysScrollBehavior),
         containerColor = MaterialTheme.colorScheme.surface,
-
+        floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            val showFab =
-                !state.isMultiSelectionEnabled && !state.isDraftBarVisible && state.existingDraftIdSet.isEmpty()
+            val hasDraft = state.isDraftBarVisible && state.existingDraftIdSet.isNotEmpty()
 
-            ExtendedFloatingActionButton(
-                text = { androidx.compose.material3.Text("New task") },
-                icon = {
-                    Icon(imageVector = Icons.Outlined.Add, contentDescription = "Start work order")
-                },
-                onClick = {
-                    onEventSent(OrderListScreenContract.Event.StartNewWorkOrderClicked)
-                },
-                expanded = true,
-//                modifier = Modifier.animateFloatingActionButton(
-//                    visible = showFab,
-//                    alignment = Alignment.BottomEnd
-//                )
+            ToolbarFabContainer(
+                hasDraft = hasDraft,
+                count = state.existingDraftIdSet.size,
+                onNewTask = { onEventSent(OrderListScreenContract.Event.StartNewWorkOrderClicked) },
+                onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
+                onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) },
+                modifier = Modifier
+                //  .padding(bottom = Dimens.Space.medium, end = Dimens.Space.medium)
+//                    .animateFloatingActionButton(
+//                        visible = !state.isMultiSelectionEnabled,
+//                        alignment = Alignment.BottomEnd
+//                    )
             )
         },
         topBar = {
@@ -248,7 +282,11 @@ fun OrderListScreen(
                                 onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
                             },
                             onExpandedChange = { isExpanded ->
-                                onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(isExpanded))
+                                onSearchEventSent(
+                                    SearchContract.Event.SearchOnExpandedChange(
+                                        isExpanded
+                                    )
+                                )
                             },
                             onBackPressed = {
                                 onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
@@ -301,25 +339,8 @@ fun OrderListScreen(
                 }
             )
         },
-        bottomBar = {
-            AnimatedVisibility(
-                visible = state.isDraftBarVisible && !state.isMultiSelectionEnabled,
-                enter = slideInVertically(
-                    animationSpec = tween(250),
-                    initialOffsetY = { it }) + fadeIn(),
-                exit = slideOutVertically(
-                    animationSpec = tween(200),
-                    targetOffsetY = { it }) + fadeOut(),
-                label = "BottomBarTransition"
-            ) {
-                DraftBottomBar(
-                    count = state.existingDraftIdSet.size,
-                    onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
-                    onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) }
-                )
-            }
-        },
-    ) { padding ->
+
+        ) { padding ->
 
         LazyVerticalGrid(
             state = lazyGridState,
@@ -405,17 +426,18 @@ fun OrderListScreen(
                         )
                     }
                 ) {
-                    CollectOrderDetails(
+                    CollectOrderItem(
                         customerName = collectOrderState.customerName,
                         customerType = collectOrderState.customerType,
                         invoiceNumber = collectOrderState.invoiceNumber,
                         webOrderNumber = collectOrderState.webOrderNumber,
                         pickedAt = collectOrderState.pickedAt,
                         isLoading = state.isRefreshing,
-                        contendPadding = PaddingValues(
+                        contendPadding = PaddingValues(),
+                        modifier = Modifier.padding(
                             start = Dimens.Space.medium,
                             top = Dimens.Space.medium,
-                            bottom = Dimens.Space.medium,
+                            bottom = Dimens.Space.small,
                             end = if (state.isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
                         ),
                     )
@@ -606,3 +628,202 @@ private fun barExitSpec(
         )
     )
 }
+
+
+@Composable
+private fun SingleFabContainer(
+    hasDraft: Boolean,
+    draftCount: Int,
+    fabExpanded: Boolean,
+    onNewTask: () -> Unit,
+    onDelete: () -> Unit,
+    onView: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    androidx.compose.material3.FloatingActionButton(
+        onClick = { if (hasDraft) onView() else onNewTask() },
+        modifier = modifier,
+        shape = androidx.compose.material3.FloatingActionButtonDefaults.extendedFabShape,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        if (hasDraft) {
+            DraftFabInlineContent(
+                count = draftCount,
+                onDelete = onDelete,
+                onView = onView
+            )
+        } else {
+            NewTaskFabContent(expanded = fabExpanded)
+        }
+    }
+}
+
+@Composable
+private fun NewTaskFabContent(expanded: Boolean) {
+    Row(
+        modifier = Modifier.padding(horizontal = Dimens.Space.large),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+    ) {
+        Icon(imageVector = Icons.Outlined.Add, contentDescription = "Start work order")
+        if (expanded) {
+            androidx.compose.material3.Text("New task")
+        }
+    }
+}
+
+@Composable
+private fun DraftFabInlineContent(
+    count: Int,
+    onDelete: () -> Unit,
+    onView: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.padding(horizontal = Dimens.Space.large),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
+        androidx.compose.material3.OutlinedIconButton(
+            onClick = onDelete
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = "Delete drafts"
+            )
+        }
+
+        androidx.compose.foundation.layout.Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            androidx.compose.material3.Text(
+                text = "Collection in progress",
+                style = MaterialTheme.typography.labelSmall,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+            ) {
+                androidx.compose.material3.Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                androidx.compose.material3.Text(
+                    text = "order selected",
+                )
+            }
+        }
+
+        androidx.compose.material3.FilledIconButton(
+            onClick = onView
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                contentDescription = "View drafts"
+            )
+        }
+    }
+}
+
+//
+//@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+//@Composable
+//private fun ToolbarFabContainer(
+//    hasDraft: Boolean,
+//    count: Int,
+//    onNewTask: () -> Unit,
+//    onDelete: () -> Unit,
+//    onView: () -> Unit,
+//    modifier: Modifier = Modifier,
+//) {
+//    if (!hasDraft) {
+//        // Collapsed state: use a smaller FAB
+//        androidx.compose.material3.SmallFloatingActionButton(
+//            onClick = onNewTask,
+//            modifier = modifier,
+//        ) {
+//            Icon(
+//                imageVector = Icons.Outlined.Add,
+//                contentDescription = "Start work order"
+//            )
+//        }
+//    } else {
+//        // Expanded state: toolbar with attached FAB and old button sizes
+//        HorizontalFloatingToolbar(
+//            expanded = true,
+//            floatingActionButton = {
+//                androidx.compose.material3.FloatingToolbarDefaults.VibrantFloatingActionButton(
+//                    onClick = onNewTask,
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Outlined.Add,
+//                        contentDescription = "Start work order"
+//                    )
+//                }
+//            },
+//            modifier = modifier,
+//            colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(
+//                toolbarContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+//            ),
+//            expandedShadowElevation = 5.dp,
+//        ) {
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+//            ) {
+//                androidx.compose.material3.OutlinedIconButton(
+//                    modifier = Modifier
+//                        .minimumInteractiveComponentSize()
+//                        .size(
+//                            androidx.compose.material3.IconButtonDefaults.extraSmallContainerSize(
+//                                androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption.Uniform
+//                            )
+//                        ),
+//                    onClick = onDelete
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Outlined.Delete,
+//                        contentDescription = "Delete drafts"
+//                    )
+//                }
+//
+//                androidx.compose.foundation.layout.Column(
+//                    modifier = Modifier.padding(horizontal = Dimens.Space.large),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    androidx.compose.material3.Text(
+//                        text = "Collection in progress",
+//                        style = MaterialTheme.typography.labelSmall,
+//                    )
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+//                    ) {
+//                        androidx.compose.material3.Text(
+//                            text = "$count",
+//                            style = MaterialTheme.typography.titleLarge,
+//                        )
+//                        androidx.compose.material3.Text(
+//                            text = "order selected",
+//                        )
+//                    }
+//                }
+//
+//                androidx.compose.material3.FilledIconButton(
+//                    modifier = Modifier
+//                        .minimumInteractiveComponentSize()
+//                        .size(
+//                            androidx.compose.material3.IconButtonDefaults.smallContainerSize(
+//                                androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption.Wide
+//                            )
+//                        ),
+//                    onClick = onView
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+//                        contentDescription = "View drafts"
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}

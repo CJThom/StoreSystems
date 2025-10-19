@@ -10,11 +10,10 @@ import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -60,11 +59,13 @@ fun DetailItemSmallChip(
     //  enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-        ),
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = MaterialTheme.shapes.small,
+//        colors = CardDefaults.cardColors(
+//            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+//            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+//        ),
         modifier = modifier.placeholder(
             visible = isLoading,
             color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.tertiaryContainer)

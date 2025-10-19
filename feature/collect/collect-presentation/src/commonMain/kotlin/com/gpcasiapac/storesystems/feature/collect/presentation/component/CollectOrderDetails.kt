@@ -1,6 +1,8 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,33 +13,33 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.outlined.BackHand
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Propane
 import androidx.compose.material.icons.outlined.Receipt
-import androidx.compose.material.icons.outlined.Web
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material.icons.outlined.Web
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeString
 import com.gpcasiapac.storesystems.common.kotlin.extension.toTimeAgoString
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
-import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmallChip
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -55,86 +57,61 @@ fun CollectOrderDetails(
     pickedAt: Instant,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contendPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
+    contendPadding: PaddingValues = PaddingValues(
+        start = Dimens.Space.medium,
+        top = Dimens.Space.medium,
+        end = Dimens.Space.medium,
+        bottom = Dimens.Space.small
+    ),
+    showAbsoluteTimeInitially: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {
-        var showMenu = remember { mutableStateOf(false) }
-        Box {
-            IconButton(
-                onClick = { showMenu.value = true },
-                modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.MoreVert,
-                    contentDescription = "More"
-                )
-            }
-            DropdownMenu(
-                expanded = showMenu.value,
-                onDismissRequest = { showMenu.value = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Select all for this customer") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.SelectAll,
-                            contentDescription = "Select all"
-                        )
-                    },
-                    onClick = { showMenu.value = false }
-                )
-            }
+        OverflowMenuIconButton(
+            modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
+        ) { dismiss ->
+            DropdownMenuItem(
+                text = { Text("Select all for this customer") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.SelectAll,
+                        contentDescription = "Select all"
+                    )
+                },
+                onClick = { dismiss() }
+            )
         }
     }
 ) {
 
-    Column(
-        modifier = modifier.height(IntrinsicSize.Min).padding(contendPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall),
-    ) {
-
-        CustomerName(
-            customerName = customerName,
-            customerType = customerType,
-            modifier = Modifier.fillMaxWidth(),
-            isLoading = isLoading
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            DetailItemSmall(
-                value = invoiceNumber,
-                imageVector = Icons.Outlined.Receipt,
-                isLoading = isLoading,
-                modifier = Modifier
-            )
-
-            if (webOrderNumber != null) {
-                DetailItemSmall(
-                    value = webOrderNumber,
-                    imageVector = Icons.Outlined.Web, // TODO: Get globe icon
-                    isLoading = isLoading,
-                    modifier = Modifier
-                )
-            }
-
-        }
-
-        Spacer(Modifier.weight(1f))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            DetailItemSmallChip(
-                value = pickedAt.toTimeAgoString(),
-                imageVector = Icons.Outlined.BackHand,
+    ListItemScaffold(
+        modifier = modifier,
+        contentPadding = contendPadding,
+        toolbar = {
+            val showAbsoluteTime = remember { mutableStateOf(showAbsoluteTimeInitially) }
+            AssistChip(
                 modifier = Modifier,
-                isLoading = isLoading
+                label = {
+                    AnimatedContent(
+                        targetState = showAbsoluteTime.value,
+                    ) { showAbs ->
+                        val text = if (showAbs) pickedAt.toLocalDateTimeString() else pickedAt.toTimeAgoString()
+                        Text(text = text)
+                    }
+                },
+                colors = AssistChipDefaults.assistChipColors(
+                    leadingIconContentColor = MaterialTheme.colorScheme.tertiary
+                ),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.BackHand,
+                        contentDescription = null,
+                        modifier = Modifier.size(SuggestionChipDefaults.IconSize)
+                    )
+                },
+                onClick = {
+                    showAbsoluteTime.value = !showAbsoluteTime.value
+                }
             )
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
                 verticalAlignment = Alignment.CenterVertically
@@ -142,6 +119,14 @@ fun CollectOrderDetails(
                 actions()
             }
         }
+    ) {
+        CollectOrderDetailsContent(
+            customerName = customerName,
+            customerType = customerType,
+            invoiceNumber = invoiceNumber,
+            webOrderNumber = webOrderNumber,
+            isLoading = isLoading
+        )
     }
 }
 
@@ -207,6 +192,23 @@ private fun DetailItemMediumPreview(
             invoiceNumber = data.invoiceNumber,
             webOrderNumber = data.webOrderNumber,
             pickedAt = data.pickedAt
+        )
+    }
+}
+
+@Preview(name = "CollectOrderDetails Full Date", showBackground = true)
+@Composable
+private fun CollectOrderDetailsFullDatePreview(
+    @PreviewParameter(CollectOrderDetailsPreviewProvider::class) data: CollectOrderDetailsParams
+) {
+    GPCTheme {
+        CollectOrderDetails(
+            customerName = data.customerName,
+            customerType = data.customerType,
+            invoiceNumber = data.invoiceNumber,
+            webOrderNumber = data.webOrderNumber,
+            pickedAt = data.pickedAt,
+            showAbsoluteTimeInitially = true
         )
     }
 }

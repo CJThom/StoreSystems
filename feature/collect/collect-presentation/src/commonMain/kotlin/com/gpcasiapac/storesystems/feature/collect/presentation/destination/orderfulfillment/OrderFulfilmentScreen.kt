@@ -61,6 +61,7 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStrok
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CollectOrderFulfilmentItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
@@ -303,57 +304,19 @@ fun OrderFulfilmentScreen(
                             )
                         }
                     ) {
-                        CollectOrderDetails(
+                        CollectOrderFulfilmentItem(
                             customerName = collectOrderState.customerName,
                             customerType = collectOrderState.customerType,
                             invoiceNumber = collectOrderState.invoiceNumber,
                             webOrderNumber = collectOrderState.webOrderNumber,
                             pickedAt = collectOrderState.pickedAt,
                             isLoading = state.isLoading,
-                            actions = {
-                                IconButton(
-                                    onClick = {
-                                        onEventSent(
-                                            OrderFulfilmentScreenContract.Event.DeselectOrder(
-                                                collectOrderState.invoiceNumber
-                                            )
-                                        )
-                                    },
-                                    modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Delete,
-                                        contentDescription = "Delete"
+                            onDelete = {
+                                onEventSent(
+                                    OrderFulfilmentScreenContract.Event.DeselectOrder(
+                                        collectOrderState.invoiceNumber
                                     )
-                                }
-
-                                var showMenu = remember { mutableStateOf(false) }
-                                Box {
-                                    IconButton(
-                                        onClick = { showMenu.value = true },
-                                        modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.MoreVert,
-                                            contentDescription = "More"
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = showMenu.value,
-                                        onDismissRequest = { showMenu.value = false }
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("Select all for this customer") },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.SelectAll,
-                                                    contentDescription = "Select all"
-                                                )
-                                            },
-                                            onClick = { showMenu.value = false }
-                                        )
-                                    }
-                                }
+                                )
                             }
                         )
                     }
@@ -626,57 +589,19 @@ private fun MultiOrderListSection(
                             )
                         }
                     ) {
-                        CollectOrderDetails(
+                        CollectOrderFulfilmentItem(
                             customerName = collectOrderState.customerName,
                             customerType = collectOrderState.customerType,
                             invoiceNumber = collectOrderState.invoiceNumber,
                             webOrderNumber = collectOrderState.webOrderNumber,
                             pickedAt = collectOrderState.pickedAt,
                             isLoading = state.isLoading,
-                            actions = {
-                                IconButton(
-                                    onClick = {
-                                        onEventSent(
-                                            OrderFulfilmentScreenContract.Event.DeselectOrder(
-                                                collectOrderState.invoiceNumber
-                                            )
-                                        )
-                                    },
-                                    modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Delete,
-                                        contentDescription = "Delete"
+                            onDelete = {
+                                onEventSent(
+                                    OrderFulfilmentScreenContract.Event.DeselectOrder(
+                                        collectOrderState.invoiceNumber
                                     )
-                                }
-
-                                var showMenu = remember { mutableStateOf(false) }
-                                Box {
-                                    IconButton(
-                                        onClick = { showMenu.value = true },
-                                        modifier = Modifier.size(IconButtonDefaults.extraSmallContainerSize())
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.MoreVert,
-                                            contentDescription = "More"
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = showMenu.value,
-                                        onDismissRequest = { showMenu.value = false }
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("Select all for this customer") },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.SelectAll,
-                                                    contentDescription = "Select all"
-                                                )
-                                            },
-                                            onClick = { showMenu.value = false }
-                                        )
-                                    }
-                                }
+                                )
                             }
                         )
                     }

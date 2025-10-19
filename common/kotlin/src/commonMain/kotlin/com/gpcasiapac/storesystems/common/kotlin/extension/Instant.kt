@@ -1,7 +1,11 @@
 package com.gpcasiapac.storesystems.common.kotlin.extension
 
+import kotlinx.datetime.LocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 enum class TimeUnit {
     SECOND,
@@ -69,4 +73,49 @@ fun Instant.toTimeAgoString(
         minLevel == TimeUnit.MONTH -> "1 month"
         else -> "1 year"
     }
+}
+
+/**
+ * Formats this Instant into a human-readable local date/time string.
+ * Example: "19 Oct 2025, 12:10 AM" (uses the current system time zone).
+ * Multiplatform-safe (uses kotlinx.datetime under the hood).
+ */
+fun Instant.toLocalDateTimeString(): String {
+    // Convert kotlin.time.Instant -> kotlinx.datetime.Instant
+    val epochMillis = this.toEpochMilliseconds()
+    val kxInstant = Instant.fromEpochMilliseconds(epochMillis)
+    val tz = TimeZone.currentSystemDefault()
+    val ldt = kxInstant.toLocalDateTime(tz)
+
+    val day = ldt.day
+    val month = ldt.month
+    val monthAbbr = when (month) {
+        Month.JANUARY -> "Jan"
+        Month.FEBRUARY -> "Feb"
+        Month.MARCH -> "Mar"
+        Month.APRIL -> "Apr"
+        Month.MAY -> "May"
+        Month.JUNE -> "Jun"
+        Month.JULY -> "Jul"
+        Month.AUGUST -> "Aug"
+        Month.SEPTEMBER -> "Sep"
+        Month.OCTOBER -> "Oct"
+        Month.NOVEMBER -> "Nov"
+        Month.DECEMBER -> "Dec"
+    }
+
+    val year = ldt.year
+
+    val hour = ldt.hour
+    val minute = ldt.minute
+    val isAm = hour < 12
+    val hour12 = when {
+        hour == 0 -> 12
+        hour > 12 -> hour - 12
+        else -> hour
+    }
+    val minutePadded = if (minute < 10) "0$minute" else "$minute"
+    val amPm = if (isAm) "AM" else "PM"
+
+    return "$day $monthAbbr $year, $hour12:$minutePadded $amPm"
 }
