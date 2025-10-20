@@ -42,43 +42,54 @@ class SearchViewModel(
     override fun handleReadinessFailed() { /* no-op */ }
 
     override fun onStart() {
-        // Search results pipeline: debounced and independent
+        // Search results pipeline: immediate reset on blank, debounced for non-blank
         viewModelScope.launch {
-            QueryFlow.build(
-                input = viewState.map { it.searchText to it.isSearchActive },
-                debounce = SearchDebounce(millis = 150),
-                keySelector = { (text, active) -> if (active) text.trim() else "" }
-            ).flatMapLatest { (text, active) ->
-                val t = text.trim()
-                if (!active || t.isEmpty()) flowOf(emptyList()) else observeSearchOrdersUseCase(t)
-            }.map { list -> list.toListItemState() }
-             .collectLatest { results ->
-                 setState { copy(searchResults = results) }
-             }
+            viewState
+                .map { it.searchText to it.isSearchActive }
+                .flatMapLatest { (text, active) ->
+                    val t = text
+                    when {
+                        !active -> flowOf(emptyList())
+                        t.isBlank() -> flowOf(emptyList()) // immediate clearing without debounce
+                        else -> {
+                            // Debounce only when non-blank to avoid stale UI on backspace-to-blank
+                            QueryFlow.build(
+                                input = flowOf(t),
+                                debounce = SearchDebounce(millis = 150),
+                                keySelector = { it }
+                            ).flatMapLatest { q -> observeSearchOrdersUseCase(q) }
+                        }
+                    }
+                }
+                .map { list -> list.toListItemState() }
+                .collectLatest { results ->
+                    setState { copy(searchOrderItems = results) }
+                }
         }
 
-        // Suggestions pipeline
+        // Suggestions pipeline: immediate defaults on blank when active, debounced for non-blank
         viewModelScope.launch {
-            val activeTextFlow: Flow<Pair<String, Boolean>> =
-                viewState.map { it.searchText to it.isSearchActive }
-
-            QueryFlow.build(
-                input = activeTextFlow,
-                debounce = SearchDebounce(millis = 100),
-                keySelector = { pair ->
-                    val (text, active) = pair
-                    if (active) text else ""
+            viewState
+                .map { it.searchText to it.isSearchActive }
+                .flatMapLatest { (text, active) ->
+                    val t = text
+                    when {
+                        !active -> flowOf(emptyList())
+                        t.isBlank() -> kotlinx.coroutines.flow.flow {
+                            emit(getOrderSearchSuggestionListUseCase(""))
+                        }
+                        else -> {
+                            QueryFlow.build(
+                                input = flowOf(t),
+                                debounce = SearchDebounce(millis = 100),
+                                keySelector = { it }
+                            ).mapLatest { q -> getOrderSearchSuggestionListUseCase(q) }
+                        }
+                    }
                 }
-            ).mapLatest { pair ->
-                val (text, active) = pair
-                if (!active || text.isBlank()) {
-                    emptyList()
-                } else {
-                    getOrderSearchSuggestionListUseCase(text)
+                .collectLatest { suggestions ->
+                    setState { copy(searchSuggestions = suggestions) }
                 }
-            }.collectLatest { suggestions ->
-                setState { copy(searchSuggestions = suggestions) }
-            }
         }
     }
 
@@ -104,6 +115,7 @@ class SearchViewModel(
     }
 
     private fun handleSearchTextChanged(text: String) {
+        // Update the query; reactive pipelines handle clearing and default suggestions.
         setState { copy(searchText = text) }
     }
 
@@ -113,7 +125,7 @@ class SearchViewModel(
     }
 
     private fun handleClearSearch() {
-        setState { copy(searchText = "", searchResults = emptyList(), searchSuggestions = emptyList()) }
+        setState { copy(searchText = "") }
     }
 
     private fun handleSearchSuggestionClicked(suggestion: SearchSuggestion) {
@@ -173,7 +185,7 @@ class SearchViewModel(
                 }
             }
             val selected = (persisted - remove) union add
-            val visibleIds = searchResults.map { it.invoiceNumber }.toSet()
+            val visibleIds = searchOrderItems.map { it.invoiceNumber }.toSet()
             val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in selected }
             copy(
                 pendingAddIdSet = add,
@@ -185,7 +197,7 @@ class SearchViewModel(
     }
 
     private fun handleSelectAll(checked: Boolean) {
-        val visibleIds = viewState.value.searchResults.map { it.invoiceNumber }.toSet()
+        val visibleIds = viewState.value.searchOrderItems.map { it.invoiceNumber }.toSet()
         setState {
             var add = pendingAddIdSet.toMutableSet()
             var remove = pendingRemoveIdSet.toMutableSet()

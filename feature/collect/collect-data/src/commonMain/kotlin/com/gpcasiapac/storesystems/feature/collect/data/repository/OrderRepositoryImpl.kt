@@ -171,17 +171,31 @@ class OrderRepositoryImpl(
     }
 
     override suspend fun getSearchSuggestions(query: com.gpcasiapac.storesystems.feature.collect.domain.repository.SuggestionQuery): List<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion> {
-        val raw = query.text.trim()
-        if (raw.isEmpty()) return emptyList()
-
-        val prefix = escapeForLike(raw) + "%"
+        val text = query.text
         val per = query.perKindLimit
         val include = query.includeKinds
 
         val out = mutableListOf<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion>()
 
+        // Treat whitespace-only as blank to ensure default suggestions are shown
+        if (text.isBlank()) {
+            if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME in include) {
+                collectOrderDao.getAllCustomerNames(limit = query.maxTotal).forEach { row ->
+                    val name = row.name.trim()
+                    if (name.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion(
+                        text = name,
+                        customerType = row.type,
+                    )
+                }
+            }
+            return out
+        }
+
+        // Substring match to allow last 4 digits etc. Use trimmed text for LIKE pattern only
+        val contains = "%" + escapeForLike(text.trim()) + "%"
+
         if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME in include) {
-            collectOrderDao.getCustomerNameSuggestionsPrefix(prefix, per).forEach { row ->
+            collectOrderDao.getCustomerNameSuggestionsPrefix(contains, per).forEach { row ->
                 val name = row.name.trim()
                 if (name.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion(
                     text = name,
@@ -190,22 +204,22 @@ class OrderRepositoryImpl(
             }
         }
         if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.INVOICE_NUMBER in include) {
-            collectOrderDao.getInvoiceSuggestionsPrefix(prefix, per).forEach { inv ->
+            collectOrderDao.getInvoiceSuggestionsPrefix(contains, per).forEach { inv ->
                 out += com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion(inv)
             }
         }
         if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.WEB_ORDER_NUMBER in include) {
-            collectOrderDao.getWebOrderSuggestionsPrefix(prefix, per).forEach { web ->
+            collectOrderDao.getWebOrderSuggestionsPrefix(contains, per).forEach { web ->
                 out += com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion(web)
             }
         }
         if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.SALES_ORDER_NUMBER in include) {
-            collectOrderDao.getSalesOrderSuggestionsPrefix(prefix, per).forEach { so ->
+            collectOrderDao.getSalesOrderSuggestionsPrefix(contains, per).forEach { so ->
                 out += com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion(so)
             }
         }
         if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.PHONE in include) {
-            collectOrderDao.getPhoneSuggestionsPrefix(prefix, per).forEach { phone ->
+            collectOrderDao.getPhoneSuggestionsPrefix(contains, per).forEach { phone ->
                 val p = phone.trim()
                 if (p.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion(p)
             }

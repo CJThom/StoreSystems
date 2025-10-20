@@ -141,6 +141,26 @@ interface CollectOrderDao {
     )
     suspend fun getCustomerNameSuggestionsPrefix(prefix: String, limit: Int): List<CustomerNameRow>
 
+    // New: fetch all distinct customer names (for initial expanded state with empty query)
+    @Query(
+        """
+        SELECT DISTINCT 
+           COALESCE(
+             NULLIF(TRIM(account_name), ''),
+             TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))
+           ) AS name,
+           customer_type AS type
+        FROM collect_order_customers
+        WHERE (
+          (account_name IS NOT NULL AND TRIM(account_name) <> '')
+          OR (COALESCE(first_name, '') <> '' OR COALESCE(last_name, '') <> '')
+        )
+        ORDER BY name COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getAllCustomerNames(limit: Int): List<CustomerNameRow>
+
     data class CustomerNameRow(val name: String, val type: CustomerType)
 
     @Query(

@@ -14,7 +14,7 @@ object SearchContract {
         val searchText: String,
         val isSearchActive: Boolean,
         val searchSuggestions: List<SearchSuggestion>,
-        val searchResults: List<CollectOrderListItemState>,
+        val searchOrderItems: List<CollectOrderListItemState>,
         // Multi-select state for search context
         val isMultiSelectionEnabled: Boolean,
         val selectedOrderIdList: Set<String>,
@@ -29,7 +29,7 @@ object SearchContract {
                 searchText = "",
                 isSearchActive = false,
                 searchSuggestions = emptyList(),
-                searchResults = emptyList(),
+                searchOrderItems = emptyList(),
                 isMultiSelectionEnabled = false,
                 selectedOrderIdList = emptySet(),
                 isSelectAllChecked = false,

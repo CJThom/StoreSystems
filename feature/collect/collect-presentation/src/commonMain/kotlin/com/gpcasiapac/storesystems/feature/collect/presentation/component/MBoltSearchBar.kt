@@ -61,7 +61,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -107,7 +106,7 @@ fun MBoltSearchBar(
     onBackPressed: () -> Unit,
     onResultClick: (String) -> Unit,
     onClearClick: () -> Unit,
-    searchResults: List<String>,
+    recentSearches: List<String>,
     // Suggestions to render as chips (full typed model)
     suggestions: List<SearchSuggestion>,
     // New: full search results as order items for the expanded grid
@@ -207,7 +206,7 @@ fun MBoltSearchBar(
             },
             suggestions = suggestions,
             searchOrderItems = searchOrderItems,
-            searchResults = searchResults,
+            recentSearches = recentSearches,
             isMultiSelectionEnabled = isMultiSelectionEnabled,
             selectedOrderIdList = selectedOrderIdList,
             isSelectAllChecked = isSelectAllChecked,
@@ -303,7 +302,7 @@ private fun ExpandedSearchSection(
     chipsPrefix: @Composable () -> Unit,
     suggestions: List<SearchSuggestion>,
     searchOrderItems: List<CollectOrderListItemState>,
-    searchResults: List<String>,
+    recentSearches: List<String>,
     isMultiSelectionEnabled: Boolean,
     selectedOrderIdList: Set<String>,
     isSelectAllChecked: Boolean,
@@ -422,12 +421,12 @@ private fun ExpandedSearchSection(
                 }
 
                 // Recent searches section (only when there are no order results)
-                if (searchOrderItems.isEmpty() && searchResults.isNotEmpty()) {
+                if (searchOrderItems.isEmpty() && recentSearches.isNotEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         HeaderSmall(text = "Recent searches")
                     }
                     items(
-                        items = searchResults,
+                        items = recentSearches,
                         key = { it },
                         span = { GridItemSpan(maxLineSpan) }
                     ) { result ->
@@ -497,7 +496,7 @@ private fun ExpandedSearchSection(
                             )
                         }
                     }
-                } else if (searchResults.isEmpty() && query.isNotEmpty()) {
+                } else if (recentSearches.isEmpty() && query.isNotEmpty()) {
                     // Show the empty state inside the grid, spanning full width
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         ListItem(
@@ -589,13 +588,8 @@ private fun SearchBarInputField(
         onSearch = { _ ->
             keyboardController?.hide()
             focusManager.clearFocus(force = true)
-            val typed = textState.text.toString()
-            val effective = when {
-                queryBase.isNotBlank() && typed.isNotBlank() -> "$queryBase $typed"
-                queryBase.isNotBlank() -> queryBase
-                else -> typed
-            }
-            onSearch(effective)
+            // Forward the latest source-of-truth query instead of recomputing locally
+            onSearch(query)
         },
         expanded = isExpanded,
         onExpandedChange = onExpandedChange,
@@ -768,7 +762,7 @@ fun MBoltSearchBarCollapsedPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = listOf(
+            recentSearches = listOf(
                 "Order #12345 - John Doe",
                 "Order #12346 - Jane Smith",
                 "Order #12347 - Bob Johnson"
@@ -804,7 +798,7 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = listOf(
+            recentSearches = listOf(
                 "Order #12345 - John Doe",
                 "Order #12346 - Jane Smith",
                 "Order #12347 - Bob Johnson",
@@ -846,7 +840,7 @@ fun MBoltSearchBarExpandedOrdersPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = emptyList(),
+            recentSearches = emptyList(),
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = false,
@@ -880,7 +874,7 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = emptyList(),
+            recentSearches = emptyList(),
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = true,
@@ -914,7 +908,7 @@ fun MBoltSearchBarExpandedSelectAllPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = emptyList(),
+            recentSearches = emptyList(),
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = true,
@@ -946,7 +940,7 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = emptyList(),
+            recentSearches = emptyList(),
             suggestions = emptyList(),
             searchOrderItems = emptyList(),
             isMultiSelectionEnabled = false,
@@ -979,7 +973,7 @@ fun MBoltSearchBarExpandedRefreshingPreview() {
             onBackPressed = {},
             onResultClick = {},
             onClearClick = {},
-            searchResults = emptyList(),
+            recentSearches = emptyList(),
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = false,

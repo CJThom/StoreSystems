@@ -215,9 +215,9 @@ fun OrderFulfilmentScreen(
                         onClearClick = {
                             onSearchEventSent(SearchContract.Event.ClearSearch)
                         },
-                        searchResults = searchState.searchSuggestions.map { it.text },
+                        recentSearches = emptyList(),
                         suggestions = searchState.searchSuggestions,
-                        searchOrderItems = searchState.searchResults,
+                        searchOrderItems = searchState.searchOrderItems,
                         isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
                         selectedOrderIdList = searchState.selectedOrderIdList,
                         isSelectAllChecked = searchState.isSelectAllChecked,
