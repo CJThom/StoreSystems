@@ -78,13 +78,22 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Heade
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
 import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Phone
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,6 +108,8 @@ fun MBoltSearchBar(
     onResultClick: (String) -> Unit,
     onClearClick: () -> Unit,
     searchResults: List<String>,
+    // Suggestions to render as chips (full typed model)
+    suggestions: List<SearchSuggestion>,
     // New: full search results as order items for the expanded grid
     searchOrderItems: List<CollectOrderListItemState>,
     isMultiSelectionEnabled: Boolean,
@@ -120,14 +131,12 @@ fun MBoltSearchBar(
     collapsedBorder: BorderStroke? = null,
 ) {
 
-    // Chips state and clear logic (saveable + derived)
-    val inputChips = rememberSaveable(saver = listSaver(
-        save = { it.toList() },
-        restore = { mutableStateListOf<String>().apply { addAll(it) } }
-    )) { mutableStateListOf<String>() }
+    // Chips state and clear logic (derived)
+    // Note: using in-memory state for typed suggestions; persistence can be added later if desired
+    val inputChips = remember { mutableStateListOf<SearchSuggestion>() }
     var clearTypedTrigger by rememberSaveable { mutableStateOf(0) }
     val chipsQueryBase by remember(inputChips) {
-        derivedStateOf { inputChips.joinToString(" ") }
+        derivedStateOf { inputChips.joinToString(" ") { it.text } }
     }
     val clearAll: () -> Unit = {
         if (inputChips.isNotEmpty()) inputChips.clear()
@@ -148,12 +157,6 @@ fun MBoltSearchBar(
         }
     }
 
-    // Build a name -> CustomerType map to power icons for chips
-    val customerTypeByName = remember(searchOrderItems) {
-        val source =
-            if (searchOrderItems.isNotEmpty()) searchOrderItems else sampleCollectOrderListItemStateList()
-        source.associate { it.customerName to it.customerType }
-    }
 
 
     Box(modifier = Modifier) {
@@ -177,8 +180,7 @@ fun MBoltSearchBar(
             chipsPrefix = {
                 ChipsPrefixRow(
                     chips = inputChips,
-                    customerTypeByName = customerTypeByName,
-                    onRemoveChip = { name -> inputChips.remove(name) }
+                    onRemoveChip = { chip -> inputChips.remove(chip) }
                 )
             },
             placeholderText = placeholderText,
@@ -200,11 +202,10 @@ fun MBoltSearchBar(
             chipsPrefix = {
                 ChipsPrefixRow(
                     chips = inputChips,
-                    customerTypeByName = customerTypeByName,
-                    onRemoveChip = { name -> inputChips.remove(name) }
+                    onRemoveChip = { chip -> inputChips.remove(chip) }
                 )
             },
-            customerTypeByName = customerTypeByName,
+            suggestions = suggestions,
             searchOrderItems = searchOrderItems,
             searchResults = searchResults,
             isMultiSelectionEnabled = isMultiSelectionEnabled,
@@ -219,9 +220,9 @@ fun MBoltSearchBar(
             onSelectClick = onSelectClick,
             onResultClick = onResultClick,
             placeholderText = placeholderText,
-            onSuggestionChosen = { name ->
-                if (!inputChips.contains(name)) {
-                    inputChips.add(name)
+            onSuggestionChosen = { s ->
+                if (!inputChips.contains(s)) {
+                    inputChips.add(s)
                 }
                 clearTypedTrigger += 1
             },
@@ -300,7 +301,7 @@ private fun ExpandedSearchSection(
     onClearAll: (() -> Unit)?,
     clearTypedTrigger: Int,
     chipsPrefix: @Composable () -> Unit,
-    customerTypeByName: Map<String, CustomerType>,
+    suggestions: List<SearchSuggestion>,
     searchOrderItems: List<CollectOrderListItemState>,
     searchResults: List<String>,
     isMultiSelectionEnabled: Boolean,
@@ -315,7 +316,7 @@ private fun ExpandedSearchSection(
     onSelectClick: () -> Unit,
     onResultClick: (String) -> Unit,
     placeholderText: String,
-    onSuggestionChosen: (String) -> Unit = {},
+    onSuggestionChosen: (SearchSuggestion) -> Unit = {},
 ) {
     Surface {
         ExpandedFullScreenSearchBar(
@@ -367,9 +368,6 @@ private fun ExpandedSearchSection(
                 }
             }
 
-            val customerSuggestions = remember(customerTypeByName) {
-                customerTypeByName.keys.toList()
-            }
 
             LazyVerticalGrid(
                 state = lazyGridState,
@@ -403,8 +401,8 @@ private fun ExpandedSearchSection(
                     }
                 }
 
-                // Customer suggestion chips from mock data (based on orders.json)
-                if (customerSuggestions.size > 1) {
+                // Suggestions chips
+                if (suggestions.size > 1) {
                     // Header
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         HeaderSmall(text = "Suggested")
@@ -412,13 +410,12 @@ private fun ExpandedSearchSection(
                     // Chips row
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         SuggestionChipsRow(
-                            suggestions = customerSuggestions,
-                            customerTypeByName = customerTypeByName,
-                            onSuggestionClick = { name ->
-                                onSuggestionChosen(name)
+                            suggestions = suggestions,
+                            onSuggestionClick = { s ->
+                                onSuggestionChosen(s)
                                 overlayKeyboardController?.hide()
                                 overlayFocusManager.clearFocus(force = true)
-                                onSearch(name)
+                                onSearch(s.text)
                             }
                         )
                     }
@@ -665,9 +662,8 @@ private fun SearchBarInputField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ChipsPrefixRow(
-    chips: List<String>,
-    customerTypeByName: Map<String, CustomerType>,
-    onRemoveChip: (String) -> Unit,
+    chips: List<SearchSuggestion>,
+    onRemoveChip: (SearchSuggestion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -678,21 +674,21 @@ internal fun ChipsPrefixRow(
         CompositionLocalProvider(
             LocalMinimumInteractiveComponentSize provides Dp.Unspecified
         ) {
-            chips.forEach { name ->
+            chips.forEach { chip ->
                 InputChip(
                     selected = false,
-                    leadingIcon = { ChipTypeIcon(customerTypeByName[name]) },
+                    leadingIcon = { SuggestionIcon(chip) },
                     onClick = { /* no-op for prefix chips */ },
                     label = {
                         Text(
-                            name,
+                            chip.text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     },
                     trailingIcon = {
                         IconButton(
-                            onClick = { onRemoveChip(name) },
+                            onClick = { onRemoveChip(chip) },
                             modifier = Modifier.size(InputChipDefaults.IconSize)
                         ) {
                             Icon(
@@ -713,9 +709,8 @@ internal fun ChipsPrefixRow(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun SuggestionChipsRow(
-    suggestions: List<String>,
-    customerTypeByName: Map<String, CustomerType>,
-    onSuggestionClick: (String) -> Unit,
+    suggestions: List<SearchSuggestion>,
+    onSuggestionClick: (SearchSuggestion) -> Unit,
     modifier: Modifier = Modifier
 ) {
     FlowRow(
@@ -724,13 +719,13 @@ internal fun SuggestionChipsRow(
             .padding(horizontal = Dimens.Space.medium),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
-        suggestions.forEach { name ->
+        suggestions.forEach { s ->
             SuggestionChip(
-                onClick = { onSuggestionClick(name) },
-                icon = { ChipTypeIcon(customerTypeByName[name]) },
+                onClick = { onSuggestionClick(s) },
+                icon = { SuggestionIcon(s) },
                 label = {
                     Text(
-                        name,
+                        s.text,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -742,11 +737,19 @@ internal fun SuggestionChipsRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChipTypeIcon(type: CustomerType?) {
-    when (type) {
-        CustomerType.B2B -> B2BIcon(modifier = Modifier.size(InputChipDefaults.IconSize))
-        CustomerType.B2C -> B2CIcon(modifier = Modifier.size(InputChipDefaults.IconSize))
-        null -> {}
+private fun SuggestionIcon(s: SearchSuggestion) {
+    when (s) {
+        is CustomerNameSuggestion -> {
+            if (s.customerType == CustomerType.B2B) {
+                B2BIcon(modifier = Modifier.size(InputChipDefaults.IconSize))
+            } else {
+                B2CIcon(modifier = Modifier.size(InputChipDefaults.IconSize))
+            }
+        }
+        is InvoiceNumberSuggestion -> Icon(Icons.Outlined.ReceiptLong, contentDescription = null)
+        is WebOrderNumberSuggestion -> Icon(Icons.Outlined.Language, contentDescription = null)
+        is SalesOrderNumberSuggestion -> Icon(Icons.Outlined.Receipt, contentDescription = null)
+        is PhoneSuggestion -> Icon(Icons.Outlined.Phone, contentDescription = null)
     }
 }
 
@@ -770,6 +773,7 @@ fun MBoltSearchBarCollapsedPreview() {
                 "Order #12346 - Jane Smith",
                 "Order #12347 - Bob Johnson"
             ),
+            suggestions = emptyList(),
             searchOrderItems = emptyList(),
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),
@@ -806,6 +810,11 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
                 "Order #12347 - Bob Johnson",
                 "Order #12348 - John Williams"
             ),
+            suggestions = listOf(
+                CustomerNameSuggestion("John Doe", CustomerType.B2C),
+                InvoiceNumberSuggestion("INV-10001"),
+                WebOrderNumberSuggestion("WEB-50001")
+            ),
             searchOrderItems = emptyList(),
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),
@@ -827,8 +836,7 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
 @Composable
 fun MBoltSearchBarExpandedOrdersPreview() {
     GPCTheme {
-        val items =
-            sampleCollectOrderListItemStateList()
+        val items = CollectOrderListItemState.placeholderList(6)
         MBoltSearchBar(
             query = "Jo",
             onQueryChange = {},
@@ -839,7 +847,8 @@ fun MBoltSearchBarExpandedOrdersPreview() {
             onResultClick = {},
             onClearClick = {},
             searchResults = emptyList(),
-            searchOrderItems = items.take(6),
+            suggestions = emptyList(),
+            searchOrderItems = items,
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
@@ -860,8 +869,7 @@ fun MBoltSearchBarExpandedOrdersPreview() {
 @Composable
 fun MBoltSearchBarExpandedMultiSelectPreview() {
     GPCTheme {
-        val items =
-            sampleCollectOrderListItemStateList()
+        val items = CollectOrderListItemState.placeholderList(8)
         val selected = setOf(items[0].invoiceNumber, items[2].invoiceNumber)
         MBoltSearchBar(
             query = "Order",
@@ -873,7 +881,8 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
             onResultClick = {},
             onClearClick = {},
             searchResults = emptyList(),
-            searchOrderItems = items.take(8),
+            suggestions = emptyList(),
+            searchOrderItems = items,
             isMultiSelectionEnabled = true,
             selectedOrderIdList = selected,
             isSelectAllChecked = false,
@@ -894,9 +903,7 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
 @Composable
 fun MBoltSearchBarExpandedSelectAllPreview() {
     GPCTheme {
-        val items =
-            sampleCollectOrderListItemStateList()
-                .take(5)
+        val items = CollectOrderListItemState.placeholderList(5)
         val allIds = items.map { it.invoiceNumber }.toSet()
         MBoltSearchBar(
             query = "",
@@ -908,6 +915,7 @@ fun MBoltSearchBarExpandedSelectAllPreview() {
             onResultClick = {},
             onClearClick = {},
             searchResults = emptyList(),
+            suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = true,
             selectedOrderIdList = allIds,
@@ -939,6 +947,7 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
             onResultClick = {},
             onClearClick = {},
             searchResults = emptyList(),
+            suggestions = emptyList(),
             searchOrderItems = emptyList(),
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),
@@ -960,9 +969,7 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
 @Composable
 fun MBoltSearchBarExpandedRefreshingPreview() {
     GPCTheme {
-        val items =
-            sampleCollectOrderListItemStateList()
-                .take(4)
+        val items = CollectOrderListItemState.placeholderList(4)
         MBoltSearchBar(
             query = "Smith",
             onQueryChange = {},
@@ -973,6 +980,7 @@ fun MBoltSearchBarExpandedRefreshingPreview() {
             onResultClick = {},
             onClearClick = {},
             searchResults = emptyList(),
+            suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),

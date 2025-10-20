@@ -39,7 +39,7 @@ interface OrderRepository {
     /**
      * Lightweight, indexed search suggestions from the DB.
      */
-    suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion>
+    suspend fun getSearchSuggestions(query: SuggestionQuery): List<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion>
 
     /**
      * Trigger a refresh/sync. In fake repo this seeds demo data.

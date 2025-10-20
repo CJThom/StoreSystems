@@ -4,8 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 
 object SearchContract {
@@ -14,7 +13,7 @@ object SearchContract {
     data class State(
         val searchText: String,
         val isSearchActive: Boolean,
-        val orderSearchSuggestionList: List<OrderSearchSuggestion>,
+        val searchSuggestions: List<SearchSuggestion>,
         val searchResults: List<CollectOrderListItemState>,
         // Multi-select state for search context
         val isMultiSelectionEnabled: Boolean,
@@ -29,7 +28,7 @@ object SearchContract {
             fun empty(): State = State(
                 searchText = "",
                 isSearchActive = false,
-                orderSearchSuggestionList = emptyList(),
+                searchSuggestions = emptyList(),
                 searchResults = emptyList(),
                 isMultiSelectionEnabled = false,
                 selectedOrderIdList = emptySet(),
@@ -47,7 +46,7 @@ object SearchContract {
         data object ClearSearch : Event
         data object SearchBarBackPressed : Event
         data class SearchResultClicked(val result: String) : Event
-        data class SearchSuggestionClicked(val suggestion: String, val type: OrderSearchSuggestionType) : Event
+        data class SearchSuggestionClicked(val suggestion: SearchSuggestion) : Event
 
         // Selection mode & actions (search context)
         data class ToggleSelectionMode(val enabled: Boolean) : Event

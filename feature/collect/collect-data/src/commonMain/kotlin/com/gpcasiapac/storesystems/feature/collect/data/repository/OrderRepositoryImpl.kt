@@ -18,7 +18,6 @@ import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetw
 import com.gpcasiapac.storesystems.feature.collect.data.util.randomUUID
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.SearchQuery
@@ -171,8 +170,60 @@ class OrderRepositoryImpl(
         }
     }
 
-    override suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion> {
-        return emptyList() // Original implementation was commented out, restoring to empty list.
+    override suspend fun getSearchSuggestions(query: com.gpcasiapac.storesystems.feature.collect.domain.repository.SuggestionQuery): List<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion> {
+        val raw = query.text.trim()
+        if (raw.isEmpty()) return emptyList()
+
+        val prefix = escapeForLike(raw) + "%"
+        val per = query.perKindLimit
+        val include = query.includeKinds
+
+        val out = mutableListOf<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion>()
+
+        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME in include) {
+            collectOrderDao.getCustomerNameSuggestionsPrefix(prefix, per).forEach { row ->
+                val name = row.name.trim()
+                if (name.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion(
+                    text = name,
+                    customerType = row.type,
+                )
+            }
+        }
+        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.INVOICE_NUMBER in include) {
+            collectOrderDao.getInvoiceSuggestionsPrefix(prefix, per).forEach { inv ->
+                out += com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion(inv)
+            }
+        }
+        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.WEB_ORDER_NUMBER in include) {
+            collectOrderDao.getWebOrderSuggestionsPrefix(prefix, per).forEach { web ->
+                out += com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion(web)
+            }
+        }
+        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.SALES_ORDER_NUMBER in include) {
+            collectOrderDao.getSalesOrderSuggestionsPrefix(prefix, per).forEach { so ->
+                out += com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion(so)
+            }
+        }
+        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.PHONE in include) {
+            collectOrderDao.getPhoneSuggestionsPrefix(prefix, per).forEach { phone ->
+                val p = phone.trim()
+                if (p.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion(p)
+            }
+        }
+
+        // De-dupe by (kind + lowercase text)
+        val deduped = out.distinctBy { it.kind to it.text.lowercase() }
+
+        // Simple priority ranking
+        val rank = mapOf(
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME to 0,
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.INVOICE_NUMBER to 1,
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.WEB_ORDER_NUMBER to 2,
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.SALES_ORDER_NUMBER to 3,
+            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.PHONE to 4,
+        )
+        val sorted = deduped.sortedWith(compareBy({ rank[it.kind] ?: 99 }, { it.text }))
+        return if (sorted.size <= query.maxTotal) sorted else sorted.take(query.maxTotal)
     }
 
     override fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>> {

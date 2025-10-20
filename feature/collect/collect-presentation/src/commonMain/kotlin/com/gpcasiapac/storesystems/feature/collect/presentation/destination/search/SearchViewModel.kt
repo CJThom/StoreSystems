@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
@@ -76,7 +77,7 @@ class SearchViewModel(
                     getOrderSearchSuggestionListUseCase(text)
                 }
             }.collectLatest { suggestions ->
-                setState { copy(orderSearchSuggestionList = suggestions) }
+                setState { copy(searchSuggestions = suggestions) }
             }
         }
     }
@@ -112,11 +113,11 @@ class SearchViewModel(
     }
 
     private fun handleClearSearch() {
-        setState { copy(searchText = "", searchResults = emptyList(), orderSearchSuggestionList = emptyList()) }
+        setState { copy(searchText = "", searchResults = emptyList(), searchSuggestions = emptyList()) }
     }
 
-    private fun handleSearchSuggestionClicked(suggestion: String) {
-        setState { copy(searchText = suggestion) }
+    private fun handleSearchSuggestionClicked(suggestion: SearchSuggestion) {
+        setState { copy(searchText = suggestion.text) }
     }
 
     private fun handleSearchResultClicked(result: String) {
