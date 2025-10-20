@@ -62,3 +62,50 @@ private fun HeaderLoadingPreview() {
         }
     }
 }
+
+
+@Composable
+fun HeaderSmall(
+    text: String,
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    maxLines: Int = 1,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(contentPadding)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = maxLines,
+            modifier = Modifier.placeholder(isLoading)
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun HeaderSmallPreview() {
+    GPCTheme {
+        Surface {
+            HeaderSmall(text = "Recent searches")
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun HeaderSmallLoadingPreview() {
+    GPCTheme {
+        Surface {
+            HeaderSmall(
+                text = "Recent searches",
+                isLoading = true
+            )
+        }
+    }
+}

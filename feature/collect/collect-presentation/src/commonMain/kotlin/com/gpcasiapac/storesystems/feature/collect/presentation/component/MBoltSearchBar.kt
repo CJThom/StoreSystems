@@ -9,8 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -76,6 +76,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -255,7 +256,7 @@ fun MBoltSearchBar(
                                     inputChips.forEach { name ->
                                         InputChip(
                                             selected = false,
-                                           // modifier = Modifier.
+                                            // modifier = Modifier.
                                             onClick = { },
                                             label = {
                                                 Text(
@@ -331,24 +332,14 @@ fun MBoltSearchBar(
                     if (customerSuggestions.size > 1) {
                         // Header
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                text = "Suggested",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
-                            )
+                            HeaderSmall(text = "Suggested")
                         }
                         // Chips row (wrapping) in a separate grid item to avoid any overlap with the header
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             FlowRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(
-                                        horizontal = Dimens.Space.medium,
-                                        vertical = Dimens.Space.small
-                                    ),
+                                    .padding(horizontal = Dimens.Space.medium),
                                 horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
                             ) {
                                 customerSuggestions.forEach { name ->
@@ -377,14 +368,7 @@ fun MBoltSearchBar(
                     // Recent searches section (only when there are no order results)
                     if (searchOrderItems.isEmpty() && searchResults.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                text = "Recent searches",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
-                            )
+                            HeaderSmall(text = "Recent searches")
                         }
                         items(
                             items = searchResults,
@@ -402,7 +386,10 @@ fun MBoltSearchBar(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.small
+                                    )
                                     .clickable {
                                         overlayKeyboardController?.hide()
                                         overlayFocusManager.clearFocus(force = true)
@@ -415,14 +402,7 @@ fun MBoltSearchBar(
                     // Results header and order items
                     if (searchOrderItems.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                text = "Results",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
-                            )
+                            HeaderSmall(text = "Results")
                         }
                         items(
                             items = searchOrderItems,
