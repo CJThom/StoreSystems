@@ -143,6 +143,7 @@ fun MBoltSearchBar(
 
     // Chips state and clear logic
     val inputChips = remember { mutableStateListOf<String>() }
+    val chipsQueryBase = inputChips.joinToString(" ")
     val clearAll: () -> Unit = {
         inputChips.clear()
         onClearClick()
@@ -201,6 +202,7 @@ fun MBoltSearchBar(
                         onBackPressed = onBackPressed,
                         onClearClick = onClearClick,
                         hasChips = inputChips.isNotEmpty(),
+                        queryBase = chipsQueryBase,
                         onClearAll = clearAll,
                         prefix = {
                             Row(
@@ -259,6 +261,7 @@ fun MBoltSearchBar(
                             onBackPressed = onBackPressed,
                             onClearClick = onClearClick,
                             hasChips = inputChips.isNotEmpty(),
+                            queryBase = chipsQueryBase,
                             onClearAll = clearAll,
                             modifier = Modifier,
                             prefix = {
@@ -354,7 +357,6 @@ fun MBoltSearchBar(
                                             }
                                             overlayKeyboardController?.hide()
                                             overlayFocusManager.clearFocus(force = true)
-                                            onQueryChange(name)
                                             onSearch(name)
                                         },
                                         label = {
@@ -443,9 +445,10 @@ private fun SearchBarInputField(
     onSearch: (String) -> Unit,
     onBackPressed: () -> Unit,
     onClearClick: () -> Unit,
-    hasChips: Boolean = false,
-    onClearAll: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    hasChips: Boolean = false,
+    queryBase: String = "",
+    onClearAll: (() -> Unit)? = null,
     colors: TextFieldColors = SearchBarDefaults.inputFieldColors(
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent,
@@ -457,31 +460,62 @@ private fun SearchBarInputField(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // Use TextFieldState-based InputField to enable prefix/suffix slots
-    val textState = remember(query) { TextFieldState(query) }
-
-    // Propagate user edits up to the String-based query
-    LaunchedEffect(textState, query) {
-        snapshotFlow { textState.text.toString() }.collect { newText ->
-            if (newText != query) onQueryChange(newText)
+    val initialFromQuery = remember(query, hasChips, queryBase) {
+        if (queryBase.isNotEmpty() && query.startsWith(queryBase)) {
+            query.removePrefix(queryBase).trimStart()
+        } else {
+            query
         }
+    }
+    val textState = remember(initialFromQuery) { TextFieldState(initialFromQuery) }
+
+    // Propagate user edits combined with chip-based queryBase
+    LaunchedEffect(textState, queryBase) {
+        snapshotFlow { textState.text.toString() }.collect { typed ->
+            val combined = when {
+                queryBase.isNotBlank() && typed.isNotBlank() -> "$queryBase $typed"
+                queryBase.isNotBlank() -> queryBase
+                else -> typed
+            }
+            if (combined != query) onQueryChange(combined)
+        }
+    }
+
+    // Ensure external changes to queryBase update the composed query
+    LaunchedEffect(queryBase) {
+        val typed = textState.text.toString()
+        val combined = when {
+            queryBase.isNotBlank() && typed.isNotBlank() -> "$queryBase $typed"
+            queryBase.isNotBlank() -> queryBase
+            else -> typed
+        }
+        if (combined != query) onQueryChange(combined)
     }
 
     SearchBarDefaults.InputField(
         state = textState,
-        onSearch = { q ->
+        onSearch = { _ ->
             keyboardController?.hide()
             focusManager.clearFocus(force = true)
-            onSearch(q)
+            val typed = textState.text.toString()
+            val effective = when {
+                queryBase.isNotBlank() && typed.isNotBlank() -> "$queryBase $typed"
+                queryBase.isNotBlank() -> queryBase
+                else -> typed
+            }
+            onSearch(effective)
         },
         expanded = isExpanded,
         onExpandedChange = onExpandedChange,
         modifier = modifier,
         placeholder = {
-            Text(
-                text = placeholderText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (!hasChips) {
+                Text(
+                    text = placeholderText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         },
         leadingIcon = {
             AnimatedContent(
