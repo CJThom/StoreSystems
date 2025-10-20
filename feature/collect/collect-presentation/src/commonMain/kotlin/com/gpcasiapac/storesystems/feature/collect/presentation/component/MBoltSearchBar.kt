@@ -8,9 +8,16 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -25,6 +32,7 @@ import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
@@ -32,44 +40,46 @@ import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSearchBarState
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
-import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
-import com.gpcasiapac.storesystems.foundation.design_system.Dimens
-import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.runtime.mutableStateListOf
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
+import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.snapshotFlow
 
+// TODO: Move to common
 @OptIn(ExperimentalLayoutApi::class)
 @Stable
 fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
@@ -131,15 +141,21 @@ fun MBoltSearchBar(
     collapsedBorder: BorderStroke? = null,
 ) {
 
-    // TODO: Somehow sync this with the onExpandedChange of the SearchBarInputField
+    // Chips state and clear logic
+    val inputChips = remember { mutableStateListOf<String>() }
+    val clearAll: () -> Unit = {
+        inputChips.clear()
+        onClearClick()
+    }
+
     // Monitor expansion state changes and notify parent
     var previousSearchBarValue by remember { mutableStateOf(searchBarState.currentValue) }
     LaunchedEffect(searchBarState.currentValue) {
         val current = searchBarState.currentValue
         onExpandedChange(current == SearchBarValue.Expanded)
-        // Clear the search text whenever the search bar collapses
+        // Clear both input chips and search text whenever the search bar collapses
         if (previousSearchBarValue == SearchBarValue.Expanded && current == SearchBarValue.Collapsed) {
-            onClearClick()
+            clearAll()
         }
         previousSearchBarValue = current
     }
@@ -184,6 +200,35 @@ fun MBoltSearchBar(
                         onSearch = onSearch,
                         onBackPressed = onBackPressed,
                         onClearClick = onClearClick,
+                        hasChips = inputChips.isNotEmpty(),
+                        onClearAll = clearAll,
+                        prefix = {
+                            Row(
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                inputChips.forEach { name ->
+                                    InputChip(
+                                        selected = false,
+                                        onClick = { inputChips.remove(name) },
+                                        label = {
+                                            Text(
+                                                name,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        },
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remove"
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        },
                     )
                 }
             )
@@ -204,17 +249,46 @@ fun MBoltSearchBar(
                     )
                 ),
                 inputField = {
-                    SearchBarInputField(
-                        query = query,
-                        onQueryChange = onQueryChange,
-                        isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
-                        onExpandedChange = onExpandedChange,
-                        placeholderText = placeholderText,
-                        onSearch = onSearch,
-                        onBackPressed = onBackPressed,
-                        onClearClick = onClearClick,
-                        modifier = Modifier
-                    )
+                        SearchBarInputField(
+                            query = query,
+                            onQueryChange = onQueryChange,
+                            isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                            onExpandedChange = onExpandedChange,
+                            placeholderText = placeholderText,
+                            onSearch = onSearch,
+                            onBackPressed = onBackPressed,
+                            onClearClick = onClearClick,
+                            hasChips = inputChips.isNotEmpty(),
+                            onClearAll = clearAll,
+                            modifier = Modifier,
+                            prefix = {
+                                Row(
+                                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    inputChips.forEach { name ->
+                                        InputChip(
+                                            selected = false,
+                                            onClick = { inputChips.remove(name) },
+                                            label = {
+                                                Text(
+                                                    name,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            },
+                                            trailingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Remove"
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        )
                 }
             ) {
                 // Local controllers from dialog window scope for reliable IME control
@@ -257,25 +331,39 @@ fun MBoltSearchBar(
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         val customerSuggestions = remember(searchOrderItems) {
                             val names = searchOrderItems.map { it.customerName }.distinct()
-                            if (names.isNotEmpty()) names else sampleCollectOrderListItemStateList().map { it.customerName }.distinct()
+                            if (names.isNotEmpty()) names else sampleCollectOrderListItemStateList().map { it.customerName }
+                                .distinct()
                         }
-                        if (customerSuggestions.isNotEmpty()) {
+                        // Show chips only when there is more than one suggestion
+                        if (customerSuggestions.size > 1) {
                             FlowRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small),
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.small
+                                    ),
                                 horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
-                              //  verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+                                //  verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
                             ) {
                                 customerSuggestions.forEach { name ->
                                     SuggestionChip(
                                         onClick = {
+                                            if (!inputChips.contains(name)) {
+                                                inputChips.add(name)
+                                            }
                                             overlayKeyboardController?.hide()
                                             overlayFocusManager.clearFocus(force = true)
                                             onQueryChange(name)
                                             onSearch(name)
                                         },
-                                        label = { Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                                        label = {
+                                            Text(
+                                                name,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     )
                                 }
                             }
@@ -303,6 +391,7 @@ fun MBoltSearchBar(
                             items = searchOrderItems,
                             key = { it.invoiceNumber }
                         ) { collectOrderState ->
+
                             CheckboxCard(
                                 modifier = Modifier
                                     .padding(
@@ -318,17 +407,18 @@ fun MBoltSearchBar(
                                     onCheckedChange(collectOrderState.invoiceNumber, isChecked)
                                 }
                             ) {
-                                CollectOrderDetails(
+                                CollectOrderItem(
                                     customerName = collectOrderState.customerName,
                                     customerType = collectOrderState.customerType,
                                     invoiceNumber = collectOrderState.invoiceNumber,
                                     webOrderNumber = collectOrderState.webOrderNumber,
                                     pickedAt = collectOrderState.pickedAt,
                                     isLoading = isRefreshing,
-                                    contendPadding = PaddingValues(
+                                    contendPadding = PaddingValues(),
+                                    modifier = Modifier.padding(
                                         start = Dimens.Space.medium,
                                         top = Dimens.Space.medium,
-                                        bottom = Dimens.Space.medium,
+                                        bottom = Dimens.Space.small,
                                         end = if (isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
                                     ),
                                 )
@@ -353,71 +443,85 @@ private fun SearchBarInputField(
     onSearch: (String) -> Unit,
     onBackPressed: () -> Unit,
     onClearClick: () -> Unit,
+    hasChips: Boolean = false,
+    onClearAll: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     colors: TextFieldColors = SearchBarDefaults.inputFieldColors(
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent,
         disabledContainerColor = Color.Transparent,
     ),
+    prefix: @Composable (() -> Unit)? = null,
 ) {
-        val focusManager = LocalFocusManager.current
-        val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-        SearchBarDefaults.InputField(
-            query = query,
-            onQueryChange = onQueryChange,
-            onSearch = { q ->
-                keyboardController?.hide()
-                focusManager.clearFocus(force = true)
-                onSearch(q)
-            },
-            expanded = isExpanded,
-            onExpandedChange = onExpandedChange,
-            modifier = modifier,
-            placeholder = {
-                Text(
-                    text = placeholderText,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            },
-            leadingIcon = {
-                AnimatedContent(
-                    targetState = isExpanded,
-                    label = "leading-icon",
-                ) { value ->
-                    if (value) {
-                        IconButton(onClick = onBackPressed) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    } else {
+    // Use TextFieldState-based InputField to enable prefix/suffix slots
+    val textState = remember(query) { TextFieldState(query) }
+
+    // Propagate user edits up to the String-based query
+    LaunchedEffect(textState, query) {
+        snapshotFlow { textState.text.toString() }.collect { newText ->
+            if (newText != query) onQueryChange(newText)
+        }
+    }
+
+    SearchBarDefaults.InputField(
+        state = textState,
+        onSearch = { q ->
+            keyboardController?.hide()
+            focusManager.clearFocus(force = true)
+            onSearch(q)
+        },
+        expanded = isExpanded,
+        onExpandedChange = onExpandedChange,
+        modifier = modifier,
+        placeholder = {
+            Text(
+                text = placeholderText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        leadingIcon = {
+            AnimatedContent(
+                targetState = isExpanded,
+                label = "leading-icon",
+            ) { value ->
+                if (value) {
+                    IconButton(onClick = onBackPressed) {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.minimumInteractiveComponentSize()
-                        )
-                    }
-                }
-            },
-            trailingIcon = if (!isExpanded || query.isEmpty()) null else {
-                {
-                    IconButton(onClick = onClearClick) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear search",
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    )
                 }
-            },
-            colors = colors
-        )
-    }
+            }
+        },
+        trailingIcon = if (!isExpanded || (query.isEmpty() && !hasChips)) null else {
+            {
+                IconButton(onClick = { onClearAll?.invoke() ?: onClearClick() }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        prefix = prefix,
+        suffix = null,
+        colors = colors,
+    )
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
