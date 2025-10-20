@@ -52,6 +52,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -244,13 +245,13 @@ fun OrderListScreen(
                         scaleIn(
                             initialScale = 0.2f,
                             animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                            transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 1f)
+                            transformOrigin = TransformOrigin(1f, 1f)
                         ),
                 exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
                         scaleOut(
                             targetScale = 0.2f,
                             animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                            transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 1f)
+                            transformOrigin = TransformOrigin(1f, 1f)
                         )
             ) {
                 ToolbarFabContainer(

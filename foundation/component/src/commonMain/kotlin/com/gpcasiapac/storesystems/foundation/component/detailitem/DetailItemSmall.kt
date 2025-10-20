@@ -36,7 +36,7 @@ fun DetailItemSmall(
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
         DetailItemContent(
@@ -57,7 +57,7 @@ fun DetailItemSmallChip(
     isLoading: Boolean = false,
     // onClick: (() -> Unit)? = null, // todo onClick adds hit padding
     //  enabled: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     Surface(
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -89,7 +89,7 @@ private fun DetailItemContent(
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     Row(
         modifier = modifier

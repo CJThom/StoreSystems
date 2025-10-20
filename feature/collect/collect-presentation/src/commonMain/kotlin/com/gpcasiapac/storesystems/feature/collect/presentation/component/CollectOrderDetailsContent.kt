@@ -2,16 +2,21 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Web
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -32,8 +37,10 @@ fun CollectOrderDetailsContent(
     contentPadding: PaddingValues = PaddingValues()
 ) {
     Column(
-        modifier = modifier.padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
+        modifier = modifier
+            .width(IntrinsicSize.Min)
+            .padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.semiMedium)
     ) {
         CustomerName(
             customerName = customerName,
@@ -43,16 +50,17 @@ fun CollectOrderDetailsContent(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+            // horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Spacer(Modifier.size(2.dp))
             DetailItemSmall(
                 value = invoiceNumber,
                 imageVector = Icons.Outlined.Receipt,
                 isLoading = isLoading,
                 modifier = Modifier
             )
-
+            Spacer(Modifier.size(Dimens.Space.small))
             if (webOrderNumber != null) {
                 DetailItemSmall(
                     value = webOrderNumber,

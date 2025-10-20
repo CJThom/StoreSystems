@@ -375,5 +375,277 @@
         "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
       }
     ]
+  },
+  {
+    "customer_type": "B2C",
+    "customer_name": "Jane Doe",
+    "customer_first_name": "Jane",
+    "customer_last_name": "Doe",
+    "customer_phone": "+65 8123 4568",
+    "customer_number": "CUST-0004",
+    "invoice_number": "10341882849-11",
+    "sales_order_number": "SO-011",
+    "web_order_number": "84777189931",
+    "created_at_epoch_ms": 1759302600000,
+    "picked_at_epoch_ms": 1759302900000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-006",
+        "product_number": "PROD-006",
+        "product_description": "Bosch Aerotwin Wiper Blade 24\"",
+        "quantity": 1,
+        "unit_price": 75.00
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
+        "quantity": 2,
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
+      }
+    ]
+  },
+  {
+    "customer_type": "B2C",
+    "customer_name": "Jane Doe",
+    "customer_first_name": "Jane",
+    "customer_last_name": "Doe",
+    "customer_phone": "+65 8123 4568",
+    "customer_number": "CUST-0004",
+    "invoice_number": "10341882849-12",
+    "sales_order_number": "SO-012",
+    "web_order_number": "84777189932",
+    "created_at_epoch_ms": 1759303000000,
+    "picked_at_epoch_ms": 1759303300000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
+        "quantity": 1,
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
+        "quantity": 1,
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
+      }
+    ]
+  },
+  {
+    "customer_type": "B2B",
+    "customer_name": "ABC Motorsports PTY Limited",
+    "account_name": "ABC Motorsports PTY Limited",
+    "customer_phone": "+65 8000 0002",
+    "customer_number": "ACC-0002",
+    "invoice_number": "10341882849-13",
+    "sales_order_number": "SO-013",
+    "web_order_number": "84777189933",
+    "created_at_epoch_ms": 1759297200000,
+    "picked_at_epoch_ms": 1759297500000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Ryco Oil Filter Z418",
+        "quantity": 20,
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-006",
+        "product_number": "PROD-006",
+        "product_description": "Bosch Aerotwin Wiper Blade 24\"",
+        "quantity": 5,
+        "unit_price": 75.00
+      }
+    ]
+  },
+  {
+    "customer_type": "B2B",
+    "customer_name": "ABC Motorsports PTY Limited",
+    "account_name": "ABC Motorsports PTY Limited",
+    "customer_phone": "+65 8000 0002",
+    "customer_number": "ACC-0002",
+    "invoice_number": "10341882849-14",
+    "sales_order_number": "SO-014",
+    "web_order_number": "84777189934",
+    "created_at_epoch_ms": 1759297800000,
+    "picked_at_epoch_ms": 1759298100000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
+        "quantity": 15,
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Ryco Oil Filter Z418",
+        "quantity": 30,
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
+      },
+      {
+        "line_number": 3,
+        "sku": "SKU-006",
+        "product_number": "PROD-006",
+        "product_description": "Bosch Aerotwin Wiper Blade 24\"",
+        "quantity": 10,
+        "unit_price": 75.00
+      }
+    ]
+  },
+  {
+    "customer_type": "B2B",
+    "customer_name": "ABC Motorsports PTY Limited",
+    "account_name": "ABC Motorsports PTY Limited",
+    "customer_phone": "+65 8000 0002",
+    "customer_number": "ACC-0002",
+    "invoice_number": "10341882849-15",
+    "sales_order_number": "SO-015",
+    "web_order_number": "84777189935",
+    "created_at_epoch_ms": 1759298400000,
+    "picked_at_epoch_ms": 1759298700000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
+        "quantity": 50,
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
+        "quantity": 100,
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
+      }
+    ]
+  },
+  {
+    "customer_type": "B2B",
+    "customer_name": "ABC Motorsports PTY Limited",
+    "account_name": "ABC Motorsports PTY Limited",
+    "customer_phone": "+65 8000 0002",
+    "customer_number": "ACC-0002",
+    "invoice_number": "10341882849-16",
+    "sales_order_number": "SO-016",
+    "web_order_number": "84777189936",
+    "created_at_epoch_ms": 1759299000000,
+    "picked_at_epoch_ms": 1759299300000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-001",
+        "product_number": "PROD-001",
+        "product_description": "Dupli-Color Vinyl & Fabric Paint Gloss Black",
+        "quantity": 25,
+        "unit_price": 10.50,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5b/h39/9495652761630/A9325857/A9325857.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Ryco Oil Filter Z418",
+        "quantity": 10,
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
+      }
+    ]
+  },
+  {
+    "customer_type": "B2B",
+    "customer_name": "AU Mechanics",
+    "account_name": "AU Mechanics",
+    "customer_phone": "+65 8000 0003",
+    "customer_number": "ACC-0003",
+    "invoice_number": "10341882849-17",
+    "sales_order_number": "SO-017",
+    "web_order_number": "84777189937",
+    "created_at_epoch_ms": 1759301700000,
+    "picked_at_epoch_ms": 1759302000000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-004",
+        "product_number": "PROD-004",
+        "product_description": "Ryco Oil Filter Z418",
+        "quantity": 5,
+        "unit_price": 50.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h0c/hda/11061361442846/A9627135/A9627135.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-006",
+        "product_number": "PROD-006",
+        "product_description": "Bosch Aerotwin Wiper Blade 24\"",
+        "quantity": 3,
+        "unit_price": 75.00
+      }
+    ]
+  },
+  {
+    "customer_type": "B2B",
+    "customer_name": "AU Mechanics",
+    "account_name": "AU Mechanics",
+    "customer_phone": "+65 8000 0003",
+    "customer_number": "ACC-0003",
+    "invoice_number": "10341882849-18",
+    "sales_order_number": "SO-018",
+    "web_order_number": "84777189938",
+    "created_at_epoch_ms": 1759302300000,
+    "picked_at_epoch_ms": 1759302600000,
+    "line_items": [
+      {
+        "line_number": 1,
+        "sku": "SKU-003",
+        "product_number": "PROD-003",
+        "product_description": "Century Ultra Hi Performance Battery 12V 60Ah",
+        "quantity": 2,
+        "unit_price": 100.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h5d/hb9/11072350617630/A9816258/A9816258.jpg"
+      },
+      {
+        "line_number": 2,
+        "sku": "SKU-002",
+        "product_number": "PROD-002",
+        "product_description": "Repco Heavy Duty Degreaser 500mL",
+        "quantity": 4,
+        "unit_price": 25.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg"
+      },
+      {
+        "line_number": 3,
+        "sku": "SKU-005",
+        "product_number": "PROD-005",
+        "product_description": "Narva LED Headlight Bulb H4 12V",
+        "quantity": 6,
+        "unit_price": 15.00,
+        "product_image_url": "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h92/h3c/11061296791582/A9632656/A9632656.jpg"
+      }
+    ]
   }
 ]

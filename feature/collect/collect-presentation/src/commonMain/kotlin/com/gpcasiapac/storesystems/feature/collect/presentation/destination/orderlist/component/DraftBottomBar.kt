@@ -115,13 +115,14 @@ fun ToolbarFabContainer(
                         verticalAlignment = Alignment.CenterVertically,
                         //   horizontalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
                     ) {
+                        val orderLabel = if (count == 1) "order" else "orders"
                         Text(
                             text = "$count",
-                            style = MaterialTheme.typography.bodyLargeEmphasized,
+                            style = MaterialTheme.typography.titleLarge,
                         )
-                        Spacer(Modifier.size(Dimens.Space.extraSmall))
+                        Spacer(Modifier.size(Dimens.Space.small))
                         Text(
-                            text = "order selected",
+                            text = "$orderLabel selected",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(Modifier.size(Dimens.Space.small))
@@ -129,7 +130,7 @@ fun ToolbarFabContainer(
                 },
                 menuContent = { state ->
                     DropdownMenuItem(
-                        text = { Text("$count order selected") },
+                        text = { Text("$count ${if (count == 1) "order" else "orders"} selected") },
                         onClick = { state.dismiss() }
                     )
                 }

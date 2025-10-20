@@ -56,7 +56,8 @@ fun CollectOrderItem(
             customerType = customerType,
             invoiceNumber = invoiceNumber,
             webOrderNumber = webOrderNumber,
-            isLoading = isLoading
+            isLoading = isLoading,
+            contentPadding = PaddingValues(bottom = Dimens.Space.small)
         )
     }
 }
@@ -72,7 +73,7 @@ private fun RowScope.CollectOrderToolbar(
         actions = actions,
         overflowMenu = { dismiss ->
             DropdownMenuItem(
-                text = { Text("Select all for this customer") },
+                text = { Text("Select all by customer") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.SelectAll,
