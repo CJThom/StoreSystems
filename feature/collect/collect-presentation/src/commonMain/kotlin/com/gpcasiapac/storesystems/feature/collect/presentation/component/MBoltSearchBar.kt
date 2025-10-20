@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -19,21 +20,27 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarColors
@@ -47,12 +54,16 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusEvent
@@ -62,12 +73,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.mutableStateListOf
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -76,8 +83,6 @@ import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.runtime.snapshotFlow
 
 // TODO: Move to common
 @OptIn(ExperimentalLayoutApi::class)
@@ -204,33 +209,6 @@ fun MBoltSearchBar(
                         hasChips = inputChips.isNotEmpty(),
                         queryBase = chipsQueryBase,
                         onClearAll = clearAll,
-                        prefix = {
-                            Row(
-                                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                inputChips.forEach { name ->
-                                    InputChip(
-                                        selected = false,
-                                        onClick = { inputChips.remove(name) },
-                                        label = {
-                                            Text(
-                                                name,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        },
-                                        trailingIcon = {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = "Remove"
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                        },
                     )
                 }
             )
@@ -251,29 +229,33 @@ fun MBoltSearchBar(
                     )
                 ),
                 inputField = {
-                        SearchBarInputField(
-                            query = query,
-                            onQueryChange = onQueryChange,
-                            isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
-                            onExpandedChange = onExpandedChange,
-                            placeholderText = placeholderText,
-                            onSearch = onSearch,
-                            onBackPressed = onBackPressed,
-                            onClearClick = onClearClick,
-                            hasChips = inputChips.isNotEmpty(),
-                            queryBase = chipsQueryBase,
-                            onClearAll = clearAll,
-                            modifier = Modifier,
-                            prefix = {
-                                Row(
-                                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
-                                    verticalAlignment = Alignment.CenterVertically
+                    SearchBarInputField(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+                        onExpandedChange = onExpandedChange,
+                        placeholderText = placeholderText,
+                        onSearch = onSearch,
+                        onBackPressed = onBackPressed,
+                        onClearClick = onClearClick,
+                        hasChips = inputChips.isNotEmpty(),
+                        queryBase = chipsQueryBase,
+                        onClearAll = clearAll,
+                        modifier = Modifier,
+                        prefix = {
+                            Row(
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CompositionLocalProvider(
+                                    LocalMinimumInteractiveComponentSize provides Dp.Unspecified // Or set a specific smaller size
                                 ) {
                                     inputChips.forEach { name ->
                                         InputChip(
                                             selected = false,
-                                            onClick = { inputChips.remove(name) },
+                                           // modifier = Modifier.
+                                            onClick = { },
                                             label = {
                                                 Text(
                                                     name,
@@ -282,16 +264,23 @@ fun MBoltSearchBar(
                                                 )
                                             },
                                             trailingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.Close,
-                                                    contentDescription = "Remove"
-                                                )
+                                                IconButton(
+                                                    onClick = { inputChips.remove(name) },
+                                                    modifier = Modifier.size(InputChipDefaults.IconSize)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Close,
+                                                        contentDescription = "Remove"
+                                                    )
+                                                }
+
                                             }
                                         )
                                     }
                                 }
                             }
-                        )
+                        }
+                    )
                 }
             ) {
                 // Local controllers from dialog window scope for reliable IME control
@@ -467,7 +456,7 @@ private fun SearchBarInputField(
             query
         }
     }
-    val textState = remember(initialFromQuery) { TextFieldState(initialFromQuery) }
+    val textState = remember { TextFieldState(initialFromQuery) }
 
     // Propagate user edits combined with chip-based queryBase
     LaunchedEffect(textState, queryBase) {
@@ -542,7 +531,11 @@ private fun SearchBarInputField(
         },
         trailingIcon = if (!isExpanded || (query.isEmpty() && !hasChips)) null else {
             {
-                IconButton(onClick = { onClearAll?.invoke() ?: onClearClick() }) {
+                IconButton(onClick = {
+                    // Clear both chips (if handler provided) and any typed text
+                    textState.edit { replace(0, length, "") }
+                    onClearAll?.invoke() ?: onClearClick()
+                }) {
                     Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = "Clear search",
