@@ -288,6 +288,13 @@ fun MBoltSearchBar(
                 val overlayFocusManager = LocalFocusManager.current
                 val overlayKeyboardController = LocalSoftwareKeyboardController.current
 
+                val customerSuggestions = remember(searchOrderItems) {
+                    val names = searchOrderItems.map { it.customerName }.distinct()
+                    if (names.isNotEmpty()) names else sampleCollectOrderListItemStateList()
+                        .map { it.customerName }
+                        .distinct()
+                }
+
                 LazyVerticalGrid(
                     state = lazyGridState,
                     columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
@@ -321,22 +328,20 @@ fun MBoltSearchBar(
                     }
 
                     // Customer suggestion chips from mock data (based on orders.json)
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        val customerSuggestions = remember(searchOrderItems) {
-                            val names = searchOrderItems.map { it.customerName }.distinct()
-                            if (names.isNotEmpty()) names else sampleCollectOrderListItemStateList().map { it.customerName }
-                                .distinct()
+                    if (customerSuggestions.size > 1) {
+                        // Header
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Text(
+                                text = "Suggested",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
+                            )
                         }
-                        // Show chips only when there is more than one suggestion
-                        if (customerSuggestions.size > 1) {
-                        Text(
-                            text = "Suggested",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
-                        )
+                        // Chips row (wrapping) in a separate grid item to avoid any overlap with the header
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             FlowRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -345,7 +350,6 @@ fun MBoltSearchBar(
                                         vertical = Dimens.Space.small
                                     ),
                                 horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
-                                //  verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
                             ) {
                                 customerSuggestions.forEach { name ->
                                     SuggestionChip(
