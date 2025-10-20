@@ -52,7 +52,7 @@ fun ToolbarFabContainer(
 
 
     HorizontalFloatingToolbar(
-        expanded = expanded,
+        expanded = hasDraft && expanded,
         floatingActionButton = {
             Box(modifier = Modifier.fillMaxSize()) {
                 FloatingToolbarDefaults.VibrantFloatingActionButton(
