@@ -154,6 +154,7 @@ fun MBoltSearchBar(
     // Chips state and clear logic
     val inputChips = remember { mutableStateListOf<String>() }
     val chipsQueryBase = inputChips.joinToString(" ")
+    var clearTypedTrigger by remember { mutableStateOf(0) }
     val clearAll: () -> Unit = {
         inputChips.clear()
         onClearClick()
@@ -221,6 +222,7 @@ fun MBoltSearchBar(
                         hasChips = inputChips.isNotEmpty(),
                         queryBase = chipsQueryBase,
                         onClearAll = clearAll,
+                        clearTypedTrigger = clearTypedTrigger,
                     )
                 }
             )
@@ -253,6 +255,7 @@ fun MBoltSearchBar(
                         hasChips = inputChips.isNotEmpty(),
                         queryBase = chipsQueryBase,
                         onClearAll = clearAll,
+                        clearTypedTrigger = clearTypedTrigger,
                         modifier = Modifier,
                         prefix = {
                             Row(
@@ -369,6 +372,7 @@ fun MBoltSearchBar(
                                             if (!inputChips.contains(name)) {
                                                 inputChips.add(name)
                                             }
+                                            clearTypedTrigger += 1
                                             overlayKeyboardController?.hide()
                                             overlayFocusManager.clearFocus(force = true)
                                             onSearch(name)
@@ -514,6 +518,7 @@ private fun SearchBarInputField(
     hasChips: Boolean = false,
     queryBase: String = "",
     onClearAll: (() -> Unit)? = null,
+    clearTypedTrigger: Int = 0,
     colors: TextFieldColors = SearchBarDefaults.inputFieldColors(
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent,
@@ -533,6 +538,12 @@ private fun SearchBarInputField(
         }
     }
     val textState = remember { TextFieldState(initialFromQuery) }
+
+    LaunchedEffect(clearTypedTrigger) {
+        if (clearTypedTrigger != 0) {
+            textState.edit { replace(0, length, "") }
+        }
+    }
 
     // Propagate user edits combined with chip-based queryBase
     LaunchedEffect(textState, queryBase) {
