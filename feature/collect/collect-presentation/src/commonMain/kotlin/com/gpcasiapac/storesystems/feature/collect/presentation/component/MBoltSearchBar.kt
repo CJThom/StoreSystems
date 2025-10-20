@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -328,6 +329,14 @@ fun MBoltSearchBar(
                         }
                         // Show chips only when there is more than one suggestion
                         if (customerSuggestions.size > 1) {
+                        Text(
+                            text = "Suggested",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
+                        )
                             FlowRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -361,23 +370,56 @@ fun MBoltSearchBar(
                         }
                     }
 
-                    if (searchOrderItems.isEmpty() && query.isNotEmpty()) {
-                        // Show the empty state inside the grid, spanning full width
+                    // Recent searches section (only when there are no order results)
+                    if (searchOrderItems.isEmpty() && searchResults.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
+                            Text(
+                                text = "Recent searches",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
+                            )
+                        }
+                        items(
+                            items = searchResults,
+                            key = { it },
+                            span = { GridItemSpan(maxLineSpan) }
+                        ) { result ->
                             ListItem(
-                                headlineContent = {
-                                    Text(
-                                        "No results found",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                headlineContent = { Text(result) },
+                                leadingContent = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(Dimens.Space.medium)
+                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
+                                    .clickable {
+                                        overlayKeyboardController?.hide()
+                                        overlayFocusManager.clearFocus(force = true)
+                                        onResultClick(result)
+                                    }
                             )
                         }
-                    } else {
+                    }
+
+                    // Results header and order items
+                    if (searchOrderItems.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Text(
+                                text = "Results",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)
+                            )
+                        }
                         items(
                             items = searchOrderItems,
                             key = { it.invoiceNumber }
@@ -414,6 +456,22 @@ fun MBoltSearchBar(
                                     ),
                                 )
                             }
+                        }
+                    } else if (searchResults.isEmpty() && query.isNotEmpty()) {
+                        // Show the empty state inside the grid, spanning full width
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        "No results found",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Dimens.Space.medium)
+                            )
                         }
                     }
                 }
