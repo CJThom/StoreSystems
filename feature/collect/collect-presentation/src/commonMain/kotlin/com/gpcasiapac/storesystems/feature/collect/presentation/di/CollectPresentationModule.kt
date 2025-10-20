@@ -9,7 +9,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.entry.CollectFeatureEntryImpl
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
-import com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchViewModel
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf

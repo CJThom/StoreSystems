@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -55,6 +56,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -181,7 +184,6 @@ fun MBoltSearchBar(
                         onSearch = onSearch,
                         onBackPressed = onBackPressed,
                         onClearClick = onClearClick,
-                      //  modifier = Modifier.clearFocusOnKeyboardDismiss()
                     )
                 }
             )
@@ -248,6 +250,35 @@ fun MBoltSearchBar(
                                 isLoading = isRefreshing,
                                 scrollBehavior = stickyHeaderScrollBehavior,
                             )
+                        }
+                    }
+
+                    // Customer suggestion chips from mock data (based on orders.json)
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        val customerSuggestions = remember(searchOrderItems) {
+                            val names = searchOrderItems.map { it.customerName }.distinct()
+                            if (names.isNotEmpty()) names else sampleCollectOrderListItemStateList().map { it.customerName }.distinct()
+                        }
+                        if (customerSuggestions.isNotEmpty()) {
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+                              //  verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+                            ) {
+                                customerSuggestions.forEach { name ->
+                                    SuggestionChip(
+                                        onClick = {
+                                            overlayKeyboardController?.hide()
+                                            overlayFocusManager.clearFocus(force = true)
+                                            onQueryChange(name)
+                                            onSearch(name)
+                                        },
+                                        label = { Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                                    )
+                                }
+                            }
                         }
                     }
 

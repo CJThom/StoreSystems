@@ -2,12 +2,13 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun OrderFulfilmentScreenDestination(
     orderFulfilmentScreenViewModel: OrderFulfilmentScreenViewModel = koinViewModel(),
-    searchViewModel: com.gpcasiapac.storesystems.feature.collect.presentation.search.SearchViewModel = koinViewModel(),
+    searchViewModel: SearchViewModel = koinViewModel(),
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
 ) {
     OrderFulfilmentScreen(

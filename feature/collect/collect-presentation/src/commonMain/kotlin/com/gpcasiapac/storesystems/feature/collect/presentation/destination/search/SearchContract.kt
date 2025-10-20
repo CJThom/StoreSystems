@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.search
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.search
 
 import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
