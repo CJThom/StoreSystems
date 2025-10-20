@@ -76,12 +76,15 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
+import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
+import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -166,6 +169,13 @@ fun MBoltSearchBar(
             clearAll()
         }
         previousSearchBarValue = current
+    }
+
+    // Build a name -> CustomerType map to power icons for chips
+    val customerTypeByName = remember(searchOrderItems) {
+        val source =
+            if (searchOrderItems.isNotEmpty()) searchOrderItems else sampleCollectOrderListItemStateList()
+        source.associate { it.customerName to it.customerType }
     }
 
     // Search results content (orders grid)
@@ -256,6 +266,19 @@ fun MBoltSearchBar(
                                     inputChips.forEach { name ->
                                         InputChip(
                                             selected = false,
+                                            leadingIcon = {
+                                                when (customerTypeByName[name]) {
+                                                    CustomerType.B2B -> B2BIcon(
+                                                        modifier = Modifier.size(InputChipDefaults.IconSize)
+                                                    )
+
+                                                    CustomerType.B2C -> B2CIcon(
+                                                        modifier = Modifier.size(InputChipDefaults.IconSize)
+                                                    )
+
+                                                    null -> {}
+                                                }
+                                            },
                                             // modifier = Modifier.
                                             onClick = { },
                                             label = {
@@ -289,11 +312,8 @@ fun MBoltSearchBar(
                 val overlayFocusManager = LocalFocusManager.current
                 val overlayKeyboardController = LocalSoftwareKeyboardController.current
 
-                val customerSuggestions = remember(searchOrderItems) {
-                    val names = searchOrderItems.map { it.customerName }.distinct()
-                    if (names.isNotEmpty()) names else sampleCollectOrderListItemStateList()
-                        .map { it.customerName }
-                        .distinct()
+                val customerSuggestions = remember(customerTypeByName) {
+                    customerTypeByName.keys.toList()
                 }
 
                 LazyVerticalGrid(
@@ -344,6 +364,7 @@ fun MBoltSearchBar(
                             ) {
                                 customerSuggestions.forEach { name ->
                                     SuggestionChip(
+                                        modifier = Modifier.animateItem(),
                                         onClick = {
                                             if (!inputChips.contains(name)) {
                                                 inputChips.add(name)
@@ -351,6 +372,19 @@ fun MBoltSearchBar(
                                             overlayKeyboardController?.hide()
                                             overlayFocusManager.clearFocus(force = true)
                                             onSearch(name)
+                                        },
+                                        icon = {
+                                            when (customerTypeByName[name]) {
+                                                CustomerType.B2B -> B2BIcon(
+                                                    modifier = Modifier.size(InputChipDefaults.IconSize)
+                                                )
+
+                                                CustomerType.B2C -> B2CIcon(
+                                                    modifier = Modifier.size(InputChipDefaults.IconSize)
+                                                )
+
+                                                null -> {}
+                                            }
                                         },
                                         label = {
                                             Text(
