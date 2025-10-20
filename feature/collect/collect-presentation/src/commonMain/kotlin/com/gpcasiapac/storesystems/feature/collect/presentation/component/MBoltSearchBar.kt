@@ -89,33 +89,6 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// TODO: Move to common
-@OptIn(ExperimentalLayoutApi::class)
-@Stable
-fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
-    var isFocused by remember { mutableStateOf(false) }
-    var keyboardAppearedSinceLastFocused by remember { mutableStateOf(false) }
-
-    if (isFocused) {
-        val imeIsVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-        val focusManager = LocalFocusManager.current
-
-        LaunchedEffect(imeIsVisible) {
-            if (imeIsVisible) {
-                keyboardAppearedSinceLastFocused = true
-            } else if (keyboardAppearedSinceLastFocused) {
-                focusManager.clearFocus()
-            }
-        }
-    }
-
-    onFocusEvent {
-        if (isFocused != it.isFocused) {
-            isFocused = it.isFocused
-            if (isFocused) keyboardAppearedSinceLastFocused = false
-        }
-    }
-}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
