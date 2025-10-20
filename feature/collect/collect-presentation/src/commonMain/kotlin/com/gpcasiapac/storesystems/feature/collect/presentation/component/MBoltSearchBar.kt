@@ -59,6 +59,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -117,25 +120,32 @@ fun MBoltSearchBar(
     collapsedBorder: BorderStroke? = null,
 ) {
 
-    // Chips state and clear logic
-    val inputChips = remember { mutableStateListOf<String>() }
-    val chipsQueryBase = inputChips.joinToString(" ")
-    var clearTypedTrigger by remember { mutableStateOf(0) }
+    // Chips state and clear logic (saveable + derived)
+    val inputChips = rememberSaveable(saver = listSaver(
+        save = { it.toList() },
+        restore = { mutableStateListOf<String>().apply { addAll(it) } }
+    )) { mutableStateListOf<String>() }
+    var clearTypedTrigger by rememberSaveable { mutableStateOf(0) }
+    val chipsQueryBase by remember(inputChips) {
+        derivedStateOf { inputChips.joinToString(" ") }
+    }
     val clearAll: () -> Unit = {
-        inputChips.clear()
+        if (inputChips.isNotEmpty()) inputChips.clear()
+        clearTypedTrigger += 1
         onClearClick()
     }
 
-    // Monitor expansion state changes and notify parent
-    var previousSearchBarValue by remember { mutableStateOf(searchBarState.currentValue) }
-    LaunchedEffect(searchBarState.currentValue) {
-        val current = searchBarState.currentValue
-        onExpandedChange(current == SearchBarValue.Expanded)
-        // Clear both input chips and search text whenever the search bar collapses
-        if (previousSearchBarValue == SearchBarValue.Expanded && current == SearchBarValue.Collapsed) {
-            clearAll()
+    // Monitor expansion state changes and notify parent (single collector)
+    LaunchedEffect(searchBarState) {
+        var prev = searchBarState.currentValue
+        snapshotFlow { searchBarState.currentValue }.collect { current ->
+            onExpandedChange(current == SearchBarValue.Expanded)
+            // When collapsing, clear chips and typed text, and notify upstream
+            if (prev == SearchBarValue.Expanded && current == SearchBarValue.Collapsed) {
+                clearAll()
+            }
+            prev = current
         }
-        previousSearchBarValue = current
     }
 
     // Build a name -> CustomerType map to power icons for chips
@@ -145,22 +155,6 @@ fun MBoltSearchBar(
         source.associate { it.customerName to it.customerType }
     }
 
-    // Search results content (orders grid)
-    val lazyGridState = rememberLazyGridState()
-    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
-        lazyGridState = lazyGridState,
-        stickyHeaderIndex = 0
-    )
-
-    // Auto-scroll to prevent sticky header overlap when it appears
-    LaunchedEffect(searchOrderItems.isNotEmpty()) {
-        if (searchOrderItems.isNotEmpty()) {
-            if (lazyGridState.firstVisibleItemIndex == 0 && lazyGridState.firstVisibleItemScrollOffset == 0) {
-                // Scroll so that the sticky header sits at the top and doesn't cover content
-                lazyGridState.animateScrollToItem(0)
-            }
-        }
-    }
 
     Box(modifier = Modifier) {
         CollapsedSearchBarSection(
