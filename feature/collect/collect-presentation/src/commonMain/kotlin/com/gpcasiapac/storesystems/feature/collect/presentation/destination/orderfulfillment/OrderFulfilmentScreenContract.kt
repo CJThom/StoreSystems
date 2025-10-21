@@ -10,8 +10,12 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncePreset
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDefaults
 
 object OrderFulfilmentScreenContract {
+
 
     @Immutable
     data class State(
@@ -37,6 +41,8 @@ object OrderFulfilmentScreenContract {
 
         // Signature data (stores actual signature strokes for preview)
         val signatureStrokes: List<List<Offset>>,
+        // Signature image as Base64 (observed from Work Order)
+        val signatureBase64: String? = null,
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
@@ -85,9 +91,16 @@ object OrderFulfilmentScreenContract {
         // Final action
         data object Confirm : Event
 
+        // Search-origin selection confirmation
+        data object ConfirmSearchSelection : Event
+        data object ConfirmSearchSelectionProceed : Event
+        data object DismissConfirmSearchSelectionDialog : Event
 
         // Order item click
         data class OrderClicked(val invoiceNumber: String) : Event
+
+        // Deselect an order from Fulfilment item actions
+        data class DeselectOrder(val invoiceNumber: String) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -102,6 +115,13 @@ object OrderFulfilmentScreenContract {
             val cancelLabel: String = "Cancel",
         ) : Effect
 
+        // Two-button confirm dialog for selection coming from Search in Fulfilment
+        data class ShowConfirmSelectionDialog(
+            val title: String = "Confirm selection",
+            val confirmLabel: String = "Confirm",
+            val cancelLabel: String = "Cancel",
+        ) : Effect
+
         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
@@ -110,5 +130,20 @@ object OrderFulfilmentScreenContract {
             data object SaveAndExit : Outcome
             data object DiscardAndExit : Outcome
         }
+    }
+
+    /** Preset combinations to use at call sites for this screen. */
+    sealed class Debounce(
+        final override val key: DebounceKey,
+        final override val interval: DebouncerDefaults.Interval
+    ) : DebouncePreset {
+        data object CollectingType : Debounce(
+            DebounceKey.CollectingType,
+            DebouncerDefaults.Interval.Medium
+        )
+        data object CourierName : Debounce(
+            DebounceKey.CourierName,
+            DebouncerDefaults.Interval.Medium
+        )
     }
 }

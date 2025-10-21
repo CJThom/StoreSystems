@@ -19,6 +19,7 @@ kotlin {
             languageSettings.optIn("kotlinx.coroutines.FlowPreview")
         }
         commonMain.dependencies {
+            implementation(libs.kotlinx.datetime)
         }
     }
 }

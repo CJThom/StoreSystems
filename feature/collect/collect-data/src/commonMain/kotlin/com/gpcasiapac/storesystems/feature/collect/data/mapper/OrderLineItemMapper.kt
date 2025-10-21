@@ -10,7 +10,8 @@ internal fun CollectOrderLineItemEntity.toDomain(): CollectOrderLineItem {
         productNumber = this.productNumber,
         productDescription = this.productDescription,
         quantity = this.quantity,
-        unitPrice = this.unitPrice
+        unitPrice = this.unitPrice,
+        productImageUrl = this.productImageUrl
     )
 }
 

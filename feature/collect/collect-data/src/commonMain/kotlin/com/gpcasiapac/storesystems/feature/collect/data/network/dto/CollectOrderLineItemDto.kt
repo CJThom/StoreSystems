@@ -16,5 +16,7 @@ data class CollectOrderLineItemDto(
     @SerialName("quantity")
     val quantity: Int,
     @SerialName("unit_price")
-    val unitPrice: Double
+    val unitPrice: Double,
+    @SerialName("product_image_url")
+    val productImageUrl: String? = null,
 )

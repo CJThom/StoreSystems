@@ -4,14 +4,17 @@ import com.gpcasiapac.storesystems.common.di.ModuleProvider
 import com.gpcasiapac.storesystems.core.sync_queue.domain.SyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.sync.SubmitOrderSyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderSelectionResultUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
@@ -30,10 +33,12 @@ val collectDomainModule = module {
     factoryOf(::ObserveSearchOrdersUseCase)
     factoryOf(::ObserveOrderCountUseCase)
 
-    factoryOf(::GetCollectOrderWithCustomerListFlowUseCase)
-    factoryOf(::ObserveOrderSelectionResultUseCase)
-
     factoryOf(::SaveSignatureUseCase)
+    factoryOf(::ObserveWorkOrderSignatureUseCase)
+    factoryOf(::ObserveLatestOpenWorkOrderUseCase)
+    factoryOf(::ObserveLatestOpenWorkOrderWithOrdersUseCase)
+    factoryOf(::SetWorkOrderCollectingTypeUseCase)
+    factoryOf(::SetWorkOrderCourierNameUseCase)
     // Selection use cases
     factoryOf(::ObserveOrderSelectionUseCase)
     factoryOf(::SetOrderSelectionUseCase)

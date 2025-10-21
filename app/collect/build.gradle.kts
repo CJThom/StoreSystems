@@ -58,7 +58,8 @@ kotlin {
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
-
+            // Kermit logger for DI-provided logging
+            implementation(libs.kermit)
 
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 

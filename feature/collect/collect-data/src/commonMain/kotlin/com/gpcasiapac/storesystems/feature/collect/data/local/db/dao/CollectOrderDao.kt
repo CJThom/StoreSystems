@@ -93,6 +93,7 @@ interface CollectOrderDao {
     @Query("SELECT * FROM collect_orders where invoice_number = :invoiceNumber")
     fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber:String): Flow<CollectOrderWithCustomerWithLineItemsRelation>
 
+    // ---- Suggestions (prefix) ----
     @Query(
         """
         SELECT invoice_number FROM collect_orders
@@ -111,6 +112,65 @@ interface CollectOrderDao {
         """
     )
     suspend fun getWebOrderSuggestionsPrefix(prefix: String, limit: Int): List<String>
+
+    @Query(
+        """
+        SELECT sales_order_number FROM collect_orders
+        WHERE sales_order_number IS NOT NULL
+          AND sales_order_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    suspend fun getSalesOrderSuggestionsPrefix(prefix: String, limit: Int): List<String>
+
+    @Query(
+        """
+        SELECT DISTINCT 
+           COALESCE(
+             NULLIF(TRIM(account_name), ''),
+             TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))
+           ) AS name,
+           customer_type AS type
+        FROM collect_order_customers
+        WHERE (
+          (account_name IS NOT NULL AND account_name LIKE :prefix ESCAPE '!' COLLATE NOCASE)
+          OR ((first_name || ' ' || last_name) LIKE :prefix ESCAPE '!' COLLATE NOCASE)
+        )
+        LIMIT :limit
+        """
+    )
+    suspend fun getCustomerNameSuggestionsPrefix(prefix: String, limit: Int): List<CustomerNameRow>
+
+    // New: fetch all distinct customer names (for initial expanded state with empty query)
+    @Query(
+        """
+        SELECT DISTINCT 
+           COALESCE(
+             NULLIF(TRIM(account_name), ''),
+             TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))
+           ) AS name,
+           customer_type AS type
+        FROM collect_order_customers
+        WHERE (
+          (account_name IS NOT NULL AND TRIM(account_name) <> '')
+          OR (COALESCE(first_name, '') <> '' OR COALESCE(last_name, '') <> '')
+        )
+        ORDER BY name COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getAllCustomerNames(limit: Int): List<CustomerNameRow>
+
+    data class CustomerNameRow(val name: String, val type: CustomerType)
+
+    @Query(
+        """
+        SELECT DISTINCT phone FROM collect_order_customers
+        WHERE phone IS NOT NULL AND phone LIKE :prefix ESCAPE '!'
+        LIMIT :limit
+        """
+    )
+    suspend fun getPhoneSuggestionsPrefix(prefix: String, limit: Int): List<String>
 
     @Query("UPDATE collect_orders SET signature = :signature WHERE invoice_number IN (:invoiceNumbers)")
     suspend fun updateSignature(signature: String, invoiceNumbers: List<String>)

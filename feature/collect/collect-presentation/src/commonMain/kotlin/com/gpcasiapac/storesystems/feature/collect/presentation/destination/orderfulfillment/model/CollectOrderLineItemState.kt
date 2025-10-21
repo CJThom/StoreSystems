@@ -10,7 +10,8 @@ data class CollectOrderLineItemState(
     val productNumber: String,
     val productDescription: String,
     val quantity: Int,
-    val unitPrice: Double
+    val unitPrice: Double,
+    val productImageUrl: String? = null,
 ) {
 
     companion object {
@@ -38,6 +39,7 @@ internal fun CollectOrderLineItem.toState(): CollectOrderLineItemState {
         productNumber = productNumber,
         productDescription = productDescription,
         quantity = quantity,
-        unitPrice = unitPrice
+        unitPrice = unitPrice,
+        productImageUrl = productImageUrl
     )
 }

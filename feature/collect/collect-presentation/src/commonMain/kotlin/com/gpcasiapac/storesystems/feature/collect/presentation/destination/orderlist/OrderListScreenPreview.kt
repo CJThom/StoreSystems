@@ -15,12 +15,8 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
 
             val base = OrderListScreenContract.State(
                 orders = orders,
-                searchResults = emptyList(),
                 isLoading = false,
                 isRefreshing = false,
-                searchText = "",
-                isSearchActive = false,
-                orderSearchSuggestionList = emptyList(),
                 customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
                 isFilterSheetOpen = false,
                 sortOption = SortOption.TIME_WAITING_DESC,
@@ -35,23 +31,6 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 isSubmitting = false,
                 submittedCollectOrder = null,
                 error = null,
-            )
-
-            val collapsedSearchBar = base.copy(
-                searchText = "",
-                isSearchActive = false,
-                orderSearchSuggestionList = emptyList()
-            )
-
-            val expandedSearchBar = base.copy(
-                searchText = "John",
-                isSearchActive = true,
-                orderSearchSuggestionList = listOf(
-                    OrderSearchSuggestion(text = "Order #12345 - John Doe", type = OrderSearchSuggestionType.NAME),
-                    OrderSearchSuggestion(text = "Order #12346 - John Smith", type = OrderSearchSuggestionType.NAME),
-                    OrderSearchSuggestion(text = "Order #12347 - John Williams", type = OrderSearchSuggestionType.NAME),
-                    OrderSearchSuggestion(text = "Order #12348 - Johnny Cash", type = OrderSearchSuggestionType.NAME),
-                )
             )
 
             val withFilters = base.copy(
@@ -82,8 +61,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             )
 
             return sequenceOf(
-                collapsedSearchBar,
-                expandedSearchBar,
+                base,
                 withFilters,
                 multiSelect,
                 multiSelectAll,

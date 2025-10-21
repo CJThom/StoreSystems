@@ -2,17 +2,22 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun OrderListScreenDestination(
     orderListScreenViewModel: OrderListScreenViewModel = koinViewModel(),
+    searchViewModel: SearchViewModel = koinViewModel(),
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit
 ) {
     OrderListScreen(
         state = orderListScreenViewModel.viewState.collectAsState().value,
+        searchState = searchViewModel.viewState.collectAsState().value,
         onEventSent = { event -> orderListScreenViewModel.setEvent(event) },
+        onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderListScreenViewModel.effect,
-        onOutcome = onOutcome
+        onOutcome = onOutcome,
+        searchEffectFlow = searchViewModel.effect,
     )
 }

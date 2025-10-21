@@ -127,6 +127,7 @@ private fun ProductListSection(
                         description = lineItem.productDescription,
                         sku = lineItem.productNumber,
                         quantity = lineItem.quantity,
+                        productImageUrl = lineItem.productImageUrl,
                         contentPadding = PaddingValues()
                     )
                 }
@@ -138,6 +139,7 @@ private fun ProductListSection(
                         description = lineItem.productDescription,
                         sku = lineItem.productNumber,
                         quantity = lineItem.quantity,
+                        productImageUrl = lineItem.productImageUrl,
                         contentPadding = PaddingValues()
                     )
                 }

@@ -68,6 +68,9 @@ kotlin {
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.component)
 
+            // Images (Coil KMP)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
 

@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.feature.collect.domain.repository
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderSummary
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -28,16 +27,9 @@ data class SearchQuery(
 interface OrderRepository {
     /** Observe the total count of orders in the DB (independent of filters/search). */
     fun observeOrderCount(): Flow<Int>
-    /**
-     * Observe orders filtered at the data source level (DB in production, in-memory for fake impl).
-     */
-    fun getCollectOrderWithCustomerWithLineItemsListFlow(orderQuery: OrderQuery): Flow<List<CollectOrderWithCustomerWithLineItems>>
 
     fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
 
-    fun getCollectOrderWithCustomerListFlow(): Flow<List<CollectOrderWithCustomer>>
-
-    fun getCollectOrderWithCustomerListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomer>>
 
     // New reactive streams for main list and search results
     fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
@@ -47,17 +39,25 @@ interface OrderRepository {
     /**
      * Lightweight, indexed search suggestions from the DB.
      */
-    suspend fun getOrderSearchSuggestionList(text: String): List<OrderSearchSuggestion>
+    suspend fun getSearchSuggestions(query: SuggestionQuery): List<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion>
 
     /**
      * Trigger a refresh/sync. In fake repo this seeds demo data.
      */
     suspend fun refreshOrders(): Result<Unit>
 
-    suspend fun saveSignature(signature: String, invoiceNumber: List<String>): Result<Unit>
 
     /** Observe the set of selected order IDs for the given user scope. */
     fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>>
+
+    /** Observe the signature (Base64) for the latest open Work Order for the given user. */
+    fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?>
+
+    /** Observe the latest open Work Order (without joining orders). */
+    fun observeLatestOpenWorkOrder(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder?>
+
+    /** Observe the full latest open Work Order with its orders (signature included). */
+    fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?>
 
     /** Replace the entire set of selected IDs. */
     suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
@@ -83,27 +83,23 @@ interface OrderRepository {
         invoiceNumbers: List<String>
     ): Result<String> // returns workOrderId
 
+    // TODO: Keep for Mutliple open WorkOrders
     suspend fun attachSignatureToWorkOrder(
         workOrderId: String,
         signature: String,        // keep String (compat with your current model)
         signedByName: String?
     ): Result<Unit>
 
-    // TODO: remove?
-    fun observeMyOpenWorkOrders(userRefId: String): Flow<List<WorkOrderSummary>>
+    suspend fun attachSignatureToLatestOpenWorkOrder(
+        userRefId: String,
+        signature: String,
+        signedByName: String?
+    ): Result<Unit>
 
-    suspend fun submitWorkOrder(workOrderId: String): Result<Unit>
+    // New: persist collecting type selection for the latest open Work Order
+    suspend fun setCollectingType(userRefId: String, type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType): Result<Unit>
 
-    // Progress/persistence helpers for Save/Discard behavior
-    /** True if the draft has progress worth keeping (multi-selection or signature). */
-    suspend fun hasProgress(workOrderId: String): Boolean
+    // New: persist courier name for the latest open Work Order
+    suspend fun setCourierName(userRefId: String, name: String): Result<Unit>
 
-    /** Observe progress state for a draft; useful to decide showing Save/Discard. */
-    fun observeHasProgress(workOrderId: String): Flow<Boolean>
-
-    /** Delete the draft if no progress; returns true if deleted. */
-    suspend fun discardIfNoProgress(workOrderId: String): Boolean
-
-    /** Delete a draft explicitly (Discard choice). */
-    suspend fun clearWorkOrderById(workOrderId: String)
 }

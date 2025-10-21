@@ -1,9 +1,12 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.component
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
@@ -49,13 +52,14 @@ fun CollectionTypeSection(
 ) {
     Column(
         modifier = modifier.padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
 
         HeaderMedium(
             text = title,
             contentPadding = PaddingValues(0.dp)
         )
+
+        Spacer(Modifier.size(Dimens.Space.medium))
 
         MBoltSegmentedButtonRow(
             selected = value,
@@ -67,7 +71,13 @@ fun CollectionTypeSection(
             equals = { a, b -> a.collectingType == b }
         )
 
-        content(value)
+        AnimatedContent(
+            targetState = value,
+            modifier = Modifier.fillMaxWidth()
+        ) { v ->
+            content(v)
+        }
+
     }
 }
 

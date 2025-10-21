@@ -1,20 +1,20 @@
 package com.gpcasiapac.storesystems.foundation.component.icon
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BusinessCenter
-import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
-import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -22,7 +22,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 object CustomerIconDefaults {
 
-    const val SIZE = 26
+    const val SIZE = 22
+    const val PADDING = 3
 
 }
 
@@ -31,20 +32,16 @@ fun B2BIcon(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
 ) {
-    Surface(
-        modifier = modifier.size(CustomerIconDefaults.SIZE.dp)
-            .placeholder(isLoading, shape = CircleShape),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        border = MaterialTheme.borderStroke(),
-        shape = CircleShape
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.BusinessCenter,
-            contentDescription = "Business",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(Dimens.Space.extraSmall)
-        )
-    }
+    Icon(
+        modifier = modifier
+            .placeholder(isLoading, shape = CircleShape)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary)
+            .size(CustomerIconDefaults.SIZE.dp)
+            .padding(CustomerIconDefaults.PADDING.dp),
+        imageVector = Icons.Default.Business, contentDescription = "Business",
+        tint = MaterialTheme.colorScheme.onPrimary,
+    )
 }
 
 @Composable
@@ -52,18 +49,17 @@ fun B2CIcon(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
 ) {
-    Surface(
-        modifier = modifier.size(CustomerIconDefaults.SIZE.dp)
-            .placeholder(isLoading, shape = CircleShape),
-        border = MaterialTheme.borderStroke(),
-        shape = CircleShape
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Person,
-            contentDescription = "Person",
-            modifier = Modifier.padding(Dimens.Space.extraSmall)
-        )
-    }
+    Icon(
+        modifier = modifier
+            .placeholder(isLoading, shape = CircleShape)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .size(CustomerIconDefaults.SIZE.dp)
+            .padding(3.dp),
+        imageVector = Icons.Default.Person,
+        contentDescription = "Person",
+        tint = MaterialTheme.colorScheme.primary,
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)

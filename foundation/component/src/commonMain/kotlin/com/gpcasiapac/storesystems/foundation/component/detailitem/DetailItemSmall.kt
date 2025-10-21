@@ -10,11 +10,10 @@ import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -37,7 +36,7 @@ fun DetailItemSmall(
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
         DetailItemContent(
@@ -58,13 +57,15 @@ fun DetailItemSmallChip(
     isLoading: Boolean = false,
     // onClick: (() -> Unit)? = null, // todo onClick adds hit padding
     //  enabled: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-        ),
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = MaterialTheme.shapes.small,
+//        colors = CardDefaults.cardColors(
+//            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+//            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+//        ),
         modifier = modifier.placeholder(
             visible = isLoading,
             color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.tertiaryContainer)
@@ -88,7 +89,7 @@ private fun DetailItemContent(
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.extraSmall)
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     Row(
         modifier = modifier

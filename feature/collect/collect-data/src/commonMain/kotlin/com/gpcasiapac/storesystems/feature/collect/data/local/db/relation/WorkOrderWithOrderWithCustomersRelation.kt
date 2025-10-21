@@ -7,14 +7,17 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectO
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 
-data class WorkOrderWithOrders(
+data class WorkOrderWithOrderWithCustomersRelation(
+
     @Embedded
-    val workOrder: CollectWorkOrderEntity,
+    val collectWorkOrderEntity: CollectWorkOrderEntity,
 
     @Relation(
         parentColumn = "work_order_id",
         entityColumn = "invoice_number",
-        associateBy = Junction(CollectWorkOrderItemEntity::class)
+        associateBy = Junction(CollectWorkOrderItemEntity::class),
+        entity = CollectOrderEntity::class
     )
-    val orders: List<CollectOrderEntity>
+    val collectOrderWithCustomerRelation: List<CollectOrderWithCustomerRelation>
+
 )

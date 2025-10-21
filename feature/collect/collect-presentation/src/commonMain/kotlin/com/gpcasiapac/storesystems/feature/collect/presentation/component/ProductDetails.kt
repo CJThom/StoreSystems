@@ -58,54 +58,34 @@ fun ProductDetails(
     description: String,
     sku: String,
     quantity: Int,
+    productImageUrl: String? = null,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     minWidth: Dp = ProductDetailsDefaults.minWidth,
     contentPadding: PaddingValues = ProductDetailsDefaults.contentPadding
 ) {
-
-    Row(
-        modifier = modifier
-            .widthIn(min = minWidth)
-            .padding(contentPadding)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-    ) {
-
-        ProductImageContainer(
-            modifier = Modifier.size(ProductDetailsDefaults.imageSize)
-        )
-
-        Column(
-            modifier = Modifier.height(IntrinsicSize.Max),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
-        ) {
-
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .placeholder(isLoading)
-            )
-
-            DetailItemSmall(
-                value = sku,
-                imageVector = Icons.Default.Search,
-                isLoading = isLoading,
-            )
-
-            Spacer(Modifier.weight(1f))
-
-            DetailItemSmallChip(
-                value = quantity.toString(),
-                imageVector = Icons.Outlined.ShoppingCart, // TODO: Get Deployed Code Icon,
-                isLoading = isLoading,
-            )
-
+    ListItemScaffold(
+        modifier = modifier.widthIn(min = minWidth),
+        contentPadding = contentPadding,
+        toolbar = {
+            ListItemToolbarScaffold(
+                actions = {},
+                overflowMenu = null
+            ) {
+                DetailItemSmallChip(
+                    value = quantity.toString(),
+                    imageVector = Icons.Outlined.ShoppingCart, // TODO: Get Deployed Code Icon,
+                    isLoading = isLoading,
+                )
+            }
         }
+    ) {
+        ProductDetailsContent(
+            description = description,
+            sku = sku,
+            productImageUrl = productImageUrl,
+            isLoading = isLoading
+        )
     }
 }
 
@@ -115,7 +95,9 @@ fun ProductDetails(
  */
 @Composable
 private fun ProductImageContainer(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    imageUrl: String? = null,
+    contentDescription: String? = null
 ) {
 
     Box(
@@ -125,14 +107,23 @@ private fun ProductImageContainer(
             .padding(Dimens.Space.extraSmall),
         contentAlignment = Alignment.Center
     ) {
-        // Placeholder for product image
-        // In a real implementation, this would be an AsyncImage or Image composable
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(MaterialTheme.shapes.small)
-                .placeholder(true)
-        )
+        if (imageUrl.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.small)
+                    .placeholder(true)
+            )
+        } else {
+            coil3.compose.AsyncImage(
+                model = imageUrl,
+                contentDescription = contentDescription,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.small),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
+        }
     }
 }
 
@@ -162,6 +153,47 @@ private fun ProductDetailsLoadingPreview() {
                 sku = "A9442910",
                 quantity = 2,
                 isLoading = true
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProductDetailsContent(
+    description: String,
+    sku: String,
+    productImageUrl: String?,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
+        ProductImageContainer(
+            modifier = Modifier.size(ProductDetailsDefaults.imageSize),
+            imageUrl = productImageUrl,
+            contentDescription = description
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
+        ) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .placeholder(isLoading)
+            )
+
+            DetailItemSmall(
+                value = sku,
+                imageVector = Icons.Default.Search,
+                isLoading = isLoading,
             )
         }
     }

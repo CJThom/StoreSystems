@@ -10,25 +10,35 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerListFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 
 
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
-    private val getCollectOrderWithCustomerListFlowUseCase: GetCollectOrderWithCustomerListFlowUseCase,
+    private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
+    private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
+    private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
+    private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
         OrderFulfilmentScreenContract.Effect>() {
+
+    private val userRefId = "mock"
+
+    // Shared keyed debouncer for persisting user edits
+    private val debouncer = com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer(viewModelScope)
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -95,9 +105,21 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Observe selected order IDs and map to list of orders to render
+        // Observe the latest open Work Order with its orders, update signature and the UI list
         viewModelScope.launch {
-            observeSelectedOrdersList()
+            observeLatestOpenWorkOrderWithOrdersUseCase(userRefId).collectLatest { wo ->
+                val listState = wo?.collectOrderWithCustomerList?.toListItemState().orEmpty()
+                setState {
+                    copy(
+                        collectOrderListItemStateList = listState,
+                        signatureBase64 = wo?.collectWorkOrder?.signature,
+                        collectingType = wo?.collectWorkOrder?.collectingType ?: CollectingType.STANDARD,
+                        courierName = wo?.collectWorkOrder?.courierName ?: "",
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }
         }
     }
 
@@ -159,7 +181,17 @@ class OrderFulfilmentScreenViewModel(
 
             // Courier flow
             is OrderFulfilmentScreenContract.Event.CourierNameChanged -> {
+                // Optimistic UI update
                 setState { copy(courierName = event.text) }
+
+                // Debounced persistence using screen preset
+                debouncer.submit(OrderFulfilmentScreenContract.Debounce.CourierName) {
+                    val s = viewState.value
+                    if (s.collectingType == CollectingType.COURIER) {
+                        setWorkOrderCourierNameUseCase(userRefId, s.courierName.trim())
+                            .onFailure { /* avoid spamming errors for text input */ }
+                    }
+                }
             }
 
             is OrderFulfilmentScreenContract.Event.ClearCourierName -> {
@@ -180,7 +212,6 @@ class OrderFulfilmentScreenViewModel(
             }
 
 
-
             // Correspondence
             is OrderFulfilmentScreenContract.Event.ToggleCorrespondence -> {
                 onCorrespondenceToggled(event.id)
@@ -195,12 +226,30 @@ class OrderFulfilmentScreenViewModel(
                 confirm()
             }
 
+            // Search-origin selection confirmation
+            is OrderFulfilmentScreenContract.Event.ConfirmSearchSelection -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog() }
+            }
+
+            is OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed -> {
+                // No-op; SearchViewModel will handle persistence and collapse
+            }
+
+            is OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog -> {
+                // No-op; UI dismisses dialog
+            }
 
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
                 setEffect {
                     OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
                         event.invoiceNumber
                     )
+                }
+            }
+
+            is OrderFulfilmentScreenContract.Event.DeselectOrder -> {
+                viewModelScope.launch {
+                    removeOrderSelectionUseCase(event.invoiceNumber, userRefId)
                 }
             }
         }
@@ -219,23 +268,6 @@ class OrderFulfilmentScreenViewModel(
         }
     }
 
-
-    private suspend fun observeSelectedOrdersList() {
-        observeOrderSelectionUseCase("mock")
-            .flatMapLatest { ids ->
-                getCollectOrderWithCustomerListFlowUseCase(ids)
-            }
-            .collectLatest { orders ->
-                val listState = orders.toListItemState()
-                setState {
-                    copy(
-                        collectOrderListItemStateList = listState,
-                        isLoading = false,
-                        error = null
-                    )
-                }
-            }
-    }
 
     private suspend fun fetchOrders(successToast: String) {
         setState {
@@ -266,6 +298,8 @@ class OrderFulfilmentScreenViewModel(
     private fun onCollectingChanged(type: CollectingType) {
         val current = viewState.value
         if (current.collectingType == type) return
+
+        // Optimistic UI update
         setState {
             copy(
                 collectingType = type,
@@ -273,6 +307,16 @@ class OrderFulfilmentScreenViewModel(
                 selectedRepresentativeIds = if (type == CollectingType.ACCOUNT) selectedRepresentativeIds else emptySet(),
                 courierName = if (type == CollectingType.COURIER) courierName else "",
             )
+        }
+
+        // Debounced DB update to keep Work Order as source of truth
+        debouncer.submit(
+            OrderFulfilmentScreenContract.Debounce.CollectingType
+        ) {
+            setWorkOrderCollectingTypeUseCase(userRefId, type)
+                .onFailure { t ->
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError(t.message ?: "Failed to save collecting type") }
+                }
         }
     }
 

@@ -1,7 +1,9 @@
 package com.gpcasiapac.storesystems.foundation.design_system
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderSize
@@ -19,6 +21,7 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.ProvideBord
  * @param darkTheme Whether to use dark theme. Defaults to system setting.
  * @param content The content to be themed.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun GPCTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -37,7 +40,8 @@ fun GPCTheme(
     MaterialTheme(
         colorScheme = GPCLightColorScheme,
         typography = GPCTypography,
-        shapes = GPCShapes
+        shapes = GPCShapes,
+        motionScheme = MotionScheme.expressive()
     ) {
 
         val borderColors = BorderColors(

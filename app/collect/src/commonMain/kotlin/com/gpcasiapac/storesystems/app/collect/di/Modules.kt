@@ -12,6 +12,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.di.CollectDomainModule
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.CollectPresentationModuleProvider
 import com.gpcasiapac.storesystems.feature.login.domain.di.LoginDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.login.presentation.di.LoginPresentationModuleProvider
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -29,6 +32,10 @@ fun getAppModules(): List<Module> {
 
     val moduleList = providerList.flatMap { it.modules() }.toMutableList()
 
+    // Provide a base Kermit Logger for the app so all dependent modules can inject it
+    moduleList.add(loggingModule)
+
+    // TODO: Use ModuleProvider
     // Add sync queue modules
     moduleList.add(syncQueueDataModule)
     moduleList.add(syncQueueDomainModule)
@@ -44,7 +51,16 @@ fun getAppModules(): List<Module> {
     return moduleList
 }
 
-val appModule = module {}
+// App-level Logger binding to identify logs from this app distinctly
+val loggingModule = module {
+    single<Logger> { Logger.withTag("StoreSystemsLogger") }
+}
+
+// TODO: Idk what this is
+val appModule = module {
+
+}
+
 
 val collectAppNavigationModule = module {
     viewModelOf(::CollectAppNavigationViewModel)

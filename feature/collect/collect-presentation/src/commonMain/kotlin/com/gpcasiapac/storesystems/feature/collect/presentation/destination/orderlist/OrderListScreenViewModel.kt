@@ -37,10 +37,8 @@ import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
     private val observeMainOrdersUseCase: ObserveMainOrdersUseCase,
-    private val observeSearchOrdersUseCase: ObserveSearchOrdersUseCase,
     private val observeOrderCountUseCase: ObserveOrderCountUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
     private val setOrderSelectionUseCase: SetOrderSelectionUseCase,
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
@@ -56,12 +54,8 @@ class OrderListScreenViewModel(
         
         return OrderListScreenContract.State(
             orders = placeholders,
-            searchResults = emptyList(),
             isLoading = true,
             isRefreshing = true,
-            searchText = "",
-            isSearchActive = false,
-            orderSearchSuggestionList = emptyList(),
             customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
             isFilterSheetOpen = false,
             sortOption = SortOption.TIME_WAITING_DESC,
@@ -116,32 +110,6 @@ class OrderListScreenViewModel(
                 }
         }
 
-        // Search results pipeline: debounced and independent of main list
-        viewModelScope.launch {
-            QueryFlow.build(
-                input = viewState.map { it.searchText to it.isSearchActive },
-                debounce = SearchDebounce(millis = 150),
-                keySelector = { (text, active) -> if (active) text.trim() else "" }
-            ).flatMapLatest { (text, active) ->
-                val t = text.trim()
-                if (!active || t.isEmpty()) flowOf(emptyList()) else observeSearchOrdersUseCase(t)
-            }.map { list -> list.toListItemState() }
-             .collectLatest { results ->
-                 setState {
-                     // maintain selection sanity against visible search results when active
-                     val visibleIds = results.map { it.invoiceNumber }.toSet()
-                     val newSelected =
-                         if (isMultiSelectionEnabled) selectedOrderIdList.intersect(visibleIds) else emptySet()
-                     val allSelected =
-                         isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
-                     copy(
-                         searchResults = results,
-                         selectedOrderIdList = newSelected,
-                         isSelectAllChecked = allSelected,
-                     )
-                 }
-             }
-        }
 
         viewModelScope.launch {
             // Observe total order count from DB (independent of filters/search)
@@ -153,10 +121,6 @@ class OrderListScreenViewModel(
         viewModelScope.launch {
             delay(3000)
             fetchOrderList(successToast = "Orders loaded")
-        }
-
-        viewModelScope.launch {
-            getOrderSearchSuggestionList()
         }
 
         // Observe current draft selection to control the floating draft bar visibility
@@ -183,32 +147,6 @@ class OrderListScreenViewModel(
                 viewModelScope.launch {
                     fetchOrderList(successToast = "Orders refreshed")
                 }
-            }
-
-            is OrderListScreenContract.Event.SearchTextChanged -> {
-                handleSearchTextChanged(event.text)
-            }
-
-            is OrderListScreenContract.Event.SearchOnExpandedChange -> {
-                handleSearchOnExpandedChange(event.expand)
-            }
-
-            is OrderListScreenContract.Event.ClearSearch -> {
-                handleClearSearch()
-            }
-
-            is OrderListScreenContract.Event.SearchBarBackPressed -> {
-                // Collapse and mark search inactive to stop the search pipeline
-                setState { copy(isSearchActive = false) }
-                setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
-            }
-
-            is OrderListScreenContract.Event.SearchResultClicked -> {
-                handleSearchResultClicked(event.result)
-            }
-
-            is OrderListScreenContract.Event.SearchSuggestionClicked -> {
-                handleSearchSuggestionClicked(event.suggestion)
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
@@ -258,6 +196,9 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.ConfirmSelection -> {
                 handleConfirmSelection()
+            }
+            is OrderListScreenContract.Event.ConfirmSearchSelection -> {
+                setEffect { OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog() }
             }
             is OrderListScreenContract.Event.ConfirmSelectionStay -> {
                 onConfirmSelectionStay()
@@ -326,54 +267,6 @@ class OrderListScreenViewModel(
         }
     }
 
-    private fun handleSearchTextChanged(text: String) {
-        setState {
-            copy(
-                searchText = text,
-                // Let suggestions pipeline update; clear immediately if blank
-                orderSearchSuggestionList = if (text.isBlank()) emptyList() else orderSearchSuggestionList
-            )
-        }
-    }
-
-    private fun handleSearchOnExpandedChange(expand: Boolean) {
-        // Keep state in sync with the UI expansion so the search pipeline can run
-        setState { copy(isSearchActive = expand) }
-        if (expand) {
-            setEffect { OrderListScreenContract.Effect.ExpandSearchBar }
-        } else {
-            setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
-        }
-    }
-
-    private fun handleClearSearch() {
-        setState {
-            copy(
-                searchText = "",
-                orderSearchSuggestionList = emptyList()
-            )
-        }
-    }
-
-    private fun handleSearchSuggestionClicked(suggestion: String) {
-        setState {
-            copy(
-                searchText = suggestion,
-                isSearchActive = false,
-                orderSearchSuggestionList = emptyList()
-            )
-        }
-    }
-
-    private fun handleSearchResultClicked(result: String) {
-        setState {
-            copy(
-                searchText = result,
-                isSearchActive = false,
-                orderSearchSuggestionList = emptyList()
-            )
-        }
-    }
 
     private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
         setState {
@@ -446,12 +339,7 @@ class OrderListScreenViewModel(
     }
 
     private fun handleSelectAll(checked: Boolean) {
-        val current = viewState.value
-        val visibleIds = if (current.isSearchActive && current.searchText.isNotBlank()) {
-            current.searchResults.map { it.invoiceNumber }.toSet()
-        } else {
-            current.orders.map { it.invoiceNumber }.toSet()
-        }
+        val visibleIds = viewState.value.orders.map { it.invoiceNumber }.toSet()
         setState {
             var add = pendingAddIdSet.toMutableSet()
             var remove = pendingRemoveIdSet.toMutableSet()
@@ -612,32 +500,6 @@ class OrderListScreenViewModel(
 
     }
 
-
-    // Suggestions pipeline: debounce user input and fetch lightweight suggestions from repository
-    private suspend fun getOrderSearchSuggestionList() {
-
-        val activeTextFlow: Flow<Pair<String, Boolean>> =
-            viewState.map { it.searchText to it.isSearchActive }
-
-        QueryFlow.build(
-            input = activeTextFlow,
-            debounce = SearchDebounce(millis = 100),
-            keySelector = { pair ->
-                val (text, active) = pair
-                if (active) text else ""
-            }
-        ).mapLatest { pair ->
-            val (text, active) = pair
-            if (!active || text.isBlank()) {
-                emptyList()
-            } else {
-                getOrderSearchSuggestionListUseCase(text)
-            }
-        }.collectLatest { suggestions ->
-            setState { copy(orderSearchSuggestionList = suggestions) }
-        }
-
-    }
 
 
 }
