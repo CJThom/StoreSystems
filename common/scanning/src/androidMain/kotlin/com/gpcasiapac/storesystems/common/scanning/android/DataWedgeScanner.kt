@@ -49,7 +49,11 @@ class DataWedgeScanner(
             val data = intent.getStringExtra("com.symbol.datawedge.data_string")
             val labelType = intent.getStringExtra("com.symbol.datawedge.label_type")
             val source = intent.getStringExtra("com.symbol.datawedge.source")
-            val raw = intent.getByteArrayExtra("com.symbol.datawedge.decode_data")
+
+            // Extract raw bytes from DataWedge in a type-agnostic way.
+            // Do not use getParcelableArrayListExtra() as some devices place a raw byte[] or arrays under this key.
+            val raw: ByteArray? = parseDecodeData(intent)
+
             if (data != null) {
                 log.i { "Scan received: text='${data.take(64)}' symbology=$labelType source=$source bytes=${raw?.size ?: 0}" }
                 scope.launch {
@@ -247,6 +251,44 @@ class DataWedgeScanner(
         }
         log.d { "Sending DW bundle command: key=$extraKey, bundleKeys=${bundle.keySet()}" }
         appContext.sendBroadcast(intent)
+    }
+
+    /**
+     * Safely parse DataWedge raw decode bytes from the Intent extras, handling multiple shapes:
+     * - ByteArray directly under key "com.symbol.datawedge.decode_data"
+     * - Bundle with key "data" containing ByteArray
+     * - ArrayList<Bundle> or ArrayList<ByteArray>
+     * - Array<Bundle> or Array<ByteArray>
+     */
+    private fun parseDecodeData(intent: Intent): ByteArray? {
+        return try {
+            val extras = intent.extras ?: return null
+            val any = extras.get("com.symbol.datawedge.decode_data") ?: return null
+            when (any) {
+                is ByteArray -> any
+                is Bundle -> any.getByteArray("data")
+                is ArrayList<*> -> {
+                    val first = any.firstOrNull()
+                    when (first) {
+                        is Bundle -> first.getByteArray("data")
+                        is ByteArray -> first
+                        else -> null
+                    }
+                }
+                is Array<*> -> {
+                    val first = any.firstOrNull()
+                    when (first) {
+                        is Bundle -> first.getByteArray("data")
+                        is ByteArray -> first
+                        else -> null
+                    }
+                }
+                else -> null
+            }
+        } catch (t: Throwable) {
+            log.w { "Failed to parse decode_data: ${t.javaClass.simpleName}" }
+            null
+        }
     }
 
     private fun isDataWedgeInstalled(): Boolean = runCatching {
