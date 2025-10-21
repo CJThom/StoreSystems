@@ -56,7 +56,7 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorde
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CollectOrderFulfilmentItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
@@ -217,6 +217,17 @@ fun OrderFulfilmentScreen(
                         },
                         recentSearches = emptyList(),
                         suggestions = searchState.searchSuggestions,
+                        onSuggestionClicked = { s ->
+                            onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
+                        },
+                        selectedChips = searchState.selectedChips,
+                        typedSuffix = searchState.typedSuffix,
+                        onTypedSuffixChange = { text ->
+                            onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
+                        },
+                        onRemoveChip = { s ->
+                            onSearchEventSent(SearchContract.Event.RemoveChip(s))
+                        },
                         searchOrderItems = searchState.searchOrderItems,
                         isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
                         selectedOrderIdList = searchState.selectedOrderIdList,

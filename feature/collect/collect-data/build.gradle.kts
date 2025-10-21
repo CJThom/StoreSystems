@@ -37,6 +37,7 @@ kotlin {
             implementation(projects.feature.collect.collectApi)
             implementation(projects.common.di)
             implementation(libs.koin.core)
+            implementation(libs.kermit)
 
             // Shared utilities
             implementation(projects.common.kotlin)

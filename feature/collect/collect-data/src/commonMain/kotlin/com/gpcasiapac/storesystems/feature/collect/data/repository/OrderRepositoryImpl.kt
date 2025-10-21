@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flatMapLatest
+import co.touchlab.kermit.Logger
 import kotlin.time.Clock
 
 class OrderRepositoryImpl(
@@ -32,7 +33,10 @@ class OrderRepositoryImpl(
     private val workOrderDao: WorkOrderDao,
     private val database: AppDatabase,
     private val orderNetworkDataSource: OrderNetworkDataSource,
+    private val logger: Logger,
 ) : OrderRepository {
+
+    private val log = logger.withTag("OrderRepository")
 
 
     override fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?> {
@@ -88,33 +92,28 @@ class OrderRepositoryImpl(
 
 
     override suspend fun refreshOrders(): Result<Unit> = runCatching {
-        val collectOrderDtoList: List<CollectOrderDto> = orderNetworkDataSource.fetchOrders()
-        val collectOrderWithCustomerWithLineItemsRelation: List<CollectOrderWithCustomerWithLineItemsRelation> =
-            collectOrderDtoList.toRelation()
+        log.d { "refreshOrders: start" }
+        try {
+            val collectOrderDtoList: List<CollectOrderDto> = orderNetworkDataSource.fetchOrders()
+            log.d { "refreshOrders: fetched ${collectOrderDtoList.size} orders" }
 
-        val collectOrderEntityList: List<CollectOrderEntity> =
-            collectOrderWithCustomerWithLineItemsRelation.map {
-                it.orderEntity
-            }
-        val collectOrderCustomerEntity: List<CollectOrderCustomerEntity> =
-            collectOrderWithCustomerWithLineItemsRelation.map {
-                it.customerEntity
-            }
-        val collectOrderLineItemEntityList: List<CollectOrderLineItemEntity> =
-            collectOrderWithCustomerWithLineItemsRelation.map {
-                it.lineItemEntityList
-            }.flatten()
+            val relations: List<CollectOrderWithCustomerWithLineItemsRelation> = collectOrderDtoList.toRelation()
 
-        database.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                collectOrderDao.insertOrReplaceCollectOrderEntityList(collectOrderEntityList)
-                collectOrderDao.insertOrReplaceCollectOrderCustomerEntityList(
-                    collectOrderCustomerEntity
-                )
-                collectOrderDao.insertOrReplaceCollectOrderLineItemEntityList(
-                    collectOrderLineItemEntityList
-                )
+            val orderEntities: List<CollectOrderEntity> = relations.map { it.orderEntity }
+            val customerEntities: List<CollectOrderCustomerEntity> = relations.map { it.customerEntity }
+            val lineItemEntities: List<CollectOrderLineItemEntity> = relations.flatMap { it.lineItemEntityList }
+
+            database.useWriterConnection { transactor ->
+                transactor.immediateTransaction {
+                    collectOrderDao.insertOrReplaceCollectOrderEntityList(orderEntities)
+                    collectOrderDao.insertOrReplaceCollectOrderCustomerEntityList(customerEntities)
+                    collectOrderDao.insertOrReplaceCollectOrderLineItemEntityList(lineItemEntities)
+                }
             }
+            log.d { "refreshOrders: committed" }
+        } catch (t: Throwable) {
+            log.e(t) { "refreshOrders: failed" }
+            throw t
         }
     }
 

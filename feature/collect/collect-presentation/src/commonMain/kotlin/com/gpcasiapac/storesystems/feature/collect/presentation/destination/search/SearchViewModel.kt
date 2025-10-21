@@ -101,6 +101,8 @@ class SearchViewModel(
             SearchContract.Event.SearchBarBackPressed -> handleSearchOnExpandedChange(false)
             is SearchContract.Event.SearchResultClicked -> handleSearchResultClicked(event.result)
             is SearchContract.Event.SearchSuggestionClicked -> handleSearchSuggestionClicked(event.suggestion)
+            is SearchContract.Event.TypedSuffixChanged -> handleTypedSuffixChanged(event.text)
+            is SearchContract.Event.RemoveChip -> handleRemoveChip(event.suggestion)
 
             // Selection events
             is SearchContract.Event.ToggleSelectionMode -> handleToggleSelectionMode(event.enabled)
@@ -120,16 +122,35 @@ class SearchViewModel(
     }
 
     private fun handleSearchOnExpandedChange(expand: Boolean) {
-        setState { copy(isSearchActive = expand) }
-        setEffect { if (expand) SearchContract.Effect.ExpandSearchBar else SearchContract.Effect.CollapseSearchBar }
+        if (!expand) {
+            // On collapse, clear chips and typed suffix for a clean slate
+            setState { copy(
+                isSearchActive = false,
+                selectedChips = emptyList(),
+                typedSuffix = "",
+                searchText = "",
+            ) }
+            setEffect { SearchContract.Effect.CollapseSearchBar }
+        } else {
+            setState { copy(isSearchActive = true) }
+            setEffect { SearchContract.Effect.ExpandSearchBar }
+        }
     }
 
     private fun handleClearSearch() {
-        setState { copy(searchText = "") }
+        setState { copy(searchText = "", selectedChips = emptyList(), typedSuffix = "") }
     }
 
     private fun handleSearchSuggestionClicked(suggestion: SearchSuggestion) {
-        setState { copy(searchText = suggestion.text) }
+        setState {
+            val exists = selectedChips.any { it == suggestion }
+            val newChips = if (exists) selectedChips else selectedChips + suggestion
+            copy(
+                selectedChips = newChips,
+                typedSuffix = "",
+                searchText = buildCombinedQuery(newChips, "")
+            )
+        }
     }
 
     private fun handleSearchResultClicked(result: String) {
@@ -280,6 +301,31 @@ class SearchViewModel(
                     isSearchActive = false
                 )
             }
+        }
+    }
+
+    // --- Hoisted search UI handlers ---
+    private fun handleTypedSuffixChanged(text: String) {
+        setState {
+            val combined = buildCombinedQuery(selectedChips, text)
+            copy(typedSuffix = text, searchText = combined)
+        }
+    }
+
+    private fun handleRemoveChip(suggestion: SearchSuggestion) {
+        setState {
+            val newChips = selectedChips.filterNot { it == suggestion }
+            val combined = buildCombinedQuery(newChips, typedSuffix)
+            copy(selectedChips = newChips, searchText = combined)
+        }
+    }
+
+    private fun buildCombinedQuery(chips: List<SearchSuggestion>, typed: String): String {
+        val base = chips.joinToString(" ") { it.text }.trim()
+        return when {
+            base.isNotEmpty() && typed.isNotBlank() -> "$base ${typed.trim()}"
+            base.isNotEmpty() -> base
+            else -> typed
         }
     }
 }

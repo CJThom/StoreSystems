@@ -48,7 +48,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
@@ -333,6 +333,17 @@ fun OrderListScreen(
                                 },
                                 recentSearches = emptyList(),
                                 suggestions = searchState.searchSuggestions,
+                                onSuggestionClicked = { s ->
+                                    onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
+                                },
+                                selectedChips = searchState.selectedChips,
+                                typedSuffix = searchState.typedSuffix,
+                                onTypedSuffixChange = { text ->
+                                    onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
+                                },
+                                onRemoveChip = { s ->
+                                    onSearchEventSent(SearchContract.Event.RemoveChip(s))
+                                },
                                 searchOrderItems = searchState.searchOrderItems,
                                 isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
                                 selectedOrderIdList = searchState.selectedOrderIdList,

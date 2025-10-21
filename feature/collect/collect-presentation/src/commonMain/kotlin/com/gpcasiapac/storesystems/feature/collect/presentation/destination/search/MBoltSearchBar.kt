@@ -1,23 +1,25 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.component
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.search
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -29,9 +31,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,13 +62,7 @@ import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,7 +73,14 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
@@ -82,17 +90,7 @@ import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
 import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.Receipt
-import androidx.compose.material.icons.outlined.ReceiptLong
-import androidx.compose.material.icons.outlined.Phone
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,12 +103,18 @@ fun MBoltSearchBar(
     onExpandedChange: (Boolean) -> Unit,
     onBackPressed: () -> Unit,
     onResultClick: (String) -> Unit,
+    onSuggestionClicked: (SearchSuggestion) -> Unit = {},
     onClearClick: () -> Unit,
     recentSearches: List<String>,
     // Suggestions to render as chips (full typed model)
     suggestions: List<SearchSuggestion>,
+    // Hoisted search UI state
+    selectedChips: List<SearchSuggestion> = emptyList(),
+    typedSuffix: String = "",
+    onTypedSuffixChange: (String) -> Unit = {},
+    onRemoveChip: (SearchSuggestion) -> Unit = {},
     // New: full search results as order items for the expanded grid
-    searchOrderItems: List<CollectOrderListItemState>,
+    searchOrderItems: List<CollectOrderListItemState> = emptyList(),
     isMultiSelectionEnabled: Boolean,
     selectedOrderIdList: Set<String>,
     isSelectAllChecked: Boolean,
@@ -130,34 +134,6 @@ fun MBoltSearchBar(
     collapsedBorder: BorderStroke? = null,
 ) {
 
-    // Chips state and clear logic (derived)
-    // Note: using in-memory state for typed suggestions; persistence can be added later if desired
-    val inputChips = remember { mutableStateListOf<SearchSuggestion>() }
-    var clearTypedTrigger by rememberSaveable { mutableStateOf(0) }
-    val chipsQueryBase by remember(inputChips) {
-        derivedStateOf { inputChips.joinToString(" ") { it.text } }
-    }
-    val clearAll: () -> Unit = {
-        if (inputChips.isNotEmpty()) inputChips.clear()
-        clearTypedTrigger += 1
-        onClearClick()
-    }
-
-    // Monitor expansion state changes and notify parent (single collector)
-    LaunchedEffect(searchBarState) {
-        var prev = searchBarState.currentValue
-        snapshotFlow { searchBarState.currentValue }.collect { current ->
-            onExpandedChange(current == SearchBarValue.Expanded)
-            // When collapsing, clear chips and typed text, and notify upstream
-            if (prev == SearchBarValue.Expanded && current == SearchBarValue.Collapsed) {
-                clearAll()
-            }
-            prev = current
-        }
-    }
-
-
-
     Box(modifier = Modifier) {
         CollapsedSearchBarSection(
             modifier = modifier,
@@ -166,20 +142,18 @@ fun MBoltSearchBar(
             collapsedColors = collapsedColors,
             collapsedBorder = collapsedBorder,
             searchBarState = searchBarState,
-            query = query,
-            onQueryChange = onQueryChange,
+            totalQuery = query,
+            typedSuffix = typedSuffix,
+            onTypedSuffixChange = onTypedSuffixChange,
             onSearch = onSearch,
             onExpandedChange = onExpandedChange,
             onBackPressed = onBackPressed,
             onClearClick = onClearClick,
-            hasChips = inputChips.isNotEmpty(),
-            queryBase = chipsQueryBase,
-            onClearAll = clearAll,
-            clearTypedTrigger = clearTypedTrigger,
+            hasChips = selectedChips.isNotEmpty(),
             chipsPrefix = {
                 ChipsPrefixRow(
-                    chips = inputChips,
-                    onRemoveChip = { chip -> inputChips.remove(chip) }
+                    chips = selectedChips,
+                    onRemoveChip = onRemoveChip
                 )
             },
             placeholderText = placeholderText,
@@ -188,23 +162,22 @@ fun MBoltSearchBar(
         ExpandedSearchSection(
             searchBarState = searchBarState,
             collapsedShape = collapsedShape,
-            query = query,
-            onQueryChange = onQueryChange,
+            totalQuery = query,
+            typedSuffix = typedSuffix,
+            onTypedSuffixChange = onTypedSuffixChange,
             onSearch = onSearch,
             onExpandedChange = onExpandedChange,
             onBackPressed = onBackPressed,
             onClearClick = onClearClick,
-            hasChips = inputChips.isNotEmpty(),
-            queryBase = chipsQueryBase,
-            onClearAll = clearAll,
-            clearTypedTrigger = clearTypedTrigger,
+            selectedChips = selectedChips,
             chipsPrefix = {
                 ChipsPrefixRow(
-                    chips = inputChips,
-                    onRemoveChip = { chip -> inputChips.remove(chip) }
+                    chips = selectedChips,
+                    onRemoveChip = onRemoveChip
                 )
             },
             suggestions = suggestions,
+            onSuggestionClicked = onSuggestionClicked,
             searchOrderItems = searchOrderItems,
             recentSearches = recentSearches,
             isMultiSelectionEnabled = isMultiSelectionEnabled,
@@ -219,12 +192,6 @@ fun MBoltSearchBar(
             onSelectClick = onSelectClick,
             onResultClick = onResultClick,
             placeholderText = placeholderText,
-            onSuggestionChosen = { s ->
-                if (!inputChips.contains(s)) {
-                    inputChips.add(s)
-                }
-                clearTypedTrigger += 1
-            },
         )
     }
 }
@@ -239,16 +206,14 @@ private fun CollapsedSearchBarSection(
     collapsedColors: SearchBarColors,
     collapsedBorder: BorderStroke?,
     searchBarState: SearchBarState,
-    query: String,
-    onQueryChange: (String) -> Unit,
+    totalQuery: String,
+    typedSuffix: String,
+    onTypedSuffixChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     onBackPressed: () -> Unit,
     onClearClick: () -> Unit,
     hasChips: Boolean,
-    queryBase: String,
-    onClearAll: (() -> Unit)?,
-    clearTypedTrigger: Int,
     chipsPrefix: @Composable () -> Unit,
     placeholderText: String,
 ) {
@@ -265,8 +230,9 @@ private fun CollapsedSearchBarSection(
             colors = collapsedColors,
             inputField = {
                 SearchBarInputField(
-                    query = query,
-                    onQueryChange = onQueryChange,
+                    totalQuery = totalQuery,
+                    typedSuffix = typedSuffix,
+                    onTypedSuffixChange = onTypedSuffixChange,
                     isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
                     onExpandedChange = onExpandedChange,
                     placeholderText = placeholderText,
@@ -274,9 +240,6 @@ private fun CollapsedSearchBarSection(
                     onBackPressed = onBackPressed,
                     onClearClick = onClearClick,
                     hasChips = hasChips,
-                    queryBase = queryBase,
-                    onClearAll = onClearAll,
-                    clearTypedTrigger = clearTypedTrigger,
                     prefix = chipsPrefix,
                 )
             }
@@ -289,18 +252,17 @@ private fun CollapsedSearchBarSection(
 private fun ExpandedSearchSection(
     searchBarState: SearchBarState,
     collapsedShape: Shape,
-    query: String,
-    onQueryChange: (String) -> Unit,
+    totalQuery: String,
+    typedSuffix: String,
+    onTypedSuffixChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     onBackPressed: () -> Unit,
     onClearClick: () -> Unit,
-    hasChips: Boolean,
-    queryBase: String,
-    onClearAll: (() -> Unit)?,
-    clearTypedTrigger: Int,
+    selectedChips: List<SearchSuggestion>,
     chipsPrefix: @Composable () -> Unit,
     suggestions: List<SearchSuggestion>,
+    onSuggestionClicked: (SearchSuggestion) -> Unit,
     searchOrderItems: List<CollectOrderListItemState>,
     recentSearches: List<String>,
     isMultiSelectionEnabled: Boolean,
@@ -315,7 +277,6 @@ private fun ExpandedSearchSection(
     onSelectClick: () -> Unit,
     onResultClick: (String) -> Unit,
     placeholderText: String,
-    onSuggestionChosen: (SearchSuggestion) -> Unit = {},
 ) {
     Surface {
         ExpandedFullScreenSearchBar(
@@ -332,18 +293,16 @@ private fun ExpandedSearchSection(
             ),
             inputField = {
                 SearchBarInputField(
-                    query = query,
-                    onQueryChange = onQueryChange,
+                    totalQuery = totalQuery,
+                    typedSuffix = typedSuffix,
+                    onTypedSuffixChange = onTypedSuffixChange,
                     isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
                     onExpandedChange = onExpandedChange,
                     placeholderText = placeholderText,
                     onSearch = onSearch,
                     onBackPressed = onBackPressed,
                     onClearClick = onClearClick,
-                    hasChips = hasChips,
-                    queryBase = queryBase,
-                    onClearAll = onClearAll,
-                    clearTypedTrigger = clearTypedTrigger,
+                    hasChips = selectedChips.isNotEmpty(),
                     modifier = Modifier,
                     prefix = chipsPrefix,
                 )
@@ -358,159 +317,149 @@ private fun ExpandedSearchSection(
                 stickyHeaderIndex = 0
             )
 
-            // Auto-scroll to ensure sticky header doesn't overlap content on first result load
-            LaunchedEffect(searchOrderItems.isNotEmpty()) {
-                if (searchOrderItems.isNotEmpty()) {
-                    if (lazyGridState.firstVisibleItemIndex == 0 && lazyGridState.firstVisibleItemScrollOffset == 0) {
-                        lazyGridState.animateScrollToItem(0)
-                    }
-                }
-            }
-
-
-            LazyVerticalGrid(
-                state = lazyGridState,
-                columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
-            ) {
-                // Toolbar in sticky header with animated visibility
-                stickyHeader {
-                    AnimatedVisibility(
-                        visible = searchOrderItems.isNotEmpty(),
-                        enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
-                        exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(),
-                        label = "SearchToolbarVisibility"
-                    ) {
-                        OrderListToolbar(
-                            isMultiSelectionEnabled = isMultiSelectionEnabled,
-                            customerTypeFilterList = emptySet(),
-                            onToggleCustomerType = { _, _ -> },
-                            onSelectAction = {
-                                overlayKeyboardController?.hide()
-                                overlayFocusManager.clearFocus(force = true)
-                                onEnterSelectionMode()
-                            },
-                            selectedCount = selectedOrderIdList.size,
-                            isSelectAllChecked = isSelectAllChecked,
-                            onSelectAllToggle = onSelectAllToggle,
-                            onCancelClick = onCancelSelection,
-                            onSelectClick = onSelectClick,
-                            isLoading = isRefreshing,
-                            scrollBehavior = stickyHeaderScrollBehavior,
-                        )
-                    }
+            Column {
+                AnimatedVisibility(
+                    visible = searchOrderItems.isNotEmpty(),
+                    enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
+                    exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(),
+                    label = "SearchToolbarVisibility"
+                ) {
+                    OrderListToolbar(
+                        modifier = Modifier,
+                        isMultiSelectionEnabled = isMultiSelectionEnabled,
+                        customerTypeFilterList = emptySet(),
+                        onToggleCustomerType = { _, _ -> },
+                        onSelectAction = {
+                            overlayKeyboardController?.hide()
+                            overlayFocusManager.clearFocus(force = true)
+                            onEnterSelectionMode()
+                        },
+                        selectedCount = selectedOrderIdList.size,
+                        isSelectAllChecked = isSelectAllChecked,
+                        onSelectAllToggle = onSelectAllToggle,
+                        onCancelClick = onCancelSelection,
+                        onSelectClick = onSelectClick,
+                        isLoading = isRefreshing,
+                        scrollBehavior = stickyHeaderScrollBehavior,
+                    )
                 }
 
-                // Suggestions chips
-                if (suggestions.size > 1) {
-                    // Header
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        HeaderSmall(text = "Suggested")
-                    }
-                    // Chips row
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        SuggestionChipsRow(
-                            suggestions = suggestions,
-                            onSuggestionClick = { s ->
-                                onSuggestionChosen(s)
-                                overlayKeyboardController?.hide()
-                                overlayFocusManager.clearFocus(force = true)
-                                onSearch(s.text)
-                            }
-                        )
-                    }
-                }
+                LazyVerticalGrid(
+                    state = lazyGridState,
+                    columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
+                ) {
 
-                // Recent searches section (only when there are no order results)
-                if (searchOrderItems.isEmpty() && recentSearches.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        HeaderSmall(text = "Recent searches")
-                    }
-                    items(
-                        items = recentSearches,
-                        key = { it },
-                        span = { GridItemSpan(maxLineSpan) }
-                    ) { result ->
-                        ListItem(
-                            headlineContent = { Text(result) },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = Dimens.Space.medium,
-                                    vertical = Dimens.Space.small
-                                )
-                                .clickable {
+                    // Suggestions chips
+                    if (suggestions.size > 1) {
+                        // Header
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            HeaderSmall(text = "Suggested")
+                        }
+                        // Chips row
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            SuggestionChipsRow(
+                                suggestions = suggestions,
+                                onSuggestionClick = { s ->
                                     overlayKeyboardController?.hide()
                                     overlayFocusManager.clearFocus(force = true)
-                                    onResultClick(result)
+                                    onSuggestionClicked(s)
                                 }
-                        )
-                    }
-                }
-
-                // Results header and order items
-                if (searchOrderItems.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        HeaderSmall(text = "Results")
-                    }
-                    items(
-                        items = searchOrderItems,
-                        key = { it.invoiceNumber }
-                    ) { collectOrderState ->
-
-                        CheckboxCard(
-                            modifier = Modifier
-                                .padding(
-                                    horizontal = Dimens.Space.medium,
-                                    vertical = Dimens.Space.small
-                                )
-                                .animateItem()
-                                .animateContentSize(),
-                            isCheckable = isMultiSelectionEnabled,
-                            isChecked = selectedOrderIdList.contains(collectOrderState.invoiceNumber),
-                            onClick = { onOpenOrder(collectOrderState.invoiceNumber) },
-                            onCheckedChange = { isChecked ->
-                                onCheckedChange(collectOrderState.invoiceNumber, isChecked)
-                            }
-                        ) {
-                            CollectOrderItem(
-                                customerName = collectOrderState.customerName,
-                                customerType = collectOrderState.customerType,
-                                invoiceNumber = collectOrderState.invoiceNumber,
-                                webOrderNumber = collectOrderState.webOrderNumber,
-                                pickedAt = collectOrderState.pickedAt,
-                                isLoading = isRefreshing,
-                                contendPadding = PaddingValues(),
-                                modifier = Modifier.padding(
-                                    start = Dimens.Space.medium,
-                                    top = Dimens.Space.medium,
-                                    bottom = Dimens.Space.small,
-                                    end = if (isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
-                                ),
                             )
                         }
                     }
-                } else if (recentSearches.isEmpty() && query.isNotEmpty()) {
-                    // Show the empty state inside the grid, spanning full width
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    "No results found",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    // Recent searches section (only when there are no order results)
+                    if (searchOrderItems.isEmpty() && recentSearches.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            HeaderSmall(text = "Recent searches")
+                        }
+                        items(
+                            items = recentSearches,
+                            key = { it },
+                            span = { GridItemSpan(maxLineSpan) }
+                        ) { result ->
+                            ListItem(
+                                headlineContent = { Text(result) },
+                                leadingContent = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.small
+                                    )
+                                    .clickable {
+                                        overlayKeyboardController?.hide()
+                                        overlayFocusManager.clearFocus(force = true)
+                                        onResultClick(result)
+                                    }
+                            )
+                        }
+                    }
+
+                    // Results header and order items
+                    if (searchOrderItems.isNotEmpty()) {
+
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            HeaderSmall(text = "Results")
+                        }
+                        items(
+                            items = searchOrderItems,
+                            key = { it.invoiceNumber }
+                        ) { collectOrderState ->
+
+                            CheckboxCard(
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = Dimens.Space.medium,
+                                        vertical = Dimens.Space.small
+                                    )
+                                    .animateItem(),
+                                isCheckable = isMultiSelectionEnabled,
+                                isChecked = selectedOrderIdList.contains(collectOrderState.invoiceNumber),
+                                onClick = { onOpenOrder(collectOrderState.invoiceNumber) },
+                                onCheckedChange = { isChecked ->
+                                    onCheckedChange(collectOrderState.invoiceNumber, isChecked)
+                                }
+                            ) {
+                                CollectOrderItem(
+                                    customerName = collectOrderState.customerName,
+                                    customerType = collectOrderState.customerType,
+                                    invoiceNumber = collectOrderState.invoiceNumber,
+                                    webOrderNumber = collectOrderState.webOrderNumber,
+                                    pickedAt = collectOrderState.pickedAt,
+                                    isLoading = isRefreshing,
+                                    contendPadding = PaddingValues(),
+                                    modifier = Modifier.padding(
+                                        start = Dimens.Space.medium,
+                                        top = Dimens.Space.medium,
+                                        bottom = Dimens.Space.small,
+                                        end = if (isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
+                                    ),
                                 )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Dimens.Space.medium)
-                        )
+                            }
+                        }
+                    } else if (recentSearches.isEmpty() && totalQuery.isNotEmpty()) {
+                        // Show the empty state inside the grid, spanning full width
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        "No results found",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Dimens.Space.medium)
+                            )
+                        }
                     }
                 }
             }
@@ -521,8 +470,9 @@ private fun ExpandedSearchSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchBarInputField(
-    query: String,
-    onQueryChange: (String) -> Unit,
+    totalQuery: String,
+    typedSuffix: String,
+    onTypedSuffixChange: (String) -> Unit,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     placeholderText: String,
@@ -531,9 +481,6 @@ private fun SearchBarInputField(
     onClearClick: () -> Unit,
     modifier: Modifier = Modifier,
     hasChips: Boolean = false,
-    queryBase: String = "",
-    onClearAll: (() -> Unit)? = null,
-    clearTypedTrigger: Int = 0,
     colors: TextFieldColors = SearchBarDefaults.inputFieldColors(
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent,
@@ -544,43 +491,23 @@ private fun SearchBarInputField(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Use TextFieldState-based InputField to enable prefix/suffix slots
-    val initialFromQuery = remember(query, hasChips, queryBase) {
-        if (queryBase.isNotEmpty() && query.startsWith(queryBase)) {
-            query.removePrefix(queryBase).trimStart()
-        } else {
-            query
-        }
-    }
-    val textState = remember { TextFieldState(initialFromQuery) }
+    // Keep a local text state for typed suffix so we can use prefix slot
+    val textState = remember { TextFieldState(typedSuffix) }
 
-    LaunchedEffect(clearTypedTrigger) {
-        if (clearTypedTrigger != 0) {
-            textState.edit { replace(0, length, "") }
+    // Sync local state when external typedSuffix changes
+    LaunchedEffect(typedSuffix) {
+        val current = textState.text.toString()
+        if (current != typedSuffix) {
+            textState.edit { replace(0, length, typedSuffix) }
         }
     }
 
-    // Propagate user edits combined with chip-based queryBase
-    LaunchedEffect(textState, queryBase) {
-        snapshotFlow { textState.text.toString() }.collect { typed ->
-            val combined = when {
-                queryBase.isNotBlank() && typed.isNotBlank() -> "$queryBase $typed"
-                queryBase.isNotBlank() -> queryBase
-                else -> typed
+    // Propagate user edits upstream
+    LaunchedEffect(textState) {
+        snapshotFlow { textState.text.toString() }
+            .collect { newText: String ->
+                if (newText != typedSuffix) onTypedSuffixChange(newText)
             }
-            if (combined != query) onQueryChange(combined)
-        }
-    }
-
-    // Ensure external changes to queryBase update the composed query
-    LaunchedEffect(queryBase) {
-        val typed = textState.text.toString()
-        val combined = when {
-            queryBase.isNotBlank() && typed.isNotBlank() -> "$queryBase $typed"
-            queryBase.isNotBlank() -> queryBase
-            else -> typed
-        }
-        if (combined != query) onQueryChange(combined)
     }
 
     SearchBarDefaults.InputField(
@@ -588,8 +515,7 @@ private fun SearchBarInputField(
         onSearch = { _ ->
             keyboardController?.hide()
             focusManager.clearFocus(force = true)
-            // Forward the latest source-of-truth query instead of recomputing locally
-            onSearch(query)
+            onSearch(totalQuery)
         },
         expanded = isExpanded,
         onExpandedChange = onExpandedChange,
@@ -626,13 +552,9 @@ private fun SearchBarInputField(
                 }
             }
         },
-        trailingIcon = if (!isExpanded || (query.isEmpty() && !hasChips)) null else {
+        trailingIcon = if (!isExpanded || (totalQuery.isEmpty() && !hasChips)) null else {
             {
-                IconButton(onClick = {
-                    // Clear both chips (if handler provided) and any typed text
-                    textState.edit { replace(0, length, "") }
-                    onClearAll?.invoke() ?: onClearClick()
-                }) {
+                IconButton(onClick = { onClearClick() }) {
                     Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = "Clear search",
@@ -646,7 +568,6 @@ private fun SearchBarInputField(
         colors = colors,
     )
 }
-
 
 
 /**
@@ -671,11 +592,12 @@ internal fun ChipsPrefixRow(
             chips.forEach { chip ->
                 InputChip(
                     selected = false,
-                    leadingIcon = { SuggestionIcon(chip) },
+                    modifier = Modifier.height(InputChipDefaults.Height - 5.dp),
+                    leadingIcon = { ChipIcon(chip) },
                     onClick = { /* no-op for prefix chips */ },
                     label = {
                         Text(
-                            chip.text,
+                            text = chip.text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -716,10 +638,10 @@ internal fun SuggestionChipsRow(
         suggestions.forEach { s ->
             SuggestionChip(
                 onClick = { onSuggestionClick(s) },
-                icon = { SuggestionIcon(s) },
+                icon = { ChipIcon(s) },
                 label = {
                     Text(
-                        s.text,
+                        text = s.text,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -731,7 +653,7 @@ internal fun SuggestionChipsRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SuggestionIcon(s: SearchSuggestion) {
+private fun ChipIcon(s: SearchSuggestion) {
     when (s) {
         is CustomerNameSuggestion -> {
             if (s.customerType == CustomerType.B2B) {
@@ -740,7 +662,8 @@ private fun SuggestionIcon(s: SearchSuggestion) {
                 B2CIcon(modifier = Modifier.size(InputChipDefaults.IconSize))
             }
         }
-        is InvoiceNumberSuggestion -> Icon(Icons.Outlined.ReceiptLong, contentDescription = null)
+
+        is InvoiceNumberSuggestion -> Icon(Icons.AutoMirrored.Outlined.ReceiptLong, contentDescription = null)
         is WebOrderNumberSuggestion -> Icon(Icons.Outlined.Language, contentDescription = null)
         is SalesOrderNumberSuggestion -> Icon(Icons.Outlined.Receipt, contentDescription = null)
         is PhoneSuggestion -> Icon(Icons.Outlined.Phone, contentDescription = null)
@@ -804,6 +727,10 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
                 "Order #12347 - Bob Johnson",
                 "Order #12348 - John Williams"
             ),
+            selectedChips = emptyList(),
+            typedSuffix = "",
+            onTypedSuffixChange = {},
+            onRemoveChip = {},
             suggestions = listOf(
                 CustomerNameSuggestion("John Doe", CustomerType.B2C),
                 InvoiceNumberSuggestion("INV-10001"),
@@ -841,6 +768,10 @@ fun MBoltSearchBarExpandedOrdersPreview() {
             onResultClick = {},
             onClearClick = {},
             recentSearches = emptyList(),
+            selectedChips = emptyList(),
+            typedSuffix = "",
+            onTypedSuffixChange = {},
+            onRemoveChip = {},
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = false,
@@ -875,6 +806,10 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
             onResultClick = {},
             onClearClick = {},
             recentSearches = emptyList(),
+            selectedChips = emptyList(),
+            typedSuffix = "",
+            onTypedSuffixChange = {},
+            onRemoveChip = {},
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = true,
@@ -909,6 +844,10 @@ fun MBoltSearchBarExpandedSelectAllPreview() {
             onResultClick = {},
             onClearClick = {},
             recentSearches = emptyList(),
+            selectedChips = emptyList(),
+            typedSuffix = "",
+            onTypedSuffixChange = {},
+            onRemoveChip = {},
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = true,
@@ -941,6 +880,10 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
             onResultClick = {},
             onClearClick = {},
             recentSearches = emptyList(),
+            selectedChips = emptyList(),
+            typedSuffix = "",
+            onTypedSuffixChange = {},
+            onRemoveChip = {},
             suggestions = emptyList(),
             searchOrderItems = emptyList(),
             isMultiSelectionEnabled = false,
@@ -974,6 +917,10 @@ fun MBoltSearchBarExpandedRefreshingPreview() {
             onResultClick = {},
             onClearClick = {},
             recentSearches = emptyList(),
+            selectedChips = emptyList(),
+            typedSuffix = "",
+            onTypedSuffixChange = {},
+            onRemoveChip = {},
             suggestions = emptyList(),
             searchOrderItems = items,
             isMultiSelectionEnabled = false,
