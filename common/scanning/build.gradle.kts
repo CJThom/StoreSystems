@@ -9,9 +9,11 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
-        commonMain.dependencies { }
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kermit)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
-        androidMain.dependencies { }
     }
 }
 

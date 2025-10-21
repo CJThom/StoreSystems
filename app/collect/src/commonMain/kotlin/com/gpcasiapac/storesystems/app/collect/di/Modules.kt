@@ -12,11 +12,12 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.di.CollectPresen
 import com.gpcasiapac.storesystems.feature.login.domain.di.LoginDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.login.presentation.di.LoginPresentationModuleProvider
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+
+// Expect a platform module that can contribute Android-specific bindings (e.g., ScannerProvider)
+expect val collectAppPlatformModule: Module
 
 fun getAppModules(): List<Module> {
     val providerList = listOf(
@@ -31,8 +32,11 @@ fun getAppModules(): List<Module> {
 
     val moduleList = providerList.flatMap { it.modules() }.toMutableList()
 
-    // Provide a base Kermit Logger for the app so all dependent modules can inject it
+    // Logging: base logger
     moduleList.add(loggingModule)
+
+    // Platform-specific bindings
+    moduleList.add(collectAppPlatformModule)
 
     // TODO: Use ModuleProvider
     moduleList.add(collectAppNavigationModule)
@@ -42,14 +46,14 @@ fun getAppModules(): List<Module> {
     return moduleList
 }
 
-// App-level Logger binding to identify logs from this app distinctly
+// App-level Logger binding: one base logger only
 val loggingModule = module {
     single<Logger> { Logger.withTag("StoreSystemsLogger") }
 }
 
-// TODO: Idk what this is
+// App-specific singletons
 val appModule = module {
-
+    // Placeholders for common app-level bindings (none yet for commonMain)
 }
 
 

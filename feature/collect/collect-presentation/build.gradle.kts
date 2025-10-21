@@ -59,6 +59,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
 
+            // Logging
+            implementation(libs.kermit)
 
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
@@ -67,6 +69,7 @@ kotlin {
             implementation(projects.common.kotlin)
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.component)
+            implementation(projects.common.scanning)
 
             // Images (Coil KMP)
             implementation(libs.coil.compose)
