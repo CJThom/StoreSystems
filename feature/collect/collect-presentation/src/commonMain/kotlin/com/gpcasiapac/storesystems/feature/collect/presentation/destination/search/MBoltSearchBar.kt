@@ -510,63 +510,65 @@ private fun SearchBarInputField(
             }
     }
 
-    SearchBarDefaults.InputField(
-        state = textState,
-        onSearch = { _ ->
-            keyboardController?.hide()
-            focusManager.clearFocus(force = true)
-            onSearch(totalQuery)
-        },
-        expanded = isExpanded,
-        onExpandedChange = onExpandedChange,
-        modifier = modifier,
-        placeholder = {
-            if (!hasChips) {
-                Text(
-                    text = placeholderText,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        },
-        leadingIcon = {
-            AnimatedContent(
-                targetState = isExpanded,
-                label = "leading-icon",
-            ) { value ->
-                if (value) {
-                    IconButton(onClick = onBackPressed) {
+   // CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+        SearchBarDefaults.InputField(
+            state = textState,
+            onSearch = { _ ->
+                keyboardController?.hide()
+                focusManager.clearFocus(force = true)
+                onSearch(totalQuery)
+            },
+            expanded = isExpanded,
+            onExpandedChange = onExpandedChange,
+            modifier = modifier.height(56.dp),
+            placeholder = {
+                if (!hasChips) {
+                    Text(
+                        text = placeholderText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            },
+            leadingIcon = {
+                AnimatedContent(
+                    targetState = isExpanded,
+                    label = "leading-icon",
+                ) { value ->
+                    if (value) {
+                        IconButton(onClick = onBackPressed) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        )
+                    }
+                }
+            },
+            trailingIcon = if (!isExpanded || (totalQuery.isEmpty() && !hasChips)) null else {
+                {
+                    IconButton(onClick = { onClearClick() }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear search",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.minimumInteractiveComponentSize()
-                    )
                 }
-            }
-        },
-        trailingIcon = if (!isExpanded || (totalQuery.isEmpty() && !hasChips)) null else {
-            {
-                IconButton(onClick = { onClearClick() }) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        prefix = prefix,
-        suffix = null,
-        colors = colors,
-    )
+            },
+            prefix = prefix,
+            suffix = null,
+            colors = colors,
+        )
+   // }
 }
 
 
@@ -592,7 +594,6 @@ internal fun ChipsPrefixRow(
             chips.forEach { chip ->
                 InputChip(
                     selected = false,
-                    modifier = Modifier.height(InputChipDefaults.Height - 5.dp),
                     leadingIcon = { ChipIcon(chip) },
                     onClick = { /* no-op for prefix chips */ },
                     label = {
