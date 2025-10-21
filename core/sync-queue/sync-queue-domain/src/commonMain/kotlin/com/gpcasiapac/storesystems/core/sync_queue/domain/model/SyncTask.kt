@@ -1,7 +1,8 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.model
 
-import kotlinx.datetime.Instant
+
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 data class SyncTask(

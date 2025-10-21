@@ -5,5 +5,6 @@ enum class TaskStatus {
     IN_PROGRESS,
     COMPLETED,
     FAILED,
-    RETRYING
+    RETRYING,
+    REQUIRES_ACTION
 }
