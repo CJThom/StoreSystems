@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrderWithCustomersRelation
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
 
@@ -22,6 +23,9 @@ interface WorkOrderDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertItem(item: CollectWorkOrderItemEntity): Long
+
+    @Query("SELECT COALESCE(MAX(position), 0) FROM work_order_items WHERE work_order_id = :workOrderId")
+    suspend fun getMaxPosition(workOrderId: String): Long
 
     @Query(
         """
@@ -87,4 +91,10 @@ interface WorkOrderDao {
 
     @Query("DELETE FROM work_order_items WHERE work_order_id = :workOrderId AND invoice_number IN (:invoiceNumbers)")
     suspend fun deleteItemsForWorkOrder(workOrderId: String, invoiceNumbers: List<String>)
+
+    // Ordered list of invoice numbers for a Work Order (by position ASC)
+    @Query(
+        "SELECT invoice_number FROM work_order_items WHERE work_order_id = :workOrderId ORDER BY position ASC"
+    )
+    fun observeInvoiceNumbersInScanOrder(workOrderId: String): Flow<List<String>>
 }

@@ -26,6 +26,18 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flatMapLatest
 import co.touchlab.kermit.Logger
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.SuggestionQuery
 import kotlin.time.Clock
 
 class OrderRepositoryImpl(
@@ -46,7 +58,7 @@ class OrderRepositoryImpl(
 
 
 
-    override fun observeLatestOpenWorkOrder(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder?> {
+    override fun observeLatestOpenWorkOrder(userRefId: String): Flow<CollectWorkOrder?> {
         return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
             .map { relation -> relation?.collectWorkOrderEntity?.toDomain() }
     }
@@ -56,14 +68,24 @@ class OrderRepositoryImpl(
             .map { it?.collectWorkOrderEntity?.signature }
     }
 
-    override fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?> {
+    override fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<WorkOrderWithOrderWithCustomers?> {
         return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
-            .map { relation ->
-                relation?.let {
-                    com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers(
-                        collectWorkOrder = it.collectWorkOrderEntity.toDomain(),
-                        collectOrderWithCustomerList = it.collectOrderWithCustomerRelation.toDomain()
-                    )
+            .flatMapLatest { relation ->
+                if (relation == null) flowOf(null) else {
+                    val wo = relation.collectWorkOrderEntity
+                    val relList = relation.collectOrderWithCustomerRelation
+                    workOrderDao
+                        .observeInvoiceNumbersInScanOrder(wo.workOrderId)
+                        .map { orderedInvoices ->
+                            val relByInvoice: Map<String, CollectOrderWithCustomerRelation> = relList.associateBy { it.orderEntity.invoiceNumber.lowercase() }
+                            val orderedRelations: List<CollectOrderWithCustomerRelation> = if (orderedInvoices.isEmpty()) emptyList() else orderedInvoices.mapNotNull { inv ->
+                                relByInvoice[inv.lowercase()]
+                            }
+                            WorkOrderWithOrderWithCustomers(
+                                collectWorkOrder = wo.toDomain(),
+                                collectOrderWithCustomerList = orderedRelations.toDomain()
+                            )
+                        }
                 }
             }
     }
@@ -154,7 +176,7 @@ class OrderRepositoryImpl(
 
     override suspend fun setCollectingType(
         userRefId: String,
-        type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+        type: CollectingType
     ): Result<Unit> = runCatching {
         val openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
             ?: error("No open work order for user: $userRefId")
@@ -175,19 +197,19 @@ class OrderRepositoryImpl(
         }
     }
 
-    override suspend fun getSearchSuggestions(query: com.gpcasiapac.storesystems.feature.collect.domain.repository.SuggestionQuery): List<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion> {
+    override suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion> {
         val text = query.text
         val per = query.perKindLimit
         val include = query.includeKinds
 
-        val out = mutableListOf<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion>()
+        val out = mutableListOf<SearchSuggestion>()
 
         // Treat whitespace-only as blank to ensure default suggestions are shown
         if (text.isBlank()) {
-            if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME in include) {
+            if (SuggestionKind.CUSTOMER_NAME in include) {
                 collectOrderDao.getAllCustomerNames(limit = query.maxTotal).forEach { row ->
                     val name = row.name.trim()
-                    if (name.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion(
+                    if (name.isNotEmpty()) out += CustomerNameSuggestion(
                         text = name,
                         customerType = row.type,
                     )
@@ -199,34 +221,34 @@ class OrderRepositoryImpl(
         // Substring match to allow last 4 digits etc. Use trimmed text for LIKE pattern only
         val contains = "%" + escapeForLike(text.trim()) + "%"
 
-        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME in include) {
+        if (SuggestionKind.CUSTOMER_NAME in include) {
             collectOrderDao.getCustomerNameSuggestionsPrefix(contains, per).forEach { row ->
                 val name = row.name.trim()
-                if (name.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion(
+                if (name.isNotEmpty()) out += CustomerNameSuggestion(
                     text = name,
                     customerType = row.type,
                 )
             }
         }
-        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.INVOICE_NUMBER in include) {
+        if (SuggestionKind.INVOICE_NUMBER in include) {
             collectOrderDao.getInvoiceSuggestionsPrefix(contains, per).forEach { inv ->
-                out += com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion(inv)
+                out += InvoiceNumberSuggestion(inv)
             }
         }
-        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.WEB_ORDER_NUMBER in include) {
+        if (SuggestionKind.WEB_ORDER_NUMBER in include) {
             collectOrderDao.getWebOrderSuggestionsPrefix(contains, per).forEach { web ->
-                out += com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion(web)
+                out += WebOrderNumberSuggestion(web)
             }
         }
-        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.SALES_ORDER_NUMBER in include) {
+        if (SuggestionKind.SALES_ORDER_NUMBER in include) {
             collectOrderDao.getSalesOrderSuggestionsPrefix(contains, per).forEach { so ->
-                out += com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion(so)
+                out += SalesOrderNumberSuggestion(so)
             }
         }
-        if (com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.PHONE in include) {
+        if (SuggestionKind.PHONE in include) {
             collectOrderDao.getPhoneSuggestionsPrefix(contains, per).forEach { phone ->
                 val p = phone.trim()
-                if (p.isNotEmpty()) out += com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion(p)
+                if (p.isNotEmpty()) out += PhoneSuggestion(p)
             }
         }
 
@@ -235,11 +257,11 @@ class OrderRepositoryImpl(
 
         // Simple priority ranking
         val rank = mapOf(
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.CUSTOMER_NAME to 0,
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.INVOICE_NUMBER to 1,
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.WEB_ORDER_NUMBER to 2,
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.SALES_ORDER_NUMBER to 3,
-            com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind.PHONE to 4,
+            SuggestionKind.CUSTOMER_NAME to 0,
+            SuggestionKind.INVOICE_NUMBER to 1,
+            SuggestionKind.WEB_ORDER_NUMBER to 2,
+            SuggestionKind.SALES_ORDER_NUMBER to 3,
+            SuggestionKind.PHONE to 4,
         )
         val sorted = deduped.sortedWith(compareBy({ rank[it.kind] ?: 99 }, { it.text }))
         return if (sorted.size <= query.maxTotal) sorted else sorted.take(query.maxTotal)
@@ -290,10 +312,12 @@ class OrderRepositoryImpl(
                     workOrderDao.insertWorkOrder(newWorkOrder)
                     openWorkOrder = newWorkOrder
                 }
+                val nextPosition = workOrderDao.getMaxPosition(openWorkOrder.workOrderId) + 1
                 val rowId = workOrderDao.insertItem(
                     CollectWorkOrderItemEntity(
                         workOrderId = openWorkOrder.workOrderId,
-                        invoiceNumber = orderId
+                        invoiceNumber = orderId,
+                        position = nextPosition
                     )
                 )
                 inserted = rowId != -1L
@@ -338,10 +362,12 @@ class OrderRepositoryImpl(
                     workOrderDao.insertWorkOrder(newWorkOrder)
                     openWorkOrder = newWorkOrder
                 }
-                val items = orderIdList.map { id ->
+                val base = workOrderDao.getMaxPosition(openWorkOrder.workOrderId)
+                val items = orderIdList.mapIndexed { index, id ->
                     CollectWorkOrderItemEntity(
                         workOrderId = openWorkOrder.workOrderId,
-                        invoiceNumber = id
+                        invoiceNumber = id,
+                        position = base + index + 1L
                     )
                 }
                 workOrderDao.insertItems(items)
@@ -394,10 +420,11 @@ class OrderRepositoryImpl(
             signedAt = null,
             signedByName = null
         )
-        val workOrderItems = invoiceNumbers.map { invoice ->
+        val workOrderItems = invoiceNumbers.mapIndexed { index, invoice ->
             CollectWorkOrderItemEntity(
                 workOrderId = workOrderId,
-                invoiceNumber = invoice
+                invoiceNumber = invoice,
+                position = index + 1L
             )
         }
         database.useWriterConnection { transactor ->
