@@ -43,13 +43,11 @@ class DataWedgeScanner(
             val data = intent.getStringExtra("com.symbol.datawedge.data_string") ?: return
             val labelType = intent.getStringExtra("com.symbol.datawedge.label_type")
             val source = intent.getStringExtra("com.symbol.datawedge.source")
-            val raw = parseDecodeData(intent)
-            log.i { "Scan received: text='${data.take(64)}' symbology=$labelType source=$source bytes=${raw?.size ?: 0}" }
+            log.i { "Scan received: text='${data.take(64)}' symbology=$labelType source=$source" }
             _scans.tryEmit(
                 ScanResult(
                     text = data,
                     symbology = labelType,
-                    rawBytes = raw,
                     source = source
                 )
             )
