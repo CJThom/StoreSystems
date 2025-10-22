@@ -93,6 +93,8 @@ fun OrderFulfilmentScreen(
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    // Platform-provided sound player via Koin
+    val soundPlayer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer>()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
@@ -140,7 +142,9 @@ fun OrderFulfilmentScreen(
                     )
                 }
 
-                is OrderFulfilmentScreenContract.Effect.PlayErrorSound -> Unit // TODO: platform sound
+                is OrderFulfilmentScreenContract.Effect.PlayErrorSound -> {
+                    soundPlayer.play(com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect.Error)
+                }
                 is OrderFulfilmentScreenContract.Effect.Haptic -> Unit // TODO: platform haptic
 
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {

@@ -1,7 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import co.touchlab.kermit.Logger
+import com.gpcasiapac.storesystems.common.scanning.ScanEventsRegistry
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
@@ -14,9 +17,9 @@ fun OrderFulfilmentScreenDestination(
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
 ) {
     // Collect scanner results: on scan, either auto-select into work order or navigate to details
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        co.touchlab.kermit.Logger.withTag("OrderFulfilmentScreenDestination").i { "Starting scan collection for Fulfilment screen (autoSelect=$autoSelectOnScan)" }
-        com.gpcasiapac.storesystems.common.scanning.ScanEventsRegistry.provider?.invoke()?.collectLatest { scan ->
+    LaunchedEffect(Unit) {
+        Logger.withTag("OrderFulfilmentScreenDestination").i { "Starting scan collection for Fulfilment screen (autoSelect=$autoSelectOnScan)" }
+        ScanEventsRegistry.provider?.invoke()?.collectLatest { scan ->
             orderFulfilmentScreenViewModel.setEvent(
                 OrderFulfilmentScreenContract.Event.ScanInvoice(scan.text, autoSelectOnScan)
             )

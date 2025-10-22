@@ -8,7 +8,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
@@ -22,6 +24,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 
 
 class OrderFulfilmentScreenViewModel(
@@ -30,8 +34,8 @@ class OrderFulfilmentScreenViewModel(
     private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
-    private val addOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase,
-    private val checkOrderExistsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase,
+    private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
+    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -40,7 +44,7 @@ class OrderFulfilmentScreenViewModel(
     private val userRefId = "mock"
 
     // Shared keyed debouncer for persisting user edits
-    private val debouncer = com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer(viewModelScope)
+    private val debouncer = Debouncer(viewModelScope)
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -253,7 +257,7 @@ class OrderFulfilmentScreenViewModel(
                 val invoice = event.invoiceNumber.trim()
                 viewModelScope.launch {
                     when (val result = checkOrderExistsUseCase(invoice)) {
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
                                 addOrderSelectionUseCase(result.invoiceNumber, userRefId)
                                 // No explicit effect needed; observer will update list
@@ -265,12 +269,12 @@ class OrderFulfilmentScreenViewModel(
                                 }
                             }
                         }
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
-                            setEffect { OrderFulfilmentScreenContract.Effect.Haptic(com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error) }
+                        is CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
+                            setEffect { OrderFulfilmentScreenContract.Effect.Haptic(HapticType.Error) }
                             setEffect { OrderFulfilmentScreenContract.Effect.PlayErrorSound }
                             setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
                         }
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error.InvalidInput -> {
+                        is CheckOrderExistsUseCase.UseCaseResult.Error.InvalidInput -> {
                             setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
                         }
                     }
