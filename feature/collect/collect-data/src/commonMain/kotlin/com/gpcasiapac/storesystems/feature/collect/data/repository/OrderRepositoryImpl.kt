@@ -90,6 +90,12 @@ class OrderRepositoryImpl(
 
     override fun observeOrderCount(): Flow<Int> = collectOrderDao.observeCount()
 
+    override suspend fun existsInvoice(invoiceNumber: String): Boolean {
+        val clean = invoiceNumber.trim()
+        if (clean.isEmpty()) return false
+        return collectOrderDao.existsInvoice(clean)
+    }
+
 
     override suspend fun refreshOrders(): Result<Unit> = runCatching {
         log.d { "refreshOrders: start" }

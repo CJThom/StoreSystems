@@ -102,4 +102,6 @@ interface OrderRepository {
     // New: persist courier name for the latest open Work Order
     suspend fun setCourierName(userRefId: String, name: String): Result<Unit>
 
+    /** Lightweight existence check by invoice number (case-insensitive). */
+    suspend fun existsInvoice(invoiceNumber: String): Boolean
 }

@@ -9,6 +9,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSugge
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
@@ -45,7 +46,7 @@ class OrderListScreenViewModel(
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
-    private val checkOrderExistsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase,
+    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     private val userRefId = "mock"
@@ -158,15 +159,19 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.ScanInvoice -> {
                 val invoice = event.invoiceNumber.trim()
-                if (invoice.isEmpty()) return
                 viewModelScope.launch {
-                    val exists = runCatching { checkOrderExistsUseCase(invoice) }.getOrElse { false }
-                    if (exists) {
-                        setEffect { OrderSelected(invoice) }
-                    } else {
-                        setEffect { OrderListScreenContract.Effect.Haptic(HapticType.Error) }
-                        setEffect { OrderListScreenContract.Effect.PlayErrorSound }
-                        setEffect { OrderListScreenContract.Effect.ShowSnackbar("Order not found: \"$invoice\"") }
+                    when (val result = checkOrderExistsUseCase(invoice)) {
+                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                            setEffect { OrderSelected(result.invoiceNumber) }
+                        }
+                        is CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
+                            setEffect { OrderListScreenContract.Effect.Haptic(HapticType.Error) }
+                            setEffect { OrderListScreenContract.Effect.PlayErrorSound }
+                            setEffect { OrderListScreenContract.Effect.ShowSnackbar(result.message) }
+                        }
+                        is CheckOrderExistsUseCase.UseCaseResult.Error.InvalidInput -> {
+                            setEffect { OrderListScreenContract.Effect.ShowSnackbar(result.message) }
+                        }
                     }
                 }
             }
