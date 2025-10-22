@@ -82,8 +82,9 @@ fun OrderListScreen(
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
-    // Platform-provided sound player via Koin
+    // Platform-provided feedback via Koin
     val soundPlayer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer>()
+    val hapticPerformer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer>()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         canScroll = { !state.isMultiSelectionEnabled }
@@ -190,7 +191,14 @@ fun OrderListScreen(
 
                 is OrderListScreenContract.Effect.Outcome -> onOutcome(effect)
                 is OrderListScreenContract.Effect.CopyToClipboard -> Unit // TODO: implement clipboard
-                is OrderListScreenContract.Effect.Haptic -> Unit // TODO: platform haptic feedback
+                is OrderListScreenContract.Effect.Haptic -> {
+                    val mapped = when (effect.type) {
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.SelectionChanged -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.SelectionChanged
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Success -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.Success
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.Error
+                    }
+                    hapticPerformer.perform(mapped)
+                }
                 is OrderListScreenContract.Effect.OpenDialer -> Unit // TODO
                 is OrderListScreenContract.Effect.PlayErrorSound -> {
                     soundPlayer.play(com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect.Error)

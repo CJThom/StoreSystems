@@ -5,6 +5,8 @@ import android.media.AudioManager
 import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.feedback.sound.AndroidToneSoundPlayer
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
+import com.gpcasiapac.storesystems.common.feedback.haptic.AndroidHapticPerformer
 import com.gpcasiapac.storesystems.common.scanning.Scanner
 import com.gpcasiapac.storesystems.common.scanning.android.DataWedgeScanner
 import org.koin.android.ext.koin.androidContext
@@ -33,6 +35,15 @@ actual val collectAppPlatformModule: Module = module {
             logger = logger,
             streamType = AudioManager.STREAM_NOTIFICATION,
             volumePercent = 100
+        )
+    }
+
+    // Haptic feedback binding
+    single<HapticPerformer> {
+        val logger: Logger = get()
+        AndroidHapticPerformer(
+            context = androidContext().applicationContext,
+            logger = logger
         )
     }
 }

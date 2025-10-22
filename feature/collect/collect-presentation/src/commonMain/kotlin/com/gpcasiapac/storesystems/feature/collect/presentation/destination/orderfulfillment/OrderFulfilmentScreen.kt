@@ -93,8 +93,9 @@ fun OrderFulfilmentScreen(
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    // Platform-provided sound player via Koin
+    // Platform-provided feedback via Koin
     val soundPlayer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer>()
+    val hapticPerformer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer>()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
@@ -145,7 +146,14 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.PlayErrorSound -> {
                     soundPlayer.play(com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect.Error)
                 }
-                is OrderFulfilmentScreenContract.Effect.Haptic -> Unit // TODO: platform haptic
+                is OrderFulfilmentScreenContract.Effect.Haptic -> {
+                    val mapped = when (effect.type) {
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.SelectionChanged -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.SelectionChanged
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Success -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.Success
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.Error
+                    }
+                    hapticPerformer.perform(mapped)
+                }
 
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
                     dialogSpec.value = effect
