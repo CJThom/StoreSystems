@@ -255,6 +255,8 @@ class OrderFulfilmentScreenViewModel(
 
             is OrderFulfilmentScreenContract.Event.ScanInvoice -> {
                 val invoice = event.invoiceNumber.trim()
+                // Collapse search on scan (handled by UI via effect)
+                setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
                 viewModelScope.launch {
                     when (val result = checkOrderExistsUseCase(invoice)) {
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {

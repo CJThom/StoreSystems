@@ -151,7 +151,11 @@ fun OrderFulfilmentScreen(
                     selectionConfirmDialogSpec.value = effect
                 }
 
-                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+                is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
+                    onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
+                }
+ 
+                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }

@@ -126,7 +126,10 @@ object OrderListScreenContract {
             val proceedLabel: String = "Select and proceed",
         ) : Effect
 
-        sealed interface Outcome : Effect {
+        // Request the search UI to collapse (triggered by VM on scan)
+        data object CollapseSearchBar : Effect
+ 
+         sealed interface Outcome : Effect {
             data class OrderSelected(val invoiceNumber: String) : Outcome
             data object OrdersSelected : Outcome
             data object Back : Outcome

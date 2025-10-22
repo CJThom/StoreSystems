@@ -131,7 +131,10 @@ object OrderFulfilmentScreenContract {
             val cancelLabel: String = "Cancel",
         ) : Effect
 
-        sealed interface Outcome : Effect {
+        // Request the search UI to collapse (triggered by VM on scan)
+        data object CollapseSearchBar : Effect
+ 
+         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
             data object SignatureRequested: Outcome

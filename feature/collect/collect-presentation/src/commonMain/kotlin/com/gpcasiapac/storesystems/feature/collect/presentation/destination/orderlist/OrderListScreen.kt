@@ -13,6 +13,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -208,6 +209,10 @@ fun OrderListScreen(
                     confirmDialogSpec.value = effect
                 }
 
+                is OrderListScreenContract.Effect.CollapseSearchBar -> {
+                    onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(false))
+                }
+ 
                 is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
                     // Adapt to SearchContract dialog spec for reuse of common dialog UI
                     searchConfirmDialogSpec.value =
@@ -408,6 +413,7 @@ fun OrderListScreen(
             columns = GridCells.Adaptive(Dimens.Adaptive.gridItemWidth),
             modifier = Modifier
                 .padding(top = padding.calculateTopPadding())
+                .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(
                 start = padding.calculateStartPadding(LocalLayoutDirection.current),
