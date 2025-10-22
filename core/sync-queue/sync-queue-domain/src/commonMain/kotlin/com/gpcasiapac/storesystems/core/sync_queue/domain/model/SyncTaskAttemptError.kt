@@ -1,6 +1,5 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.model
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
@@ -9,6 +8,7 @@ import kotlin.time.ExperimentalTime
 @Serializable
 data class SyncTaskAttemptError(
     val attemptNumber: Int,
-    @Contextual val timestamp: Instant,
+    @Contextual val timestamp: kotlin.time.Instant,
     val errorMessage: String
 )
+

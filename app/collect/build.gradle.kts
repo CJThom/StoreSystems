@@ -95,6 +95,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.androidx.work.runtimeKtx)
+            implementation(libs.koin.androidx.workmanager)
             implementation(projects.core.syncQueue.syncQueueDomain)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
