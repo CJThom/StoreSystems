@@ -115,6 +115,9 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                         is OrderDetailsScreenContract.Effect.Outcome.Selected -> onOutcome(
                             CollectOutcome.OpenOrderFulfilment
                         )
+                        is OrderDetailsScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
+                            CollectOutcome.OrderSelected(outcome.invoiceNumber)
+                        )
                     }
                 }
             }
