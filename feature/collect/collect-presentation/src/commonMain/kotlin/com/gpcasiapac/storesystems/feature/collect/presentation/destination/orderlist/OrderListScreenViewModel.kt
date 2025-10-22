@@ -1,20 +1,16 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
 import androidx.lifecycle.viewModelScope
-import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
-import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
@@ -27,14 +23,11 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class OrderListScreenViewModel(
@@ -54,7 +47,7 @@ class OrderListScreenViewModel(
     override fun setInitialState(): OrderListScreenContract.State {
 
         val placeholders = CollectOrderListItemState.placeholderList(count = 10)
-        
+
         return OrderListScreenContract.State(
             orders = placeholders,
             isLoading = true,
@@ -164,12 +157,10 @@ class OrderListScreenViewModel(
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             setEffect { OrderSelected(result.invoiceNumber) }
                         }
-                        is CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
-                            setEffect { OrderListScreenContract.Effect.Haptic(HapticType.Error) }
-                            setEffect { OrderListScreenContract.Effect.PlayErrorSound }
-                            setEffect { OrderListScreenContract.Effect.ShowSnackbar(result.message) }
-                        }
-                        is CheckOrderExistsUseCase.UseCaseResult.Error.InvalidInput -> {
+
+                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                            setEffect { OrderListScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                            setEffect { OrderListScreenContract.Effect.PlaySound(SoundEffect.Error) }
                             setEffect { OrderListScreenContract.Effect.ShowSnackbar(result.message) }
                         }
                     }
@@ -219,15 +210,19 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.ConfirmSelection -> {
                 handleConfirmSelection()
             }
+
             is OrderListScreenContract.Event.ConfirmSearchSelection -> {
                 setEffect { OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog() }
             }
+
             is OrderListScreenContract.Event.ConfirmSelectionStay -> {
                 onConfirmSelectionStay()
             }
+
             is OrderListScreenContract.Event.ConfirmSelectionProceed -> {
                 onConfirmSelectionProceed()
             }
+
             is OrderListScreenContract.Event.DismissConfirmSelectionDialog -> {
                 // no-op
             }
@@ -281,8 +276,6 @@ class OrderListScreenViewModel(
                 val ids = viewState.value.existingDraftIdSet.toList()
                 if (ids.isNotEmpty()) {
                     setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-                } else {
-                    setEffect { OrderListScreenContract.Effect.ShowToast("No draft to view") }
                 }
             }
 
@@ -423,7 +416,6 @@ class OrderListScreenViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         if (toAdd.isEmpty() && toRemove.isEmpty()) {
-            setEffect { OrderListScreenContract.Effect.ShowToast("Nothing to update") }
             return
         }
         viewModelScope.launch {
@@ -442,7 +434,6 @@ class OrderListScreenViewModel(
                     isSelectAllChecked = false
                 )
             }
-            setEffect { OrderListScreenContract.Effect.ShowToast("Selection saved") }
         }
     }
 
@@ -511,17 +502,14 @@ class OrderListScreenViewModel(
         result.fold(
             onSuccess = {
                 setState { copy(isRefreshing = false) }
-                setEffect { OrderListScreenContract.Effect.ShowToast(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
                 setState { copy(isRefreshing = false, error = msg) }
-//                setEffect { OrderListScreenContract.Effect.ShowError(msg) }
             }
         )
 
     }
-
 
 
 }

@@ -151,12 +151,7 @@ fun OrderFulfilmentScreen(
                     soundPlayer.play(SoundEffect.Error)
                 }
                 is OrderFulfilmentScreenContract.Effect.Haptic -> {
-                    val mapped = when (effect.type) {
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.SelectionChanged -> HapticEffect.SelectionChanged
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Success -> HapticEffect.Success
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error -> HapticEffect.Error
-                    }
-                    hapticPerformer.perform(mapped)
+                    hapticPerformer.perform(effect.type)
                 }
 
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {

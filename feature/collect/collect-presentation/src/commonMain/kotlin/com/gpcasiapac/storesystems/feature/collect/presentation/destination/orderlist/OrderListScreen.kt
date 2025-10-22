@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -31,7 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -44,14 +44,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
-import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
@@ -66,11 +65,13 @@ import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
+import org.koin.compose.koinInject
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -87,8 +88,19 @@ fun OrderListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     // Platform-provided feedback via Koin
-    val soundPlayer = org.koin.compose.koinInject<SoundPlayer>()
-    val hapticPerformer = org.koin.compose.koinInject<HapticPerformer>()
+    val soundPlayer: SoundPlayer = koinInject()
+    val hapticPerformer: HapticPerformer = koinInject()
+
+    val scope = rememberCoroutineScope()
+
+    // Search bar state management
+    val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
+
+    val lazyGridState = rememberLazyGridState()
+    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
+        lazyGridState = lazyGridState,
+        stickyHeaderIndex = 1
+    )
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         canScroll = { !state.isMultiSelectionEnabled }
@@ -98,7 +110,7 @@ fun OrderListScreen(
     LaunchedEffect(state.isMultiSelectionEnabled) {
         if (state.isMultiSelectionEnabled) {
             val appBarState = scrollBehavior.state
-            val anim = androidx.compose.animation.core.Animatable(appBarState.heightOffset)
+            val anim = Animatable(appBarState.heightOffset)
             anim.animateTo(
                 targetValue = 0f,
                 animationSpec = tween(durationMillis = 300)
@@ -110,17 +122,12 @@ fun OrderListScreen(
         }
     }
 
-    val lazyGridState = rememberLazyGridState()
-    val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
-        lazyGridState = lazyGridState,
-        stickyHeaderIndex = 1
-    )
 
     // Track FAB expanded/collapsed based on grid scroll direction
     var fabExpanded by remember { mutableStateOf(true) }
     LaunchedEffect(lazyGridState) {
         var previous = 0
-        androidx.compose.runtime.snapshotFlow {
+        snapshotFlow {
             // Combine index and offset into a monotonically increasing value as we scroll down
             lazyGridState.firstVisibleItemIndex * 100000 + lazyGridState.firstVisibleItemScrollOffset
         }.collect { current ->
@@ -136,10 +143,10 @@ fun OrderListScreen(
     }
     // Ensure FAB expands again when scrolling stops (idle state), but wait briefly to avoid flicker
     LaunchedEffect(lazyGridState) {
-        androidx.compose.runtime.snapshotFlow { lazyGridState.isScrollInProgress }
+        snapshotFlow { lazyGridState.isScrollInProgress }
             .collectLatest { inProgress ->
                 if (!inProgress) {
-                    kotlinx.coroutines.delay(750)
+                    delay(750)
                     // If scrolling resumed within the delay, this block would be cancelled (collectLatest)
                     fabExpanded = true
                 }
@@ -155,10 +162,6 @@ fun OrderListScreen(
             }
         }
     }
-    val scope = rememberCoroutineScope()
-
-    // Search bar state management
-    val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
 
     // Keep search bar animation in sync with SearchViewModel
     LaunchedEffect(searchState.isSearchActive) {
@@ -184,36 +187,20 @@ fun OrderListScreen(
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderListScreenContract.Effect.ShowToast ->
-                    snackbarHostState.showSnackbar(
-                        effect.message,
-                        duration = SnackbarDuration.Short
-                    )
-
-                is OrderListScreenContract.Effect.ShowError ->
-                    snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
-
                 is OrderListScreenContract.Effect.Outcome -> onOutcome(effect)
-                is OrderListScreenContract.Effect.CopyToClipboard -> Unit // TODO: implement clipboard
-                is OrderListScreenContract.Effect.Haptic -> {
-                    val mapped = when (effect.type) {
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.SelectionChanged -> HapticEffect.SelectionChanged
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Success -> HapticEffect.Success
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error -> HapticEffect.Error
-                    }
-                    hapticPerformer.perform(mapped)
+                is OrderListScreenContract.Effect.PlayHaptic -> {
+                    hapticPerformer.perform(effect.hapticEffect)
                 }
-                is OrderListScreenContract.Effect.OpenDialer -> Unit // TODO
-                is OrderListScreenContract.Effect.PlayErrorSound -> {
-                    soundPlayer.play(SoundEffect.Error)
+
+                is OrderListScreenContract.Effect.PlaySound -> {
+                    soundPlayer.play(effect.soundEffect)
                 }
+
                 is OrderListScreenContract.Effect.ShowSnackbar -> {
-                    val duration =
-                        if (effect.persistent) SnackbarDuration.Indefinite else SnackbarDuration.Short
                     snackbarHostState.showSnackbar(
                         message = effect.message,
                         actionLabel = effect.actionLabel,
-                        duration = duration
+                        duration = effect.duration
                     )
                 }
 

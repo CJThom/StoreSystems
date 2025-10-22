@@ -2,12 +2,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -116,7 +116,7 @@ object OrderFulfilmentScreenContract {
             val persistent: Boolean = false,
         ) : Effect
         data object PlayErrorSound : Effect
-        data class Haptic(val type: HapticType) : Effect
+        data class Haptic(val type: HapticEffect) : Effect
         // Ask UI to present a 3-button dialog for unsaved progress
         data class ShowSaveDiscardDialog(
             val title: String = "Unsaved progress",

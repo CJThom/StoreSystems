@@ -6,9 +6,9 @@ import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
@@ -270,7 +270,7 @@ class OrderFulfilmentScreenViewModel(
                             }
                         }
                         is CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
-                            setEffect { OrderFulfilmentScreenContract.Effect.Haptic(HapticType.Error) }
+                            setEffect { OrderFulfilmentScreenContract.Effect.Haptic(HapticEffect.Error) }
                             setEffect { OrderFulfilmentScreenContract.Effect.PlayErrorSound }
                             setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
                         }

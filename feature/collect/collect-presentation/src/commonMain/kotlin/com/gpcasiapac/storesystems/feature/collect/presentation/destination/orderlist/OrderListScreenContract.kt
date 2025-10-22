@@ -1,13 +1,13 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Immutable
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
@@ -102,17 +102,13 @@ object OrderListScreenContract {
     }
 
     sealed interface Effect : ViewSideEffect {
-        data class ShowToast(val message: String) : Effect
-        data class ShowError(val error: String) : Effect
         data class ShowSnackbar(
             val message: String,
             val actionLabel: String? = null,
-            val persistent: Boolean = false,
+            val duration: SnackbarDuration = SnackbarDuration.Short,
         ) : Effect
-        data object PlayErrorSound : Effect
-        data class Haptic(val type: HapticType) : Effect
-        data class OpenDialer(val phoneNumber: String) : Effect
-        data class CopyToClipboard(val label: String, val text: String) : Effect
+        data class PlaySound(val soundEffect: SoundEffect) : Effect
+        data class PlayHaptic(val hapticEffect: HapticEffect) : Effect
 
         // Multi-select confirmation dialog trigger
         data class ShowMultiSelectConfirmDialog(
