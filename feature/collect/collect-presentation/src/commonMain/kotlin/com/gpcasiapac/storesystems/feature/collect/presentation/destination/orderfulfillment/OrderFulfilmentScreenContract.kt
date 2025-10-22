@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -99,6 +100,9 @@ object OrderFulfilmentScreenContract {
         // Order item click
         data class OrderClicked(val invoiceNumber: String) : Event
 
+        // Scanning
+        data class ScanInvoice(val invoiceNumber: String, val autoSelect: Boolean) : Event
+
         // Deselect an order from Fulfilment item actions
         data class DeselectOrder(val invoiceNumber: String) : Event
     }
@@ -106,6 +110,13 @@ object OrderFulfilmentScreenContract {
     sealed interface Effect : ViewSideEffect {
         data class ShowToast(val message: String) : Effect
         data class ShowError(val error: String) : Effect
+        data class ShowSnackbar(
+            val message: String,
+            val actionLabel: String? = null,
+            val persistent: Boolean = false,
+        ) : Effect
+        data object PlayErrorSound : Effect
+        data class Haptic(val type: HapticType) : Effect
         // Ask UI to present a 3-button dialog for unsaved progress
         data class ShowSaveDiscardDialog(
             val title: String = "Unsaved progress",

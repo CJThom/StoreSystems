@@ -131,6 +131,18 @@ fun OrderFulfilmentScreen(
                     effect.error, duration = SnackbarDuration.Long
                 )
 
+                is OrderFulfilmentScreenContract.Effect.ShowSnackbar -> {
+                    val duration = if (effect.persistent) SnackbarDuration.Indefinite else SnackbarDuration.Short
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel,
+                        duration = duration
+                    )
+                }
+
+                is OrderFulfilmentScreenContract.Effect.PlayErrorSound -> Unit // TODO: platform sound
+                is OrderFulfilmentScreenContract.Effect.Haptic -> Unit // TODO: platform haptic
+
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
                     dialogSpec.value = effect
                 }
