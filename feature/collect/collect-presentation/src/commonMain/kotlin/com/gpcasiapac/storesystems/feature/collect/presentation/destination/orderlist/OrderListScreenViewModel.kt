@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
@@ -44,6 +45,7 @@ class OrderListScreenViewModel(
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
+    private val checkOrderExistsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase,
 ) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
 
     private val userRefId = "mock"
@@ -152,6 +154,21 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.OpenOrder -> {
                 // Single-tap now navigates to OrderDetails without persisting selection; selection happens on OrderDetails SELECT
                 setEffect { OrderSelected(event.orderId) }
+            }
+
+            is OrderListScreenContract.Event.ScanInvoice -> {
+                val invoice = event.invoiceNumber.trim()
+                if (invoice.isEmpty()) return
+                viewModelScope.launch {
+                    val exists = runCatching { checkOrderExistsUseCase(invoice) }.getOrElse { false }
+                    if (exists) {
+                        setEffect { OrderSelected(invoice) }
+                    } else {
+                        setEffect { OrderListScreenContract.Effect.Haptic(HapticType.Error) }
+                        setEffect { OrderListScreenContract.Effect.PlayErrorSound }
+                        setEffect { OrderListScreenContract.Effect.ShowSnackbar("Order not found: \"$invoice\"") }
+                    }
+                }
             }
 
             is OrderListScreenContract.Event.ClearError -> {
@@ -494,7 +511,7 @@ class OrderListScreenViewModel(
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
                 setState { copy(isRefreshing = false, error = msg) }
-                setEffect { OrderListScreenContract.Effect.ShowError(msg) }
+//                setEffect { OrderListScreenContract.Effect.ShowError(msg) }
             }
         )
 

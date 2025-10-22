@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,13 +49,13 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.ToolbarFabContainer
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
@@ -186,10 +187,19 @@ fun OrderListScreen(
                     snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
 
                 is OrderListScreenContract.Effect.Outcome -> onOutcome(effect)
-                is OrderListScreenContract.Effect.CopyToClipboard -> TODO()
-                is OrderListScreenContract.Effect.Haptic -> TODO()
-                is OrderListScreenContract.Effect.OpenDialer -> TODO()
-                is OrderListScreenContract.Effect.ShowSnackbar -> TODO()
+                is OrderListScreenContract.Effect.CopyToClipboard -> Unit // TODO: implement clipboard
+                is OrderListScreenContract.Effect.Haptic -> Unit // TODO: platform haptic feedback
+                is OrderListScreenContract.Effect.OpenDialer -> Unit // TODO
+                is OrderListScreenContract.Effect.PlayErrorSound -> Unit // TODO: platform sound feedback
+                is OrderListScreenContract.Effect.ShowSnackbar -> {
+                    val duration =
+                        if (effect.persistent) SnackbarDuration.Indefinite else SnackbarDuration.Short
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel,
+                        duration = duration
+                    )
+                }
 
                 is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
                     confirmDialogSpec.value = effect
@@ -225,6 +235,9 @@ fun OrderListScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             val hasDraft = state.isDraftBarVisible && state.existingDraftIdSet.isNotEmpty()
@@ -385,7 +398,7 @@ fun OrderListScreen(
                 }
             )
         }
-        ) { padding ->
+    ) { padding ->
 
         LazyVerticalGrid(
             state = lazyGridState,

@@ -57,8 +57,9 @@ object OrderListScreenContract {
         // User-driven refresh (initial load happens in onStart)
         data object Refresh : Event
 
-        // Navigation
+        // Navigation / Scanning
         data class OpenOrder(val orderId: String) : Event
+        data class ScanInvoice(val invoiceNumber: String) : Event
         data object Back : Event
         data object Logout : Event
 
@@ -108,6 +109,7 @@ object OrderListScreenContract {
             val actionLabel: String? = null,
             val persistent: Boolean = false,
         ) : Effect
+        data object PlayErrorSound : Effect
         data class Haptic(val type: HapticType) : Effect
         data class OpenDialer(val phoneNumber: String) : Effect
         data class CopyToClipboard(val label: String, val text: String) : Effect

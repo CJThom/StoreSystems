@@ -20,8 +20,8 @@ fun OrderListScreenDestination(
     LaunchedEffect(Unit) {
         log.i { "Starting scan collection for OrderList screen" }
         ScanEventsRegistry.provider?.invoke()?.collectLatest { scan ->
-            log.i { "Forwarding scan to VM: '${scan.text.take(64)}'" }
-            orderListScreenViewModel.setEvent(OrderListScreenContract.Event.OpenOrder(scan.text))
+            log.i { "Scan received for invoice='${scan.text.take(64)}' - dispatching ScanInvoice" }
+            orderListScreenViewModel.setEvent(OrderListScreenContract.Event.ScanInvoice(scan.text))
         }
     }
 
