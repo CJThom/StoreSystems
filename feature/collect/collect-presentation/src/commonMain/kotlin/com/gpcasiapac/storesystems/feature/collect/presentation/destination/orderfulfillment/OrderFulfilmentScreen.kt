@@ -50,6 +50,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorder
@@ -94,8 +98,8 @@ fun OrderFulfilmentScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     // Platform-provided feedback via Koin
-    val soundPlayer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer>()
-    val hapticPerformer = org.koin.compose.koinInject<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer>()
+    val soundPlayer = org.koin.compose.koinInject<SoundPlayer>()
+    val hapticPerformer = org.koin.compose.koinInject<HapticPerformer>()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
@@ -144,13 +148,13 @@ fun OrderFulfilmentScreen(
                 }
 
                 is OrderFulfilmentScreenContract.Effect.PlayErrorSound -> {
-                    soundPlayer.play(com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect.Error)
+                    soundPlayer.play(SoundEffect.Error)
                 }
                 is OrderFulfilmentScreenContract.Effect.Haptic -> {
                     val mapped = when (effect.type) {
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.SelectionChanged -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.SelectionChanged
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Success -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.Success
-                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error -> com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect.Error
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.SelectionChanged -> HapticEffect.SelectionChanged
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Success -> HapticEffect.Success
+                        com.gpcasiapac.storesystems.feature.collect.domain.model.HapticType.Error -> HapticEffect.Error
                     }
                     hapticPerformer.perform(mapped)
                 }
