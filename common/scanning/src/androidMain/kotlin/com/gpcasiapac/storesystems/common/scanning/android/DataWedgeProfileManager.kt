@@ -10,7 +10,7 @@ import co.touchlab.kermit.Logger
  * Splits configuration into BARCODE, INTENT and KEYSTROKE steps, then switches to the profile.
  */
 internal class DataWedgeProfileManager(
-    private val ctx: Context,
+    private val context: Context,
     private val profileName: String,
     private val intentAction: String,
     private val log: Logger,
@@ -18,13 +18,13 @@ internal class DataWedgeProfileManager(
     fun ensureProfile() {
         log.i { "DW ensureProfile(): '$profileName' action='$intentAction'" }
         // Create / idempotent
-        DataWedgeIntents.sendCommand(ctx, DataWedgeIntents.EXTRA_CREATE_PROFILE, profileName)
+        DataWedgeIntents.sendCommand(context, DataWedgeIntents.EXTRA_CREATE_PROFILE, profileName)
         // Configure plugins
         setBarcode()
         setIntent()
         disableKeystroke()
         // Activate
-        DataWedgeIntents.sendCommand(ctx, DataWedgeIntents.EXTRA_SWITCH_TO_PROFILE, profileName)
+        DataWedgeIntents.sendCommand(context, DataWedgeIntents.EXTRA_SWITCH_TO_PROFILE, profileName)
         log.d { "DW switched active profile to '$profileName'" }
     }
 
@@ -33,7 +33,7 @@ internal class DataWedgeProfileManager(
         putString("PROFILE_ENABLED", "true")
         putString("CONFIG_MODE", "UPDATE")
         putParcelableArray("APP_LIST", arrayOf(Bundle().apply {
-            putString("PACKAGE_NAME", ctx.packageName)
+            putString("PACKAGE_NAME", context.packageName)
             putStringArray("ACTIVITY_LIST", arrayOf("*"))
         }))
     }
@@ -55,7 +55,7 @@ internal class DataWedgeProfileManager(
             })
         }
         log.d { "DW SET_CONFIG: BARCODE for '$profileName'" }
-        DataWedgeIntents.sendBundle(ctx, DataWedgeIntents.EXTRA_SET_CONFIG, bundle)
+        DataWedgeIntents.sendBundle(context, DataWedgeIntents.EXTRA_SET_CONFIG, bundle)
     }
 
     private fun setIntent() {
@@ -73,7 +73,7 @@ internal class DataWedgeProfileManager(
             })
         }
         log.d { "DW SET_CONFIG: INTENT for '$profileName', action='$intentAction'" }
-        DataWedgeIntents.sendBundle(ctx, DataWedgeIntents.EXTRA_SET_CONFIG, bundle)
+        DataWedgeIntents.sendBundle(context, DataWedgeIntents.EXTRA_SET_CONFIG, bundle)
     }
 
     private fun disableKeystroke() {
@@ -87,6 +87,6 @@ internal class DataWedgeProfileManager(
             })
         }
         log.d { "DW SET_CONFIG: KEYSTROKE disable for '$profileName'" }
-        DataWedgeIntents.sendBundle(ctx, DataWedgeIntents.EXTRA_SET_CONFIG, bundle)
+        DataWedgeIntents.sendBundle(context, DataWedgeIntents.EXTRA_SET_CONFIG, bundle)
     }
 }
