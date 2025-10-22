@@ -259,19 +259,22 @@ class OrderFulfilmentScreenViewModel(
                     when (val result = checkOrderExistsUseCase(invoice)) {
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
-                                runCatching {
-                                    addOrderSelectionUseCase(result.invoiceNumber, userRefId)
-                                }.onSuccess {
-                                    // Success feedback on auto-select/insert
-                                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
-                                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(
-                                        SoundEffect.Success) }
-                                }.onFailure { t ->
-                                    // Fall back to error feedback if insert fails unexpectedly
-                                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(
-                                        SoundEffect.Error) }
-                                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(t.message ?: "Failed to add order to work order.") }
+                                val addResult = addOrderSelectionUseCase(result.invoiceNumber, userRefId)
+                                when (addResult) {
+                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Added -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                                    }
+                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Duplicate -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${addResult.invoiceNumber}\"") }
+                                    }
+                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Error -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(addResult.message) }
+                                    }
                                 }
                             } else {
                                 setEffect {

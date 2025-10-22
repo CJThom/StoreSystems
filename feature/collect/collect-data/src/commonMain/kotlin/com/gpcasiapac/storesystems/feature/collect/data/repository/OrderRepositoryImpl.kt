@@ -270,7 +270,8 @@ class OrderRepositoryImpl(
         }
     }
 
-    override suspend fun addSelectedId(orderId: String, userRefId: String) {
+    override suspend fun addSelectedId(orderId: String, userRefId: String): Boolean {
+        var inserted = false
         database.useWriterConnection { transactor ->
             transactor.immediateTransaction {
                 var openWorkOrder = workOrderDao.getOpenWorkOrderForUser(userRefId)
@@ -289,14 +290,16 @@ class OrderRepositoryImpl(
                     workOrderDao.insertWorkOrder(newWorkOrder)
                     openWorkOrder = newWorkOrder
                 }
-                workOrderDao.insertItem(
+                val rowId = workOrderDao.insertItem(
                     CollectWorkOrderItemEntity(
                         workOrderId = openWorkOrder.workOrderId,
                         invoiceNumber = orderId
                     )
                 )
+                inserted = rowId != -1L
             }
         }
+        return inserted
     }
 
     override suspend fun removeSelectedId(orderId: String, userRefId: String) {

@@ -27,6 +27,7 @@ class AndroidToneSoundPlayer(
         val (tone, durationMs) = when (effect) {
             SoundEffect.Error -> ToneGenerator.TONE_PROP_NACK to 150
             SoundEffect.Success -> ToneGenerator.TONE_PROP_ACK to 150
+            SoundEffect.Warning -> ToneGenerator.TONE_PROP_BEEP2 to 200
             SoundEffect.Click -> ToneGenerator.TONE_PROP_BEEP to 80
         }
         runCatching { tg.startTone(tone, durationMs) }

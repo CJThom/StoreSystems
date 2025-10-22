@@ -18,10 +18,10 @@ interface WorkOrderDao {
     suspend fun insertWorkOrder(entity: CollectWorkOrderEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertItems(items: List<CollectWorkOrderItemEntity>)
+    suspend fun insertItems(items: List<CollectWorkOrderItemEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertItem(item: CollectWorkOrderItemEntity)
+    suspend fun insertItem(item: CollectWorkOrderItemEntity): Long
 
     @Query(
         """

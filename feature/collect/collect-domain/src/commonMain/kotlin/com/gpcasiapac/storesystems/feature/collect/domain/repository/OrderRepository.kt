@@ -62,8 +62,8 @@ interface OrderRepository {
     /** Replace the entire set of selected IDs. */
     suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
 
-    /** Add a single order ID to the selection. */
-    suspend fun addSelectedId(orderId: String, userRefId: String)
+    /** Add a single order ID to the selection. Returns true if newly added, false if it already existed. */
+    suspend fun addSelectedId(orderId: String, userRefId: String): Boolean
 
     /** Remove a single order ID from the selection. */
     suspend fun removeSelectedId(orderId: String, userRefId: String)

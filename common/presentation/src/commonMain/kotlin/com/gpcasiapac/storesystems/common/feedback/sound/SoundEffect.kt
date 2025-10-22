@@ -6,5 +6,6 @@ package com.gpcasiapac.storesystems.common.feedback.sound
 enum class SoundEffect {
     Error,
     Success,
+    Warning,
     Click
 }
