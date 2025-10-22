@@ -27,9 +27,7 @@ object OrderDetailsScreenContract {
     }
 
     sealed interface Effect : ViewSideEffect {
-        data class ShowToast(val message: String) : Effect
-        data class ShowError(val error: String) : Effect
-        // New: platform feedback + snackbar for invalid scans
+        // Platform feedback + snackbar for invalid scans
         data class ShowSnackbar(
             val message: String,
             val actionLabel: String? = null,

@@ -4,9 +4,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
@@ -20,8 +22,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
@@ -224,7 +224,7 @@ class OrderFulfilmentScreenViewModel(
             }
 
             is OrderFulfilmentScreenContract.Event.EditCorrespondence -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit ${event.id} not implemented") }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Edit ${event.id} not implemented") }
             }
 
             // Final action
@@ -259,8 +259,20 @@ class OrderFulfilmentScreenViewModel(
                     when (val result = checkOrderExistsUseCase(invoice)) {
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
-                                addOrderSelectionUseCase(result.invoiceNumber, userRefId)
-                                // No explicit effect needed; observer will update list
+                                runCatching {
+                                    addOrderSelectionUseCase(result.invoiceNumber, userRefId)
+                                }.onSuccess {
+                                    // Success feedback on auto-select/insert
+                                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(
+                                        SoundEffect.Success) }
+                                }.onFailure { t ->
+                                    // Fall back to error feedback if insert fails unexpectedly
+                                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(
+                                        SoundEffect.Error) }
+                                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(t.message ?: "Failed to add order to work order.") }
+                                }
                             } else {
                                 setEffect {
                                     OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
@@ -269,12 +281,9 @@ class OrderFulfilmentScreenViewModel(
                                 }
                             }
                         }
-                        is CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
-                            setEffect { OrderFulfilmentScreenContract.Effect.Haptic(HapticEffect.Error) }
-                            setEffect { OrderFulfilmentScreenContract.Effect.PlayErrorSound }
-                            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
-                        }
-                        is CheckOrderExistsUseCase.UseCaseResult.Error.InvalidInput -> {
+                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                            setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                            setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                             setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
                         }
                     }
@@ -314,7 +323,7 @@ class OrderFulfilmentScreenViewModel(
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast(successToast) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
@@ -324,7 +333,7 @@ class OrderFulfilmentScreenViewModel(
                         error = msg
                     )
                 }
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowError(msg) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
             }
         )
     }
@@ -349,7 +358,7 @@ class OrderFulfilmentScreenViewModel(
         ) {
             setWorkOrderCollectingTypeUseCase(userRefId, type)
                 .onFailure { t ->
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError(t.message ?: "Failed to save collecting type") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(t.message ?: "Failed to save collecting type", duration = SnackbarDuration.Long) }
                 }
         }
     }
@@ -371,13 +380,13 @@ class OrderFulfilmentScreenViewModel(
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {
         setState { copy(signatureStrokes = strokes) }
-        setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Signature saved") }
+        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Signature saved") }
     }
 
     private fun clearSignature() {
         if (viewState.value.signatureStrokes.isNotEmpty()) {
             setState { copy(signatureStrokes = emptyList()) }
-            setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Signature cleared") }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Signature cleared") }
         }
     }
 
@@ -385,20 +394,20 @@ class OrderFulfilmentScreenViewModel(
         val s = viewState.value
         val hasOrders = s.collectOrderListItemStateList.isNotEmpty()
         if (!hasOrders) {
-            setEffect { OrderFulfilmentScreenContract.Effect.ShowError("No orders to confirm") }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No orders to confirm", duration = SnackbarDuration.Long) }
             return
         }
         when (s.collectingType) {
             CollectingType.ACCOUNT -> {
                 if (s.selectedRepresentativeIds.isEmpty()) {
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please select at least one representative") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please select at least one representative", duration = SnackbarDuration.Long) }
                     return
                 }
             }
 
             CollectingType.COURIER -> {
                 if (s.courierName.isBlank()) {
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please enter the courier name") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please enter the courier name", duration = SnackbarDuration.Long) }
                     return
                 }
             }

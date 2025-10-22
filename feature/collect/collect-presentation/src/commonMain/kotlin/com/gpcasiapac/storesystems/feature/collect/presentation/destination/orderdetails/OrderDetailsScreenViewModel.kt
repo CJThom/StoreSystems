@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
@@ -52,7 +53,7 @@ class OrderDetailsScreenViewModel(
                         .catch { e ->
                             val msg = e.message ?: "Failed to load order"
                             setState { copy(isLoading = false, error = msg) }
-                            setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
+                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
                             emit(null)
                         }
                 }
@@ -61,7 +62,7 @@ class OrderDetailsScreenViewModel(
                         setState { copy(order = orderState, isLoading = false, error = null) }
                     } else {
                         setState { copy(order = null, isLoading = false, error = "Order not found") }
-                        setEffect { OrderDetailsScreenContract.Effect.ShowError("Order not found") }
+                        setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar("Order not found", duration = SnackbarDuration.Long) }
                     }
                 }
         }
@@ -85,7 +86,7 @@ class OrderDetailsScreenViewModel(
                         .onFailure { t ->
                             val msg = t.message ?: "Failed to select order. Please try again."
                             setState { copy(error = msg) }
-                            setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
+                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
                         }
                 }
             }
@@ -100,12 +101,9 @@ class OrderDetailsScreenViewModel(
                                 invoiceKey.value = target
                             }
                         }
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error.NotFound -> {
+                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error -> {
                             setEffect { OrderDetailsScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderDetailsScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(result.message) }
-                        }
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error.InvalidInput -> {
                             setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(result.message) }
                         }
                     }
@@ -120,12 +118,12 @@ class OrderDetailsScreenViewModel(
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowToast(successToast) }
+                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
                 setState { copy(isLoading = false, error = msg) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
+                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
             }
         )
     }

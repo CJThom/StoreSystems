@@ -55,13 +55,6 @@ fun OrderDetailsScreen(
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderDetailsScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
-                    effect.message, duration = SnackbarDuration.Short
-                )
-
-                is OrderDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-                    effect.error
-                )
 
                 is OrderDetailsScreenContract.Effect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(

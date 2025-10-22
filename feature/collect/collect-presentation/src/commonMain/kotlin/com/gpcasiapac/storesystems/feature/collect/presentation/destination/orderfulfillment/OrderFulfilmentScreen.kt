@@ -34,7 +34,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -50,9 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
-import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
@@ -130,27 +127,19 @@ fun OrderFulfilmentScreen(
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderFulfilmentScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
-                    effect.message, duration = SnackbarDuration.Short
-                )
-
-                is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-                    effect.error, duration = SnackbarDuration.Long
-                )
 
                 is OrderFulfilmentScreenContract.Effect.ShowSnackbar -> {
-                    val duration = if (effect.persistent) SnackbarDuration.Indefinite else SnackbarDuration.Short
                     snackbarHostState.showSnackbar(
                         message = effect.message,
                         actionLabel = effect.actionLabel,
-                        duration = duration
+                        duration = effect.duration
                     )
                 }
 
-                is OrderFulfilmentScreenContract.Effect.PlayErrorSound -> {
-                    soundPlayer.play(SoundEffect.Error)
+                is OrderFulfilmentScreenContract.Effect.PlaySound -> {
+                    soundPlayer.play(effect.soundEffect)
                 }
-                is OrderFulfilmentScreenContract.Effect.Haptic -> {
+                is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
                     hapticPerformer.perform(effect.type)
                 }
 

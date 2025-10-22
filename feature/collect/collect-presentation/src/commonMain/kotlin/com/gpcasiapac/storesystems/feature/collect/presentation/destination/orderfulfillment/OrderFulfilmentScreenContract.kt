@@ -108,15 +108,13 @@ object OrderFulfilmentScreenContract {
     }
 
     sealed interface Effect : ViewSideEffect {
-        data class ShowToast(val message: String) : Effect
-        data class ShowError(val error: String) : Effect
         data class ShowSnackbar(
             val message: String,
             val actionLabel: String? = null,
-            val persistent: Boolean = false,
+            val duration: androidx.compose.material3.SnackbarDuration = androidx.compose.material3.SnackbarDuration.Short,
         ) : Effect
-        data object PlayErrorSound : Effect
-        data class Haptic(val type: HapticEffect) : Effect
+        data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) : Effect
+        data class PlayHaptic(val type: HapticEffect) : Effect
         // Ask UI to present a 3-button dialog for unsaved progress
         data class ShowSaveDiscardDialog(
             val title: String = "Unsaved progress",
