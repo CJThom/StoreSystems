@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.usecase
 
-import com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator.SyncTriggerCoordinator
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCoordinator
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 
 /**

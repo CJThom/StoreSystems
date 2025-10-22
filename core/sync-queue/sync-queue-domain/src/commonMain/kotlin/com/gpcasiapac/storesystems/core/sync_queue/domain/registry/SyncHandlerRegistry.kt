@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.registry
 
-import com.gpcasiapac.storesystems.core.sync_queue.domain.SyncHandler
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 
 /**
  * Builds a dispatch map from a list of handlers and detects duplicates at init.

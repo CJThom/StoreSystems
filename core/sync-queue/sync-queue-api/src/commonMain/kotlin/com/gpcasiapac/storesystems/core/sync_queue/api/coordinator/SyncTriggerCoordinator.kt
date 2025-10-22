@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator
+package com.gpcasiapac.storesystems.core.sync_queue.api.coordinator
 
 /**
  * Platform-agnostic interface for triggering sync operations.

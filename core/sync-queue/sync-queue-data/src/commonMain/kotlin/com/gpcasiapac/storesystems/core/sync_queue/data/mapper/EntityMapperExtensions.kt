@@ -1,9 +1,9 @@
 package com.gpcasiapac.storesystems.core.sync_queue.data.mapper
 
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTask
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskStatus
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)

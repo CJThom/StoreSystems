@@ -3,10 +3,10 @@ package com.gpcasiapac.storesystems.core.sync_queue.data.repository
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.SyncTaskDao
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
 import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toDomain
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTask
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTaskAttemptError
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskStatus
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

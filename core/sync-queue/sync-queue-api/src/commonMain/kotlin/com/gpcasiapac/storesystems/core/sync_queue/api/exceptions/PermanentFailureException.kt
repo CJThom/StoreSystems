@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.core.sync_queue.domain.exceptions
+package com.gpcasiapac.storesystems.core.sync_queue.api.exceptions
 
 /**
  * Throw this (wrapped in Result.failure) to indicate a non-retryable error.

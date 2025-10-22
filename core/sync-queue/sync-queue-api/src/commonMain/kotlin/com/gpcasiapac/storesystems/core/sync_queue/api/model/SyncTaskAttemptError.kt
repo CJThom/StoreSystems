@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.core.sync_queue.domain.model
+package com.gpcasiapac.storesystems.core.sync_queue.api.model
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -11,4 +11,3 @@ data class SyncTaskAttemptError(
     @Contextual val timestamp: kotlin.time.Instant,
     val errorMessage: String
 )
-

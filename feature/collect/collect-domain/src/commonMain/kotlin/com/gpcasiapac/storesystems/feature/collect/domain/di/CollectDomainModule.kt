@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.di
 
 import com.gpcasiapac.storesystems.common.di.ModuleProvider
-import com.gpcasiapac.storesystems.core.sync_queue.domain.SyncHandler
+import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.sync.SubmitOrderSyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase

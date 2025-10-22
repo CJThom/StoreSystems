@@ -2,7 +2,7 @@ package com.gpcasiapac.storesystems.app.collect.sync
 
 import android.content.Context
 import androidx.work.*
-import com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator.SyncTriggerCoordinator
+import com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCoordinator
 import java.util.concurrent.TimeUnit
 
 /**

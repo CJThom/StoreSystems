@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.app.collect.di
 
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavigationViewModel
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample.CollectGlobalNavigationViewModel
-import com.gpcasiapac.storesystems.core.sync_queue.data.syncQueueDataModule
 import com.gpcasiapac.storesystems.core.sync_queue.domain.syncQueueDomainModule
 import com.gpcasiapac.storesystems.external.feature_flags.data.internal.featureFlagModule
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
@@ -37,7 +36,6 @@ fun getAppModules(): List<Module> {
 
     // TODO: Use ModuleProvider
     // Add sync queue modules
-    moduleList.add(syncQueueDataModule)
     moduleList.add(syncQueueDomainModule)
 
     // App-level modules

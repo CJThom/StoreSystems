@@ -3,7 +3,7 @@ package com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)

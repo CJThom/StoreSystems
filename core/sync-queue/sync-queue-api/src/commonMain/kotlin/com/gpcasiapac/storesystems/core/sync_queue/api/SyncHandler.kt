@@ -1,7 +1,7 @@
-package com.gpcasiapac.storesystems.core.sync_queue.domain
+package com.gpcasiapac.storesystems.core.sync_queue.api
 
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTask
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 
 /**
  * Feature modules implement this to handle specific task types.

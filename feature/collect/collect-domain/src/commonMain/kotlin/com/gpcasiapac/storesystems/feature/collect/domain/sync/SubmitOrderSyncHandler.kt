@@ -1,8 +1,8 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.sync
 
-import com.gpcasiapac.storesystems.core.sync_queue.domain.SyncHandler
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTask
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
 /**

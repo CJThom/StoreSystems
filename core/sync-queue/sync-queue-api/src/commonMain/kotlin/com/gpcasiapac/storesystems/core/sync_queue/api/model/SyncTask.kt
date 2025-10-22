@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.core.sync_queue.domain.model
+package com.gpcasiapac.storesystems.core.sync_queue.api.model
 
 
 import kotlin.time.ExperimentalTime

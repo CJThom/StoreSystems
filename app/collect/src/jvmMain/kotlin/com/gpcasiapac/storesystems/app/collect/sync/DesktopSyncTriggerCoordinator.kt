@@ -1,6 +1,6 @@
 package com.gpcasiapac.storesystems.app.collect.sync
 
-import com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator.SyncTriggerCoordinator
+import com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCoordinator
 
 /**
  * Desktop (JVM) implementation of SyncTriggerCoordinator.

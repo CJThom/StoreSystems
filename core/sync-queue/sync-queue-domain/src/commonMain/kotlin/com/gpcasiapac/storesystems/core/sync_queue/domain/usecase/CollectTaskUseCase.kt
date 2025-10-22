@@ -1,9 +1,9 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.usecase
 
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTask
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.SyncTaskAttemptError
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskStatus
-import com.gpcasiapac.storesystems.core.sync_queue.domain.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime

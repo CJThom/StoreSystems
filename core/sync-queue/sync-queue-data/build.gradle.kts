@@ -19,8 +19,10 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.koin.core)
             implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.room.ktx)
             implementation(libs.androidx.sqlite.bundled)
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.room.ktx)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
@@ -28,6 +30,8 @@ kotlin {
 
 dependencies {
     add("kspCommonMainMetadata", libs.androidx.room.compiler)
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
 }
 
 room {
