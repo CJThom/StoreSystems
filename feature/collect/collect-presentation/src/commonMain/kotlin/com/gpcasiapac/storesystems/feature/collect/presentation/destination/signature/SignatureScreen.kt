@@ -38,6 +38,10 @@ import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlinx.coroutines.flow.emptyFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -187,3 +191,24 @@ fun SignatureScreen(
     }
 }
 
+
+@Preview(
+    name = "Signature",
+    showBackground = true,
+    backgroundColor = 0xFFF5F5F5L,
+    widthDp = 360,
+    heightDp = 720
+)
+@Composable
+private fun SignatureScreenPreview(
+    @PreviewParameter(SignatureScreenStateProvider::class) state: SignatureScreenContract.State
+) {
+    GPCTheme {
+        SignatureScreen(
+            state = state,
+            onEventSent = {},
+            effectFlow = emptyFlow(),
+            onOutcome = {}
+        )
+    }
+}
