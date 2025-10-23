@@ -101,6 +101,11 @@ class SignatureScreenViewModel(
                 setState { copy(signatureBitmap = event.signatureBitmap) }
             }
 
+            is SignatureScreenContract.Event.ViewDetailsClicked -> {
+                val invoices = viewState.value.selectedOrderList.map { it.invoiceNumber }
+                setEffect { SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails(invoices) }
+            }
+
             SignatureScreenContract.Event.ClearSignature -> {
                 setState {
                     copy(

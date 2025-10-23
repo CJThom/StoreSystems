@@ -2,17 +2,26 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderWithCustomerWithLineItemsState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderState
 
 class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenContract.State> {
     override val values: Sequence<SignatureScreenContract.State>
         get() {
+            val singleOrder = sampleCollectOrderWithCustomerWithLineItemsState()
+            val multiOrders = listOf(
+                singleOrder,
+                singleOrder.copy(order = singleOrder.order.copy(invoiceNumber = "10341882856"))
+            )
+
             val base = SignatureScreenContract.State(
                 isLoading = false,
                 isSigned = false,
                 error = null,
                 signatureStrokes = emptyList(),
                 signatureBitmap = null,
-                customerName = "John Appleseed"
+                customerName = "John Appleseed",
+                selectedOrderList = listOf(singleOrder.toSignatureOrderState())
             )
 
             val signed = base.copy(
@@ -32,6 +41,8 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 )
             )
 
+            val multi = base.copy(selectedOrderList = multiOrders.map { it.toSignatureOrderState() })
+
             val loading = base.copy(
                 isLoading = true
             )
@@ -42,6 +53,7 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
 
             return sequenceOf(
                 base,
+                multi,
                 signed,
                 loading,
                 error

@@ -3,9 +3,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -30,17 +33,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CustomerDetails
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.DrawCanvas
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.component.SignatureOrderSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.emptyFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,26 +105,32 @@ fun SignatureScreen(
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
             ) {
-                // Customer Details Card
-                CustomerDetails(
-                    customerName = "Customer Name",
-                    customerNumber = "Customer Number",
-                    phoneNumber = "Phone Number",
-                    customerType = CustomerType.B2C
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(Dimens.Space.medium),
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//
+//                    ) {
+//                    Text(
+//                        text = state.customerName,
+//                        style = MaterialTheme.typography.titleLarge
+//                    )
+//                    Spacer(modifier = Modifier.size(Dimens.Space.medium))
+//                    Text(
+//                        text = "To collect",
+//                        style = MaterialTheme.typography.bodyMedium
+//                    )
+//                }
+
+                // Order details summary
+                SignatureOrderSummary(
+                    orders = state.selectedOrderList,
+                    onViewDetails = { onEventSent(SignatureScreenContract.Event.ViewDetailsClicked) },
+                    modifier = Modifier
                 )
                 HorizontalDivider()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Dimens.Space.medium),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = "Customer: ${state.customerName}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -153,7 +162,8 @@ fun SignatureScreen(
                         onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
                     },
                     modifier = Modifier
-                        .weight(1f),
+                        .height(200.dp)
+                        .fillMaxWidth(),
                     strokes = state.signatureStrokes,
                     onStrokesChange = { strokes ->
                         onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
