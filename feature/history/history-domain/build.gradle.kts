@@ -9,7 +9,15 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
-        commonMain.dependencies { }
+        commonMain.dependencies {
+            // Core dependencies
+            implementation(projects.core.syncQueue.syncQueueApi)
+            
+            // External dependencies
+            implementation(libs.koin.core)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+        }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }

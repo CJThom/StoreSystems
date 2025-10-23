@@ -33,11 +33,14 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
 
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
 
             implementation(projects.feature.history.historyApi)
+            implementation(projects.feature.history.historyDomain)
+            implementation(projects.feature.history.historyData)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
