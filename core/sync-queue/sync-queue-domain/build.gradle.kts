@@ -10,8 +10,13 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
+        androidMain.dependencies {
+            implementation(libs.androidx.work.runtimeKtx)
+            implementation(libs.koin.androidx.workmanager)
+        }
         commonMain.dependencies {
-            api(project(":core:sync-queue:sync-queue-api"))
+            implementation(projects.common.di)
+            implementation(projects.core.syncQueue.syncQueueApi)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)

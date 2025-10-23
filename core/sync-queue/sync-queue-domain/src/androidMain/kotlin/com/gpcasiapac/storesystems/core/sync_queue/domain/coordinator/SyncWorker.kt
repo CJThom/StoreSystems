@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.sync
+package com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -11,6 +11,7 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptErro
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
 import com.gpcasiapac.storesystems.core.sync_queue.domain.registry.SyncHandlerRegistry
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -38,7 +39,7 @@ class SyncWorker(
                     status = TaskStatus.REQUIRES_ACTION,
                     errorAttempt = SyncTaskAttemptError(
                         attemptNumber = task.noOfAttempts + 1,
-                        timestamp = kotlin.time.Clock.System.now(),
+                        timestamp = Clock.System.now(),
                         errorMessage = "No handler for ${task.taskType}"
                     )
                 )
@@ -59,7 +60,7 @@ class SyncWorker(
     }
 
     private suspend fun handleFailure(task: SyncTask, e: Throwable?) {
-        val now = kotlin.time.Clock.System.now()
+        val now = Clock.System.now()
         val attempt = task.noOfAttempts + 1
         val maxAttempts = task.maxAttempts
         when (e) {
@@ -69,6 +70,7 @@ class SyncWorker(
                     SyncTaskAttemptError(attempt, now, e.message ?: e.code)
                 )
             }
+
             is RetryAfterException -> {
                 if (attempt >= maxAttempts) {
                     repo.updateTaskStatus(
@@ -82,6 +84,7 @@ class SyncWorker(
                     )
                 }
             }
+
             else -> {
                 if (attempt >= maxAttempts) {
                     repo.updateTaskStatus(

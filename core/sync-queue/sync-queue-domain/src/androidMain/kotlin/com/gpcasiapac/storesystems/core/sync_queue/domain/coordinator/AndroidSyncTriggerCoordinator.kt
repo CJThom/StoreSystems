@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.sync
+package com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator
 
 import android.content.Context
 import androidx.work.*

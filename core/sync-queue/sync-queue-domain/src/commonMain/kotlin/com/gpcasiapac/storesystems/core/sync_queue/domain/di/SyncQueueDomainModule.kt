@@ -1,6 +1,7 @@
-package com.gpcasiapac.storesystems.core.sync_queue.domain
+package com.gpcasiapac.storesystems.core.sync_queue.domain.di
 
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
+import com.gpcasiapac.storesystems.core.sync_queue.domain.SyncQueueServiceImpl
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.AddTaskAndTriggerSyncUseCase
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.AddTaskToQueueUseCase
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.CollectTaskUseCase

@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.app.collect.sync
+package com.gpcasiapac.storesystems.core.sync_queue.domain.coordinator
 
 import com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCoordinator
 
@@ -8,11 +8,11 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCo
  * Future implementation could use Quartz Scheduler or Kotlin coroutines.
  */
 class DesktopSyncTriggerCoordinator : SyncTriggerCoordinator {
-    
+
     override fun triggerSync() {
         println("Desktop: Sync triggered (no-op)")
     }
-    
+
     override fun cancelSync() {
         println("Desktop: Sync cancelled (no-op)")
     }
