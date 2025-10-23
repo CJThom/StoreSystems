@@ -27,11 +27,12 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+      //      implementation(libs.compose.material3)
             implementation(compose.ui)
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+
             implementation(compose.material3AdaptiveNavigationSuite)
 
 
@@ -78,11 +79,6 @@ kotlin {
         commonTest.dependencies { implementation(libs.kotlin.test) }
 
     }
-}
-
-dependencies {
-    debugImplementation(platform(libs.androidx.compose.bom))
-    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 android {

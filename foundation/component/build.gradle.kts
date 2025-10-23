@@ -20,7 +20,7 @@ kotlin {
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            
 
             implementation(compose.material3AdaptiveNavigationSuite)
             implementation(libs.androidx.compose.material3.adaptive)

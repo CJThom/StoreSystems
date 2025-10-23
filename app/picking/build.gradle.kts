@@ -27,7 +27,6 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.preview)
             implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
             implementation(projects.foundation.config)
 
             implementation(projects.feature.login.loginPresentation)
@@ -66,10 +65,6 @@ android {
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
 }
 
-dependencies {
-    debugImplementation(platform(libs.androidx.compose.bom))
-    debugImplementation(libs.androidx.compose.ui.tooling)
-}
 
 compose.desktop {
     application {
