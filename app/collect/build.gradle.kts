@@ -88,12 +88,19 @@ kotlin {
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.config)
 
+            // Sync queue modules
+            implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(projects.core.syncQueue.syncQueueDomain)
+
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.work.runtimeKtx)
+            implementation(libs.koin.androidx.workmanager)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-
         }
     }
 }

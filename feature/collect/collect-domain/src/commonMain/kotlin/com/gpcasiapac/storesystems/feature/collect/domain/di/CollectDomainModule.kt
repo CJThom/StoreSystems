@@ -1,6 +1,8 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.di
 
 import com.gpcasiapac.storesystems.common.di.ModuleProvider
+import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
+import com.gpcasiapac.storesystems.feature.collect.domain.sync.SubmitOrderSyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
@@ -49,6 +51,9 @@ val collectDomainModule = module {
     factoryOf(::AddOrderSelectionUseCase)
     factoryOf(::RemoveOrderSelectionUseCase)
     factoryOf(::ClearOrderSelectionUseCase)
+
+    // Register Collect feature's SyncHandler(s)
+    factory<SyncHandler> { SubmitOrderSyncHandler(get()) }
 }
 
 object CollectDomainModuleProvider : ModuleProvider {
