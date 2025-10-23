@@ -9,6 +9,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectW
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrderWithCustomersRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderItemWithOrderWithCustomerRelation
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
 
@@ -74,6 +75,12 @@ interface WorkOrderDao {
     @Query("SELECT * FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1")
     suspend fun getOpenWorkOrderForUser(userId: String): CollectWorkOrderEntity?
 
+    // New: just the latest open work order id for user
+    @Query(
+        "SELECT work_order_id FROM work_orders WHERE user_id = :userId ORDER BY created_at DESC LIMIT 1"
+    )
+    fun observeLatestOpenWorkOrderId(userId: String): Flow<String?>
+
     @Query("DELETE FROM work_orders WHERE work_order_id = :workOrderId")
     suspend fun deleteWorkOrder(workOrderId: String)
 
@@ -97,4 +104,13 @@ interface WorkOrderDao {
         "SELECT invoice_number FROM work_order_items WHERE work_order_id = :workOrderId ORDER BY position ASC"
     )
     fun observeInvoiceNumbersInScanOrder(workOrderId: String): Flow<List<String>>
+
+    // New: ordered work order items with their nested order+customer
+    @Transaction
+    @Query(
+        "SELECT * FROM work_order_items WHERE work_order_id = :workOrderId ORDER BY position ASC"
+    )
+    fun observeWorkOrderItemsWithOrders(
+        workOrderId: String
+    ): Flow<List<WorkOrderItemWithOrderWithCustomerRelation>>
 }

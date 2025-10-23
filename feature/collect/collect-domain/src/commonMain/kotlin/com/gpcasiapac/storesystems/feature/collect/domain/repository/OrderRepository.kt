@@ -59,6 +59,12 @@ interface OrderRepository {
     /** Observe the full latest open Work Order with its orders (signature included). */
     fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?>
 
+    /** New: Observe latest open Work Order id for user. */
+    fun observeLatestOpenWorkOrderId(userRefId: String): Flow<String?>
+
+    /** New: Observe ordered list of orders (domain) for a given Work Order id. */
+    fun observeWorkOrderItemsInScanOrder(workOrderId: String): Flow<List<CollectOrderWithCustomer>>
+
     /** Replace the entire set of selected IDs. */
     suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
 

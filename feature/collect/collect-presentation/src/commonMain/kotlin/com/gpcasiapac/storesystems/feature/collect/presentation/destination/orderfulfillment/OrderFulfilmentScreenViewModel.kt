@@ -14,14 +14,19 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderIdUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
@@ -31,7 +36,9 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
-    private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
+    private val observeLatestOpenWorkOrderUseCase: ObserveLatestOpenWorkOrderUseCase,
+    private val observeLatestOpenWorkOrderIdUseCase: ObserveLatestOpenWorkOrderIdUseCase,
+    private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
@@ -111,21 +118,30 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Observe the latest open Work Order with its orders, update signature and the UI list
+        // Observe header (latest open Work Order entity)
         viewModelScope.launch {
-            observeLatestOpenWorkOrderWithOrdersUseCase(userRefId).collectLatest { wo ->
-                val listState = wo?.collectOrderWithCustomerList?.toListItemState().orEmpty()
+            observeLatestOpenWorkOrderUseCase(userRefId).collectLatest { wo ->
                 setState {
                     copy(
-                        collectOrderListItemStateList = listState,
-                        signatureBase64 = wo?.collectWorkOrder?.signature,
-                        collectingType = wo?.collectWorkOrder?.collectingType ?: CollectingType.STANDARD,
-                        courierName = wo?.collectWorkOrder?.courierName ?: "",
+                        signatureBase64 = wo?.signature,
+                        collectingType = wo?.collectingType ?: CollectingType.STANDARD,
+                        courierName = wo?.courierName ?: "",
                         isLoading = false,
                         error = null
                     )
                 }
             }
+        }
+        // Observe ordered items for latest open Work Order
+        viewModelScope.launch {
+            observeLatestOpenWorkOrderIdUseCase(userRefId)
+                .flatMapLatest { id ->
+                    if (id == null) flowOf<List<CollectOrderWithCustomer>>(emptyList())
+                    else observeWorkOrderItemsInScanOrderUseCase(id)
+                }
+                .collectLatest { items ->
+                    setState { copy(collectOrderListItemStateList = items.toListItemState()) }
+                }
         }
     }
 

@@ -15,8 +15,7 @@ fun CollectOrderDto.toRelation(): CollectOrderWithCustomerWithLineItemsRelation 
             salesOrderNumber = this.salesOrderNumber,
             webOrderNumber = this.webOrderNumber,
             createdAt = Instant.fromEpochMilliseconds(this.createdAtEpochMillis),
-            pickedAt = Instant.fromEpochMilliseconds(this.pickedAtEpochMillis),
-            signature = null
+            pickedAt = Instant.fromEpochMilliseconds(this.pickedAtEpochMillis)
         ),
         customerEntity = CollectOrderCustomerEntity(
             invoiceNumber = this.invoiceNumber,

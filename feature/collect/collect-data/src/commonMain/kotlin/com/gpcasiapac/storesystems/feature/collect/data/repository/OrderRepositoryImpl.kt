@@ -69,26 +69,30 @@ class OrderRepositoryImpl(
     }
 
     override fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<WorkOrderWithOrderWithCustomers?> {
+        // Simplified: use ordered items relation anchored on work_order_items
         return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
             .flatMapLatest { relation ->
                 if (relation == null) flowOf(null) else {
                     val wo = relation.collectWorkOrderEntity
-                    val relList = relation.collectOrderWithCustomerRelation
                     workOrderDao
-                        .observeInvoiceNumbersInScanOrder(wo.workOrderId)
-                        .map { orderedInvoices ->
-                            val relByInvoice: Map<String, CollectOrderWithCustomerRelation> = relList.associateBy { it.orderEntity.invoiceNumber.lowercase() }
-                            val orderedRelations: List<CollectOrderWithCustomerRelation> = if (orderedInvoices.isEmpty()) emptyList() else orderedInvoices.mapNotNull { inv ->
-                                relByInvoice[inv.lowercase()]
-                            }
+                        .observeWorkOrderItemsWithOrders(wo.workOrderId)
+                        .map { itemsWithOrders ->
+                            val orderedDomain = itemsWithOrders.map { it.orderWithCustomer }.toDomain()
                             WorkOrderWithOrderWithCustomers(
                                 collectWorkOrder = wo.toDomain(),
-                                collectOrderWithCustomerList = orderedRelations.toDomain()
+                                collectOrderWithCustomerList = orderedDomain
                             )
                         }
                 }
             }
     }
+
+    override fun observeLatestOpenWorkOrderId(userRefId: String): Flow<String?> =
+        workOrderDao.observeLatestOpenWorkOrderId(userRefId)
+
+    override fun observeWorkOrderItemsInScanOrder(workOrderId: String): Flow<List<CollectOrderWithCustomer>> =
+        workOrderDao.observeWorkOrderItemsWithOrders(workOrderId)
+            .map { list -> list.map { it.orderWithCustomer }.toDomain() }
 
     // New: observe main orders via DB-side filter + sort
     override fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>> {

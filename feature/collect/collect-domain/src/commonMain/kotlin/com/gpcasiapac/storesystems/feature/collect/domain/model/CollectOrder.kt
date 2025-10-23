@@ -7,6 +7,5 @@ data class CollectOrder(
     val salesOrderNumber: String,
     val webOrderNumber: String?,
     val createdAt: Instant,
-    val pickedAt: Instant,
-    val signature: String?
+    val pickedAt: Instant
 )
