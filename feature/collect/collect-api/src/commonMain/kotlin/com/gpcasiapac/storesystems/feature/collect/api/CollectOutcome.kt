@@ -6,7 +6,7 @@ sealed interface CollectOutcome {
     data object Logout : CollectOutcome
     //TODO Change to offset.
     data class SignatureSaved(val strokes: List<List<Pair<Double, Double>>>) : CollectOutcome
-    data object SignatureRequested : CollectOutcome
+    data class SignatureRequested(val customerName: String) : CollectOutcome
     data class WorkOrderItemSelected(val invoiceNumber: String) : CollectOutcome
     data object OpenOrderFulfilment : CollectOutcome
 }

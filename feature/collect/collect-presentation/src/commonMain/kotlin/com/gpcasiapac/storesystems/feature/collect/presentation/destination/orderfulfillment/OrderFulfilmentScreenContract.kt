@@ -45,6 +45,10 @@ object OrderFulfilmentScreenContract {
         // Signature image as Base64 (observed from Work Order)
         val signatureBase64: String? = null,
 
+        // Customer name capture dialog
+        val isCustomerNameDialogVisible: Boolean = false,
+        val customerNameInput: String = "",
+
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
     ) : ViewState{
@@ -82,6 +86,11 @@ object OrderFulfilmentScreenContract {
 
         // Signature
         data object Sign : Event
+        // Customer name dialog flow
+        data object ShowCustomerNameDialog : Event
+        data object DismissCustomerNameDialog : Event
+        data class CustomerNameChanged(val text: String) : Event
+        data object ConfirmCustomerName : Event
         data class SignatureSaved(val strokes: List<List<Offset>>) : Event
         data object ClearSignature : Event
 
@@ -137,7 +146,7 @@ object OrderFulfilmentScreenContract {
          sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
-            data object SignatureRequested: Outcome
+            data class SignatureRequested(val customerName: String): Outcome
             data class NavigateToOrderDetails(val invoiceNumber: String) : Outcome
             data object SaveAndExit : Outcome
             data object DiscardAndExit : Outcome

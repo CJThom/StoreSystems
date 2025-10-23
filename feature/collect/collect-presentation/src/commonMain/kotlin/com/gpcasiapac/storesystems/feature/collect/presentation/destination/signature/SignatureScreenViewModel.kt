@@ -23,7 +23,8 @@ class SignatureScreenViewModel(
             isLoading = false,
             isSigned = false,
             error = null,
-            signatureStrokes = emptyList()
+            signatureStrokes = emptyList(),
+            customerName = ""
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -59,7 +60,7 @@ class SignatureScreenViewModel(
                             saveSignatureUseCase(
                                 userRefId = "mock",
                                 base64Signature = base64String,
-                                signedByName = null
+                                signedByName = viewState.value.customerName.trim().ifBlank { null }
                             )
 
                             // Set success effect
@@ -92,6 +93,9 @@ class SignatureScreenViewModel(
             }
 
             is SignatureScreenContract.Event.ClearError -> clearError()
+            is SignatureScreenContract.Event.SetCustomerName -> {
+                setState { copy(customerName = event.name) }
+            }
             is SignatureScreenContract.Event.Back -> setEffect { Back }
             is SignatureScreenContract.Event.SignatureCompleted -> {
                 setState { copy(signatureBitmap = event.signatureBitmap) }

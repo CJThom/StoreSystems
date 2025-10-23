@@ -15,7 +15,8 @@ object SignatureScreenContract {
         val isSigned: Boolean,
         val error: String?,
         val signatureStrokes: List<List<Offset>>,
-        val signatureBitmap: ImageBitmap? = null
+        val signatureBitmap: ImageBitmap? = null,
+        val customerName: String = ""
     ) : ViewState
 
     sealed interface Event : ViewEvent {
@@ -25,6 +26,7 @@ object SignatureScreenContract {
         data class SignatureCompleted(val signatureBitmap: ImageBitmap) : Event
         data object ClearError : Event
         data object Back : Event
+        data class SetCustomerName(val name: String) : Event
     }
 
     sealed interface Effect : ViewSideEffect {

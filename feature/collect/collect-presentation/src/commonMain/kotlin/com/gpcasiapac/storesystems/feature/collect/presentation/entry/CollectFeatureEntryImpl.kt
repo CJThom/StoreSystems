@@ -136,7 +136,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                         )
 
                         is OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
-                            CollectOutcome.SignatureRequested
+                            CollectOutcome.SignatureRequested(effect.customerName)
                         )
 
                         is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
@@ -169,8 +169,8 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
 
             entry<CollectFeatureDestination.Signature>(
                 metadata = ListDetailSceneStrategy.extraPane(),
-            ) {
-                SignatureScreenDestination { outcome ->
+            ) { destination ->
+                SignatureScreenDestination(customerName = destination.customerName) { outcome ->
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is SignatureScreenContract.Effect.Outcome.SignatureSaved -> {

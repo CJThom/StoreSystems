@@ -9,11 +9,13 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.Custo
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.TimeConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.SignatureDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.SignatureEntity
 import kotlinx.coroutines.Dispatchers
 
 @Database(
@@ -23,8 +25,9 @@ import kotlinx.coroutines.Dispatchers
         CollectOrderLineItemEntity::class,
         CollectWorkOrderEntity::class,
         CollectWorkOrderItemEntity::class,
+        SignatureEntity::class,
     ],
-    version = 3,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(
@@ -35,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 abstract class AppDatabase : RoomDatabase() {
     abstract fun collectOrderDao(): CollectOrderDao
     abstract fun workOrderDao(): WorkOrderDao
+    abstract fun signatureDao(): SignatureDao
 }
 
 @Suppress("KotlinNoActualForExpect")

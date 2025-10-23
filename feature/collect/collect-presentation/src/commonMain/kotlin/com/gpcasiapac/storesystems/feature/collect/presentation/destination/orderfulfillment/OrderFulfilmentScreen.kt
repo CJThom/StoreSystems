@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
@@ -442,6 +443,36 @@ fun OrderFulfilmentScreen(
     }
     //  }
 
+    // Customer name dialog
+    if (state.isCustomerNameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog)
+            },
+            title = { Text("Enter Customer Name") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    Text("This name will be saved with the signature.")
+                    OutlinedTextField(
+                        value = state.customerNameInput,
+                        onValueChange = { onEventSent(OrderFulfilmentScreenContract.Event.CustomerNameChanged(it)) },
+                        singleLine = true,
+                        label = { Text("Customer Name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = state.customerNameInput.trim().isNotEmpty(),
+                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.ConfirmCustomerName) }
+                ) { Text("Confirm") }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 

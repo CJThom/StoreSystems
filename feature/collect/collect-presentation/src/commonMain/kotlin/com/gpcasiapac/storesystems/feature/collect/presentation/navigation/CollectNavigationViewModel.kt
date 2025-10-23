@@ -35,7 +35,7 @@ class CollectNavigationViewModel :
                 // Emit external outcome to navigate to login screen
                 setEffect { ExternalOutcome(CollectExternalOutcome.Logout) }
             }
-            is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature)
+            is CollectOutcome.SignatureRequested -> push(CollectFeatureDestination.Signature(outcome.customerName))
             is CollectOutcome.SignatureSaved -> {
                 pop()
             }
