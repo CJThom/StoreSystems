@@ -22,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
         CollectOrderCustomerEntity::class,
         CollectOrderLineItemEntity::class,
         CollectWorkOrderEntity::class,
-        CollectWorkOrderItemEntity::class,
+        CollectWorkOrderItemEntity::class
     ],
     version = 3,
     exportSchema = true,

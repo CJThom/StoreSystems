@@ -39,6 +39,8 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.kermit)
 
+            implementation(projects.core.syncQueue.syncQueueApi)
+
             // Shared utilities
             implementation(projects.common.kotlin)
             implementation(projects.common.networking)

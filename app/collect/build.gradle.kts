@@ -91,6 +91,7 @@ kotlin {
             // Sync queue modules
             implementation(projects.core.syncQueue.syncQueueApi)
             implementation(projects.core.syncQueue.syncQueueDomain)
+            implementation(projects.core.syncQueue.syncQueueData)
 
         }
         androidMain.dependencies {

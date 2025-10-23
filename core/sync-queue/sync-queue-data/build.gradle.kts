@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
 }
@@ -12,11 +11,13 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+        }
         commonMain.dependencies {
-            api(project(":core:sync-queue:sync-queue-domain"))
-            implementation(project(":core:sync-queue:sync-queue-api"))
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.kotlinx.serialization.json)
+            implementation(projects.core.syncQueue.syncQueueDomain)
+            implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(projects.common.di)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.koin.core)
             implementation(libs.androidx.room.runtime)

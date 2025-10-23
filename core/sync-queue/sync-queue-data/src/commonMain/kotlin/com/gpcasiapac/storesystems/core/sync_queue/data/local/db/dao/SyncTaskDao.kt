@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao
 
 import androidx.room.Dao
@@ -7,10 +9,9 @@ import androidx.room.Query
 import androidx.room.Update
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 @Dao
 interface SyncTaskDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)

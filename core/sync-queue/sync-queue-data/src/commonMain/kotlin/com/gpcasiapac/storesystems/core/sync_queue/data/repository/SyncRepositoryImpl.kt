@@ -59,8 +59,10 @@ class SyncRepositoryImpl(
         val currentTask = syncTaskDao.getTaskById(taskId)
         
         if (currentTask != null) {
-            val newErrorAttempts = if (errorAttempt != null) {
-                (currentTask.errorAttempts ?: emptyList()) + errorAttempt
+            val newErrorAttemptsJson = if (errorAttempt != null) {
+                val currentErrors = parseErrorAttemptsFromJson(currentTask.errorAttempts)
+                val updatedErrors = currentErrors + errorAttempt
+                convertErrorAttemptsToJson(updatedErrors)
             } else {
                 currentTask.errorAttempts
             }
@@ -68,11 +70,42 @@ class SyncRepositoryImpl(
             val updatedTask = currentTask.copy(
                 status = status.name,
                 updatedTime = now,
-                errorAttempts = newErrorAttempts
+                errorAttempts = newErrorAttemptsJson
             )
             
             syncTaskDao.updateTask(updatedTask)
         }
+    }
+    
+    private fun parseErrorAttemptsFromJson(json: String?): List<SyncTaskAttemptError> {
+        if (json.isNullOrEmpty() || json == "[]") return emptyList()
+        
+        return try {
+            val items = mutableListOf<SyncTaskAttemptError>()
+            val jsonArray = json.trim().removeSurrounding("[", "]")
+            
+            if (jsonArray.isEmpty()) return emptyList()
+            
+            val itemRegex = """"attemptNumber":(\d+),"timestamp":(\d+),"errorMessage":"((?:[^"\\]|\\.)*)"""".toRegex()
+            itemRegex.findAll(jsonArray).forEach { match ->
+                val attemptNumber = match.groupValues[1].toInt()
+                val timestamp = kotlin.time.Instant.fromEpochMilliseconds(match.groupValues[2].toLong())
+                val errorMessage = match.groupValues[3].replace("\\\"", "\"")
+                items.add(SyncTaskAttemptError(attemptNumber, timestamp, errorMessage))
+            }
+            items
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    private fun convertErrorAttemptsToJson(errors: List<SyncTaskAttemptError>): String {
+        if (errors.isEmpty()) return "[]"
+        
+        val jsonItems = errors.joinToString(",") { error ->
+            """{"attemptNumber":${error.attemptNumber},"timestamp":${error.timestamp.toEpochMilliseconds()},"errorMessage":"${error.errorMessage.replace("\"", "\\\"")}"}"""
+        }
+        return "[$jsonItems]"
     }
 
     override suspend fun incrementTaskAttempt(taskId: String): Result<Unit> = runCatching {

@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavigationVi
 import com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample.CollectGlobalNavigationViewModel
 import com.gpcasiapac.storesystems.core.identity.data.di.IdentityDataModuleProvider
 import com.gpcasiapac.storesystems.core.identity.domain.di.IdentityDomainModuleProvider
+import com.gpcasiapac.storesystems.core.sync_queue.data.SyncQueueDataModuleProvider
 import com.gpcasiapac.storesystems.core.sync_queue.domain.di.SyncDomainModuleProvider
 import com.gpcasiapac.storesystems.external.feature_flags.data.internal.featureFlagModule
 import com.gpcasiapac.storesystems.feature.collect.data.di.CollectDataModuleProvider
@@ -28,6 +29,7 @@ fun getAppModules(): List<Module> {
         CollectDataModuleProvider,
         CollectDomainModuleProvider,
         CollectPresentationModuleProvider,
+        SyncQueueDataModuleProvider,
         SyncDomainModuleProvider
     )
 

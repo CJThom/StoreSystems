@@ -1,12 +1,13 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 @Entity(tableName = "sync_tasks")
 data class SyncTaskEntity(
     @PrimaryKey
@@ -32,14 +33,14 @@ data class SyncTaskEntity(
     val priority: Int,
 
     @ColumnInfo(name = "added_time")
-    val addedTime: kotlin.time.Instant,
+    val addedTime: Instant,
 
     @ColumnInfo(name = "updated_time")
-    val updatedTime: kotlin.time.Instant,
+    val updatedTime: Instant,
 
     @ColumnInfo(name = "last_attempt_time")
-    val lastAttemptTime: kotlin.time.Instant?,
+    val lastAttemptTime: Instant?,
 
     @ColumnInfo(name = "error_attempts")
-    val errorAttempts: List<SyncTaskAttemptError>? // Room handles JSON conversion with TypeConverter
+    val errorAttempts: String? // Store as JSON string
 )
