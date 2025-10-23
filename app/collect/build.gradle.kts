@@ -43,7 +43,7 @@ kotlin {
             implementation(compose.preview)
             implementation(compose.components.resources)
             implementation(compose.animation)
-            implementation(compose.components.uiToolingPreview)
+            
             implementation(compose.material3AdaptiveNavigationSuite)
 
             implementation(libs.androidx.compose.material3.adaptive.layout)
@@ -88,12 +88,19 @@ kotlin {
             implementation(projects.foundation.designSystem)
             implementation(projects.foundation.config)
 
+            // Sync queue modules
+            implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(projects.core.syncQueue.syncQueueDomain)
+
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.work.runtimeKtx)
+            implementation(libs.koin.androidx.workmanager)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-
         }
     }
 }
@@ -119,11 +126,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11
     }
-}
-
-dependencies {
-    debugImplementation(platform(libs.androidx.compose.bom))
-    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 compose.desktop {
