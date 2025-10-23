@@ -172,6 +172,7 @@ interface CollectOrderDao {
     )
     suspend fun getPhoneSuggestionsPrefix(prefix: String, limit: Int): List<String>
 
-    @Query("UPDATE collect_orders SET signature = :signature WHERE invoice_number IN (:invoiceNumbers)")
-    suspend fun updateSignature(signature: String, invoiceNumbers: List<String>)
+    // Lightweight existence check for invoice (case-insensitive)
+    @Query("SELECT EXISTS(SELECT 1 FROM collect_orders WHERE invoice_number = :invoiceNumber COLLATE NOCASE)")
+    suspend fun existsInvoice(invoiceNumber: String): Boolean
 }

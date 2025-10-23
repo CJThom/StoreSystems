@@ -11,8 +11,7 @@ fun CollectOrderEntity.toDomain(): CollectOrder {
         salesOrderNumber = this.salesOrderNumber,
         webOrderNumber = this.webOrderNumber,
         createdAt = this.pickedAt,
-        pickedAt = this.pickedAt,
-        signature = this.signature
+        pickedAt = this.pickedAt
     )
 }
 

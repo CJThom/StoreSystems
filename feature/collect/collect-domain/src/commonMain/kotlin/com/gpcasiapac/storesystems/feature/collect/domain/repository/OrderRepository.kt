@@ -59,11 +59,17 @@ interface OrderRepository {
     /** Observe the full latest open Work Order with its orders (signature included). */
     fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?>
 
+    /** New: Observe latest open Work Order id for user. */
+    fun observeLatestOpenWorkOrderId(userRefId: String): Flow<String?>
+
+    /** New: Observe ordered list of orders (domain) for a given Work Order id. */
+    fun observeWorkOrderItemsInScanOrder(workOrderId: String): Flow<List<CollectOrderWithCustomer>>
+
     /** Replace the entire set of selected IDs. */
     suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
 
-    /** Add a single order ID to the selection. */
-    suspend fun addSelectedId(orderId: String, userRefId: String)
+    /** Add a single order ID to the selection. Returns true if newly added, false if it already existed. */
+    suspend fun addSelectedId(orderId: String, userRefId: String): Boolean
 
     /** Remove a single order ID from the selection. */
     suspend fun removeSelectedId(orderId: String, userRefId: String)
@@ -102,4 +108,6 @@ interface OrderRepository {
     // New: persist courier name for the latest open Work Order
     suspend fun setCourierName(userRefId: String, name: String): Result<Unit>
 
+    /** Lightweight existence check by invoice number (case-insensitive). */
+    suspend fun existsInvoice(invoiceNumber: String): Boolean
 }

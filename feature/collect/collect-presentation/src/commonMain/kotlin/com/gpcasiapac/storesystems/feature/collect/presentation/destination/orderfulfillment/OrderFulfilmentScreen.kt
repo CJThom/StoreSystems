@@ -34,7 +34,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -48,8 +47,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorder
@@ -72,8 +75,6 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
 
@@ -93,6 +94,9 @@ fun OrderFulfilmentScreen(
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    // Platform-provided feedback via Koin
+    val soundPlayer = org.koin.compose.koinInject<SoundPlayer>()
+    val hapticPerformer = org.koin.compose.koinInject<HapticPerformer>()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
@@ -123,13 +127,21 @@ fun OrderFulfilmentScreen(
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderFulfilmentScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
-                    effect.message, duration = SnackbarDuration.Short
-                )
 
-                is OrderFulfilmentScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-                    effect.error, duration = SnackbarDuration.Long
-                )
+                is OrderFulfilmentScreenContract.Effect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel,
+                        duration = effect.duration
+                    )
+                }
+
+                is OrderFulfilmentScreenContract.Effect.PlaySound -> {
+                    soundPlayer.play(effect.soundEffect)
+                }
+                is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
+                    hapticPerformer.perform(effect.type)
+                }
 
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
                     dialogSpec.value = effect
@@ -139,7 +151,11 @@ fun OrderFulfilmentScreen(
                     selectionConfirmDialogSpec.value = effect
                 }
 
-                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+                is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
+                    onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
+                }
+ 
+                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }

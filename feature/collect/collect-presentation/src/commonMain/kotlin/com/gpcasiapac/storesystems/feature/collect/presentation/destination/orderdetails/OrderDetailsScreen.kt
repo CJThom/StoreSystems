@@ -33,6 +33,9 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
+import org.koin.compose.koinInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -45,17 +48,29 @@ fun OrderDetailsScreen(
     onOutcome: (outcome: OrderDetailsScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    // Platform feedback
+    val soundPlayer: SoundPlayer = koinInject()
+    val hapticPerformer: HapticPerformer = koinInject()
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is OrderDetailsScreenContract.Effect.ShowToast -> snackbarHostState.showSnackbar(
-                    effect.message, duration = SnackbarDuration.Short
-                )
 
-                is OrderDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
-                    effect.error
-                )
+                is OrderDetailsScreenContract.Effect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel,
+                        duration = effect.duration
+                    )
+                }
+
+                is OrderDetailsScreenContract.Effect.PlaySound -> {
+                    soundPlayer.play(effect.soundEffect)
+                }
+
+                is OrderDetailsScreenContract.Effect.PlayHaptic -> {
+                    hapticPerformer.perform(effect.hapticEffect)
+                }
 
                 is OrderDetailsScreenContract.Effect.Outcome -> onOutcome(effect)
             }

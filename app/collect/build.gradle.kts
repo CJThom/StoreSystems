@@ -31,11 +31,11 @@ kotlin {
     }
 
     sourceSets {
-//        androidMain.dependencies {
-//            implementation(libs.androidx.activity.compose)
-//            implementation(libs.koin.androidx.compose)
-//        }
+        androidMain.dependencies {
+            implementation(libs.koin.android)
+        }
         commonMain.dependencies {
+            implementation(projects.common.scanning)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)

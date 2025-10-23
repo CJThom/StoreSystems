@@ -4,32 +4,45 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderIdUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 
 
 class OrderFulfilmentScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
-    private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
+    private val observeLatestOpenWorkOrderUseCase: ObserveLatestOpenWorkOrderUseCase,
+    private val observeLatestOpenWorkOrderIdUseCase: ObserveLatestOpenWorkOrderIdUseCase,
+    private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
+    private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
+    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -38,7 +51,7 @@ class OrderFulfilmentScreenViewModel(
     private val userRefId = "mock"
 
     // Shared keyed debouncer for persisting user edits
-    private val debouncer = com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer(viewModelScope)
+    private val debouncer = Debouncer(viewModelScope)
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -105,21 +118,30 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Observe the latest open Work Order with its orders, update signature and the UI list
+        // Observe header (latest open Work Order entity)
         viewModelScope.launch {
-            observeLatestOpenWorkOrderWithOrdersUseCase(userRefId).collectLatest { wo ->
-                val listState = wo?.collectOrderWithCustomerList?.toListItemState().orEmpty()
+            observeLatestOpenWorkOrderUseCase(userRefId).collectLatest { wo ->
                 setState {
                     copy(
-                        collectOrderListItemStateList = listState,
-                        signatureBase64 = wo?.collectWorkOrder?.signature,
-                        collectingType = wo?.collectWorkOrder?.collectingType ?: CollectingType.STANDARD,
-                        courierName = wo?.collectWorkOrder?.courierName ?: "",
+                        signatureBase64 = wo?.signature,
+                        collectingType = wo?.collectingType ?: CollectingType.STANDARD,
+                        courierName = wo?.courierName ?: "",
                         isLoading = false,
                         error = null
                     )
                 }
             }
+        }
+        // Observe ordered items for latest open Work Order
+        viewModelScope.launch {
+            observeLatestOpenWorkOrderIdUseCase(userRefId)
+                .flatMapLatest { id ->
+                    if (id == null) flowOf<List<CollectOrderWithCustomer>>(emptyList())
+                    else observeWorkOrderItemsInScanOrderUseCase(id)
+                }
+                .collectLatest { items ->
+                    setState { copy(collectOrderListItemStateList = items.toListItemState()) }
+                }
         }
     }
 
@@ -218,7 +240,7 @@ class OrderFulfilmentScreenViewModel(
             }
 
             is OrderFulfilmentScreenContract.Event.EditCorrespondence -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Edit ${event.id} not implemented") }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Edit ${event.id} not implemented") }
             }
 
             // Final action
@@ -244,6 +266,48 @@ class OrderFulfilmentScreenViewModel(
                     OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
                         event.invoiceNumber
                     )
+                }
+            }
+
+            is OrderFulfilmentScreenContract.Event.ScanInvoice -> {
+                val invoice = event.invoiceNumber.trim()
+                // Collapse search on scan (handled by UI via effect)
+                setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
+                viewModelScope.launch {
+                    when (val result = checkOrderExistsUseCase(invoice)) {
+                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                            if (event.autoSelect) {
+                                val addResult = addOrderSelectionUseCase(result.invoiceNumber, userRefId)
+                                when (addResult) {
+                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Added -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                                    }
+                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Duplicate -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${addResult.invoiceNumber}\"") }
+                                    }
+                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Error -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(addResult.message) }
+                                    }
+                                }
+                            } else {
+                                setEffect {
+                                    OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
+                                        result.invoiceNumber
+                                    )
+                                }
+                            }
+                        }
+                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                            setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                            setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
+                        }
+                    }
                 }
             }
 
@@ -280,7 +344,7 @@ class OrderFulfilmentScreenViewModel(
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowToast(successToast) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
@@ -290,7 +354,7 @@ class OrderFulfilmentScreenViewModel(
                         error = msg
                     )
                 }
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowError(msg) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
             }
         )
     }
@@ -315,7 +379,7 @@ class OrderFulfilmentScreenViewModel(
         ) {
             setWorkOrderCollectingTypeUseCase(userRefId, type)
                 .onFailure { t ->
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError(t.message ?: "Failed to save collecting type") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(t.message ?: "Failed to save collecting type", duration = SnackbarDuration.Long) }
                 }
         }
     }
@@ -337,13 +401,13 @@ class OrderFulfilmentScreenViewModel(
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {
         setState { copy(signatureStrokes = strokes) }
-        setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Signature saved") }
+        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Signature saved") }
     }
 
     private fun clearSignature() {
         if (viewState.value.signatureStrokes.isNotEmpty()) {
             setState { copy(signatureStrokes = emptyList()) }
-            setEffect { OrderFulfilmentScreenContract.Effect.ShowToast("Signature cleared") }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Signature cleared") }
         }
     }
 
@@ -351,20 +415,20 @@ class OrderFulfilmentScreenViewModel(
         val s = viewState.value
         val hasOrders = s.collectOrderListItemStateList.isNotEmpty()
         if (!hasOrders) {
-            setEffect { OrderFulfilmentScreenContract.Effect.ShowError("No orders to confirm") }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No orders to confirm", duration = SnackbarDuration.Long) }
             return
         }
         when (s.collectingType) {
             CollectingType.ACCOUNT -> {
                 if (s.selectedRepresentativeIds.isEmpty()) {
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please select at least one representative") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please select at least one representative", duration = SnackbarDuration.Long) }
                     return
                 }
             }
 
             CollectingType.COURIER -> {
                 if (s.courierName.isBlank()) {
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowError("Please enter the courier name") }
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please enter the courier name", duration = SnackbarDuration.Long) }
                     return
                 }
             }

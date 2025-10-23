@@ -1,23 +1,35 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class OrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
     private val setOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase,
-    private val invoiceNumber: String
+    private val checkOrderExistsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase,
+    private val initialInvoice: String
 ) : MVIViewModel<
         OrderDetailsScreenContract.Event,
         OrderDetailsScreenContract.State,
         OrderDetailsScreenContract.Effect>() {
+
+    private val invoiceKey = MutableStateFlow(initialInvoice.trim())
 
     override fun setInitialState(): OrderDetailsScreenContract.State {
         return OrderDetailsScreenContract.State(
@@ -28,17 +40,38 @@ class OrderDetailsScreenViewModel(
     }
 
     override fun onStart() {
+        // Single reactive pipeline that switches the observed order when invoiceKey changes
         viewModelScope.launch {
-            loadOrderDetails(invoiceNumber = invoiceNumber)
+            invoiceKey
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .distinctUntilChanged { a, b -> a.equals(b, ignoreCase = true) }
+                .onEach { setState { copy(isLoading = true, error = null) } }
+                .flatMapLatest { invoice ->
+                    getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoice)
+                        .map { domain -> domain?.toState() }
+                        .catch { e ->
+                            val msg = e.message ?: "Failed to load order"
+                            setState { copy(isLoading = false, error = msg) }
+                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
+                            emit(null)
+                        }
+                }
+                .collectLatest { orderState ->
+                    if (orderState != null) {
+                        setState { copy(order = orderState, isLoading = false, error = null) }
+                    } else {
+                        setState { copy(order = null, isLoading = false, error = "Order not found") }
+                        setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar("Order not found", duration = SnackbarDuration.Long) }
+                    }
+                }
         }
     }
 
     override fun handleEvents(event: OrderDetailsScreenContract.Event) {
         when (event) {
             is OrderDetailsScreenContract.Event.Refresh -> {
-                viewModelScope.launch {
-                    fetchOrders(successToast = "Orders refreshed")
-                }
+                viewModelScope.launch { fetchOrders(successToast = "Orders refreshed") }
             }
 
             is OrderDetailsScreenContract.Event.Back -> {
@@ -47,68 +80,51 @@ class OrderDetailsScreenViewModel(
 
             is OrderDetailsScreenContract.Event.Select -> {
                 viewModelScope.launch {
-                    runCatching {
-                        setOrderSelectionUseCase(listOf(invoiceNumber), "mock")
-                    }.onSuccess {
-                        setEffect { OrderDetailsScreenContract.Effect.Outcome.Selected(invoiceNumber) }
-                    }.onFailure { t ->
-                        val msg = t.message ?: "Failed to select order. Please try again."
-                        setState { copy(error = msg) }
-                        setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
+                    val current = invoiceKey.value
+                    runCatching { setOrderSelectionUseCase(listOf(current), "mock") }
+                        .onSuccess { setEffect { OrderDetailsScreenContract.Effect.Outcome.Selected(current) } }
+                        .onFailure { t ->
+                            val msg = t.message ?: "Failed to select order. Please try again."
+                            setState { copy(error = msg) }
+                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
+                        }
+                }
+            }
+
+            is OrderDetailsScreenContract.Event.ScanInvoice -> {
+                val invoice = event.invoiceNumber.trim()
+                viewModelScope.launch {
+                    when (val result = checkOrderExistsUseCase(invoice)) {
+                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                            val target = result.invoiceNumber
+                            if (!target.equals(invoiceKey.value, ignoreCase = true)) {
+                                invoiceKey.value = target
+                            }
+                        }
+                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                            setEffect { OrderDetailsScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                            setEffect { OrderDetailsScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(result.message) }
+                        }
                     }
                 }
             }
         }
     }
 
-    private suspend fun loadOrderDetails(invoiceNumber: String) {
-
-        getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoiceNumber).catch { throwable ->
-            val errorMessage = throwable.message ?: "An unknown error occurred"
-            setState { copy(isLoading = false, error = errorMessage) }
-            setEffect { OrderDetailsScreenContract.Effect.ShowError(errorMessage) }
-        }.collectLatest { order ->
-            if (order != null) {
-                setState {
-                    copy(
-                        order = order.toState(),
-                        isLoading = false
-                    )
-                }
-            } else {
-                val errorMessage = "Order not found"
-                setState { copy(isLoading = false, error = errorMessage) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowError(errorMessage) }
-            }
-        }
-
-    }
-
     private suspend fun fetchOrders(successToast: String) {
-        setState {
-            copy(
-                isLoading = true,
-                error = null
-            )
-        }
+        setState { copy(isLoading = true, error = null) }
         val result = fetchOrderListUseCase()
         result.fold(
             onSuccess = {
                 setState { copy(isLoading = false) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowToast(successToast) }
+                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(successToast) }
             },
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
-                setState {
-                    copy(
-                        isLoading = false,
-                        error = msg
-                    )
-                }
-                setEffect { OrderDetailsScreenContract.Effect.ShowError(msg) }
+                setState { copy(isLoading = false, error = msg) }
+                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
             }
         )
     }
-
-
 }

@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
@@ -99,13 +100,21 @@ object OrderFulfilmentScreenContract {
         // Order item click
         data class OrderClicked(val invoiceNumber: String) : Event
 
+        // Scanning
+        data class ScanInvoice(val invoiceNumber: String, val autoSelect: Boolean) : Event
+
         // Deselect an order from Fulfilment item actions
         data class DeselectOrder(val invoiceNumber: String) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
-        data class ShowToast(val message: String) : Effect
-        data class ShowError(val error: String) : Effect
+        data class ShowSnackbar(
+            val message: String,
+            val actionLabel: String? = null,
+            val duration: androidx.compose.material3.SnackbarDuration = androidx.compose.material3.SnackbarDuration.Short,
+        ) : Effect
+        data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) : Effect
+        data class PlayHaptic(val type: HapticEffect) : Effect
         // Ask UI to present a 3-button dialog for unsaved progress
         data class ShowSaveDiscardDialog(
             val title: String = "Unsaved progress",
@@ -122,7 +131,10 @@ object OrderFulfilmentScreenContract {
             val cancelLabel: String = "Cancel",
         ) : Effect
 
-        sealed interface Outcome : Effect {
+        // Request the search UI to collapse (triggered by VM on scan)
+        data object CollapseSearchBar : Effect
+ 
+         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
             data object SignatureRequested: Outcome

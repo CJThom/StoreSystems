@@ -22,7 +22,10 @@ import androidx.room.Index
             onDelete = ForeignKey.NO_ACTION
         )
     ],
-    indices = [Index(value = ["invoice_number"])]
+    indices = [
+        Index(value = ["invoice_number"]),
+        Index(value = ["work_order_id", "position"])
+    ]
 )
 data class CollectWorkOrderItemEntity(
 
@@ -30,6 +33,10 @@ data class CollectWorkOrderItemEntity(
     val workOrderId: String,
 
     @ColumnInfo(name = "invoice_number")
-    val invoiceNumber: String
+    val invoiceNumber: String,
+
+    // Scan/insertion order within a work order (1-based)
+    @ColumnInfo(name = "position")
+    val position: Long,
 
 )

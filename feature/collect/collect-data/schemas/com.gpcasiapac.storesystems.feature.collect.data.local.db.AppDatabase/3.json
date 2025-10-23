@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "8b6c98240c93fb8c843d9b7b9403a9f9",
+    "identityHash": "9b864571d18c1d7fb0b2b95374a837b8",
     "entities": [
       {
         "tableName": "collect_orders",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`invoice_number` TEXT NOT NULL, `sales_order_number` TEXT NOT NULL, `web_order_number` TEXT, `created_at` INTEGER NOT NULL, `picked_at` INTEGER NOT NULL, `signature` TEXT, PRIMARY KEY(`invoice_number`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`invoice_number` TEXT NOT NULL, `sales_order_number` TEXT NOT NULL, `web_order_number` TEXT, `created_at` INTEGER NOT NULL, `picked_at` INTEGER NOT NULL, PRIMARY KEY(`invoice_number`))",
         "fields": [
           {
             "fieldPath": "invoiceNumber",
@@ -36,11 +36,6 @@
             "columnName": "picked_at",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "signature",
-            "columnName": "signature",
-            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -274,7 +269,7 @@
       },
       {
         "tableName": "work_order_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`work_order_id` TEXT NOT NULL, `invoice_number` TEXT NOT NULL, PRIMARY KEY(`work_order_id`, `invoice_number`), FOREIGN KEY(`work_order_id`) REFERENCES `work_orders`(`work_order_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`work_order_id` TEXT NOT NULL, `invoice_number` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`work_order_id`, `invoice_number`), FOREIGN KEY(`work_order_id`) REFERENCES `work_orders`(`work_order_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "workOrderId",
@@ -286,6 +281,12 @@
             "fieldPath": "invoiceNumber",
             "columnName": "invoice_number",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -305,6 +306,16 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_work_order_items_invoice_number` ON `${TABLE_NAME}` (`invoice_number`)"
+          },
+          {
+            "name": "index_work_order_items_work_order_id_position",
+            "unique": false,
+            "columnNames": [
+              "work_order_id",
+              "position"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_work_order_items_work_order_id_position` ON `${TABLE_NAME}` (`work_order_id`, `position`)"
           }
         ],
         "foreignKeys": [
@@ -335,7 +346,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8b6c98240c93fb8c843d9b7b9403a9f9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9b864571d18c1d7fb0b2b95374a837b8')"
     ]
   }
 }

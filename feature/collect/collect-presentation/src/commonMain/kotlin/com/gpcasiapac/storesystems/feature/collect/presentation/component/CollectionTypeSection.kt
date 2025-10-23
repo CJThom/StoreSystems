@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
@@ -29,7 +30,6 @@ import com.gpcasiapac.storesystems.foundation.component.MBoltSegmentedButtonRow
 import com.gpcasiapac.storesystems.foundation.component.MBoltSegmentedRowOptionDisplayParam
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
 data class CollectionTypeSectionDisplayState(

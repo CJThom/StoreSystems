@@ -10,8 +10,7 @@ internal fun CollectOrder.toState(): CollectOrderState {
         salesOrderNumber = this.salesOrderNumber,
         webOrderNumber = this.webOrderNumber,
         createdAt = this.createdAt,
-        pickedAt = this.pickedAt,
-        signature = this.signature
+        pickedAt = this.pickedAt
     )
 }
 
