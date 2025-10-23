@@ -14,12 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeString
 import com.gpcasiapac.storesystems.common.kotlin.extension.toTimeAgoString
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.foundation.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Instant
 
 /**

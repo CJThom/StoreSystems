@@ -10,12 +10,14 @@ androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.9.5"
 androidx-testExt = "1.3.0"
 composeHotReload = "1.0.0-rc02"
-composeMultiplatform = "1.10.0-alpha02"
+composeMultiplatform = "1.10.0-alpha03"
 junit = "4.13.2"
 kotlin = "2.2.20"
 kotlinx-coroutines = "1.10.2"
 buildConfig = "5.7.0"
 androidx-navigation3 = "1.0.0-beta01"
+kmp-navigation3 = "1.0.0-alpha03"
+androidx-navigationevent = "1.0.0-alpha02"
 launchdarklyAndroidClientSdk = "5.9.1"
 launchdarklyJavaServerSdk = "7.10.2"
 lifecycle-viewmodel-navigation3 = "2.10.0-beta01"
@@ -29,7 +31,7 @@ sqlite = "2.6.1"
 ksp = "2.2.20-2.0.3"
 compose-bom = "2025.10.01"
 #compose-material3 = "1.9.0"
-compose-material3 = "1.10.0-alpha02"
+compose-material3 = "1.10.0-alpha03"
 #compose-material3-adaptive = "1.2.0-rc01"
 compose-material3-adaptive = "1.3.0-alpha02"
 
@@ -55,6 +57,12 @@ androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:life
 androidx-lifecycle-runtime = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime", version.ref = "androidx-lifecycle" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "androidx-navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
+
+kmp-navigation3-runtime = { module = "org.jetbrains.androidx.navigation3:navigation3-runtime",  version.ref = "androidx-navigation3" }
+kmp-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "kmp-navigation3" }
+
+androidx-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "androidx-navigationevent" }
+
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle-viewmodel-navigation3" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }

@@ -11,6 +11,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectPickedAtChip
@@ -18,7 +19,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListIt
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemToolbarScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Instant
 
 /**

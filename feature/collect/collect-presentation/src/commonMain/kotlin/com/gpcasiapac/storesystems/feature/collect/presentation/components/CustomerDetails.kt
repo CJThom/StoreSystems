@@ -12,12 +12,12 @@ import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CustomerName
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * Customer Details component that displays customer information in a card format.

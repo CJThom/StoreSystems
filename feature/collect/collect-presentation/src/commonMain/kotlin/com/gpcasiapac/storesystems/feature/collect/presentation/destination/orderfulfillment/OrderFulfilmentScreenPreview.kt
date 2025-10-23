@@ -4,12 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
-import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderFulfilmentScreenStateProvider :
     PreviewParameterProvider<OrderFulfilmentScreenContract.State> {
@@ -100,10 +100,15 @@ class OrderFulfilmentScreenStateProvider :
                 collectOrderListItemStateList = orders.take(2),
                 collectingType = CollectingType.ACCOUNT,
                 representativeSearchQuery = "Jo",
-                representativeList = representativeList.filter { it.name.contains("Jo", ignoreCase = true) },
+                representativeList = representativeList.filter {
+                    it.name.contains(
+                        "Jo",
+                        ignoreCase = true
+                    )
+                },
                 selectedRepresentativeIds = setOf("rep-1"),
             )
-            
+
             val accountFlowFeatureOff = accountFlow.copy(
                 featureFlags = accountFlow.featureFlags.copy(isAccountCollectingFeatureEnabled = false)
             )
@@ -123,6 +128,14 @@ class OrderFulfilmentScreenStateProvider :
                 error = "Failed to load order. Please try again.",
             )
 
-            return sequenceOf(singleB2C, multiB2C, accountFlow, accountFlowFeatureOff, courierFlow, loading, error)
+            return sequenceOf(
+                singleB2C,
+                multiB2C,
+                accountFlow,
+                accountFlowFeatureOff,
+                courierFlow,
+                loading,
+                error
+            )
         }
 }

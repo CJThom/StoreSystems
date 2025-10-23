@@ -1,12 +1,12 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
-import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
 
 class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenContract.State> {
     override val values: Sequence<OrderListScreenContract.State>
