@@ -19,7 +19,7 @@ kotlin {
             implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            
 
             implementation(projects.common.presentation)
         }

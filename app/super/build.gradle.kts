@@ -27,7 +27,7 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.animation)
-            implementation(compose.components.uiToolingPreview)
+            
             implementation(compose.material3AdaptiveNavigationSuite)
 
             implementation(libs.androidx.compose.material3.adaptive.layout)
@@ -103,11 +103,6 @@ android {
         }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
-}
-
-dependencies {
-    debugImplementation(platform(libs.androidx.compose.bom))
-    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 compose.desktop {
