@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.DrawCanvas
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignHereCanvas
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.component.SignatureOrderSummary
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
@@ -163,7 +163,7 @@ fun SignatureScreen(
 //                        }
 //                    }
 
-                    DrawCanvas(
+                    SignHereCanvas(
                         onComplete = { image ->
                             onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
                         },
@@ -175,6 +175,9 @@ fun SignatureScreen(
                             onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
                         },
                         strokeColor = Color.Black,
+                        customerName = state.customerName,
+                        onClearClick = { onEventSent(SignatureScreenContract.Event.ClearSignature) },
+                        // Keep default hint/line; they hide when user starts signing
                     )
 
            //     }
