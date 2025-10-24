@@ -1,9 +1,10 @@
 package com.gpcasiapac.storesystems.core.identity.data.mapper
 
 import com.gpcasiapac.storesystems.core.identity.api.model.User
-import com.gpcasiapac.storesystems.core.identity.data.network.dto.UserDto
+import com.gpcasiapac.storesystems.core.identity.data.local.db.entity.UserEntity
 
-fun UserDto.toDomain(): User = User(
+
+fun UserEntity.toDomain(): User = User(
     username = username,
     email = email,
     firstName = firstName,
@@ -12,3 +13,4 @@ fun UserDto.toDomain(): User = User(
     createdAt = createdAt,
     lastLoginAt = lastLoginAt,
 )
+

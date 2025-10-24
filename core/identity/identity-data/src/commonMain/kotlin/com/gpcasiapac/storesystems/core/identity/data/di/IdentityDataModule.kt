@@ -16,5 +16,9 @@ val identityDataModule = module {
 }
 
 object IdentityDataModuleProvider : ModuleProvider {
-    override fun modules(): List<Module> = listOf(identityDataModule)
+    override fun modules(): List<Module> = listOf(
+        identityDataModule,
+        identityDataDatabaseModule,
+        identityDaoModule,
+    )
 }
