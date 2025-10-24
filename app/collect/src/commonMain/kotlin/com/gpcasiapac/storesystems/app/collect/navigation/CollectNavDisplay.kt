@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
+import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureEntry
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureEntry
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -22,6 +23,7 @@ fun CollectNavDisplay() {
     val state by appNavigationViewModel.viewState.collectAsStateWithLifecycle()
     val loginEntry: LoginFeatureEntry = koinInject()
     val collectEntry: CollectFeatureEntry = koinInject()
+    val historyEntry: HistoryFeatureEntry = koinInject()
 
     NavDisplay(
         backStack = state.stack,
@@ -51,6 +53,16 @@ fun CollectNavDisplay() {
                     onExternalOutcome = { externalOutcome ->
                         appNavigationViewModel.setEvent(
                             CollectAppNavContract.Event.FromCollect(externalOutcome)
+                        )
+                    },
+                )
+            }
+
+            entry<CollectAppNavContract.Destination.HistoryHost> {
+                historyEntry.Host(
+                    onExternalOutcome = { externalOutcome ->
+                        appNavigationViewModel.setEvent(
+                            CollectAppNavContract.Event.FromHistory(externalOutcome)
                         )
                     },
                 )

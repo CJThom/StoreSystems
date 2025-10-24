@@ -11,6 +11,7 @@ import com.gpcasiapac.storesystems.external.feature_flags.data.internal.featureF
 import com.gpcasiapac.storesystems.feature.collect.data.di.CollectDataModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.domain.di.CollectDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.presentation.di.CollectPresentationModuleProvider
+import com.gpcasiapac.storesystems.feature.history.presentation.di.HistoryPresentationModuleProvider
 import com.gpcasiapac.storesystems.feature.login.domain.di.LoginDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.login.presentation.di.LoginPresentationModuleProvider
 import org.koin.core.module.Module
@@ -30,7 +31,8 @@ fun getAppModules(): List<Module> {
         CollectDomainModuleProvider,
         CollectPresentationModuleProvider,
         SyncQueueDataModuleProvider,
-        SyncDomainModuleProvider
+        SyncDomainModuleProvider,
+        HistoryPresentationModuleProvider
     )
 
     val moduleList = providerList.flatMap { it.modules() }.toMutableList()

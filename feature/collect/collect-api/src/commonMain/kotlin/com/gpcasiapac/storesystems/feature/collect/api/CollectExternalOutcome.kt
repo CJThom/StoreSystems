@@ -10,4 +10,7 @@ sealed interface CollectExternalOutcome {
     
     /** Request the app to navigate back to the login screen (logout) */
     data object Logout : CollectExternalOutcome
+    
+    /** Request the app to navigate to the history feature */
+    data object OpenHistory : CollectExternalOutcome
 }

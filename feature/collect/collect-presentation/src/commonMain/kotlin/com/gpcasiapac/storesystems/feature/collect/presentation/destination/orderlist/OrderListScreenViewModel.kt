@@ -201,6 +201,10 @@ class OrderListScreenViewModel(
                 setEffect { Logout }
             }
 
+            is OrderListScreenContract.Event.OpenHistory -> {
+                setEffect { OrderListScreenContract.Effect.Outcome.OpenHistory }
+            }
+
             is OrderListScreenContract.Event.CancelSelection -> {
                 handleCancelSelection()
             }

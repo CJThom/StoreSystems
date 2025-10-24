@@ -93,6 +93,11 @@ kotlin {
             implementation(projects.core.syncQueue.syncQueueDomain)
             implementation(projects.core.syncQueue.syncQueueData)
 
+            implementation(projects.feature.history.historyApi)
+            implementation(projects.feature.history.historyDomain)
+            implementation(projects.feature.history.historyData)
+            implementation(projects.feature.history.historyPresentation)
+
         }
         androidMain.dependencies {
             implementation(libs.androidx.work.runtimeKtx)

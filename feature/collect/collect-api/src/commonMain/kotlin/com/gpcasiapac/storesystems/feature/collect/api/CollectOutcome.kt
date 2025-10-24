@@ -9,4 +9,5 @@ sealed interface CollectOutcome {
     data object SignatureRequested : CollectOutcome
     data class WorkOrderItemSelected(val invoiceNumber: String) : CollectOutcome
     data object OpenOrderFulfilment : CollectOutcome
+    data object OpenHistory : CollectOutcome
 }

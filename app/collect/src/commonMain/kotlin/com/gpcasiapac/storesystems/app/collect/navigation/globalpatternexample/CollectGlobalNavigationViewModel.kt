@@ -4,9 +4,11 @@ import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.OrderFulfilment
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.Signature
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
+import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
 
@@ -55,7 +57,7 @@ class CollectGlobalNavigationViewModel :
         when (outcome) {
             is CollectOutcome.OrderSelected -> {
                 // From order list, open Order Details for the tapped order
-                pushOrReplaceTop(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(OrderDetails(outcome.invoiceNumber))
             }
 
             is CollectOutcome.OpenOrderFulfilment -> {
@@ -78,7 +80,11 @@ class CollectGlobalNavigationViewModel :
 
             is CollectOutcome.WorkOrderItemSelected -> {
                 // From fulfilment, open a parked/selected work order item details
-                pushOrReplaceTop(CollectFeatureDestination.WorkOrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(WorkOrderDetails(outcome.invoiceNumber))
+            }
+
+            CollectOutcome.OpenHistory -> {
+                push(HistoryFeatureDestination.History)
             }
         }
     }

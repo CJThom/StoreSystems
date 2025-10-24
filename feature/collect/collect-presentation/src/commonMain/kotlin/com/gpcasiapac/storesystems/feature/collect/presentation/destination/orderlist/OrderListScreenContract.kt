@@ -62,6 +62,7 @@ object OrderListScreenContract {
         data class ScanInvoice(val invoiceNumber: String) : Event
         data object Back : Event
         data object Logout : Event
+        data object OpenHistory : Event
 
         // Errors
         data object ClearError : Event
@@ -134,6 +135,7 @@ object OrderListScreenContract {
             data object OrdersSelected : Outcome
             data object Back : Outcome
             data object Logout : Outcome
+            data object OpenHistory : Outcome
         }
     }
 }

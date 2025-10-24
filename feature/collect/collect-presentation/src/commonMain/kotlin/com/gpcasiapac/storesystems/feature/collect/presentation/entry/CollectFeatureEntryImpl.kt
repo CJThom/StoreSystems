@@ -99,6 +99,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
 
                         is OrderListScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is OrderListScreenContract.Effect.Outcome.Logout -> onOutcome(CollectOutcome.Logout)
+                        is OrderListScreenContract.Effect.Outcome.OpenHistory -> onOutcome(CollectOutcome.OpenHistory)
                     }
                 }
             }

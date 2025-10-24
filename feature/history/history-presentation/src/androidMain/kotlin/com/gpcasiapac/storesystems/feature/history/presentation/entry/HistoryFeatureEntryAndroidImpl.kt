@@ -28,7 +28,6 @@ class HistoryFeatureEntryAndroidImpl : HistoryFeatureEntry {
         onExternalOutcome: (HistoryExternalOutcome) -> Unit,
     ) {
         val navViewModel: HistoryNavigationViewModel = koinViewModel()
-        val historyEntry: HistoryFeatureEntry = koinInject()
 
         val state by navViewModel.viewState.collectAsState()
 
@@ -50,7 +49,7 @@ class HistoryFeatureEntryAndroidImpl : HistoryFeatureEntry {
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                historyEntry.registerEntries(
+                registerEntries(
                     builder = this,
                     onOutcome = { outcome ->
                         navViewModel.setEvent(HistoryNavigationContract.Event.Outcome(outcome))

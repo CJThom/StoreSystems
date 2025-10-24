@@ -292,7 +292,9 @@ fun OrderListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Handle notifications */ }) {
+                    IconButton(onClick = { 
+                        onEventSent(OrderListScreenContract.Event.OpenHistory)
+                    }) {
                         Icon(
                             imageVector = Icons.Default.CloudCircle,
                             contentDescription = "History"
