@@ -135,33 +135,33 @@ fun SignatureScreen(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
 
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(Dimens.Space.medium),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = "Please sign here",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        OutlinedButton(
-                            enabled = state.signatureStrokes.isNotEmpty(),
-                            modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
-                            onClick = {
-                                onEventSent(SignatureScreenContract.Event.ClearSignature)
-                            }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear")
-                                Text("Clear All")
-                            }
-                        }
-                    }
+//                Column {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(Dimens.Space.medium),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween,
+//                    ) {
+//                        Text(
+//                            text = "Please sign here",
+//                            style = MaterialTheme.typography.titleLarge
+//                        )
+//                        OutlinedButton(
+//                            enabled = state.signatureStrokes.isNotEmpty(),
+//                            modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
+//                            onClick = {
+//                                onEventSent(SignatureScreenContract.Event.ClearSignature)
+//                            }
+//                        ) {
+//                            Row(
+//                                verticalAlignment = Alignment.CenterVertically
+//                            ) {
+//                                Icon(Icons.Default.Close, contentDescription = "Clear")
+//                                Text("Clear All")
+//                            }
+//                        }
+//                    }
 
                     DrawCanvas(
                         onComplete = { image ->
@@ -177,7 +177,7 @@ fun SignatureScreen(
                         strokeColor = Color.Black,
                     )
 
-                }
+           //     }
                 //  Spacer(Modifier.size(Dimens.Space.medium))
 
 
@@ -218,7 +218,7 @@ fun SignatureScreen(
     showBackground = true,
     backgroundColor = 0xFFF5F5F5L,
     widthDp = 360,
-    heightDp = 720
+    heightDp = 720,
 )
 @Composable
 private fun SignatureScreenPreview(

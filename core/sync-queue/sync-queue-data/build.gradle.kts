@@ -13,7 +13,8 @@ kotlin {
     jvm()
     sourceSets {
         commonMain.dependencies {
-            api(project(":core:sync-queue:sync-queue-domain"))
+            implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(projects.core.syncQueue.syncQueueDomain)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
