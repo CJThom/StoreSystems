@@ -7,4 +7,5 @@ package com.gpcasiapac.storesystems.core.identity.api.model
  data class AuthSession(
      val user: User,
      val token: Token,
+     val metadata: Map<String, Any> = emptyMap()
  )

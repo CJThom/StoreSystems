@@ -43,11 +43,12 @@ fun getAppModules(): List<Module> {
     // Platform-specific bindings
     moduleList.add(collectAppPlatformModule)
 
-    // App-level modules
-    moduleList.add(collectAppNavigationModule)
-    moduleList.add(appModule)
+    // Feature flags (MUST be loaded BEFORE appModule that depends on it)
     moduleList.addAll(featureFlagModule)
 
+    // App-level modules
+    moduleList.add(collectAppNavigationModule)
+    moduleList.add(appModule) // FeatureFlagInitializer registered here
 
     return moduleList
 }
@@ -59,7 +60,21 @@ val loggingModule = module {
 
 // App-specific singletons
 val appModule = module {
-    // Placeholders for common app-level bindings (none yet for commonMain)
+    // ✅ Register FeatureFlagContextProvider (single source of truth for default context)
+    single {
+        FeatureFlagContextProvider(
+            // Add repository dependencies as they become available:
+            // deviceInfoRepository = getOrNull(),
+        )
+    }
+    
+    // ✅ Register FeatureFlagInitializer (depends on provider)
+    single(createdAtStart = true) {
+        FeatureFlagInitializer(
+            featureFlags = get(),
+            contextProvider = get() // Inject provider
+        )
+    }
 }
 
 

@@ -17,9 +17,18 @@ class LoginServiceImpl(
 
     override suspend fun login(username: String, password: String): DataResult<AuthSession> =
         when (val r = loginUseCase(username, password)) {
-            is LoginUseCase.UseCaseResult.Success -> DataResult.Success(
-                AuthSession(user = r.user, token = r.token)
-            )
+            is LoginUseCase.UseCaseResult.Success -> {
+                // Include MFA requirement in metadata
+                val session = AuthSession(
+                    user = r.user,
+                    token = r.token,
+                    metadata = mapOf(
+                        "mfaRequired" to r.mfaRequired,
+                        "mfaVersion" to (r.mfaVersion ?: "")
+                    )
+                )
+                DataResult.Success(session)
+            }
             is LoginUseCase.UseCaseResult.Error.NetworkError -> DataResult.Error.Network.ConnectionError()
             is LoginUseCase.UseCaseResult.Error.InvalidCredentials -> DataResult.Error.Network.HttpError(
                 code = 401,
