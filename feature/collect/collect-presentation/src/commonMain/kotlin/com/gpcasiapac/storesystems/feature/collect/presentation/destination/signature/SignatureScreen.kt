@@ -10,13 +10,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,16 +38,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.DrawCanvas
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.component.SignatureOrderSummary
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.component.SignatureOrderSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SignatureScreen(
     state: SignatureScreenContract.State,
@@ -96,80 +97,89 @@ fun SignatureScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(paddingValues)
+                .fillMaxSize()
+                .padding(paddingValues),
+            // verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-            ) {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(Dimens.Space.medium),
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//
-//                    ) {
-//                    Text(
-//                        text = state.customerName,
-//                        style = MaterialTheme.typography.titleLarge
-//                    )
-//                    Spacer(modifier = Modifier.size(Dimens.Space.medium))
-//                    Text(
-//                        text = "To collect",
-//                        style = MaterialTheme.typography.bodyMedium
-//                    )
-//                }
+
+            Column(modifier = Modifier) {
 
                 // Order details summary
                 SignatureOrderSummary(
                     orders = state.selectedOrderList,
-                    onViewDetails = { onEventSent(SignatureScreenContract.Event.ViewDetailsClicked) },
                     modifier = Modifier
                 )
-                HorizontalDivider()
 
-                Row(
+                //Spacer(Modifier.size(Dimens.Space.small))
+
+                OutlinedButton(
+                    onClick = { onEventSent(SignatureScreenContract.Event.ViewDetailsClicked) },
                     modifier = Modifier
+                        .padding(horizontal = Dimens.Space.medium)
                         .fillMaxWidth()
-                        .padding(horizontal = Dimens.Space.medium),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .height(ButtonDefaults.ExtraSmallContainerHeight)
                 ) {
                     Text(
-                        "Please sign here",
-                        style = MaterialTheme.typography.titleLarge
+                        text = "VIEW DETAILS",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    OutlinedButton(
-                        enabled = state.signatureStrokes.isNotEmpty(),
-                        onClick = {
-                            onEventSent(SignatureScreenContract.Event.ClearSignature)
-                        }
+                }
+                Spacer(Modifier.size(Dimens.Space.medium))
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
+
+            }
+
+            Column(
+                modifier = Modifier.weight(1F),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Dimens.Space.medium),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        Text(
+                            text = "Please sign here",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        OutlinedButton(
+                            enabled = state.signatureStrokes.isNotEmpty(),
+                            modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
+                            onClick = {
+                                onEventSent(SignatureScreenContract.Event.ClearSignature)
+                            }
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear")
-                            Text("Clear All")
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                                Text("Clear All")
+                            }
                         }
                     }
-                }
 
-                DrawCanvas(
-                    onComplete = { image ->
-                        onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
-                    },
-                    modifier = Modifier
-                        .height(200.dp)
-                        .fillMaxWidth(),
-                    strokes = state.signatureStrokes,
-                    onStrokesChange = { strokes ->
-                        onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
-                    },
-                    strokeColor = Color.Black,
-                )
+                    DrawCanvas(
+                        onComplete = { image ->
+                            onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
+                        },
+                        modifier = Modifier
+                            .height(250.dp)
+                            .fillMaxWidth(),
+                        strokes = state.signatureStrokes,
+                        onStrokesChange = { strokes ->
+                            onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                        },
+                        strokeColor = Color.Black,
+                    )
+
+                }
+                //  Spacer(Modifier.size(Dimens.Space.medium))
+
 
                 // Confirm Button
                 Button(
@@ -196,6 +206,7 @@ fun SignatureScreen(
                         )
                     }
                 }
+
             }
         }
     }

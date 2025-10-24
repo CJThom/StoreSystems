@@ -2,17 +2,33 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderWithCustomerWithLineItemsState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureLineItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
 
 class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenContract.State> {
     override val values: Sequence<SignatureScreenContract.State>
         get() {
-            val singleOrder = sampleCollectOrderWithCustomerWithLineItemsState()
-            val multiOrders = listOf(
-                singleOrder,
-                singleOrder.copy(order = singleOrder.order.copy(invoiceNumber = "10341882856"))
+            // Single-order scenarios with varying product counts
+            val single1 = listOf(buildOrder("10341882855", "Johnathan Citizenship", 1))
+            val single3 = listOf(buildOrder("10341882856", "Alice Smith", 3))
+            val single8 = listOf(buildOrder("10341882857", "Bob Brown", 8))
+
+            // Multi-order scenarios mirroring SignatureOrderSummary previews
+            val multi2 = listOf(
+                buildOrder("10341882858", "Company A", 2),
+                buildOrder("10341882859", "Company B", 1),
             )
+            val multi3 = listOf(
+                buildOrder("10341882860", "Customer 1", 3),
+                buildOrder("10341882861", "Customer 2", 4),
+                buildOrder("10341882862", "Customer 3", 2),
+            )
+            val multi5 = List(5) { idx ->
+                buildOrder("1034188290$idx", "Customer ${idx + 1}", (idx + 1) * 2)
+            }
+            val multi10Small = List(10) { idx ->
+                buildOrder("103418830$idx", "Cust ${idx + 1}", (idx % 2) + 1)
+            }
 
             val base = SignatureScreenContract.State(
                 isLoading = false,
@@ -21,10 +37,17 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 signatureStrokes = emptyList(),
                 signatureBitmap = null,
                 customerName = "John Appleseed",
-                selectedOrderList = listOf(singleOrder.toSignatureOrderState())
+                selectedOrderList = single1
             )
 
-            val signed = base.copy(
+            val single3State = base.copy(selectedOrderList = single3)
+            val single8State = base.copy(selectedOrderList = single8)
+            val multi2State = base.copy(selectedOrderList = multi2)
+            val multi3State = base.copy(selectedOrderList = multi3)
+            val multi5State = base.copy(selectedOrderList = multi5)
+            val multi10SmallState = base.copy(selectedOrderList = multi10Small)
+
+            val signed = single3State.copy(
                 isSigned = true,
                 signatureStrokes = listOf(
                     listOf(
@@ -41,9 +64,7 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 )
             )
 
-            val multi = base.copy(selectedOrderList = multiOrders.map { it.toSignatureOrderState() })
-
-            val loading = base.copy(
+            val loading = multi3State.copy(
                 isLoading = true
             )
 
@@ -53,10 +74,33 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
 
             return sequenceOf(
                 base,
-                multi,
+                single3State,
+                single8State,
+                multi2State,
+                multi3State,
+                multi5State,
+                multi10SmallState,
                 signed,
                 loading,
-                error
+                error,
             )
         }
+}
+
+private fun buildOrder(
+    invoice: String,
+    customer: String,
+    productCount: Int,
+): SignatureOrderState {
+    val items = List(productCount) { idx ->
+        SignatureLineItemState(
+            productDescription = "Product ${idx + 1} Description",
+            quantity = (idx % 3) + 1,
+        )
+    }
+    return SignatureOrderState(
+        invoiceNumber = invoice,
+        customerName = customer,
+        lineItems = items,
+    )
 }

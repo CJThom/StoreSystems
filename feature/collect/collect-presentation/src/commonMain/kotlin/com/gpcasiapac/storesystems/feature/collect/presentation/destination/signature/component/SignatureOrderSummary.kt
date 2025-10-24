@@ -5,20 +5,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -26,7 +24,6 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 @Composable
 fun SignatureOrderSummary(
     orders: List<SignatureOrderState>,
-    onViewDetails: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
@@ -43,9 +40,9 @@ fun SignatureOrderSummary(
 //        )
 
         if (orders.size == 1) {
-            SingleOrderSummaryCard(order = orders.first(), onViewDetails = onViewDetails)
+            SingleOrderSummaryCard(order = orders.first())
         } else {
-            MultiOrderSummaryCard(orders = orders, onViewDetails = onViewDetails)
+            MultiOrderSummaryCard(orders = orders)
         }
     }
 }
@@ -54,7 +51,6 @@ fun SignatureOrderSummary(
 @Composable
 private fun SingleOrderSummaryCard(
     order: SignatureOrderState,
-    onViewDetails: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -86,7 +82,7 @@ private fun SingleOrderSummaryCard(
             )
             Text(
                 text = order.customerName,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyLarge
             )
         }
 
@@ -103,7 +99,7 @@ private fun SingleOrderSummaryCard(
                     )
                     Text(
                         text = "x${line.quantity}",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             }
@@ -115,18 +111,6 @@ private fun SingleOrderSummaryCard(
                 )
             }
         }
-
-        OutlinedButton(
-            onClick = onViewDetails,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(ButtonDefaults.ExtraSmallContainerHeight)
-        ) {
-            Text(
-                text = "VIEW DETAILS",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
 }
 
@@ -134,53 +118,38 @@ private fun SingleOrderSummaryCard(
 @Composable
 private fun MultiOrderSummaryCard(
     orders: List<SignatureOrderState>,
-    onViewDetails: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
         val invoiceNumbers = orders.joinToString(", ") { it.invoiceNumber }
         val totalQty = orders.sumOf { order -> order.lineItems.sumOf { it.quantity } }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
-        ) {
-            Text(
-                text = "Invoices:",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = invoiceNumbers,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        Text(
+            text = buildAnnotatedString {
+                withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
+                    append("Invoices: ")
+                }
+                append(invoiceNumbers)
+            },
+            style = MaterialTheme.typography.bodyMedium
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Total quantity"
+                text = "Total quantity",
+                style = MaterialTheme.typography.bodyLarge
             )
             Text(
                 text = totalQty.toString(),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.titleMedium
             )
         }
 
-        OutlinedButton(
-            onClick = onViewDetails,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(ButtonDefaults.ExtraSmallContainerHeight)
-        ) {
-            Text(
-                text = "VIEW DETAILS",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
 }
 
@@ -197,8 +166,7 @@ private fun SignatureOrderSummaryPreview(
 ) {
     GPCTheme {
         SignatureOrderSummary(
-            orders = orders,
-            onViewDetails = {}
+            orders = orders
         )
     }
 }
