@@ -126,6 +126,10 @@ class SyncRepositoryImpl(
         return syncTaskDao.observePendingTasks().map { entities -> entities.map { it.toDomain() } }
     }
 
+    override fun observeAllTasks(): Flow<List<SyncTask>> {
+        return syncTaskDao.observeAllTasks().map { entities -> entities.map { it.toDomain() } }
+    }
+
     override suspend fun deleteTask(taskId: String): Result<Unit> = runCatching {
         syncTaskDao.deleteTask(taskId)
     }

@@ -35,6 +35,10 @@ internal class SyncQueueServiceImpl(
         return syncRepository.observePendingTasks()
     }
     
+    override fun observeAllTasks(): Flow<List<SyncTask>> {
+        return syncRepository.observeAllTasks()
+    }
+    
     override suspend fun deleteTask(taskId: String): Result<Unit> {
         return syncRepository.deleteTask(taskId)
     }

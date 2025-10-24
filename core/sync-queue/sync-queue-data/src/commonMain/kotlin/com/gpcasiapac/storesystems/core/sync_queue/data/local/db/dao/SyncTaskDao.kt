@@ -41,6 +41,9 @@ interface SyncTaskDao {
     @Query("SELECT * FROM sync_tasks WHERE status = 'PENDING' ORDER BY priority DESC, added_time ASC")
     fun observePendingTasks(): Flow<List<SyncTaskEntity>>
     
+    @Query("SELECT * FROM sync_tasks ORDER BY updated_time DESC")
+    fun observeAllTasks(): Flow<List<SyncTaskEntity>>
+    
     @Query("DELETE FROM sync_tasks WHERE id = :taskId")
     suspend fun deleteTask(taskId: String)
     

@@ -30,6 +30,11 @@ interface SyncQueueService {
     fun observePendingTasks(): Flow<List<SyncTask>>
     
     /**
+     * Observe all tasks regardless of status.
+     */
+    fun observeAllTasks(): Flow<List<SyncTask>>
+    
+    /**
      * Delete a specific task by ID.
      */
     suspend fun deleteTask(taskId: String): Result<Unit>

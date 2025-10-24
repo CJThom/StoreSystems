@@ -17,7 +17,7 @@ class HistoryRepositoryImpl(
 ) : HistoryRepository {
     
     override fun observeHistory(): Flow<List<HistoryItem>> {
-        return syncQueueService.observePendingTasks()
+        return syncQueueService.observeAllTasks()
             .map { syncTasks -> syncTasks.toHistoryItems() }
     }
     

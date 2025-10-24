@@ -31,6 +31,9 @@ interface SyncRepository {
     /** Observe all pending tasks */
     fun observePendingTasks(): Flow<List<SyncTask>>
     
+    /** Observe all tasks (pending, completed, failed) */
+    fun observeAllTasks(): Flow<List<SyncTask>>
+    
     /** Delete a specific task */
     suspend fun deleteTask(taskId: String): Result<Unit>
     
