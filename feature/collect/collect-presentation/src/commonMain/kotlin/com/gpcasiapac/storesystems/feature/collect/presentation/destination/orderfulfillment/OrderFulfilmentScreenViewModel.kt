@@ -10,30 +10,29 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderIdUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderItemsInScanOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SubmitOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
-import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
-import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
-import kotlinx.coroutines.delay
 
 
 class OrderFulfilmentScreenViewModel(
@@ -46,7 +45,7 @@ class OrderFulfilmentScreenViewModel(
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
-    private val syncQueueService: SyncQueueService,
+    private val submitOrderUseCase: SubmitOrderUseCase
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -455,11 +454,7 @@ class OrderFulfilmentScreenViewModel(
             var failureCount = 0
             
             orders.forEach { order ->
-                val result = syncQueueService.addTaskAndTriggerSync(
-                    taskType = TaskType.COLLECT_SUBMIT_ORDER,
-                    entityId = order.invoiceNumber,
-                    priority = 0
-                )
+                val result = submitOrderUseCase(order.invoiceNumber)
                 
                 result.fold(
                     onSuccess = { successCount++ },
@@ -473,21 +468,21 @@ class OrderFulfilmentScreenViewModel(
             if (failureCount == 0) {
                 setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
                 setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
-                setEffect { 
+                setEffect {
                     OrderFulfilmentScreenContract.Effect.ShowSnackbar(
                         "Successfully queued $successCount order(s) for sync",
                         duration = SnackbarDuration.Long
-                    ) 
+                    )
                 }
                 setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
             } else {
                 setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                 setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                setEffect { 
+                setEffect {
                     OrderFulfilmentScreenContract.Effect.ShowSnackbar(
                         "Queued $successCount order(s), $failureCount failed",
                         duration = SnackbarDuration.Long
-                    ) 
+                    )
                 }
             }
         }
