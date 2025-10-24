@@ -24,6 +24,9 @@ object OrderFulfilmentScreenContract {
 
         // Loading / refreshing
         val isLoading: Boolean,
+        
+        // Processing confirmation (adding to sync queue)
+        val isProcessing: Boolean,
 
         val error: String?,
         val featureFlags: FeatureFlags,

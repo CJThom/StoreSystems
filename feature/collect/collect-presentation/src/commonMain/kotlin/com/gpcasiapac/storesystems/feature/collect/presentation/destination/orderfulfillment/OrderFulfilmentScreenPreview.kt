@@ -29,6 +29,7 @@ class OrderFulfilmentScreenStateProvider :
                 // isMultiOrder = { false },
                 // Flags
                 isLoading = false,
+                isProcessing = false,
                 error = null,
 
                 featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(

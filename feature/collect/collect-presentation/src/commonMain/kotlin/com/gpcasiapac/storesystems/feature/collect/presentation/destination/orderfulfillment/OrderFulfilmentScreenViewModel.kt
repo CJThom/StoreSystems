@@ -31,6 +31,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCo
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
+import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
+import kotlinx.coroutines.delay
 
 
 class OrderFulfilmentScreenViewModel(
@@ -43,6 +46,7 @@ class OrderFulfilmentScreenViewModel(
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
+    private val syncQueueService: SyncQueueService,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -57,6 +61,7 @@ class OrderFulfilmentScreenViewModel(
         return OrderFulfilmentScreenContract.State(
             collectOrderListItemStateList = listOf(CollectOrderListItemState.placeholder()),
             isLoading = false,
+            isProcessing = false,
             error = null,
             featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
                 isAccountCollectingFeatureEnabled = false,
@@ -435,7 +440,57 @@ class OrderFulfilmentScreenViewModel(
 
             CollectingType.STANDARD -> Unit
         }
-        setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
+        
+        // Start processing - add orders to sync queue
+        viewModelScope.launch {
+            setState { copy(isProcessing = true) }
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Processing orders...") }
+            
+            // Add delay for UX feedback
+            delay(1500)
+            
+            // Add each order to sync queue
+            val orders = s.collectOrderListItemStateList
+            var successCount = 0
+            var failureCount = 0
+            
+            orders.forEach { order ->
+                val result = syncQueueService.addTaskAndTriggerSync(
+                    taskType = TaskType.COLLECT_SUBMIT_ORDER,
+                    entityId = order.invoiceNumber,
+                    priority = 0
+                )
+                
+                result.fold(
+                    onSuccess = { successCount++ },
+                    onFailure = { failureCount++ }
+                )
+            }
+            
+            setState { copy(isProcessing = false) }
+            
+            // Show result feedback
+            if (failureCount == 0) {
+                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                setEffect { 
+                    OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                        "Successfully queued $successCount order(s) for sync",
+                        duration = SnackbarDuration.Long
+                    ) 
+                }
+                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
+            } else {
+                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                setEffect { 
+                    OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                        "Queued $successCount order(s), $failureCount failed",
+                        duration = SnackbarDuration.Long
+                    ) 
+                }
+            }
+        }
     }
 
 }

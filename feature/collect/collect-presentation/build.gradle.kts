@@ -65,6 +65,9 @@ kotlin {
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectDomain)
+            
+            // Sync queue for order submission
+            implementation(projects.core.syncQueue.syncQueueApi)
 
             implementation(projects.common.kotlin)
             implementation(projects.foundation.designSystem)

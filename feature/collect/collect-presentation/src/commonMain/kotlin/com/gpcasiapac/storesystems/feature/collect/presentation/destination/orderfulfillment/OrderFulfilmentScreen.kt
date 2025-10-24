@@ -373,11 +373,25 @@ fun OrderFulfilmentScreen(
                 ActionButton(
                     modifier = Modifier.padding(Dimens.Space.medium),
                     title = {
-                        Icon(imageVector = Icons.Outlined.DoneAll, contentDescription = "Done")
-                        Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
-                        Text(text = "CONFIRM", style = MaterialTheme.typography.labelLarge)
+                        if (state.isProcessing) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(ButtonDefaults.IconSize),
+                                color = MaterialTheme.colorScheme.onTertiary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
+                            Text(text = "PROCESSING...", style = MaterialTheme.typography.labelLarge)
+                        } else {
+                            Icon(imageVector = Icons.Outlined.DoneAll, contentDescription = "Done")
+                            Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
+                            Text(text = "CONFIRM", style = MaterialTheme.typography.labelLarge)
+                        }
                     },
-                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Confirm) },
+                    onClick = { 
+                        if (!state.isProcessing && !state.isLoading) {
+                            onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
+                        }
+                    },
                 )
             }
         }

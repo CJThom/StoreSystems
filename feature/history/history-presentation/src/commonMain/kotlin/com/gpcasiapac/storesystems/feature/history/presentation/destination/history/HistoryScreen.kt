@@ -80,8 +80,6 @@ private fun Content(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Text("History", style = MaterialTheme.typography.headlineSmall)
-
         when {
             state.isLoading -> {
                 CircularProgressIndicator()
