@@ -199,21 +199,47 @@ private fun MultiOrderSummaryCard(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        val invoiceNumbers = orders.joinToString(", ") { it.invoiceNumber }
         val totalQty = orders.sumOf { order -> order.lineItems.sumOf { it.quantity } }
+
+        // Build a concise invoice list preview that tends to fit within ~2 lines,
+        // without hardcoding heights. We use a simple character budget heuristic
+        // and then cap the text to maxLines = 2 with ellipsis.
+        fun buildInvoicesPreview(all: List<String>, charBudget: Int = 120): Pair<String, Int> {
+            if (all.isEmpty()) return "" to 0
+            val sb = StringBuilder()
+            var count = 0
+            for (inv in all) {
+                val part = if (sb.isEmpty()) inv else ", $inv"
+                if (sb.length + part.length > charBudget) break
+                sb.append(part)
+                count++
+            }
+            val remaining = all.size - count
+            return sb.toString() to remaining
+        }
+
+        val invoices = orders.map { it.invoiceNumber }
+        val (invoicePreview, remaining) = buildInvoicesPreview(invoices)
+
+        val invoiceAnnotated = buildAnnotatedString {
+            withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
+                append("Invoices: ")
+            }
+            append(invoicePreview)
+            if (remaining > 0) {
+                append(" +$remaining more")
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = buildAnnotatedString {
-                    withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
-                        append("Invoices: ")
-                    }
-                    append(invoiceNumbers)
-                },
-                style = MaterialTheme.typography.bodyMedium,
+                text = invoiceAnnotated,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(0.85f)
             )
             Text(
