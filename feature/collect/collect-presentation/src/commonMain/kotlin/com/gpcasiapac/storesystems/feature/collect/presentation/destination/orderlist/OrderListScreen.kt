@@ -72,7 +72,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -84,13 +83,12 @@ fun OrderListScreen(
     onSearchEventSent: (SearchContract.Event) -> Unit,
     effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
+    soundPlayer: SoundPlayer? = null,
+    hapticPerformer: HapticPerformer? = null,
     searchEffectFlow: Flow<SearchContract.Effect>? = null,
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
-    // Platform-provided feedback via Koin
-    val soundPlayer: SoundPlayer = koinInject()
-    val hapticPerformer: HapticPerformer = koinInject()
 
     val scope = rememberCoroutineScope()
 
@@ -190,11 +188,11 @@ fun OrderListScreen(
             when (effect) {
                 is OrderListScreenContract.Effect.Outcome -> onOutcome(effect)
                 is OrderListScreenContract.Effect.PlayHaptic -> {
-                    hapticPerformer.perform(effect.hapticEffect)
+                    hapticPerformer?.perform(effect.hapticEffect)
                 }
 
                 is OrderListScreenContract.Effect.PlaySound -> {
-                    soundPlayer.play(effect.soundEffect)
+                    soundPlayer?.play(effect.soundEffect)
                 }
 
                 is OrderListScreenContract.Effect.ShowSnackbar -> {
@@ -587,7 +585,7 @@ fun OrderListScreenPreview(
             onEventSent = {},
             onSearchEventSent = {},
             effectFlow = null,
-            onOutcome = {}
+            onOutcome = {},
         )
     }
 }

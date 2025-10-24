@@ -135,33 +135,45 @@ fun OrderDetailsScreen(
 @Preview
 @Composable
 private fun OrderDetailsScreenPreview() {
-    GPCTheme {
-        OrderDetailsScreen(
-            state = OrderDetailsScreenContract.State(
-                isLoading = false,
-                error = null,
-                order = CollectOrderWithCustomerWithLineItemsState.placeholder()
-            ),
-            onEventSent = {},
-            effectFlow = null,
-            onOutcome = {}
-        )
+    val previewModule = org.koin.dsl.module {
+        single<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer> { com.gpcasiapac.storesystems.common.feedback.sound.FakeSoundPlayer() }
+        single<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer> { com.gpcasiapac.storesystems.common.feedback.haptic.FakeHapticPerformer() }
+    }
+    org.koin.compose.KoinApplication(application = { modules(previewModule) }) {
+        GPCTheme {
+            OrderDetailsScreen(
+                state = OrderDetailsScreenContract.State(
+                    isLoading = false,
+                    error = null,
+                    order = CollectOrderWithCustomerWithLineItemsState.placeholder()
+                ),
+                onEventSent = {},
+                effectFlow = null,
+                onOutcome = {}
+            )
+        }
     }
 }
 
 @Preview
 @Composable
 private fun OrderDetailsScreenLoadingPreview() {
-    GPCTheme {
-        OrderDetailsScreen(
-            state = OrderDetailsScreenContract.State(
-                isLoading = true,
-                error = null,
-                order = null
-            ),
-            onEventSent = {},
-            effectFlow = null,
-            onOutcome = {}
-        )
+    val previewModule = org.koin.dsl.module {
+        single<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer> { com.gpcasiapac.storesystems.common.feedback.sound.FakeSoundPlayer() }
+        single<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer> { com.gpcasiapac.storesystems.common.feedback.haptic.FakeHapticPerformer() }
+    }
+    org.koin.compose.KoinApplication(application = { modules(previewModule) }) {
+        GPCTheme {
+            OrderDetailsScreen(
+                state = OrderDetailsScreenContract.State(
+                    isLoading = true,
+                    error = null,
+                    order = null
+                ),
+                onEventSent = {},
+                effectFlow = null,
+                onOutcome = {}
+            )
+        }
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +27,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 //    const val LabelWeight = 0.35f
 //    const val ValueWeight = 0.75f
 //}
+
 
 @Composable
 fun SignatureOrderSummary(
@@ -60,12 +60,28 @@ private fun SingleOrderSummaryCard(
 ) {
     Column(
         modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
+        SingleOrderSummaryHeader(order = order)
+        SingleOrderQuantityRow(order = order)
+        // If needed in future: SingleOrderProductsPreview(order)
+    }
+}
+
+// ——— Inlined private components ———
+
+@Composable
+private fun SingleOrderSummaryHeader(
+    order: SignatureOrderState,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Invoice",
@@ -83,10 +99,10 @@ private fun SingleOrderSummaryCard(
                 modifier = Modifier.weight(0.75f)
             )
         }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Customer",
@@ -104,39 +120,71 @@ private fun SingleOrderSummaryCard(
                 modifier = Modifier.weight(0.75f)
             )
         }
+    }
+}
 
-        // Simple product lines summary
-        HorizontalDivider()
+@Composable
+private fun SingleOrderQuantityRow(
+    order: SignatureOrderState,
+    modifier: Modifier = Modifier,
+) {
+    val totalQty = order.lineItems.sumOf { it.quantity }
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Quantity",
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = "x${totalQty}",
+            style = MaterialTheme.typography.titleMedium,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1
+        )
+    }
+}
 
-        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)) {
-            val previewLines = order.lineItems.take(3)
-            previewLines.forEach { line ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        text = line.productDescription,
-                        style = MaterialTheme.typography.bodyMedium,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        modifier = Modifier.weight(0.85f)
-                    )
-                    Text(
-                        text = "x${line.quantity}",
-                        style = MaterialTheme.typography.labelLarge,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        modifier = Modifier.weight(0.15f),
-                        textAlign = TextAlign.End,
-                    )
-                }
-            }
-            val remaining = order.lineItems.size - previewLines.size
-            if (remaining > 0) {
+@Composable
+private fun SingleOrderProductsPreview(
+    order: SignatureOrderState,
+    modifier: Modifier = Modifier,
+) {
+    // Simple product lines summary
+    HorizontalDivider()
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
+    ) {
+        val previewLines = order.lineItems.take(3)
+        previewLines.forEach { line ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    text = "+$remaining more",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
+                    text = "- ${line.productDescription}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier = Modifier.weight(0.85f)
+                )
+                Text(
+                    text = "x${line.quantity}",
+                    style = MaterialTheme.typography.labelLarge,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier = Modifier.weight(0.15f),
+                    textAlign = TextAlign.End,
                 )
             }
+        }
+        val remaining = order.lineItems.size - previewLines.size
+        if (remaining > 0) {
+            Text(
+                text = "+$remaining more",
+                maxLines = 1,
+                style = MaterialTheme.typography.labelLarge,
+            )
         }
     }
 }
@@ -157,7 +205,6 @@ private fun MultiOrderSummaryCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
         ) {
             Text(
                 text = buildAnnotatedString {
@@ -193,10 +240,8 @@ private fun MultiOrderSummaryCard(
                 maxLines = 1
             )
         }
-
     }
 }
-
 
 @Preview(
     name = "SignatureOrderSummary • Scenarios",
