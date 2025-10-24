@@ -37,6 +37,65 @@ class SignatureOrderSummaryOrdersProvider : PreviewParameterProvider<List<Signat
                 buildOrder("103418830${idx}", "Cust ${idx + 1}", productCount = (idx % 2) + 1)
             }
 
+            // Long-text scenarios for wrapping/ellipsizing tests
+            val veryLongCustomerName = "Alexandria Catherine Montgomery-Smythe & Sons International Holdings Proprietary Limited"
+            val singleLongNames = listOf(
+                buildLongOrder(
+                    invoice = "10341889999",
+                    customer = veryLongCustomerName,
+                    productCount = 3
+                )
+            )
+
+            val multiLongInvoices = listOf(
+                buildOrder("10341890001", "Long Co A", 1),
+                buildOrder("10341890002", "Long Co B", 1),
+                buildOrder("10341890003", "Long Co C", 1),
+                buildOrder("10341890004", "Long Co D", 1),
+                buildOrder("10341890005", "Long Co E", 1),
+                buildOrder("10341890006", "Long Co F", 1),
+            )
+
+            val singleLongProducts = listOf(
+                buildLongOrder(
+                    invoice = "10341890010",
+                    customer = "Customer With Extremely Long Product Names",
+                    productCount = 3
+                )
+            )
+
+            val multiLongProducts = listOf(
+                buildLongOrder(
+                    invoice = "10341890011",
+                    customer = "Customer With Long Products 1",
+                    productCount = 2
+                ),
+                buildLongOrder(
+                    invoice = "10341890012",
+                    customer = "Customer With Long Products 2",
+                    productCount = 2
+                ),
+            )
+
+            // Large quantity scenarios (to test big numbers and total)
+            val singleLargeQty = listOf(
+                buildOrderLargeQty(
+                    invoice = "10341888888",
+                    customer = "Bulk Buyer International Pty Ltd"
+                )
+            )
+
+            val multiLargeTotals = listOf(
+                buildOrderLargeQty(
+                    invoice = "10341888889",
+                    customer = "Mega Supplies Co"
+                ),
+                buildOrderLargeQty(
+                    invoice = "10341888890",
+                    customer = "Global Warehousing AU"
+                )
+            )
+
             return sequenceOf(
                 single1,
                 single3,
@@ -45,6 +104,14 @@ class SignatureOrderSummaryOrdersProvider : PreviewParameterProvider<List<Signat
                 multi3,
                 multi5,
                 multi10Small,
+                // Long-text
+                singleLongNames,
+                multiLongInvoices,
+                singleLongProducts,
+                multiLongProducts,
+                // Large quantities
+                singleLargeQty,
+                multiLargeTotals,
             )
         }
 }
@@ -60,6 +127,50 @@ private fun buildOrder(
             quantity = (idx % 3) + 1,
         )
     }
+    return SignatureOrderState(
+        invoiceNumber = invoice,
+        customerName = customer,
+        lineItems = items,
+    )
+}
+
+private fun buildLongOrder(
+    invoice: String,
+    customer: String,
+    productCount: Int,
+): SignatureOrderState {
+    val longBase = "Ultra-High Performance Windshield Wiper Blade with Nano-Coating Technology, All-Weather, Vehicle Fitment: Toyota Corolla 2008-2024, Part No. 9X-24B — "
+    val items = List(productCount) { idx ->
+        SignatureLineItemState(
+            productDescription = longBase + "Variant ${idx + 1}: Includes adapters for multiple arm types, corrosion-resistant frame, OEM-grade rubber compound for silent operation, extended warranty included.",
+            quantity = (idx % 3) + 1,
+        )
+    }
+    return SignatureOrderState(
+        invoiceNumber = invoice,
+        customerName = customer,
+        lineItems = items,
+    )
+}
+
+private fun buildOrderLargeQty(
+    invoice: String,
+    customer: String,
+): SignatureOrderState {
+    val items = listOf(
+        SignatureLineItemState(
+            productDescription = "Bulk Pack A — Extended Description",
+            quantity = 150,
+        ),
+        SignatureLineItemState(
+            productDescription = "Bulk Pack B — Extended Description",
+            quantity = 1050,
+        ),
+        SignatureLineItemState(
+            productDescription = "Bulk Pack C — Extended Description",
+            quantity = 63823,
+        ),
+    )
     return SignatureOrderState(
         invoiceNumber = invoice,
         customerName = customer,

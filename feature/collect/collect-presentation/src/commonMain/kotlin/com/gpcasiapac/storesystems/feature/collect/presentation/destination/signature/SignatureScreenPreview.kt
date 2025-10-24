@@ -30,6 +30,45 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 buildOrder("103418830$idx", "Cust ${idx + 1}", (idx % 2) + 1)
             }
 
+            // Long-text scenarios
+            val longCustomerName = "Alexandria Catherine Montgomery-Smythe & Sons International Holdings Proprietary Limited"
+            val singleLongName = listOf(
+                buildLongOrder(
+                    invoice = "10341889998",
+                    customer = longCustomerName,
+                    productCount = 3
+                )
+            )
+
+            val multiLongInvoices = listOf(
+                buildOrder("10341890020", "Long Co A", 1),
+                buildOrder("10341890021", "Long Co B", 1),
+                buildOrder("10341890022", "Long Co C", 1),
+                buildOrder("10341890023", "Long Co D", 1),
+                buildOrder("10341890024", "Long Co E", 1),
+            )
+
+            val singleLongProducts = listOf(
+                buildLongOrder(
+                    invoice = "10341890030",
+                    customer = "Customer With Extremely Long Product Names",
+                    productCount = 3
+                )
+            )
+
+            val multiLongProducts = listOf(
+                buildLongOrder(
+                    invoice = "10341890031",
+                    customer = "Customer With Long Products 1",
+                    productCount = 2
+                ),
+                buildLongOrder(
+                    invoice = "10341890032",
+                    customer = "Customer With Long Products 2",
+                    productCount = 2
+                ),
+            )
+
             val base = SignatureScreenContract.State(
                 isLoading = false,
                 isSigned = false,
@@ -72,6 +111,37 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 error = "Failed to capture signature. Please try again."
             )
 
+            val longNameState = base.copy(
+                customerName = longCustomerName,
+                selectedOrderList = single1
+            )
+
+            val singleLongNameState = base.copy(selectedOrderList = singleLongName)
+            val multiLongInvoicesState = base.copy(selectedOrderList = multiLongInvoices)
+            val singleLongProductsState = base.copy(selectedOrderList = singleLongProducts)
+            val multiLongProductsState = base.copy(selectedOrderList = multiLongProducts)
+
+            // Large quantity scenarios
+            val singleLargeQtyOrders = listOf(
+                buildOrderLargeQty(
+                    invoice = "10341888888",
+                    customer = "Bulk Buyer International Pty Ltd"
+                )
+            )
+            val singleLargeQtyState = base.copy(selectedOrderList = singleLargeQtyOrders)
+
+            val multiLargeTotalsOrders = listOf(
+                buildOrderLargeQty(
+                    invoice = "10341888889",
+                    customer = "Mega Supplies Co"
+                ),
+                buildOrderLargeQty(
+                    invoice = "10341888890",
+                    customer = "Global Warehousing AU"
+                )
+            )
+            val multiLargeTotalsState = base.copy(selectedOrderList = multiLargeTotalsOrders)
+
             return sequenceOf(
                 base,
                 single3State,
@@ -80,6 +150,15 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 multi3State,
                 multi5State,
                 multi10SmallState,
+                // Long-text additions
+                longNameState,
+                singleLongNameState,
+                multiLongInvoicesState,
+                singleLongProductsState,
+                multiLongProductsState,
+                // Large quantities
+                singleLargeQtyState,
+                multiLargeTotalsState,
                 signed,
                 loading,
                 error,
@@ -98,6 +177,50 @@ private fun buildOrder(
             quantity = (idx % 3) + 1,
         )
     }
+    return SignatureOrderState(
+        invoiceNumber = invoice,
+        customerName = customer,
+        lineItems = items,
+    )
+}
+
+private fun buildLongOrder(
+    invoice: String,
+    customer: String,
+    productCount: Int,
+): SignatureOrderState {
+    val longBase = "Ultra-High Performance Windshield Wiper Blade with Nano-Coating Technology, All-Weather, Vehicle Fitment: Toyota Corolla 2008-2024, Part No. 9X-24B — "
+    val items = List(productCount) { idx ->
+        SignatureLineItemState(
+            productDescription = longBase + "Variant ${idx + 1}: Includes adapters for multiple arm types, corrosion-resistant frame, OEM-grade rubber compound for silent operation, extended warranty included.",
+            quantity = (idx % 3) + 1,
+        )
+    }
+    return SignatureOrderState(
+        invoiceNumber = invoice,
+        customerName = customer,
+        lineItems = items,
+    )
+}
+
+private fun buildOrderLargeQty(
+    invoice: String,
+    customer: String,
+): SignatureOrderState {
+    val items = listOf(
+        SignatureLineItemState(
+            productDescription = "Bulk Pack A — Extended Description",
+            quantity = 1_234_567,
+        ),
+        SignatureLineItemState(
+            productDescription = "Bulk Pack B — Extended Description",
+            quantity = 89_012_345,
+        ),
+        SignatureLineItemState(
+            productDescription = "Bulk Pack C — Extended Description",
+            quantity = 678_901_234,
+        ),
+    )
     return SignatureOrderState(
         invoiceNumber = invoice,
         customerName = customer,

@@ -18,6 +18,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -182,6 +184,8 @@ fun SignHereCanvas(
                     Text(
                         text = customerName,
                         style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                 }
@@ -192,57 +196,27 @@ fun SignHereCanvas(
     }
 }
 
-@Preview(name = "SignHereCanvas • Empty")
+@Preview(
+    name = "SignHereCanvas • Scenarios",
+    showBackground = true,
+    backgroundColor = 0xFFF5F5F5L,
+    widthDp = 360
+)
 @Composable
-private fun SignHereCanvasPreviewEmpty() {
+private fun SignHereCanvasPreview(
+    @PreviewParameter(SignHereCanvasPreviewProvider::class) state: SignHereCanvasPreviewState
+) {
     GPCTheme {
-        SignHereCanvas(
-            strokes = emptyList(),
-            onStrokesChange = {},
-            modifier = Modifier
-                .height(220.dp)
-                .fillMaxWidth(),
-            customerName = "John Appleseed"
-        )
-    }
-}
-
-@Preview(name = "SignHereCanvas • With Strokes")
-@Composable
-private fun SignHereCanvasPreviewWithStrokes() {
-    GPCTheme {
-        SignHereCanvas(
-            strokes = listOf(
-                listOf(
-                    Offset(10f, 10f), Offset(30f, 40f), Offset(60f, 20f), Offset(90f, 50f)
-                )
-            ),
-            onStrokesChange = {},
-            modifier = Modifier
-                .height(220.dp)
-                .fillMaxWidth(),
-            showHintWhenSigned = false,
-            customerName = "Alice Wonderland"
-        )
-    }
-}
-
-@Preview(name = "SignHereCanvas • With Strokes")
-@Composable
-private fun SignHereCanvasPreviewWithStrokesAndHint() {
-    GPCTheme {
-        SignHereCanvas(
-            strokes = listOf(
-                listOf(
-                    Offset(10f, 10f), Offset(30f, 40f), Offset(60f, 20f), Offset(90f, 50f)
-                )
-            ),
-            onStrokesChange = {},
-            modifier = Modifier
-                .height(220.dp)
-                .fillMaxWidth(),
-            showHintWhenSigned = true,
-            customerName = "Alice Wonderland"
-        )
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SignHereCanvas(
+                strokes = state.strokes,
+                onStrokesChange = {},
+                modifier = Modifier
+                    .height(220.dp)
+                    .fillMaxWidth(),
+                showHintWhenSigned = state.showHintWhenSigned,
+                customerName = state.customerName,
+            )
+        }
     }
 }

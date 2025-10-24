@@ -2,23 +2,19 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -56,7 +51,6 @@ fun SignatureScreen(
     onOutcome: (outcome: SignatureScreenContract.Effect.Outcome) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollState = rememberScrollState()
 
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
@@ -99,18 +93,15 @@ fun SignatureScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            // verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
 
             Column(modifier = Modifier) {
 
-                // Order details summary
                 SignatureOrderSummary(
                     orders = state.selectedOrderList,
                     modifier = Modifier
                 )
-
-                //Spacer(Modifier.size(Dimens.Space.small))
 
                 OutlinedButton(
                     onClick = { onEventSent(SignatureScreenContract.Event.ViewDetailsClicked) },
@@ -126,65 +117,33 @@ fun SignatureScreen(
                 }
                 Spacer(Modifier.size(Dimens.Space.medium))
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
+                //   HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
 
             }
 
             Column(
                 modifier = Modifier.weight(1F),
-                verticalArrangement = Arrangement.SpaceBetween
+                // verticalArrangement = Arrangement.SpaceBetween
             ) {
+                Spacer(Modifier.weight(1F))
+                SignHereCanvas(
+                    onComplete = { image ->
+                        onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
+                    },
+                    modifier = Modifier
+                        .height(250.dp)
+                        .fillMaxWidth(),
+                    strokes = state.signatureStrokes,
+                    onStrokesChange = { strokes ->
+                        onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                    },
+                    strokeColor = Color.Black,
+                    customerName = state.customerName,
+                    onClearClick = { onEventSent(SignatureScreenContract.Event.ClearSignature) },
+                )
 
-//                Column {
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(Dimens.Space.medium),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.SpaceBetween,
-//                    ) {
-//                        Text(
-//                            text = "Please sign here",
-//                            style = MaterialTheme.typography.titleLarge
-//                        )
-//                        OutlinedButton(
-//                            enabled = state.signatureStrokes.isNotEmpty(),
-//                            modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
-//                            onClick = {
-//                                onEventSent(SignatureScreenContract.Event.ClearSignature)
-//                            }
-//                        ) {
-//                            Row(
-//                                verticalAlignment = Alignment.CenterVertically
-//                            ) {
-//                                Icon(Icons.Default.Close, contentDescription = "Clear")
-//                                Text("Clear All")
-//                            }
-//                        }
-//                    }
+                Spacer(Modifier.size(Dimens.Space.large))
 
-                    SignHereCanvas(
-                        onComplete = { image ->
-                            onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
-                        },
-                        modifier = Modifier
-                            .height(250.dp)
-                            .fillMaxWidth(),
-                        strokes = state.signatureStrokes,
-                        onStrokesChange = { strokes ->
-                            onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
-                        },
-                        strokeColor = Color.Black,
-                        customerName = state.customerName,
-                        onClearClick = { onEventSent(SignatureScreenContract.Event.ClearSignature) },
-                        // Keep default hint/line; they hide when user starts signing
-                    )
-
-           //     }
-                //  Spacer(Modifier.size(Dimens.Space.medium))
-
-
-                // Confirm Button
                 Button(
                     onClick = {
                         if (state.signatureBitmap != null) {
