@@ -16,10 +16,6 @@ kotlin {
             languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
             languageSettings.optIn("kotlinx.coroutines.FlowPreview")
         }
-        androidMain.dependencies {
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -29,6 +25,7 @@ kotlin {
             implementation(projects.common.presentation)
             implementation(projects.common.di)
             implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.androidx.navigation3.ui)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
@@ -37,6 +34,8 @@ kotlin {
 
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
             implementation(projects.feature.history.historyApi)
             implementation(projects.feature.history.historyDomain)
