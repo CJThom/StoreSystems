@@ -10,27 +10,24 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
-        all {
-            languageSettings.optIn("kotlin.time.ExperimentalTime")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-            languageSettings.optIn("kotlinx.coroutines.FlowPreview")
-        }
         commonMain.dependencies {
+            implementation(projects.core.preferences.preferencesApi)
+            implementation(projects.common.kotlin)
+            implementation(projects.common.di)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(projects.common.di)
-            implementation(projects.common.kotlin)
             implementation(libs.koin.core)
-            implementation(projects.core.preferences.preferencesApi)
-            // Sync queue domain for SyncHandler and models
-            implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(libs.androidx.datastore.preferencesCore)
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.datastore.preferencesAndroid)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
 
 android {
-    namespace = "com.gpcasiapac.storesystems.feature.collect.domain"
+    namespace = "com.gpcasiapac.storesystems.core.preferences.data"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }

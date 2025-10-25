@@ -44,6 +44,8 @@ coil3 = "3.3.0"
 
 
 [libraries]
+androidx-datastore-preferencesCore = { module = "androidx.datastore:datastore-preferences-core", version = "1.1.1" }
+androidx-datastore-preferencesAndroid = { module = "androidx.datastore:datastore-preferences", version = "1.1.1" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
