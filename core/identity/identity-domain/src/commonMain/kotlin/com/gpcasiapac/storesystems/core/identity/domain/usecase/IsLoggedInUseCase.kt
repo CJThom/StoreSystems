@@ -1,13 +1,14 @@
 package com.gpcasiapac.storesystems.core.identity.domain.usecase
 
-import com.gpcasiapac.storesystems.common.kotlin.DataResult
-import com.gpcasiapac.storesystems.core.identity.domain.repository.IdentityRepository
+import com.gpcasiapac.storesystems.core.identity.api.SessionRepository
+import kotlinx.coroutines.flow.first
 
 class IsLoggedInUseCase(
-    private val identityRepository: IdentityRepository
+    private val sessionRepository: SessionRepository,
 ) {
-    suspend operator fun invoke(): Boolean = when (identityRepository.getCurrentUser()) {
-        is DataResult.Success -> true
-        is DataResult.Error -> false
+    suspend operator fun invoke(): Boolean {
+        val userId = sessionRepository.userIdFlow().first()
+        val token = sessionRepository.accessTokenFlow().first()
+        return !userId.isNullOrBlank() && !token.isNullOrBlank()
     }
 }

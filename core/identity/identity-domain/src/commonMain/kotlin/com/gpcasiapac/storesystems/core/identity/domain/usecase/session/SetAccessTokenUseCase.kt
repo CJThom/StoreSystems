@@ -1,9 +1,9 @@
 package com.gpcasiapac.storesystems.core.identity.domain.usecase.session
 
-import com.gpcasiapac.storesystems.core.identity.api.SessionManager
+import com.gpcasiapac.storesystems.core.identity.api.SessionRepository
 
 class SetAccessTokenUseCase(
-    private val sessionManager: SessionManager,
+    private val sessionRepository: SessionRepository,
 ) {
-    suspend operator fun invoke(token: String) = sessionManager.setAccessToken(token)
+    suspend operator fun invoke(token: String) = sessionRepository.setAccessToken(token)
 }

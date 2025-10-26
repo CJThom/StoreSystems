@@ -10,12 +10,4 @@ interface IdentityNetworkDataSource {
 
     suspend fun login(loginRequest: LoginRequestDto): DataResult<LoginResponseDto>
 
-    suspend fun refreshToken(refreshToken: String): DataResult<TokenDto>
-
-    suspend fun logout(): DataResult<Unit>
-
-    suspend fun getCurrentUser(): DataResult<UserDto>
-
-    suspend fun validateToken(token: String): DataResult<Boolean>
-
 }

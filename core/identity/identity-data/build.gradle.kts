@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
 }
@@ -16,6 +17,7 @@ kotlin {
             implementation(projects.core.identity.identityDomain)
             implementation(projects.common.kotlin)
             implementation(projects.common.di)
+            implementation(projects.common.networking)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
@@ -43,6 +45,13 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
+
+    // Package commonMain/resources into Android assets so ResourceReader can load them
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/commonMain/resources")
+        }
+    }
 }
 
 // KSP processors for each target used by this module

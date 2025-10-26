@@ -10,16 +10,8 @@ import com.gpcasiapac.storesystems.core.identity.api.model.User
  */
 interface IdentityService {
     suspend fun login(username: String, password: String): DataResult<AuthSession>
-    suspend fun getCurrentUser(): DataResult<User>
+    suspend fun getUser(userId: String): User?
     suspend fun isLoggedIn(): Boolean
-    suspend fun logout(): LogoutResult
-    suspend fun refreshToken(refreshToken: String): DataResult<Token>
+    suspend fun logout()
 }
 
-sealed interface LogoutResult {
-    data object Success : LogoutResult
-    sealed class Error(val message: String) : LogoutResult {
-        data object NetworkError : Error("Network error. Please try again.")
-        data object ServiceUnavailable : Error("Logout service unavailable. Please try again later.")
-    }
-}

@@ -1,16 +1,15 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 
 import androidx.lifecycle.viewModelScope
-import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContextBuilder
 import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
-import com.gpcasiapac.storesystems.feature.login.api.LoginService
+import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val loginService: LoginService,
+    private val loginUseCase: LoginUseCase,
     private val flags: FeatureFlags
 ) : MVIViewModel<LoginScreenContract.Event, LoginScreenContract.State, LoginScreenContract.Effect>() {
 
@@ -113,11 +112,11 @@ class LoginViewModel(
             )
         }
 
-        when (val result = loginService.login(
+        when (val result = loginUseCase(
             viewState.value.username,
             viewState.value.password
         )) {
-            is DataResult.Success -> {
+            is LoginUseCase.UseCaseResult.Success -> {
                 setState {
                     copy(
                         isLoading = false,
@@ -137,29 +136,9 @@ class LoginViewModel(
                 }
             }
 
-            is DataResult.Error -> {
-                val message = when (result) {
-                    is DataResult.Error.Network.ConnectionError ->
-                        "Network connection error. Please check your internet connection."
-                    is DataResult.Error.Network.HttpError -> when (result.code) {
-                        400, 401, 404 -> "Invalid username or password. Please try again."
-                        403 -> "Account is locked. Please contact support."
-                        429 -> "Too many login attempts. Please try again later."
-                        else -> "Login service is currently unavailable. Please try again later."
-                    }
-                    is DataResult.Error.Network.SerializationError ->
-                        "Login failed due to serialization error. Please try again."
-                    is DataResult.Error.Network.UnknownError ->
-                        "An unknown network error occurred. Please try again."
-                    is DataResult.Error.Client.Database ->
-                        "Login service is currently unavailable. Please try again later."
-                    is DataResult.Error.Client.Mapping ->
-                        "Login failed. Please try again."
-                    is DataResult.Error.Client.UnexpectedError ->
-                        result.message
-                }
-                setState { copy(isLoading = false, error = message) }
-                onError(message)
+            is LoginUseCase.UseCaseResult.Error -> {
+                setState { copy(isLoading = false, error = result.message) }
+                onError(result.message)
             }
         }
     }

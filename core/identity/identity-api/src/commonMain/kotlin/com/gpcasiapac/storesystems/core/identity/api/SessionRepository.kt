@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
  * Lightweight session storage facade for identity-related session values.
  * Backed by DataStore in identity-data.
  */
-interface SessionManager {
+interface SessionRepository {
     fun userIdFlow(): Flow<String?>
     suspend fun setUserId(userId: String)
 

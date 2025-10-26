@@ -4,7 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.gpcasiapac.storesystems.core.identity.api.SessionManager
+import com.gpcasiapac.storesystems.core.identity.api.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.map
  * DataStore-backed implementation of SessionManager.
  * Stores basic identity session values (user id, access token).
  */
-class SessionManagerImpl(
+class SessionRepositoryImpl(
     private val dataStore: DataStore<Preferences>
-) : SessionManager {
+) : SessionRepository {
 
     private companion object {
         val USER_ID_KEY = stringPreferencesKey("identity.user_id")
