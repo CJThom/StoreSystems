@@ -20,6 +20,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
             implementation(libs.kermit)
+            implementation(libs.androidx.datastore.preferencesCore)
 
             // Room KMP runtime and SQLite driver
             implementation(libs.androidx.room.runtime)

@@ -21,7 +21,7 @@ kotlin {
             implementation(projects.common.di)
             implementation(projects.common.kotlin)
             implementation(libs.koin.core)
-            implementation(projects.core.preferences.preferencesApi)
+           // implementation(projects.core.preferences.preferencesApi)
             // Sync queue domain for SyncHandler and models
             implementation(projects.core.syncQueue.syncQueueApi)
         }

@@ -7,6 +7,11 @@ import com.gpcasiapac.storesystems.core.identity.domain.usecase.IsLoggedInUseCas
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.LoginUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.LogoutUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.RefreshTokenUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ClearSessionUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ObserveAccessTokenFlowUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ObserveUserIdFlowUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.SetAccessTokenUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.SetUserIdUseCase
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -17,6 +22,13 @@ val identityDomainModule = module {
     singleOf(::IsLoggedInUseCase)
     singleOf(::LogoutUseCase)
     singleOf(::RefreshTokenUseCase)
+
+    // Session-related use cases
+    singleOf(::ObserveUserIdFlowUseCase)
+    singleOf(::SetUserIdUseCase)
+    singleOf(::ObserveAccessTokenFlowUseCase)
+    singleOf(::SetAccessTokenUseCase)
+    singleOf(::ClearSessionUseCase)
 
     // Bind public IdentityService facade here (impl lives in domain now)
     singleOf(::IdentityServiceImpl) { bind<IdentityService>() }
