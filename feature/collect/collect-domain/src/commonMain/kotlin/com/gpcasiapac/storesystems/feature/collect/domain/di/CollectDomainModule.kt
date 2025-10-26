@@ -27,10 +27,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetO
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetSelectedWorkOrderIdFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SetSelectedWorkOrderIdUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectFiltersFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SetCollectFiltersUseCase
+
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.ObserveCollectUserPrefsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SaveCollectUserPrefsUseCase
 
@@ -61,10 +58,10 @@ val collectDomainModule = module {
     factoryOf(::SubmitOrderUseCase)
 
     // Preferences use cases
-    factoryOf(::GetSelectedWorkOrderIdFlowUseCase)
-    factoryOf(::SetSelectedWorkOrderIdUseCase)
-    factoryOf(::GetCollectFiltersFlowUseCase)
-    factoryOf(::SetCollectFiltersUseCase)
+//    factoryOf(::GetSelectedWorkOrderIdFlowUseCase)
+//    factoryOf(::SetSelectedWorkOrderIdUseCase)
+//    factoryOf(::GetCollectFiltersFlowUseCase)
+//    factoryOf(::SetCollectFiltersUseCase)
     factoryOf(::ObserveCollectUserPrefsUseCase)
     factoryOf(::SaveCollectUserPrefsUseCase)
 

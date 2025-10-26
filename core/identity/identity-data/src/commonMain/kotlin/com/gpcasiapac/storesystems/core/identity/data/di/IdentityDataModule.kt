@@ -22,6 +22,7 @@ val identityDataModule = module {
 
 object IdentityDataModuleProvider : ModuleProvider {
     override fun modules(): List<Module> = listOf(
+        identityDataStoreModule, // must be loaded first to provide DataStore<Preferences>
         identityDataModule,
         identityDataDatabaseModule,
         identityDaoModule,
