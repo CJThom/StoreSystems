@@ -1,6 +1,10 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.material.icons.Icons
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderIdUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
+import kotlinx.coroutines.delay
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
@@ -10,14 +14,13 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderItemsInScanOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SubmitOrderUseCase
@@ -27,8 +30,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Collec
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -45,7 +46,8 @@ class OrderFulfilmentScreenViewModel(
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
-    private val submitOrderUseCase: SubmitOrderUseCase
+    private val submitOrderUseCase: SubmitOrderUseCase,
+    private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -94,6 +96,9 @@ class OrderFulfilmentScreenViewModel(
             selectedRepresentativeIds = emptySet(),
             courierName = "",
             signatureStrokes = emptyList(),
+            signatureBase64 = null,
+            isCustomerNameDialogVisible = false,
+            customerNameInput = "",
             correspondenceOptionList = listOf(
                 CorrespondenceItemDisplayParam(
                     id = "email",
@@ -127,7 +132,6 @@ class OrderFulfilmentScreenViewModel(
             observeLatestOpenWorkOrderUseCase(userRefId).collectLatest { wo ->
                 setState {
                     copy(
-                        signatureBase64 = wo?.signature,
                         collectingType = wo?.collectingType ?: CollectingType.STANDARD,
                         courierName = wo?.courierName ?: "",
                         isLoading = false,
@@ -146,6 +150,12 @@ class OrderFulfilmentScreenViewModel(
                 .collectLatest { items ->
                     setState { copy(collectOrderListItemStateList = items.toListItemState()) }
                 }
+        }
+        // Observe signature (Base64) from dedicated signatures table
+        viewModelScope.launch {
+            observeWorkOrderSignatureUseCase(userRefId).collectLatest { base64 ->
+                setState { copy(signatureBase64 = base64) }
+            }
         }
     }
 
@@ -228,6 +238,24 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.Sign -> {
                 sign()
             }
+            is OrderFulfilmentScreenContract.Event.ShowCustomerNameDialog -> {
+                setState { copy(isCustomerNameDialogVisible = true) }
+            }
+            is OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog -> {
+                setState { copy(isCustomerNameDialogVisible = false) }
+            }
+            is OrderFulfilmentScreenContract.Event.CustomerNameChanged -> {
+                setState { copy(customerNameInput = event.text) }
+            }
+            is OrderFulfilmentScreenContract.Event.ConfirmCustomerName -> {
+                val name = viewState.value.customerNameInput.trim()
+                if (name.isEmpty()) {
+                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please enter customer name") }
+                } else {
+                    setState { copy(isCustomerNameDialogVisible = false) }
+                    setEffect { OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested(name) }
+                }
+            }
 
             is OrderFulfilmentScreenContract.Event.SignatureSaved -> {
                 onSignatureSaved(event.strokes)
@@ -283,16 +311,16 @@ class OrderFulfilmentScreenViewModel(
                             if (event.autoSelect) {
                                 val addResult = addOrderSelectionUseCase(result.invoiceNumber, userRefId)
                                 when (addResult) {
-                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Added -> {
+                                    is AddOrderSelectionUseCase.UseCaseResult.Added -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
                                     }
-                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Duplicate -> {
+                                    is AddOrderSelectionUseCase.UseCaseResult.Duplicate -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${addResult.invoiceNumber}\"") }
                                     }
-                                    is com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase.UseCaseResult.Error -> {
+                                    is AddOrderSelectionUseCase.UseCaseResult.Error -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(addResult.message) }
@@ -397,10 +425,8 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun sign() {
-        // Navigate to signature screen - this will be handled by navigation layer
-        setEffect {
-            OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested
-        }
+        // Open customer name dialog before navigating to signature screen
+        setState { copy(isCustomerNameDialogVisible = true) }
     }
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {
@@ -439,31 +465,31 @@ class OrderFulfilmentScreenViewModel(
 
             CollectingType.STANDARD -> Unit
         }
-        
+
         // Start processing - add orders to sync queue
         viewModelScope.launch {
             setState { copy(isProcessing = true) }
             setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Processing orders...") }
-            
+
             // Add delay for UX feedback
             delay(1500)
-            
+
             // Add each order to sync queue
             val orders = s.collectOrderListItemStateList
             var successCount = 0
             var failureCount = 0
-            
+
             orders.forEach { order ->
                 val result = submitOrderUseCase(order.invoiceNumber)
-                
+
                 result.fold(
                     onSuccess = { successCount++ },
                     onFailure = { failureCount++ }
                 )
             }
-            
+
             setState { copy(isProcessing = false) }
-            
+
             // Show result feedback
             if (failureCount == 0) {
                 setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }

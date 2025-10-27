@@ -2,16 +2,22 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderStateList
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class SignatureScreenViewModel(
-    private val observeLatestOpenWorkOrderUseCase: ObserveLatestOpenWorkOrderUseCase,
+    private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
+    private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
     private val saveSignatureUseCase: SaveSignatureUseCase
 ) : MVIViewModel<
         SignatureScreenContract.Event,
@@ -23,7 +29,8 @@ class SignatureScreenViewModel(
             isLoading = false,
             isSigned = false,
             error = null,
-            signatureStrokes = emptyList()
+            signatureStrokes = emptyList(),
+            customerName = ""
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -37,9 +44,35 @@ class SignatureScreenViewModel(
 
     override fun onStart() {
         viewModelScope.launch {
-            observeLatestOpenWorkOrderUseCase("mock").collectLatest {
-                // TODO: Add signature strokes
-                setState { copy() }
+            observeLatestOpenWorkOrderWithOrdersUseCase("mock").collectLatest { workOrderWithOrders ->
+                val invoiceNumbers = workOrderWithOrders
+                    ?.collectOrderWithCustomerList
+                    ?.map { it.order.invoiceNumber }
+                    ?: emptyList()
+
+                if (invoiceNumbers.isEmpty()) {
+                    setState { copy(selectedOrderList = emptyList(), isLoading = false) }
+                    return@collectLatest
+                }
+
+                setState { copy(isLoading = true, error = null) }
+
+                val flows = invoiceNumbers.map { invoice ->
+                    getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoice).map { it }
+                }
+
+                val combinedFlow = if (flows.size == 1) {
+                    flows.first().map { listOf(it) }
+                } else {
+                    combine(flows) { it.toList() }
+                }
+
+                combinedFlow.collectLatest { domainList ->
+                    val nonNullDomain = domainList.filterNotNull()
+                    val presentationList = nonNullDomain.map { it.toState() }
+                    val signatureOrders = presentationList.toSignatureOrderStateList()
+                    setState { copy(selectedOrderList = signatureOrders, isLoading = false) }
+                }
             }
         }
     }
@@ -59,7 +92,7 @@ class SignatureScreenViewModel(
                             saveSignatureUseCase(
                                 userRefId = "mock",
                                 base64Signature = base64String,
-                                signedByName = null
+                                signedByName = viewState.value.customerName.trim().ifBlank { null }
                             )
 
                             // Set success effect
@@ -92,9 +125,17 @@ class SignatureScreenViewModel(
             }
 
             is SignatureScreenContract.Event.ClearError -> clearError()
+            is SignatureScreenContract.Event.SetCustomerName -> {
+                setState { copy(customerName = event.name) }
+            }
             is SignatureScreenContract.Event.Back -> setEffect { Back }
             is SignatureScreenContract.Event.SignatureCompleted -> {
                 setState { copy(signatureBitmap = event.signatureBitmap) }
+            }
+
+            is SignatureScreenContract.Event.ViewDetailsClicked -> {
+                val invoices = viewState.value.selectedOrderList.map { it.invoiceNumber }
+                setEffect { SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails(invoices) }
             }
 
             SignatureScreenContract.Event.ClearSignature -> {
