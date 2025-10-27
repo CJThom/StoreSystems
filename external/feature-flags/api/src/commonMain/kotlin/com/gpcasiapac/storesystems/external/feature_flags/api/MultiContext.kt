@@ -19,8 +19,6 @@ data class MultiContext(
         fun single(kind: String, key: String, attributes: Map<String, Any> = emptyMap()) =
             MultiContext(listOf(FeatureFlagContext(kind, key, attributes)))
 
-        //TODO Do we need anonymous contexts?
-
         fun user(key: String, attributes: Map<String, Any> = emptyMap()) =
             single("user", key, attributes)
 

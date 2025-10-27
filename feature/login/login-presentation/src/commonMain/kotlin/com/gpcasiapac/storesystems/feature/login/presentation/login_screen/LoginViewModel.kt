@@ -1,36 +1,14 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 
 import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
-import com.gpcasiapac.storesystems.external.feature_flags.api.MultiContextBuilder
-import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
-import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase
+import com.gpcasiapac.storesystems.feature.login.api.LoginService
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val loginUseCase: LoginUseCase,
-    private val flags: FeatureFlags
+    private val loginService: LoginService
 ) : MVIViewModel<LoginScreenContract.Event, LoginScreenContract.State, LoginScreenContract.Effect>() {
-
-    private fun configureAnonymousContext(builder: MultiContextBuilder) {
-        builder.user("user_session", buildMap {
-            put("anonymous", true)
-        })
-        builder.device("device_information", buildMap {
-            put("model", "TC53e")
-        })
-    }
-
-    private fun configureUserContext(username: String, builder: MultiContextBuilder) {
-        builder.user("user_session", buildMap {
-            put("anonymous", false)
-            put("username", username)
-        })
-        builder.device("device_information", buildMap {
-            put("model", "TC53e")
-        })
-    }
 
     override fun setInitialState(): LoginScreenContract.State {
         return LoginScreenContract.State(
@@ -52,10 +30,8 @@ class LoginViewModel(
     }
 
     override fun onStart() {
-        // Initialize any startup logic here if needed
-        flags.initialize {
-            configureAnonymousContext(this)
-        }
+        // ❌ REMOVED: Feature flag initialization
+        // Feature flags are initialized at app startup, not in ViewModel
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -123,12 +99,20 @@ class LoginViewModel(
                         error = null
                     )
                 }
-                flags.updateContext {
-                    configureUserContext(viewState.value.username, this)
-                }
-                // Feature flag: if MFA is required, don't navigate to home yet
-                if (flags.isEnabled(LoginFlags.MfaRequired)) {
-                    setEffect { LoginScreenContract.Effect.ShowToast("MFA required (demo)") }
+
+                // ❌ REMOVED: Feature flag context update - handled in domain layer
+                // ❌ REMOVED: Feature flag check - handled in domain layer
+
+                // Get MFA requirement from result metadata
+                val mfaRequired = result.data.metadata["mfaRequired"] as? Boolean ?: false
+                val mfaVersion = result.data.metadata["mfaVersion"] as? String ?: "v1"
+
+                // Use case tells us if MFA is required
+                if (mfaRequired) {
+                    setEffect { LoginScreenContract.Effect.ShowToast("Login successful!") }
+                    setEffect {
+                        LoginScreenContract.Effect.ShowToast("MFA required ($mfaVersion)")
+                    }
                     val uid = viewState.value.username.ifBlank { "user" }
                     setEffect { LoginScreenContract.Effect.Outcome.MfaRequired(uid) }
                 } else {

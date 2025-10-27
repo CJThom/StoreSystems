@@ -6,7 +6,9 @@ import com.gpcasiapac.storesystems.core.identity.api.model.Token
 import com.gpcasiapac.storesystems.core.identity.api.model.User
 
 class LoginUseCase(
-    private val identityService: IdentityService
+    private val identityService: IdentityService,
+    private val updateFeatureFlagContextUseCase: UpdateFeatureFlagContextUseCase,
+    private val checkMfaRequirementUseCase: CheckMfaRequirementUseCase
 ) {
     suspend operator fun invoke(username: String, password: String): UseCaseResult {
         val cleanUsername = username.trim()
@@ -35,9 +37,17 @@ class LoginUseCase(
                 if (result.data.user.username.isBlank() || result.data.token.accessToken.isBlank()) {
                     UseCaseResult.Error.LoginFailed
                 } else {
+                    // Update feature flag context with authenticated user
+                    updateFeatureFlagContextUseCase(cleanUsername)
+                    
+                    // Check MFA requirement based on feature flags
+                    val mfaResult = checkMfaRequirementUseCase()
+                    
                     UseCaseResult.Success(
                         user = result.data.user,
-                        token = result.data.token
+                        token = result.data.token,
+                        mfaRequired = mfaResult,
+                        mfaVersion = "version"
                     )
                 }
             }
@@ -67,7 +77,12 @@ class LoginUseCase(
     }
     
     sealed interface UseCaseResult {
-        data class Success(val user: User, val token: Token) : UseCaseResult
+        data class Success(
+            val user: User, 
+            val token: Token,
+            val mfaRequired: Boolean,
+            val mfaVersion: String?
+        ) : UseCaseResult
         
         sealed class Error(val message: String) : UseCaseResult {
             data object EmptyUsername : Error("Username cannot be empty.")

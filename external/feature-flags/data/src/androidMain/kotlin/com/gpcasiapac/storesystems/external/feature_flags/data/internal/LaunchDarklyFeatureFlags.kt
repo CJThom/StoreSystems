@@ -26,12 +26,15 @@ class LaunchDarklyFeatureFlagsAndroidImpl(
     private var ldClient: LDClient? = null
     private var ldConfig: LDConfig? = null
 
+    private var multiContext: MultiContext? = null
+
     override fun initialize(contextBuilder: MultiContextBuilder.() -> Unit): Boolean {
         ldConfig = LDConfig.Builder(LDConfig.Builder.AutoEnvAttributes.Enabled)
             .mobileKey(config.apiKey)
             .build()
-        val multiContext = MultiContextBuilder().apply(contextBuilder).build()
-        val ldContext = createContext(multiContext)
+        val initialContext = MultiContextBuilder().apply(contextBuilder).build()
+        multiContext = initialContext
+        val ldContext = createContext(initialContext)
         ldClient = LDClient.init(
             application,
             ldConfig,
@@ -42,8 +45,17 @@ class LaunchDarklyFeatureFlagsAndroidImpl(
     }
 
     override fun updateContext(contextBuilder: MultiContextBuilder.() -> Unit) {
-        val multiContext = MultiContextBuilder().apply(contextBuilder).build()
-        val newContext = createContext(multiContext)
+        val newPartialMulticontext = MultiContextBuilder().apply(contextBuilder).build()
+        val existingContexts = multiContext?.contexts.orEmpty()
+        val newByKindKey = newPartialMulticontext.contexts
+            .associateBy { it.kind to it.key }
+        val updatedContexts = existingContexts.map { existing ->
+            val new = newByKindKey[existing.kind to existing.key]
+            new?.copy(attributes = existing.attributes + new.attributes) ?: existing
+        }
+        val fullUpdatedMultiContext = MultiContext(updatedContexts)
+        val newContext = createContext(fullUpdatedMultiContext)
+        multiContext = fullUpdatedMultiContext
         ldClient?.identify(newContext)
     }
 
