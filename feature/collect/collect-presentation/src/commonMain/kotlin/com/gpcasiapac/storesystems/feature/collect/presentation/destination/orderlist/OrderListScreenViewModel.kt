@@ -524,8 +524,14 @@ class OrderListScreenViewModel(
     private fun handleToggleSelectionMode(enabled: Boolean) {
         if (enabled) {
             viewModelScope.launch {
-                val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return@launch
-                val persisted = observeSelectedOrderListUseCase(workOrderId = workOrderId).first()
+                val workOrderId: WorkOrderId? = sessionState.value.workOrderId.handleNull()
+
+                val persisted = if (workOrderId == null) {
+                    emptySet()
+                } else {
+                    observeSelectedOrderListUseCase(workOrderId = workOrderId).first()
+                }
+
                 setState {
                     copy(
                         isMultiSelectionEnabled = true,
