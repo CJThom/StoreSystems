@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 5,
-    "identityHash": "7dbc3204168cf49affca0a718bb90e3f",
+    "version": 4,
+    "identityHash": "78e78b0a6cdead6ecf758d2ea1153867",
     "entities": [
       {
         "tableName": "collect_orders",
@@ -315,8 +315,14 @@
       },
       {
         "tableName": "signatures",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`work_order_id` TEXT NOT NULL, `signature` TEXT NOT NULL, `signed_at` INTEGER NOT NULL, `signed_by_name` TEXT, PRIMARY KEY(`work_order_id`), FOREIGN KEY(`work_order_id`) REFERENCES `work_orders`(`work_order_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`signature_id` TEXT NOT NULL, `work_order_id` TEXT NOT NULL, `signature` TEXT NOT NULL, `signed_at` INTEGER NOT NULL, `signed_by_name` TEXT, PRIMARY KEY(`signature_id`), FOREIGN KEY(`work_order_id`) REFERENCES `work_orders`(`work_order_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
+          {
+            "fieldPath": "signatureId",
+            "columnName": "signature_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
           {
             "fieldPath": "workOrderId",
             "columnName": "work_order_id",
@@ -344,9 +350,20 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "work_order_id"
+            "signature_id"
           ]
         },
+        "indices": [
+          {
+            "name": "index_signatures_work_order_id",
+            "unique": true,
+            "columnNames": [
+              "work_order_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_signatures_work_order_id` ON `${TABLE_NAME}` (`work_order_id`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "work_orders",
@@ -364,7 +381,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7dbc3204168cf49affca0a718bb90e3f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '78e78b0a6cdead6ecf758d2ea1153867')"
     ]
   }
 }

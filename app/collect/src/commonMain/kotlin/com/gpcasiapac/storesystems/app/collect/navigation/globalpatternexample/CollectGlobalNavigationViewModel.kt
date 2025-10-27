@@ -73,7 +73,7 @@ class CollectGlobalNavigationViewModel :
             }
 
             is CollectOutcome.SignatureRequested -> {
-                push(Signature)
+                push(Signature(outcome.customerName))
             }
 
             is CollectOutcome.SignatureSaved -> pop()

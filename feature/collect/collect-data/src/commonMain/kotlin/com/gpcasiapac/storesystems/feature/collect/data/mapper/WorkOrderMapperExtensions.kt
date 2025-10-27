@@ -8,9 +8,6 @@ fun CollectWorkOrder.toDomain(): CollectWorkOrderEntity{
         workOrderId = workOrderId,
         userId = userId,
         createdAt = createdAt,
-        signature = signature,
-        signedAt = signedAt,
-        signedByName = signedByName,
         collectingType = collectingType,
         courierName = courierName,
     )

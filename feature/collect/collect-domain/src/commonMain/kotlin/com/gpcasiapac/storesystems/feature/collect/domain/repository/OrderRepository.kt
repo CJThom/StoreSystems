@@ -52,6 +52,16 @@ interface OrderRepository {
      */
     suspend fun refreshOrders(): Result<Unit>
 
+
+    /** Observe the set of selected order IDs for the given user scope. */
+    fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>>
+
+    /** Observe the signature (Base64) for the latest open Work Order for the given user. */
+    fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?>
+
+    /** Observe signature record (image + name + timestamp) for the latest open Work Order. */
+    fun observeLatestOpenWorkOrderSignatureRecord(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.SignatureRecord?>
+
     /** Observe the latest open Work Order (without joining orders). */
     fun observeLatestOpenWorkOrder(workOrderId: WorkOrderId): Flow<CollectWorkOrder?>
 

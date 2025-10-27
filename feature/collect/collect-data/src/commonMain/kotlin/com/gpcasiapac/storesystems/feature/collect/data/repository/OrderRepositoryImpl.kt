@@ -5,6 +5,7 @@ import androidx.room.useWriterConnection
 import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.SignatureDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
@@ -35,6 +36,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderReposi
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.SuggestionQuery
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
@@ -45,6 +47,7 @@ class OrderRepositoryImpl(
     private val database: AppDatabase,
     private val orderNetworkDataSource: OrderNetworkDataSource,
     private val logger: Logger,
+    private val signatureDao: SignatureDao,
 ) : OrderRepository {
 
     override suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder) {
@@ -67,6 +70,49 @@ class OrderRepositoryImpl(
     override fun getWorkOrderWithOrderWithCustomerFlow(workOrderId: WorkOrderId): Flow<WorkOrderWithOrderWithCustomers?> {
         return workOrderDao.getWorkOrderWithOrderWithCustomerRelationFlow(workOrderId = workOrderId)
             .map { it?.toDomain() }
+    }
+
+
+    override fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?> {
+        return workOrderDao.observeLatestOpenWorkOrderId(userRefId)
+            .flatMapLatest { id ->
+                if (id == null) flowOf<String?>(null) else signatureDao.observeByWorkOrderId(id)
+                    .map { it?.signature }
+            }
+    }
+
+    override fun observeLatestOpenWorkOrderSignatureRecord(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.SignatureRecord?> {
+        return workOrderDao.observeLatestOpenWorkOrderId(userRefId)
+            .flatMapLatest { id ->
+                if (id == null) flowOf(null) else signatureDao.observeByWorkOrderId(id)
+                    .map { entity ->
+                        if (entity == null) null else com.gpcasiapac.storesystems.feature.collect.domain.model.SignatureRecord(
+                            signatureBase64 = entity.signature,
+                            signedByName = entity.signedByName,
+                            signedAt = entity.signedAt,
+                        )
+                    }
+            }
+    }
+
+    override fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<WorkOrderWithOrderWithCustomers?> {
+        // Simplified: use ordered items relation anchored on work_order_items
+        return workOrderDao.observeLatestOpenWorkOrderForUser(userRefId)
+            .flatMapLatest { relation ->
+                if (relation == null) flowOf(null) else {
+                    val wo = relation.collectWorkOrderEntity
+                    workOrderDao
+                        .observeWorkOrderItemsWithOrders(wo.workOrderId)
+                        .map { itemsWithOrders ->
+                            val orderedDomain =
+                                itemsWithOrders.map { it.orderWithCustomer }.toDomain()
+                            WorkOrderWithOrderWithCustomers(
+                                collectWorkOrder = wo.toDomain(),
+                                collectOrderWithCustomerList = orderedDomain
+                            )
+                        }
+                }
+            }
     }
 
     override fun observeWorkOrderItemsInScanOrder(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomer>> =
@@ -131,18 +177,20 @@ class OrderRepositoryImpl(
         }
     }
 
+
     override suspend fun attachSignature(
         workOrderId: WorkOrderId,
         signature: String,
         signedByName: String?
     ): Result<Unit> = runCatching {
         val now = Clock.System.now()
-        workOrderDao.attachSignature(
+        val entity = SignatureEntity(
             workOrderId = workOrderId,
             signature = signature,
             signedAt = now,
-            signedBy = signedByName
+            signedByName = signedByName
         )
+        signatureDao.replaceForWorkOrder(entity)
     }
 
     override suspend fun setCollectingType(
@@ -256,10 +304,7 @@ class OrderRepositoryImpl(
                         workOrderId = workOrderId,
                         userId = userRefId,
                         createdAt = now,
-                        submittedAt = null,
-                        signature = null,
-                        signedAt = null,
-                        signedByName = null
+                        submittedAt = null
                     )
                     workOrderDao.insertOrReplaceWorkOrder(newWorkOrder)
                     openWorkOrder = newWorkOrder
@@ -313,9 +358,6 @@ class OrderRepositoryImpl(
             userId = userId,
             createdAt = now,
             submittedAt = null,
-            signature = null,
-            signedAt = null,
-            signedByName = null
         )
         val workOrderItems = invoiceNumbers.mapIndexed { index, invoice ->
             CollectWorkOrderItemEntity(

@@ -10,12 +10,14 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.TimeC
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.converter.SortOptionConverters
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.SignatureDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectUserPrefsDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.SignatureEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectUserPrefsEntity
 import kotlinx.coroutines.Dispatchers
 
@@ -26,9 +28,11 @@ import kotlinx.coroutines.Dispatchers
         CollectOrderLineItemEntity::class,
         CollectWorkOrderEntity::class,
         CollectWorkOrderItemEntity::class,
+        SignatureEntity::class,
+        CollectWorkOrderItemEntity::class,
         CollectUserPrefsEntity::class,
     ],
-    version = 5,
+    version = 1,
     exportSchema = true,
 )
 @TypeConverters(
@@ -40,6 +44,7 @@ import kotlinx.coroutines.Dispatchers
 abstract class AppDatabase : RoomDatabase() {
     abstract fun collectOrderDao(): CollectOrderDao
     abstract fun workOrderDao(): WorkOrderDao
+    abstract fun signatureDao(): SignatureDao
     abstract fun collectUserPrefsDao(): CollectUserPrefsDao
 }
 

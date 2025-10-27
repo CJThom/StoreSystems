@@ -1,7 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.entry
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
@@ -20,14 +19,14 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenDestination
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails.WorkOrderDetailsScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails.WorkOrderDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails.WorkOrderDetailsScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails.WorkOrderDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.navigation.CollectNavigationViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -113,9 +112,11 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                         is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
                             CollectOutcome.Back
                         )
+
                         is OrderDetailsScreenContract.Effect.Outcome.Selected -> onOutcome(
                             CollectOutcome.OpenOrderFulfilment
                         )
+
                         is OrderDetailsScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
                             CollectOutcome.OrderSelected(outcome.invoiceNumber)
                         )
@@ -137,7 +138,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                         )
 
                         is OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested -> onOutcome(
-                            CollectOutcome.SignatureRequested
+                            CollectOutcome.SignatureRequested(effect.customerName)
                         )
 
                         is OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails -> onOutcome(
@@ -170,13 +171,19 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
 
             entry<CollectFeatureDestination.Signature>(
                 metadata = ListDetailSceneStrategy.extraPane(),
-            ) {
-                SignatureScreenDestination { outcome ->
+            ) { destination ->
+                SignatureScreenDestination(customerName = destination.customerName) { outcome ->
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
+                        is SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails -> onOutcome(
+                            CollectOutcome.WorkOrderItemSelected(outcome.invoiceNumbers.first())
+                        )
+
                         is SignatureScreenContract.Effect.Outcome.SignatureSaved -> {
                             onOutcome(CollectOutcome.Back)
                         }
+
+
                     }
                 }
             }

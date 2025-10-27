@@ -100,14 +100,22 @@ class SuperGlobalNavigationViewModel :
                 TabItem.Collect(),
                 CollectFeatureDestination.OrderDetails(outcome.invoiceNumber)
             )
+
             is CollectOutcome.OpenOrderFulfilment -> {
                 popBackInTab(TabItem.Collect(), 1)
                 pushInTab(TabItem.Collect(), CollectFeatureDestination.OrderFulfilment)
             }
+
             is CollectOutcome.Back -> popBackInTab(TabItem.Collect(), 1)
-            CollectOutcome.SignatureRequested -> pushInTab(TabItem.Collect(), CollectFeatureDestination.Signature)
+            is CollectOutcome.SignatureRequested -> pushInTab(
+                tab = TabItem.Collect(),
+                key = CollectFeatureDestination.Signature(outcome.customerName)
+            )
+
             is CollectOutcome.SignatureSaved -> popBackInTab(TabItem.Collect(), 1)
-            CollectOutcome.Logout -> { /* TODO: handle logout at shell level if needed */ }
+            CollectOutcome.Logout -> { /* TODO: handle logout at shell level if needed */
+            }
+
             is CollectOutcome.WorkOrderItemSelected -> pushInTab(
                 TabItem.Collect(),
                 CollectFeatureDestination.WorkOrderDetails(outcome.invoiceNumber)
