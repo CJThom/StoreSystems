@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.order
 
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 

@@ -4,31 +4,15 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWith
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Signature
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Query parameters for observing orders. Start minimal: only search text.
- * Extend later with sort, filters, paging, etc.
- */
-data class OrderQuery(
-    val searchText: String = "",
-)
-
-// Main-list query for filters + sort
-data class MainOrderQuery(
-    val customerTypes: Set<CustomerType>,
-    val sort: SortOption,
-)
-
-// Search-only query for debounced search text
-data class SearchQuery(
-    val text: String,
-)
 
 interface OrderRepository {
     /** Observe the total count of orders in the DB (independent of filters/search). */
@@ -52,18 +36,11 @@ interface OrderRepository {
      */
     suspend fun refreshOrders(): Result<Unit>
 
-
-    /** Observe the set of selected order IDs for the given user scope. */
-    fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>>
-
-    /** Observe the signature (Base64) for the latest open Work Order for the given user. */
-    fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?>
-
     /** Observe signature record (image + name + timestamp) for the latest open Work Order. */
-    fun observeLatestOpenWorkOrderSignatureRecord(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.SignatureRecord?>
+    fun getWorkOrderSignatureFlow(workOrderId: WorkOrderId): Flow<Signature?>
 
     /** Observe the latest open Work Order (without joining orders). */
-    fun observeLatestOpenWorkOrder(workOrderId: WorkOrderId): Flow<CollectWorkOrder?>
+    fun getCollectWorkOrderFlow(workOrderId: WorkOrderId): Flow<CollectWorkOrder?>
 
     /** Observe the full latest open Work Order with its orders (signature included). */
     fun getWorkOrderWithOrderWithCustomerFlow(workOrderId: WorkOrderId): Flow<WorkOrderWithOrderWithCustomers?>
@@ -71,23 +48,13 @@ interface OrderRepository {
     /** New: Observe ordered list of orders (domain) for a given Work Order id. */
     fun observeWorkOrderItemsInScanOrder(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomer>>
 
-    /** Replace the entire set of selected IDs. */
-    suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
-
-    /** Add a single order ID to the selection. Returns true if newly added, false if it already existed. */
-    suspend fun addSelectedId(orderId: String, userRefId: String): Boolean
-
     /** Remove a single order ID from the selection. */
-    suspend fun removeSelectedId(orderId: String, userRefId: String)
+    suspend fun removeWorkOrderItem(workOrderId: WorkOrderId, orderId: String)
 
     /** Clear the selection. */
-    suspend fun clear(workOrderId: WorkOrderId)
+    suspend fun deleteWorkOrder(workOrderId: WorkOrderId)
 
-    suspend fun attachSignature(
-        workOrderId: WorkOrderId,
-        signature: String,
-        signedByName: String?
-    ): Result<Unit>
+    suspend fun insertOrReplaceSignature(signature: Signature)
 
     // New: persist collecting type selection for the latest open Work Order
     suspend fun setCollectingType(workOrderId: WorkOrderId, type: CollectingType)
@@ -100,4 +67,8 @@ interface OrderRepository {
 
     suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder)
 
+    suspend fun addOrderToCollectWorkOrder(
+        workOrderId: WorkOrderId,
+        orderId: String
+    ): Boolean
 }

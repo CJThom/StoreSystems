@@ -3,15 +3,12 @@ package com.gpcasiapac.storesystems.feature.collect.data.mapper
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
 
-fun CollectWorkOrderEntity.toDomain(): CollectWorkOrder =
-    CollectWorkOrder(
+fun CollectWorkOrderEntity.toDomain(): CollectWorkOrder {
+    return CollectWorkOrder(
         workOrderId = workOrderId,
         userId = userId,
         createdAt = createdAt,
-        signature = signature,
-        signedAt = signedAt,
-        signedByName = signedByName,
         collectingType = collectingType,
         courierName = courierName,
     )
-
+}

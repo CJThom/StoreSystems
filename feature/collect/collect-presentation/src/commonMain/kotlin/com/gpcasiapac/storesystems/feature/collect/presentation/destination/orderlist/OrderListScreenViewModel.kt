@@ -10,17 +10,17 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderSelected
@@ -42,10 +42,10 @@ class OrderListScreenViewModel(
     private val observeOrderCountUseCase: ObserveOrderCountUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeSelectedOrderListUseCase: ObserveOrderSelectionUseCase,
-    private val setOrderSelectionUseCase: SetOrderSelectionUseCase,
-    private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
+    private val addOrderListToCollectWorkOrderUseCase: AddOrderListToCollectWorkOrderUseCase,
+    private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
-    private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
+    private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
@@ -56,8 +56,6 @@ class OrderListScreenViewModel(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
     ) {
-
-    private val userRefId = "mock"
 
     override fun setInitialState(): OrderListScreenContract.State {
 
@@ -264,7 +262,7 @@ class OrderListScreenViewModel(
 
     private suspend fun handleDraftBarDeleteClicked() {
         val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return
-        clearOrderSelectionUseCase(workOrderId = workOrderId)
+        deleteWorkOrderUseCase(workOrderId = workOrderId)
         setState {
             copy(
                 isDraftBarVisible = false,
@@ -446,8 +444,14 @@ class OrderListScreenViewModel(
     private fun handleSubmitSelectedOrders() {
         val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
         viewModelScope.launch {
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
 
-            setOrderSelectionUseCase(selectedOrderIdList, userRefId)
+            addOrderListToCollectWorkOrderUseCase(
+                workOrderId = workOrderId,
+                orderIdList = selectedOrderIdList
+            )
+
             setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
         setState {
@@ -461,7 +465,15 @@ class OrderListScreenViewModel(
 
     private fun handleStartNewWorkOrderClick() {
         viewModelScope.launch {
-            setOrderSelectionUseCase(emptyList(), userRefId)
+
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
+
+            addOrderListToCollectWorkOrderUseCase(
+                workOrderId = workOrderId,
+                orderIdList = emptyList()
+            )
+
             setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
         setState {
@@ -481,9 +493,21 @@ class OrderListScreenViewModel(
             return
         }
         viewModelScope.launch {
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
             // Commit adds and removals
-            toAdd.forEach { addOrderSelectionUseCase(it, userRefId) }
-            toRemove.forEach { removeOrderSelectionUseCase(it, userRefId) }
+            toAdd.forEach {
+                addOrderToCollectWorkOrderUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
+            toRemove.forEach {
+                removeOrderSelectionUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
             val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
             val selected = newExisting
             setState {
@@ -504,8 +528,20 @@ class OrderListScreenViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
-            toAdd.forEach { addOrderSelectionUseCase(it, userRefId) }
-            toRemove.forEach { removeOrderSelectionUseCase(it, userRefId) }
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
+            toAdd.forEach {
+                addOrderToCollectWorkOrderUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
+            toRemove.forEach {
+                removeOrderSelectionUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
             val finalIds = ((s.existingDraftIdSet + toAdd) - toRemove).toList()
             setState {
                 copy(

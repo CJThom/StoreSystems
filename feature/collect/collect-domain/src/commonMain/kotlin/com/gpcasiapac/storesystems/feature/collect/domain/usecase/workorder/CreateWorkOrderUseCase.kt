@@ -1,30 +1,40 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
-import kotlinx.coroutines.CancellationException
+import java.util.UUID.randomUUID
+import kotlin.time.Clock
 
 class CreateWorkOrderUseCase(
     private val orderRepository: OrderRepository,
 ) {
 
-    suspend operator fun invoke(orderId: String, userRefId: String): UseCaseResult {
-        val newWorkOrder = CollectWorkOrderEntity(
+    suspend operator fun invoke(userRefId: String): UseCaseResult {
+
+        val workOrderId = WorkOrderId(randomUUID().toString()) // TODO: Use kotlin kmp
+        val now = Clock.System.now()
+
+        val newWorkOrder = CollectWorkOrder(
             workOrderId = workOrderId,
             userId = userRefId,
             createdAt = now,
-            submittedAt = null,
-            signature = null,
-            signedAt = null,
-            signedByName = null
+            collectingType = null,
+            courierName = null
         )
+
+        orderRepository.insertOrReplaceWorkOrder(newWorkOrder)
+
+        // TODO: Handle exceptions
+        return UseCaseResult.Success(workOrderId)
+
     }
 
     sealed interface UseCaseResult {
-        data class Added(val invoiceNumber: String) : UseCaseResult
-        data class Duplicate(val invoiceNumber: String) : UseCaseResult
+        data class Success(val workOrderId: WorkOrderId) : UseCaseResult
         sealed class Error(val message: String) : UseCaseResult {
-            data object InvalidInput : Error("Invoice number cannot be empty.")
             data class Unexpected(val reason: String) : Error(reason)
         }
     }
+
 }

@@ -2,8 +2,8 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.wor
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class WorkOrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
+    private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
     private val invoiceNumber: String
 ) : MVIViewModel<
         WorkOrderDetailsScreenContract.Event,
@@ -48,7 +48,7 @@ class WorkOrderDetailsScreenViewModel(
 
     private suspend fun loadOrderDetails(invoiceNumber: String) {
 
-        getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoiceNumber).catch { throwable ->
+        observeCollectOrderWithCustomerWithLineItemsUseCase(invoiceNumber).catch { throwable ->
             val errorMessage = throwable.message ?: "An unknown error occurred"
             setState { copy(isLoading = false, error = errorMessage) }
             setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(errorMessage) }

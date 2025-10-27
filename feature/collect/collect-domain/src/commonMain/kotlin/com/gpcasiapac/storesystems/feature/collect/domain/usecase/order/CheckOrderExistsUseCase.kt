@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.order
 
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
@@ -9,18 +9,22 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderReposi
 class CheckOrderExistsUseCase(
     private val orderRepository: OrderRepository,
 ) {
+
     suspend operator fun invoke(invoiceNumber: String): UseCaseResult {
-        val clean = invoiceNumber.trim()
-        if (clean.isEmpty()) return UseCaseResult.Error.InvalidInput
-        val exists = orderRepository.existsInvoice(clean)
-        return if (exists) UseCaseResult.Exists(clean) else UseCaseResult.Error.NotFound(clean)
+        val exists = orderRepository.existsInvoice(invoiceNumber)
+        return if (exists) {
+            UseCaseResult.Exists(invoiceNumber)
+        } else {
+            UseCaseResult.Error.NotFound(invoiceNumber)
+        }
     }
 
     sealed interface UseCaseResult {
         data class Exists(val invoiceNumber: String) : UseCaseResult
         sealed class Error(val message: String) : UseCaseResult {
-            data object InvalidInput : Error("Invoice number cannot be empty.")
-            data class NotFound(val invoiceNumber: String) : Error("Order not found: \"$invoiceNumber\"")
+            data class NotFound(val invoiceNumber: String) :
+                Error("Order not found: \"$invoiceNumber\"")
         }
     }
+
 }

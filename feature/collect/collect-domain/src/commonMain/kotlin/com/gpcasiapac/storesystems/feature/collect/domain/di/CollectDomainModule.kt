@@ -3,25 +3,25 @@ package com.gpcasiapac.storesystems.feature.collect.domain.di
 import com.gpcasiapac.storesystems.common.di.ModuleProvider
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.sync.SubmitOrderSyncHandler
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderWithOrderWithCustomersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderItemsInScanOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SubmitOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrderSearchSuggestionListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderWithOrderWithCustomersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderCollectingTypeUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderCourierNameUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -32,7 +32,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetColle
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
-    factoryOf(::GetCollectOrderWithCustomerWithLineItemsFlowUseCase)
+    factoryOf(::ObserveCollectOrderWithCustomerWithLineItemsUseCase)
     factoryOf(::FetchOrderListUseCase)
     factoryOf(::GetOrderSearchSuggestionListUseCase)
     factoryOf(::ObserveMainOrdersUseCase)
@@ -41,17 +41,17 @@ val collectDomainModule = module {
     factoryOf(::CheckOrderExistsUseCase)
 
     factoryOf(::SaveSignatureUseCase)
-    factoryOf(::ObserveLatestOpenWorkOrderUseCase)
+    factoryOf(::ObserveCollectWorkOrderUseCase)
     factoryOf(::ObserveWorkOrderWithOrderWithCustomersUseCase)
     factoryOf(::ObserveWorkOrderItemsInScanOrderUseCase)
     factoryOf(::SetWorkOrderCollectingTypeUseCase)
     factoryOf(::SetWorkOrderCourierNameUseCase)
     // Selection use cases
     factoryOf(::ObserveOrderSelectionUseCase)
-    factoryOf(::SetOrderSelectionUseCase)
-    factoryOf(::AddOrderSelectionUseCase)
+    factoryOf(::AddOrderListToCollectWorkOrderUseCase)
+    factoryOf(::AddOrderToCollectWorkOrderUseCase)
     factoryOf(::RemoveOrderSelectionUseCase)
-    factoryOf(::ClearOrderSelectionUseCase)
+    factoryOf(::DeleteWorkOrderUseCase)
     factoryOf(::SubmitOrderUseCase)
 
     // Preferences use cases

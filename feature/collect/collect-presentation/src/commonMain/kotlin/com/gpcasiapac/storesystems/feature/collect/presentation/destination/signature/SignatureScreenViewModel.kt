@@ -2,16 +2,16 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderWithOrderWithCustomersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderStateList
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
@@ -22,10 +22,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class SignatureScreenViewModel(
-    private val observeLatestOpenWorkOrderUseCase: ObserveLatestOpenWorkOrderUseCase,
+    private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val observeLatestOpenWorkOrderWithOrdersUseCase: ObserveLatestOpenWorkOrderWithOrdersUseCase,
-    private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
+    private val observeWorkOrderWithOrderWithCustomersUseCase: ObserveWorkOrderWithOrderWithCustomersUseCase,
+    private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
     private val saveSignatureUseCase: SaveSignatureUseCase
 ) : MVIViewModel<
         SignatureScreenContract.Event,
@@ -58,7 +58,7 @@ class SignatureScreenViewModel(
         viewModelScope.launch {
             val workOrderId: WorkOrderId =
                 sessionState.value.workOrderId.handleNull() ?: return@launch
-            observeLatestOpenWorkOrderUseCase(workOrderId = workOrderId).collectLatest { workOrderWithOrders ->
+            observeWorkOrderWithOrderWithCustomersUseCase(workOrderId = workOrderId).collectLatest { workOrderWithOrders ->
                 val invoiceNumbers = workOrderWithOrders
                     ?.collectOrderWithCustomerList
                     ?.map { it.order.invoiceNumber }
@@ -72,7 +72,7 @@ class SignatureScreenViewModel(
                 setState { copy(isLoading = true, error = null) }
 
                 val flows = invoiceNumbers.map { invoice ->
-                    getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoice).map { it }
+                    observeCollectOrderWithCustomerWithLineItemsUseCase(invoice).map { it }
                 }
 
                 val combinedFlow = if (flows.size == 1) {
@@ -107,8 +107,8 @@ class SignatureScreenViewModel(
                             // Call the use case with correct parameters
                             saveSignatureUseCase(
                                 workOrderId = workOrderId,
-                                base64Signature = base64String,
-                                signedByName = viewState.value.customerName.trim().ifBlank { null }
+                                signatureBase64 = base64String,
+                                signedByName = viewState.value.customerName
                             )
 
                             // Set success effect
@@ -145,6 +145,7 @@ class SignatureScreenViewModel(
             is SignatureScreenContract.Event.SetCustomerName -> {
                 setState { copy(customerName = event.name) }
             }
+
             is SignatureScreenContract.Event.Back -> setEffect { Back }
             is SignatureScreenContract.Event.SignatureCompleted -> {
                 setState { copy(signatureBitmap = event.signatureBitmap) }

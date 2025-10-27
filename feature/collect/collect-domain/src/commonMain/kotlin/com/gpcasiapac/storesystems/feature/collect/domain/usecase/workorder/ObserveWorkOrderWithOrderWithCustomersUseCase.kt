@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId

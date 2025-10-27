@@ -1,14 +1,14 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
-class ClearOrderSelectionUseCase(
+class DeleteWorkOrderUseCase(
     private val orderRepository: OrderRepository,
 ) {
 
     suspend operator fun invoke(workOrderId: WorkOrderId) {
-        return orderRepository.clear(workOrderId = workOrderId)
+        return orderRepository.deleteWorkOrder(workOrderId = workOrderId)
     }
 
 }

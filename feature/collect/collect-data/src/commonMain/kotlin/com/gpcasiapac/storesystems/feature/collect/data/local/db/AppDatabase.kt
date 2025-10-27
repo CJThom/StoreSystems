@@ -29,7 +29,6 @@ import kotlinx.coroutines.Dispatchers
         CollectWorkOrderEntity::class,
         CollectWorkOrderItemEntity::class,
         SignatureEntity::class,
-        CollectWorkOrderItemEntity::class,
         CollectUserPrefsEntity::class,
     ],
     version = 1,

@@ -9,14 +9,14 @@ import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrderSearchSuggestionListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -31,10 +31,10 @@ class SearchViewModel(
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     // Selection persistence dependencies
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
-    private val setOrderSelectionUseCase: SetOrderSelectionUseCase,
-    private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
+    private val addOrderListToCollectWorkOrderUseCase: AddOrderListToCollectWorkOrderUseCase,
+    private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
-    private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
+    private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
         SearchContract.Event,
@@ -291,9 +291,21 @@ class SearchViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
             // Commit adds and removals
-            toAdd.forEach { addOrderSelectionUseCase(it, userRefId) }
-            toRemove.forEach { removeOrderSelectionUseCase(it, userRefId) }
+            toAdd.forEach {
+                addOrderToCollectWorkOrderUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
+            toRemove.forEach {
+                removeOrderSelectionUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
             val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
             setState {
                 copy(
@@ -313,8 +325,20 @@ class SearchViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
-            toAdd.forEach { addOrderSelectionUseCase(it, userRefId) }
-            toRemove.forEach { removeOrderSelectionUseCase(it, userRefId) }
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
+            toAdd.forEach {
+                addOrderToCollectWorkOrderUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
+            toRemove.forEach {
+                removeOrderSelectionUseCase(
+                    workOrderId = workOrderId,
+                    orderId = it
+                )
+            }
             val finalIds = ((s.existingDraftIdSet + toAdd) - toRemove).toList()
             setState {
                 copy(

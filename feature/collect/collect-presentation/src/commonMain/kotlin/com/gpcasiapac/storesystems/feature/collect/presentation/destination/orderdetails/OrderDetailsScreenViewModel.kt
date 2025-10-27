@@ -5,9 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -15,19 +23,23 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class OrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val getCollectOrderWithCustomerWithLineItemsFlowUseCase: GetCollectOrderWithCustomerWithLineItemsFlowUseCase,
-    private val setOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase,
-    private val checkOrderExistsUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase,
-    private val initialInvoice: String
+    private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
+    private val addOrderListToCollectWorkOrderUseCase: AddOrderListToCollectWorkOrderUseCase,
+    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
+    private val initialInvoice: String,
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
         OrderDetailsScreenContract.Event,
         OrderDetailsScreenContract.State,
-        OrderDetailsScreenContract.Effect>() {
+        OrderDetailsScreenContract.Effect>(),
+    SessionHandlerDelegate<CollectSessionIds> by SessionHandler(
+        initialSession = CollectSessionIds(),
+        sessionFlow = collectSessionIdsFlowUseCase()
+    ) {
 
     private val invoiceKey = MutableStateFlow(initialInvoice.trim())
 
@@ -48,12 +60,17 @@ class OrderDetailsScreenViewModel(
                 .distinctUntilChanged { a, b -> a.equals(b, ignoreCase = true) }
                 .onEach { setState { copy(isLoading = true, error = null) } }
                 .flatMapLatest { invoice ->
-                    getCollectOrderWithCustomerWithLineItemsFlowUseCase(invoice)
+                    observeCollectOrderWithCustomerWithLineItemsUseCase(invoice)
                         .map { domain -> domain?.toState() }
                         .catch { e ->
                             val msg = e.message ?: "Failed to load order"
                             setState { copy(isLoading = false, error = msg) }
-                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
+                            setEffect {
+                                OrderDetailsScreenContract.Effect.ShowSnackbar(
+                                    msg,
+                                    duration = SnackbarDuration.Long
+                                )
+                            }
                             emit(null)
                         }
                 }
@@ -61,8 +78,19 @@ class OrderDetailsScreenViewModel(
                     if (orderState != null) {
                         setState { copy(order = orderState, isLoading = false, error = null) }
                     } else {
-                        setState { copy(order = null, isLoading = false, error = "Order not found") }
-                        setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar("Order not found", duration = SnackbarDuration.Long) }
+                        setState {
+                            copy(
+                                order = null,
+                                isLoading = false,
+                                error = "Order not found"
+                            )
+                        }
+                        setEffect {
+                            OrderDetailsScreenContract.Effect.ShowSnackbar(
+                                "Order not found",
+                                duration = SnackbarDuration.Long
+                            )
+                        }
                     }
                 }
         }
@@ -80,14 +108,32 @@ class OrderDetailsScreenViewModel(
 
             is OrderDetailsScreenContract.Event.Select -> {
                 viewModelScope.launch {
+                    val workOrderId: WorkOrderId =
+                        sessionState.value.workOrderId.handleNull() ?: return@launch
+
                     val current = invoiceKey.value
-                    runCatching { setOrderSelectionUseCase(listOf(current), "mock") }
-                        .onSuccess { setEffect { OrderDetailsScreenContract.Effect.Outcome.Selected(current) } }
-                        .onFailure { t ->
-                            val msg = t.message ?: "Failed to select order. Please try again."
-                            setState { copy(error = msg) }
-                            setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
+
+                    runCatching {
+                        addOrderListToCollectWorkOrderUseCase(
+                            workOrderId = workOrderId,
+                            orderIdList = listOf(current)
+                        )
+                    }.onSuccess {
+                        setEffect {
+                            OrderDetailsScreenContract.Effect.Outcome.Selected(
+                                current
+                            )
                         }
+                    }.onFailure { t ->
+                        val msg = t.message ?: "Failed to select order. Please try again."
+                        setState { copy(error = msg) }
+                        setEffect {
+                            OrderDetailsScreenContract.Effect.ShowSnackbar(
+                                msg,
+                                duration = SnackbarDuration.Long
+                            )
+                        }
+                    }
                 }
             }
 
@@ -95,13 +141,14 @@ class OrderDetailsScreenViewModel(
                 val invoice = event.invoiceNumber.trim()
                 viewModelScope.launch {
                     when (val result = checkOrderExistsUseCase(invoice)) {
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             val target = result.invoiceNumber
                             if (!target.equals(invoiceKey.value, ignoreCase = true)) {
                                 invoiceKey.value = target
                             }
                         }
-                        is com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase.UseCaseResult.Error -> {
+
+                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
                             setEffect { OrderDetailsScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderDetailsScreenContract.Effect.PlaySound(SoundEffect.Error) }
                             setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(result.message) }
@@ -123,8 +170,22 @@ class OrderDetailsScreenViewModel(
             onFailure = { t ->
                 val msg = t.message ?: "Failed to refresh orders. Please try again."
                 setState { copy(isLoading = false, error = msg) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(msg, duration = SnackbarDuration.Long) }
+                setEffect {
+                    OrderDetailsScreenContract.Effect.ShowSnackbar(
+                        msg,
+                        duration = SnackbarDuration.Long
+                    )
+                }
             }
         )
     }
+
+    private fun WorkOrderId?.handleNull(): WorkOrderId? {
+        if (this == null) {
+            setState { copy(error = "No Work Order Selected") }
+        }
+        return this
+    }
+
+
 }

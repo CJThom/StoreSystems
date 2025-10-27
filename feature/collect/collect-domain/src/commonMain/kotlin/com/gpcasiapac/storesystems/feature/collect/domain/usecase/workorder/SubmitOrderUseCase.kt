@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType

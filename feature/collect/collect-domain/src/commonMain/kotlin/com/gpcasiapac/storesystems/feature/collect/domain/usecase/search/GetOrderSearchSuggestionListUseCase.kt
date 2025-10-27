@@ -1,8 +1,8 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.search
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.SuggestionQuery
 
 class GetOrderSearchSuggestionListUseCase(
     private val orderRepository: OrderRepository,

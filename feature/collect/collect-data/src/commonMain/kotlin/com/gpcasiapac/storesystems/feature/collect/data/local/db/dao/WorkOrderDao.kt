@@ -20,6 +20,9 @@ interface WorkOrderDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertWorkOrder(entity: CollectWorkOrderEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrReplaceWorkOrderEntity(collectWorkOrderEntity: CollectWorkOrderEntity)
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertItems(items: List<CollectWorkOrderItemEntity>): List<Long>
 
@@ -28,15 +31,6 @@ interface WorkOrderDao {
 
     @Query("SELECT COALESCE(MAX(position), 0) FROM work_order_items WHERE work_order_id = :workOrderId")
     suspend fun getMaxPosition(workOrderId: WorkOrderId): Long
-
-    @Query(
-        """
-        UPDATE work_orders
-        SET signature = :signature, signed_at = :signedAt, signed_by_name = :signedBy
-        WHERE work_order_id = :workOrderId
-        """
-    )
-    suspend fun attachSignature(workOrderId: WorkOrderId, signature: String, signedAt: Instant, signedBy: String?)
 
     @Query(
         """

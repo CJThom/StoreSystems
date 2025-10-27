@@ -1,8 +1,8 @@
-package com.gpcasiapac.storesystems.feature.collect.domain.usecase
+package com.gpcasiapac.storesystems.feature.collect.domain.usecase.search
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.SearchQuery
 import kotlinx.coroutines.flow.Flow
 
 /**
