@@ -12,9 +12,13 @@ kotlin {
     androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     jvm()
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+        }
         commonMain.dependencies {
             implementation(projects.core.syncQueue.syncQueueApi)
             implementation(projects.core.syncQueue.syncQueueDomain)
+            implementation(projects.common.di)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
