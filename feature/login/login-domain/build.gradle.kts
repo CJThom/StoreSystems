@@ -15,6 +15,7 @@ kotlin {
             implementation(projects.core.identity.identityApi)
             implementation(projects.feature.login.loginApi)
             implementation(projects.external.featureFlags.api)
+            implementation(projects.foundation.config)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
         }

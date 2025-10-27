@@ -17,7 +17,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
             implementation(projects.common.di)
+            implementation(projects.external.featureFlags.api)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

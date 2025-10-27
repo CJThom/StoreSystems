@@ -14,6 +14,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.di.CollectPresen
 import com.gpcasiapac.storesystems.feature.history.presentation.di.HistoryPresentationModuleProvider
 import com.gpcasiapac.storesystems.feature.login.domain.di.LoginDomainModuleProvider
 import com.gpcasiapac.storesystems.feature.login.presentation.di.LoginPresentationModuleProvider
+import com.gpcasiapac.storesystems.foundation.config.di.configModule
+import com.gpcasiapac.storesystems.foundation.config.featureflags.FeatureFlagInitializer
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -45,10 +47,11 @@ fun getAppModules(): List<Module> {
 
     // Feature flags (MUST be loaded BEFORE appModule that depends on it)
     moduleList.addAll(featureFlagModule)
+    moduleList.add(configModule) // FeatureFlagInitializer registered here
 
     // App-level modules
     moduleList.add(collectAppNavigationModule)
-    moduleList.add(appModule) // FeatureFlagInitializer registered here
+    moduleList.add(appModule)
 
     return moduleList
 }
@@ -60,21 +63,7 @@ val loggingModule = module {
 
 // App-specific singletons
 val appModule = module {
-    // ✅ Register FeatureFlagContextProvider (single source of truth for default context)
-    single {
-        FeatureFlagContextProvider(
-            // Add repository dependencies as they become available:
-            // deviceInfoRepository = getOrNull(),
-        )
-    }
-    
-    // ✅ Register FeatureFlagInitializer (depends on provider)
-    single(createdAtStart = true) {
-        FeatureFlagInitializer(
-            featureFlags = get(),
-            contextProvider = get() // Inject provider
-        )
-    }
+
 }
 
 

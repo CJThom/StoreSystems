@@ -46,10 +46,8 @@ class LoginUseCase(
                     UseCaseResult.Success(
                         user = result.data.user,
                         token = result.data.token,
-                        mfaRequired = mfaResult is CheckMfaRequirementUseCase.Result.Required,
-                        mfaVersion = if (mfaResult is CheckMfaRequirementUseCase.Result.Required) {
-                            mfaResult.version
-                        } else null
+                        mfaRequired = mfaResult,
+                        mfaVersion = "version"
                     )
                 }
             }

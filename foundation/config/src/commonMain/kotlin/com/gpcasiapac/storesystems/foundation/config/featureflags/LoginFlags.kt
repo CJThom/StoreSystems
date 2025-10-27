@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.login.api
+package com.gpcasiapac.storesystems.foundation.config.featureflags
 
 import com.gpcasiapac.storesystems.external.feature_flags.api.FlagKey
 

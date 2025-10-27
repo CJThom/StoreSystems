@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val loginService: LoginService
-    // ❌ REMOVED: private val flags: FeatureFlags
 ) : MVIViewModel<LoginScreenContract.Event, LoginScreenContract.State, LoginScreenContract.Effect>() {
 
     override fun setInitialState(): LoginScreenContract.State {

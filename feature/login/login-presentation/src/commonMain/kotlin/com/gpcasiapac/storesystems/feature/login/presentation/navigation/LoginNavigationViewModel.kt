@@ -1,15 +1,14 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
-import com.gpcasiapac.storesystems.external.feature_flags.api.FeatureFlags
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
-import com.gpcasiapac.storesystems.feature.login.api.LoginFlags
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
+import com.gpcasiapac.storesystems.feature.login.domain.usecase.CheckMfaRequirementUseCase
 import org.koin.core.component.KoinComponent
 
 class LoginNavigationViewModel(
-    private val flags: FeatureFlags
+    private val checkMfaRequirementUseCase: CheckMfaRequirementUseCase
 ) : BaseNavViewModel<LoginNavigationContract.Event, LoginNavigationContract.State, LoginFeatureDestination>(),
     KoinComponent {
 
@@ -47,7 +46,7 @@ class LoginNavigationViewModel(
     }
 
     private fun onMfaRequired(userId: String) {
-        if (flags.isEnabled(LoginFlags.Mfa_V2)) {
+        if (checkMfaRequirementUseCase()) {
             push(LoginFeatureDestination.Mfa(userId))
         } else {
             push(LoginFeatureDestination.Mfa(userId))

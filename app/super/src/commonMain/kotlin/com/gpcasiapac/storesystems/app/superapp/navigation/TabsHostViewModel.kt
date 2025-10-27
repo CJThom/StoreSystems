@@ -26,6 +26,7 @@ class TabsHostViewModel : MVIViewModel<TabsHostContract.Event, TabsHostContract.
             }
 
             CollectExternalOutcome.Logout -> TODO()
+            CollectExternalOutcome.OpenHistory -> TODO()
         }
     }
 }
