@@ -1,12 +1,18 @@
 package com.gpcasiapac.storesystems.core.sync_queue.data.repository
 
-import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.SyncTaskDao
-import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
-import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toDomain
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.CollectTaskMetadataDao
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.SyncTaskDao
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toApiModel
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toApiModels
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toEntity
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toDomain
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,7 +23,8 @@ import java.util.UUID
 
 @OptIn(ExperimentalTime::class)
 class SyncRepositoryImpl(
-    private val syncTaskDao: SyncTaskDao
+    private val syncTaskDao: SyncTaskDao,
+    private val collectTaskMetadataDao: CollectTaskMetadataDao
 ) : SyncRepository {
 
     override suspend fun addTask(taskType: TaskType, taskId: String, priority: Int): Result<String> = runCatching {
@@ -140,5 +147,61 @@ class SyncRepositoryImpl(
 
     override suspend fun getTasksByEntityId(entityId: String): List<SyncTask> {
         return syncTaskDao.getTasksByEntityId(entityId).map { it.toDomain() }
+    }
+    
+    override fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>> {
+        return syncTaskDao.observeAllTasksWithCollectMetadata()
+            .map { entities -> entities.toApiModels() }
+    }
+    
+    override suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?> = runCatching {
+        syncTaskDao.getTaskWithCollectMetadata(taskId)?.toApiModel()
+    }
+    
+    override suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.getTasksWithCollectMetadataByEntityId(entityId).toApiModels()
+    }
+    
+    override suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.getTasksByInvoiceNumber(invoiceNumber).toApiModels()
+    }
+    
+    override suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.getTasksByCustomerNumber(customerNumber).toApiModels()
+    }
+    
+    override suspend fun enqueueCollectTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int,
+        maxAttempts: Int,
+        metadata: CollectTaskMetadata
+    ): Result<String> = runCatching {
+        val syncTaskId = UUID.randomUUID().toString()
+        val now = Clock.System.now()
+        
+        // Create sync task
+        val task = SyncTaskEntity(
+            id = syncTaskId,
+            taskType = taskType.name,
+            status = TaskStatus.PENDING.name,
+            taskId = taskId,
+            noOfAttempts = 0,
+            maxAttempts = maxAttempts,
+            priority = priority,
+            addedTime = now,
+            updatedTime = now,
+            lastAttemptTime = null,
+            errorAttempts = null
+        )
+        
+        // Insert task
+        syncTaskDao.insertTask(task)
+        
+        // Insert metadata with reference to task
+        val metadataEntity = metadata.copy(syncTaskId = syncTaskId).toEntity()
+        collectTaskMetadataDao.insert(metadataEntity)
+        
+        syncTaskId
     }
 }

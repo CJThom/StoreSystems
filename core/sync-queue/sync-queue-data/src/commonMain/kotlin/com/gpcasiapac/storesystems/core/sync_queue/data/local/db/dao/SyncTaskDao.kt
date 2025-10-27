@@ -6,8 +6,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskWithCollectMetadataEntity
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -52,4 +54,54 @@ interface SyncTaskDao {
     
     @Query("SELECT * FROM sync_tasks WHERE task_id = :entityId")
     suspend fun getTasksByEntityId(entityId: String): List<SyncTaskEntity>
+    
+    /**
+     * Get task with collect metadata by task ID using JOIN.
+     */
+    @Transaction
+    @Query("SELECT * FROM sync_tasks WHERE id = :taskId")
+    suspend fun getTaskWithCollectMetadata(taskId: String): SyncTaskWithCollectMetadataEntity?
+    
+    /**
+     * Observe all tasks with collect metadata.
+     */
+    @Transaction
+    @Query("SELECT * FROM sync_tasks ORDER BY updated_time DESC")
+    fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadataEntity>>
+    
+    /**
+     * Observe pending tasks with collect metadata.
+     */
+    @Transaction
+    @Query("SELECT * FROM sync_tasks WHERE status = 'PENDING' ORDER BY priority DESC, added_time ASC")
+    fun observePendingTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadataEntity>>
+    
+    /**
+     * Get tasks by invoice number through metadata JOIN.
+     */
+    @Transaction
+    @Query("""
+        SELECT sync_tasks.* FROM sync_tasks
+        INNER JOIN collect_task_metadata ON sync_tasks.id = collect_task_metadata.sync_task_id
+        WHERE collect_task_metadata.invoice_number = :invoiceNumber
+    """)
+    suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadataEntity>
+    
+    /**
+     * Get tasks by customer number through metadata JOIN.
+     */
+    @Transaction
+    @Query("""
+        SELECT sync_tasks.* FROM sync_tasks
+        INNER JOIN collect_task_metadata ON sync_tasks.id = collect_task_metadata.sync_task_id
+        WHERE collect_task_metadata.customer_number = :customerNumber
+    """)
+    suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadataEntity>
+    
+    /**
+     * Get tasks by entity ID with metadata.
+     */
+    @Transaction
+    @Query("SELECT * FROM sync_tasks WHERE task_id = :entityId")
+    suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadataEntity>
 }

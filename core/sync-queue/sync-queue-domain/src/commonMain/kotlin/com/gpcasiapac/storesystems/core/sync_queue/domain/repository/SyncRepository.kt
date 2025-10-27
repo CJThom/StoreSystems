@@ -1,7 +1,9 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.repository
 
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import kotlinx.coroutines.flow.Flow
@@ -42,4 +44,28 @@ interface SyncRepository {
     
     /** Get tasks by the actual entity ID they reference */
     suspend fun getTasksByEntityId(entityId: String): List<SyncTask>
+    
+    /** Observe all tasks with collect metadata */
+    fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>>
+    
+    /** Get task with collect metadata by ID */
+    suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?>
+    
+    /** Get tasks by entity ID with collect metadata */
+    suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata>
+    
+    /** Get tasks by invoice number */
+    suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata>
+    
+    /** Get tasks by customer number */
+    suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata>
+    
+    /** Enqueue a collect task with metadata */
+    suspend fun enqueueCollectTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int = 0,
+        maxAttempts: Int = 3,
+        metadata: CollectTaskMetadata
+    ): Result<String>
 }

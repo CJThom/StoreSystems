@@ -1,7 +1,9 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain
 
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.AddTaskAndTriggerSyncUseCase
@@ -49,5 +51,41 @@ internal class SyncQueueServiceImpl(
     
     override suspend fun getTasksByEntityId(entityId: String): List<SyncTask> {
         return syncRepository.getTasksByEntityId(entityId)
+    }
+    
+    override fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>> {
+        return syncRepository.observeAllTasksWithCollectMetadata()
+    }
+    
+    override suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?> {
+        return syncRepository.getTaskWithCollectMetadata(taskId)
+    }
+    
+    override suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata> {
+        return syncRepository.getTasksWithCollectMetadataByEntityId(entityId)
+    }
+    
+    override suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata> {
+        return syncRepository.getTasksByInvoiceNumber(invoiceNumber)
+    }
+    
+    override suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata> {
+        return syncRepository.getTasksByCustomerNumber(customerNumber)
+    }
+    
+    override suspend fun enqueueCollectTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int,
+        maxAttempts: Int,
+        metadata: CollectTaskMetadata
+    ): Result<String> {
+        return syncRepository.enqueueCollectTask(
+            taskType = taskType,
+            taskId = taskId,
+            priority = priority,
+            maxAttempts = maxAttempts,
+            metadata = metadata
+        )
     }
 }

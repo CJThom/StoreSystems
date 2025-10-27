@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.history.domain.repository
 
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithCollectMetadata
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -27,4 +28,25 @@ interface HistoryRepository {
      * Retry a failed history item (resets the sync task to pending).
      */
     suspend fun retryHistoryItem(id: String): Result<Unit>
+    
+    /**
+     * Observe all history items with collect metadata.
+     * Only returns tasks that have collect metadata attached.
+     */
+    fun observeHistoryWithCollectMetadata(): Flow<List<HistoryItemWithCollectMetadata>>
+    
+    /**
+     * Get history with collect metadata for a specific entity ID.
+     */
+    suspend fun getHistoryWithCollectMetadataByEntityId(entityId: String): List<HistoryItemWithCollectMetadata>
+    
+    /**
+     * Get history by invoice number.
+     */
+    suspend fun getHistoryByInvoiceNumber(invoiceNumber: String): List<HistoryItemWithCollectMetadata>
+    
+    /**
+     * Get history by customer number.
+     */
+    suspend fun getHistoryByCustomerNumber(customerNumber: String): List<HistoryItemWithCollectMetadata>
 }
