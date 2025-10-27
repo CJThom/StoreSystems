@@ -1,13 +1,12 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 
 import androidx.lifecycle.viewModelScope
-import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.login.api.LoginService
+import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val loginService: LoginService
+    private val loginUseCase: LoginUseCase
 ) : MVIViewModel<LoginScreenContract.Event, LoginScreenContract.State, LoginScreenContract.Effect>() {
 
     override fun setInitialState(): LoginScreenContract.State {
@@ -104,14 +103,14 @@ class LoginViewModel(
                 // ❌ REMOVED: Feature flag check - handled in domain layer
 
                 // Get MFA requirement from result metadata
-                val mfaRequired = result.data.metadata["mfaRequired"] as? Boolean ?: false
-                val mfaVersion = result.data.metadata["mfaVersion"] as? String ?: "v1"
+//                val mfaRequired = result.metadata["mfaRequired"] as? Boolean ?: false
+//                val mfaVersion = result.data.metadata["mfaVersion"] as? String ?: "v1"
 
                 // Use case tells us if MFA is required
-                if (mfaRequired) {
+                if (result.mfaRequired) {
                     setEffect { LoginScreenContract.Effect.ShowToast("Login successful!") }
                     setEffect {
-                        LoginScreenContract.Effect.ShowToast("MFA required ($mfaVersion)")
+                        LoginScreenContract.Effect.ShowToast("MFA required (${result.mfaVersion})")
                     }
                     val uid = viewState.value.username.ifBlank { "user" }
                     setEffect { LoginScreenContract.Effect.Outcome.MfaRequired(uid) }

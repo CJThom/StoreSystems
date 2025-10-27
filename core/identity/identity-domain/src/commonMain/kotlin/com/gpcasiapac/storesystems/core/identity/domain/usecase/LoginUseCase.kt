@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.core.identity.domain.repository.UserRepositor
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.SetAccessTokenUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.SetUserIdUseCase
 
+// TODO: Rename to something that resembles a core functionality and not UI
 class LoginUseCase(
     private val userRepository: UserRepository,
     private val setUserIdUseCase: SetUserIdUseCase,
