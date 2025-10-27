@@ -2,8 +2,13 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
 import kotlinx.coroutines.delay
@@ -12,11 +17,16 @@ import kotlinx.coroutines.launch
 
 class SignatureScreenViewModel(
     private val observeLatestOpenWorkOrderUseCase: ObserveLatestOpenWorkOrderUseCase,
-    private val saveSignatureUseCase: SaveSignatureUseCase
+    private val saveSignatureUseCase: SaveSignatureUseCase,
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
         SignatureScreenContract.Event,
         SignatureScreenContract.State,
-        SignatureScreenContract.Effect>() {
+        SignatureScreenContract.Effect>(),
+    SessionHandlerDelegate<CollectSessionIds> by SessionHandler(
+        initialSession = CollectSessionIds(),
+        sessionFlow = collectSessionIdsFlowUseCase()
+    ) {
 
     override fun setInitialState(): SignatureScreenContract.State =
         SignatureScreenContract.State(
@@ -37,7 +47,9 @@ class SignatureScreenViewModel(
 
     override fun onStart() {
         viewModelScope.launch {
-            observeLatestOpenWorkOrderUseCase("mock").collectLatest {
+            val workOrderId: WorkOrderId =
+                sessionState.value.workOrderId.handleNull() ?: return@launch
+            observeLatestOpenWorkOrderUseCase(workOrderId = workOrderId).collectLatest {
                 // TODO: Add signature strokes
                 setState { copy() }
             }
@@ -52,12 +64,14 @@ class SignatureScreenViewModel(
                 if (signatureBitmap != null) {
                     viewModelScope.launch {
                         try {
+                            val workOrderId: WorkOrderId =
+                                sessionState.value.workOrderId.handleNull() ?: return@launch
                             // Convert ImageBitmap to byte array using KMP-compatible approach
                             val base64String =
                                 imageBitmapToBase64Encoded(imageBitmap = signatureBitmap)
                             // Call the use case with correct parameters
                             saveSignatureUseCase(
-                                userRefId = "mock",
+                                workOrderId = workOrderId,
                                 base64Signature = base64String,
                                 signedByName = null
                             )
@@ -126,9 +140,14 @@ class SignatureScreenViewModel(
         }
     }
 
-
-
     private fun clearError() {
         setState { copy(error = null) }
+    }
+
+    private fun WorkOrderId?.handleNull(): WorkOrderId? {
+        if (this == null) {
+            setState { copy(error = "No Work Order Selected") }
+        }
+        return this
     }
 }

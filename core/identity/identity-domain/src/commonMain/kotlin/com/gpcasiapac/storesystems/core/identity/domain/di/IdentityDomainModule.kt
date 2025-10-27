@@ -8,7 +8,7 @@ import com.gpcasiapac.storesystems.core.identity.domain.usecase.LoginUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.LogoutUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ClearSessionUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ObserveAccessTokenFlowUseCase
-import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ObserveUserIdFlowUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ObserveCurrentUserIdFlowUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.SetAccessTokenUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.SetUserIdUseCase
 import org.koin.core.module.dsl.bind
@@ -22,7 +22,7 @@ val identityDomainModule = module {
     singleOf(::LogoutUseCase)
 
     // Session-related use cases
-    singleOf(::ObserveUserIdFlowUseCase)
+    singleOf(::ObserveCurrentUserIdFlowUseCase)
     singleOf(::SetUserIdUseCase)
     singleOf(::ObserveAccessTokenFlowUseCase)
     singleOf(::SetAccessTokenUseCase)

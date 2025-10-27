@@ -5,6 +5,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderReposi
 class RemoveOrderSelectionUseCase(
     private val orderRepository: OrderRepository,
 ) {
-    suspend operator fun invoke(orderId: String, userRefId: String) =
-        orderRepository.removeSelectedId(orderId, userRefId)
+
+    suspend operator fun invoke(orderId: String, userRefId: String) {
+        return orderRepository.removeSelectedId(orderId, userRefId)
+    }
+
 }

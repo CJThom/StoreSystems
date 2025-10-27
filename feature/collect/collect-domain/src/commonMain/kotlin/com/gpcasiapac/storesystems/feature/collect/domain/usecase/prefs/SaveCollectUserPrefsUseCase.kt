@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectUserPrefs
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.CollectUserPrefsRepository
 
 /**
@@ -12,7 +13,7 @@ class SaveCollectUserPrefsUseCase(
 ) {
     suspend operator fun invoke(
         userId: String = "mock-user",
-        selectedWorkOrderId: String,
+        selectedWorkOrderId: WorkOrderId,
         isB2BFilterSelected: Boolean,
         isB2CFilterSelected: Boolean,
         sort: SortOption,

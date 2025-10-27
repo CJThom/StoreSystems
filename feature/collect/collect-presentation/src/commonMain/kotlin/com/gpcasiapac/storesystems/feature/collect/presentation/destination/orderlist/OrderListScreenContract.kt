@@ -24,9 +24,8 @@ object OrderListScreenContract {
         val isRefreshing: Boolean,
 
         // Filters & sort
-        val customerTypeFilterList: Set<CustomerType>,
+        val filters: Filters,
         val isFilterSheetOpen: Boolean,
-        val sortOption: SortOption,
 
         // Selection mode
         val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
@@ -50,7 +49,14 @@ object OrderListScreenContract {
 
         // Error
         val error: String?,
-    ) : ViewState
+    ) : ViewState {
+        @Immutable
+        data class Filters(
+            val showB2B: Boolean,
+            val showB2C: Boolean,
+            val sortOption: SortOption,
+        )
+    }
 
 
     sealed interface Event : ViewEvent {

@@ -17,9 +17,12 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 orders = orders,
                 isLoading = false,
                 isRefreshing = false,
-                customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
+                filters = OrderListScreenContract.State.Filters(
+                    showB2B = true,
+                    showB2C = true,
+                    sortOption = SortOption.TIME_WAITING_DESC
+                ),
                 isFilterSheetOpen = false,
-                sortOption = SortOption.TIME_WAITING_DESC,
                 isMultiSelectionEnabled = false,
                 selectedOrderIdList = emptySet(),
                 isSelectAllChecked = false,
@@ -34,7 +37,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             )
 
             val withFilters = base.copy(
-                customerTypeFilterList = setOf(CustomerType.B2C),
+                filters = base.filters.copy(showB2B = false, showB2C = true),
                 orders = orders.filter { it.customerType == CustomerType.B2C }
             )
 

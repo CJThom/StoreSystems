@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectUserPrefs
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.CollectUserPrefsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,9 +24,9 @@ class CollectUserPrefsRepositoryImpl(
         dao.upsert(prefs.toEntity(userId))
     }
 
-    override suspend fun setSelectedWorkOrderId(userId: String, id: String) {
-        val updated = dao.setSelectedWorkOrderId(userId, id)
-        if (updated == 0) dao.upsert(get(userId).copy(selectedWorkOrderId = id).toEntity(userId))
+    override suspend fun setSelectedWorkOrderId(userId: String, workOrderId: WorkOrderId) {
+        val updated = dao.setSelectedWorkOrderId(userId, workOrderId)
+        if (updated == 0) dao.upsert(get(userId).copy(selectedWorkOrderId = workOrderId).toEntity(userId))
     }
 
     override suspend fun setB2BFilterSelected(userId: String, selected: Boolean) {

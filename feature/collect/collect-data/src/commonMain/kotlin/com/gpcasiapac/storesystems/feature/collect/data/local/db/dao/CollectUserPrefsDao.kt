@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectUserPrefsEntity
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,8 +20,8 @@ interface CollectUserPrefsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: CollectUserPrefsEntity)
 
-    @Query("UPDATE collect_user_prefs SET selectedWorkOrderId = :value WHERE userId = :userId")
-    suspend fun setSelectedWorkOrderId(userId: String, value: String): Int
+    @Query("UPDATE collect_user_prefs SET selectedWorkOrderId = :workOrderId WHERE userId = :userId")
+    suspend fun setSelectedWorkOrderId(userId: String, workOrderId: WorkOrderId): Int
 
     @Query("UPDATE collect_user_prefs SET isB2BFilterSelected = :value WHERE userId = :userId")
     suspend fun setB2BFilterSelected(userId: String, value: Boolean): Int

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.Flow
 class ObserveMainOrdersUseCase(
     private val orderRepository: OrderRepository,
 ) {
-    operator fun invoke(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>> =
-        orderRepository.observeMainOrders(query)
+    operator fun invoke(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>> {
+        return orderRepository.observeMainOrders(query)
+    }
+
 }

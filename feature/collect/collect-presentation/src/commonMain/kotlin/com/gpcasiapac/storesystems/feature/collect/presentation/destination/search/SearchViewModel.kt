@@ -4,22 +4,26 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.SetOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
@@ -31,7 +35,15 @@ class SearchViewModel(
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
-) : MVIViewModel<SearchContract.Event, SearchContract.State, SearchContract.Effect>() {
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
+) : MVIViewModel<
+        SearchContract.Event,
+        SearchContract.State,
+        SearchContract.Effect>(),
+    SessionHandlerDelegate<CollectSessionIds> by SessionHandler(
+        initialSession = CollectSessionIds(),
+        sessionFlow = collectSessionIdsFlowUseCase()
+    ) {
 
     private val userRefId = "mock"
 
@@ -39,7 +51,8 @@ class SearchViewModel(
 
     override suspend fun awaitReadiness(): Boolean = true
 
-    override fun handleReadinessFailed() { /* no-op */ }
+    override fun handleReadinessFailed() { /* no-op */
+    }
 
     override fun onStart() {
         // Search results pipeline: immediate reset on blank, debounced for non-blank
@@ -78,6 +91,7 @@ class SearchViewModel(
                         t.isBlank() -> kotlinx.coroutines.flow.flow {
                             emit(getOrderSearchSuggestionListUseCase(""))
                         }
+
                         else -> {
                             QueryFlow.build(
                                 input = flowOf(t),
@@ -100,19 +114,27 @@ class SearchViewModel(
             SearchContract.Event.ClearSearch -> handleClearSearch()
             SearchContract.Event.SearchBarBackPressed -> handleSearchOnExpandedChange(false)
             is SearchContract.Event.SearchResultClicked -> handleSearchResultClicked(event.result)
-            is SearchContract.Event.SearchSuggestionClicked -> handleSearchSuggestionClicked(event.suggestion)
+            is SearchContract.Event.SearchSuggestionClicked -> handleSearchSuggestionClicked(
+                event.suggestion
+            )
+
             is SearchContract.Event.TypedSuffixChanged -> handleTypedSuffixChanged(event.text)
             is SearchContract.Event.RemoveChip -> handleRemoveChip(event.suggestion)
 
             // Selection events
             is SearchContract.Event.ToggleSelectionMode -> handleToggleSelectionMode(event.enabled)
-            is SearchContract.Event.OrderChecked -> handleOrderChecked(event.orderId, event.checked)
+            is SearchContract.Event.OrderChecked -> handleOrderChecked(
+                event.orderId,
+                event.checked
+            )
+
             is SearchContract.Event.SelectAll -> handleSelectAll(event.checked)
             SearchContract.Event.CancelSelection -> handleCancelSelection()
             SearchContract.Event.ConfirmSelection -> handleConfirmSelection()
             SearchContract.Event.ConfirmSelectionStay -> handleConfirmSelectionStay()
             SearchContract.Event.ConfirmSelectionProceed -> handleConfirmSelectionProceed()
-            SearchContract.Event.DismissConfirmSelectionDialog -> { /* no-op for now */ }
+            SearchContract.Event.DismissConfirmSelectionDialog -> { /* no-op for now */
+            }
         }
     }
 
@@ -124,12 +146,14 @@ class SearchViewModel(
     private fun handleSearchOnExpandedChange(expand: Boolean) {
         if (!expand) {
             // On collapse, clear chips and typed suffix for a clean slate
-            setState { copy(
-                isSearchActive = false,
-                selectedChips = emptyList(),
-                typedSuffix = "",
-                searchText = "",
-            ) }
+            setState {
+                copy(
+                    isSearchActive = false,
+                    selectedChips = emptyList(),
+                    typedSuffix = "",
+                    searchText = "",
+                )
+            }
             setEffect { SearchContract.Effect.CollapseSearchBar }
         } else {
             setState { copy(isSearchActive = true) }
@@ -162,7 +186,9 @@ class SearchViewModel(
     private fun handleToggleSelectionMode(enabled: Boolean) {
         if (enabled) {
             viewModelScope.launch {
-                val persisted = observeOrderSelectionUseCase(userRefId).first()
+                val workOrderId: WorkOrderId =
+                    sessionState.value.workOrderId.handleNull() ?: return@launch
+                val persisted = observeOrderSelectionUseCase(workOrderId = workOrderId).first()
                 setState {
                     copy(
                         isMultiSelectionEnabled = true,
@@ -328,4 +354,12 @@ class SearchViewModel(
             else -> typed
         }
     }
+
+    private fun WorkOrderId?.handleNull(): WorkOrderId? {
+        if (this == null) {
+            // setState { copy(error = "No Work Order Selected") }
+        }
+        return this
+    }
+
 }

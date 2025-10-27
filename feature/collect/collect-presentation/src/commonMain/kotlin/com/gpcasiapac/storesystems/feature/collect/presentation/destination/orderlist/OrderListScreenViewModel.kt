@@ -4,13 +4,18 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
+import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
@@ -25,8 +30,10 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -34,13 +41,21 @@ class OrderListScreenViewModel(
     private val observeMainOrdersUseCase: ObserveMainOrdersUseCase,
     private val observeOrderCountUseCase: ObserveOrderCountUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
-    private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
+    private val observeSelectedOrderListUseCase: ObserveOrderSelectionUseCase,
     private val setOrderSelectionUseCase: SetOrderSelectionUseCase,
     private val addOrderSelectionUseCase: AddOrderSelectionUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val clearOrderSelectionUseCase: ClearOrderSelectionUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
-) : MVIViewModel<OrderListScreenContract.Event, OrderListScreenContract.State, OrderListScreenContract.Effect>() {
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
+) : MVIViewModel<
+        OrderListScreenContract.Event,
+        OrderListScreenContract.State,
+        OrderListScreenContract.Effect>(),
+    SessionHandlerDelegate<CollectSessionIds> by SessionHandler(
+        initialSession = CollectSessionIds(),
+        sessionFlow = collectSessionIdsFlowUseCase()
+    ) {
 
     private val userRefId = "mock"
 
@@ -52,9 +67,12 @@ class OrderListScreenViewModel(
             orders = placeholders,
             isLoading = true,
             isRefreshing = true,
-            customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
+            filters = OrderListScreenContract.State.Filters(
+                showB2B = true,
+                showB2C = true,
+                sortOption = SortOption.TIME_WAITING_DESC
+            ),
             isFilterSheetOpen = false,
-            sortOption = SortOption.TIME_WAITING_DESC,
             isMultiSelectionEnabled = false,
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
@@ -70,48 +88,18 @@ class OrderListScreenViewModel(
     }
 
     override suspend fun awaitReadiness(): Boolean {
-        // Order list screen doesn't require session readiness for this placeholder
-        return true
+        val collectSessionIds = sessionState.first { it.userId != null }
+        return collectSessionIds.userId != null
     }
 
     override fun handleReadinessFailed() {
-        // Not applicable for this screen as readiness is always true
+        setState { copy(error = "userId: ${sessionState.value.userId}") }
     }
 
     override fun onStart() {
 
-        // Main list pipeline: respond to filter/sort changes
         viewModelScope.launch {
-            viewState
-                .map { state -> MainOrderQuery(state.customerTypeFilterList, state.sortOption) }
-                .distinctUntilChanged()
-                .flatMapLatest { query -> observeMainOrdersUseCase(query) }
-                .map { list -> list.toListItemState() }
-                .collectLatest { items ->
-                    setState {
-                        // maintain selection sanity against visible main list
-                        val visibleIds = items.map { it.invoiceNumber }.toSet()
-                        val newSelected =
-                            if (isMultiSelectionEnabled) selectedOrderIdList.intersect(visibleIds) else emptySet()
-                        val allSelected =
-                            isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
-                        copy(
-                            orders = items,
-                            isLoading = false,
-                            error = null,
-                            selectedOrderIdList = newSelected,
-                            isSelectAllChecked = allSelected,
-                        )
-                    }
-                }
-        }
-
-
-        viewModelScope.launch {
-            // Observe total order count from DB (independent of filters/search)
-            observeOrderCountUseCase().collectLatest { count ->
-                setState { copy(orderCount = count) }
-            }
+            observeOrderList()
         }
 
         viewModelScope.launch {
@@ -119,19 +107,12 @@ class OrderListScreenViewModel(
             fetchOrderList(successToast = "Orders loaded")
         }
 
-        // Observe current draft selection to control the floating draft bar visibility
-        // Delay slightly to avoid racing Room's initial database configuration on first open.
         viewModelScope.launch {
-            delay(150)
-            observeOrderSelectionUseCase(userRefId).collectLatest { persistedSet ->
-                setState {
-                    val showBar = persistedSet.isNotEmpty() && !isMultiSelectionEnabled
-                    copy(
-                        existingDraftIdSet = persistedSet,
-                        isDraftBarVisible = showBar
-                    )
-                }
-            }
+            observeOrderCount()
+        }
+
+        viewModelScope.launch {
+            observeOrderSelections()
         }
 
     }
@@ -190,7 +171,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.SortChanged -> {
-                setState { copy(sortOption = event.sortOption) }
+                setState { copy(filters = filters.copy(sortOption = event.sortOption)) }
             }
 
             is OrderListScreenContract.Event.Back -> {
@@ -267,14 +248,7 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
                 viewModelScope.launch {
-                    clearOrderSelectionUseCase(userRefId)
-                    setState {
-                        copy(
-                            isDraftBarVisible = false,
-                            existingDraftIdSet = emptySet(),
-                            selectedOrderIdList = if (!isMultiSelectionEnabled) emptySet() else selectedOrderIdList
-                        )
-                    }
+                    handleDraftBarDeleteClicked()
                 }
             }
 
@@ -288,13 +262,94 @@ class OrderListScreenViewModel(
         }
     }
 
+    private suspend fun handleDraftBarDeleteClicked() {
+        val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return
+        clearOrderSelectionUseCase(workOrderId = workOrderId)
+        setState {
+            copy(
+                isDraftBarVisible = false,
+                existingDraftIdSet = emptySet(),
+                selectedOrderIdList = if (!isMultiSelectionEnabled) emptySet() else selectedOrderIdList
+            )
+        }
+    }
+
+
+    // Main list pipeline: respond to filter/sort changes
+    private suspend fun observeOrderList() {
+        viewState
+            .map { state ->
+                val types = buildSet<CustomerType> {
+                    if (state.filters.showB2B) add(CustomerType.B2B)
+                    if (state.filters.showB2C) add(CustomerType.B2C)
+                }
+                MainOrderQuery(types, state.filters.sortOption)
+            }
+            .distinctUntilChanged()
+            .flatMapLatest { query -> observeMainOrdersUseCase(query) }
+            .map { list -> list.toListItemState() }
+            .collectLatest { items ->
+                setState {
+                    // maintain selection sanity against visible main list
+                    val visibleIds = items.map { it.invoiceNumber }.toSet()
+                    val newSelected =
+                        if (isMultiSelectionEnabled) selectedOrderIdList.intersect(
+                            visibleIds
+                        ) else emptySet()
+                    val allSelected =
+                        isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
+                    copy(
+                        orders = items,
+                        isLoading = false,
+                        error = null,
+                        selectedOrderIdList = newSelected,
+                        isSelectAllChecked = allSelected,
+                    )
+                }
+            }
+    }
+
+    private suspend fun observeOrderCount() {
+        // Observe total order count from DB (independent of filters/search)
+        observeOrderCountUseCase().collectLatest { count ->
+            setState { copy(orderCount = count) }
+        }
+    }
+
+
+    // Observe current draft selection to control the floating draft bar visibility
+    // Delay slightly to avoid racing Room's initial database configuration on first open.
+    private suspend fun observeOrderSelections() {
+        delay(150)
+        sessionState.distinctUntilChangedBy { session ->
+            session.workOrderId
+        }.map { session ->
+            session.workOrderId
+        }.flatMapLatest { workOrderId ->
+            if (workOrderId == null) {
+                flowOf(emptySet())
+            } else {
+                observeSelectedOrderListUseCase(workOrderId = workOrderId)
+            }
+        }.collectLatest { persistedSet ->
+            setState {
+                val showBar = persistedSet.isNotEmpty() && !isMultiSelectionEnabled
+                copy(
+                    existingDraftIdSet = persistedSet,
+                    isDraftBarVisible = showBar
+                )
+            }
+        }
+    }
+
 
     private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
         setState {
-            val updated = customerTypeFilterList.toMutableSet().apply {
-                if (checked) add(type) else remove(type)
+            val newFilters = when (type) {
+                CustomerType.B2B -> filters.copy(showB2B = checked)
+                CustomerType.B2C -> filters.copy(showB2C = checked)
             }
-            copy(customerTypeFilterList = updated)
+            copy(filters = newFilters)
         }
     }
 
@@ -391,6 +446,7 @@ class OrderListScreenViewModel(
     private fun handleSubmitSelectedOrders() {
         val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
         viewModelScope.launch {
+
             setOrderSelectionUseCase(selectedOrderIdList, userRefId)
             setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
@@ -468,7 +524,8 @@ class OrderListScreenViewModel(
     private fun handleToggleSelectionMode(enabled: Boolean) {
         if (enabled) {
             viewModelScope.launch {
-                val persisted = observeOrderSelectionUseCase(userRefId).first()
+                val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return@launch
+                val persisted = observeSelectedOrderListUseCase(workOrderId = workOrderId).first()
                 setState {
                     copy(
                         isMultiSelectionEnabled = true,
@@ -515,6 +572,14 @@ class OrderListScreenViewModel(
             }
         )
 
+    }
+
+
+    private fun WorkOrderId?.handleNull(): WorkOrderId? {
+        if (this == null) {
+            setState { copy(error = "No Work Order Selected") }
+        }
+        return this
     }
 
 

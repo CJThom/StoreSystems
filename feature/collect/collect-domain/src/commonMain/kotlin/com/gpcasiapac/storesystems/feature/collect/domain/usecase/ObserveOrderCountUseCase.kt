@@ -9,5 +9,9 @@ import kotlinx.coroutines.flow.Flow
 class ObserveOrderCountUseCase(
     private val orderRepository: OrderRepository,
 ) {
-    operator fun invoke(): Flow<Int> = orderRepository.observeOrderCount()
+
+    operator fun invoke(): Flow<Int> {
+        return orderRepository.observeOrderCount()
+    }
+
 }

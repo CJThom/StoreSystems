@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.Flow
 class ObserveSearchOrdersUseCase(
     private val orderRepository: OrderRepository,
 ) {
-    operator fun invoke(text: String): Flow<List<CollectOrderWithCustomer>> =
-        orderRepository.observeSearchOrders(SearchQuery(text))
+
+    operator fun invoke(text: String): Flow<List<CollectOrderWithCustomer>> {
+        return orderRepository.observeSearchOrders(SearchQuery(text))
+    }
+
 }

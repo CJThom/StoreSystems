@@ -439,7 +439,10 @@ fun OrderListScreen(
             stickyHeader {
                 OrderListToolbar(
                     isMultiSelectionEnabled = state.isMultiSelectionEnabled,
-                    customerTypeFilterList = state.customerTypeFilterList,
+                    customerTypeFilterList = buildSet {
+                                            if (state.filters.showB2B) add(com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2B)
+                                            if (state.filters.showB2C) add(com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C)
+                                        },
                     selectedCount = state.selectedOrderIdList.size,
                     isSelectAllChecked = state.isSelectAllChecked,
                     isLoading = state.isRefreshing,

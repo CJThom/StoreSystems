@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "71bef9b0ecf6f54f8f8631ba91ba9171",
+    "identityHash": "c4b5fae358db618aa4f196bcbd2d079a",
     "entities": [
       {
         "tableName": "collect_orders",
@@ -345,7 +345,7 @@
       },
       {
         "tableName": "collect_user_prefs",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `selectedWorkOrderId` TEXT NOT NULL, `isB2BFilterSelected` INTEGER NOT NULL, `isB2CFilterSelected` INTEGER NOT NULL, `sort` TEXT NOT NULL, PRIMARY KEY(`userId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `selectedWorkOrderId` TEXT, `isB2BFilterSelected` INTEGER NOT NULL, `isB2CFilterSelected` INTEGER NOT NULL, `sort` TEXT NOT NULL, PRIMARY KEY(`userId`))",
         "fields": [
           {
             "fieldPath": "userId",
@@ -356,8 +356,7 @@
           {
             "fieldPath": "selectedWorkOrderId",
             "columnName": "selectedWorkOrderId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "isB2BFilterSelected",
@@ -388,7 +387,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '71bef9b0ecf6f54f8f8631ba91ba9171')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c4b5fae358db618aa4f196bcbd2d079a')"
     ]
   }
 }

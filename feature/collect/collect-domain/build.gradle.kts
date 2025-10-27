@@ -20,6 +20,8 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.common.di)
             implementation(projects.common.kotlin)
+            implementation(projects.common.presentation)
+            implementation(projects.core.identity.identityDomain)
             implementation(libs.koin.core)
            // implementation(projects.core.preferences.preferencesApi)
             // Sync queue domain for SyncHandler and models

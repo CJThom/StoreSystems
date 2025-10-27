@@ -11,10 +11,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchO
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SaveSignatureUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderSignatureUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderWithOrdersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderWithOrderWithCustomersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveLatestOpenWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
@@ -30,6 +28,7 @@ import org.koin.dsl.module
 
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.ObserveCollectUserPrefsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SaveCollectUserPrefsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
@@ -42,10 +41,8 @@ val collectDomainModule = module {
     factoryOf(::CheckOrderExistsUseCase)
 
     factoryOf(::SaveSignatureUseCase)
-    factoryOf(::ObserveWorkOrderSignatureUseCase)
     factoryOf(::ObserveLatestOpenWorkOrderUseCase)
-    factoryOf(::ObserveLatestOpenWorkOrderWithOrdersUseCase)
-    factoryOf(::ObserveLatestOpenWorkOrderIdUseCase)
+    factoryOf(::ObserveWorkOrderWithOrderWithCustomersUseCase)
     factoryOf(::ObserveWorkOrderItemsInScanOrderUseCase)
     factoryOf(::SetWorkOrderCollectingTypeUseCase)
     factoryOf(::SetWorkOrderCourierNameUseCase)
@@ -64,6 +61,7 @@ val collectDomainModule = module {
 //    factoryOf(::SetCollectFiltersUseCase)
     factoryOf(::ObserveCollectUserPrefsUseCase)
     factoryOf(::SaveCollectUserPrefsUseCase)
+    factoryOf(::GetCollectSessionIdsFlowUseCase)
 
     // Register Collect feature's SyncHandler(s)
     factory<SyncHandler> { SubmitOrderSyncHandler(get()) }
