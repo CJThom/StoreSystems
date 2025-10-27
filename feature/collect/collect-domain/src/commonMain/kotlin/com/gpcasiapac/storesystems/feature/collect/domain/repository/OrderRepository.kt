@@ -88,4 +88,6 @@ interface OrderRepository {
     /** Lightweight existence check by invoice number (case-insensitive). */
     suspend fun existsInvoice(invoiceNumber: String): Boolean
 
+    suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder)
+
 }

@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
@@ -212,7 +213,7 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.CollapseSearchBar -> {
                     onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(false))
                 }
- 
+
                 is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
                     // Adapt to SearchContract dialog spec for reuse of common dialog UI
                     searchConfirmDialogSpec.value =
@@ -292,7 +293,7 @@ fun OrderListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         onEventSent(OrderListScreenContract.Event.OpenHistory)
                     }) {
                         Icon(
@@ -440,9 +441,9 @@ fun OrderListScreen(
                 OrderListToolbar(
                     isMultiSelectionEnabled = state.isMultiSelectionEnabled,
                     customerTypeFilterList = buildSet {
-                                            if (state.filters.showB2B) add(com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2B)
-                                            if (state.filters.showB2C) add(com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C)
-                                        },
+                        if (state.filters.showB2B) add(CustomerType.B2B)
+                        if (state.filters.showB2C) add(CustomerType.B2C)
+                    },
                     selectedCount = state.selectedOrderIdList.size,
                     isSelectAllChecked = state.isSelectAllChecked,
                     isLoading = state.isRefreshing,

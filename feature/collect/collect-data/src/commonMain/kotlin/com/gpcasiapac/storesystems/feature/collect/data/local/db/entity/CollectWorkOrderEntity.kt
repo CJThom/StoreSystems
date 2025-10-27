@@ -10,8 +10,7 @@ import kotlin.time.Instant
 @Entity(
     tableName = "work_orders",
     indices = [
-        Index(value = ["user_id"]),
-        Index(value = ["status"])
+        Index(value = ["user_id"])
     ]
 )
 data class CollectWorkOrderEntity(
@@ -23,9 +22,6 @@ data class CollectWorkOrderEntity(
     @ColumnInfo(name = "user_id")
     val userId: String,
 
-    @ColumnInfo(name = "status")
-    val status: String = "OPEN", // TODO: remove?
-
     @ColumnInfo(name = "created_at")
     val createdAt: Instant,
 
@@ -35,17 +31,6 @@ data class CollectWorkOrderEntity(
 
     // New: persisted courier name for COURIER collecting type
     @ColumnInfo(name = "courier_name")
-    val courierName: String = "",
+    val courierName: String = ""
 
-    @ColumnInfo(name = "submitted_at")
-    val submittedAt: Instant?, // TODO: remove?
-
-    @ColumnInfo(name = "signature")
-    val signature: String?,
-
-    @ColumnInfo(name = "signed_at")
-    val signedAt: Instant?,
-
-    @ColumnInfo(name = "signed_by_name")
-    val signedByName: String? // TODO: Rename to customer/representative?
 )

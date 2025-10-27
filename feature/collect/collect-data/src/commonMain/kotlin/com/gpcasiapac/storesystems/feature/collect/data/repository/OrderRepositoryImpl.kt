@@ -47,6 +47,10 @@ class OrderRepositoryImpl(
     private val logger: Logger,
 ) : OrderRepository {
 
+    override suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder) {
+        workOrderDao.insertOrReplaceWorkOrderEntity(collectWorkOrder.toEntity())
+    }
+
     private val log = logger.withTag("OrderRepository")
 
 
@@ -257,7 +261,7 @@ class OrderRepositoryImpl(
                         signedAt = null,
                         signedByName = null
                     )
-                    workOrderDao.insertWorkOrder(newWorkOrder)
+                    workOrderDao.insertOrReplaceWorkOrder(newWorkOrder)
                     openWorkOrder = newWorkOrder
                 }
                 val nextPosition =
@@ -274,6 +278,7 @@ class OrderRepositoryImpl(
         }
         return inserted
     }
+
 
     // TODO: Replace with WorkOrderId
     override suspend fun removeSelectedId(orderId: String, userRefId: String) {
@@ -321,7 +326,7 @@ class OrderRepositoryImpl(
         }
         database.useWriterConnection { transactor ->
             transactor.immediateTransaction {
-                workOrderDao.insertWorkOrder(workOrder)
+                workOrderDao.insertOrReplaceWorkOrder(workOrder)
                 workOrderDao.insertItems(workOrderItems)
             }
         }
