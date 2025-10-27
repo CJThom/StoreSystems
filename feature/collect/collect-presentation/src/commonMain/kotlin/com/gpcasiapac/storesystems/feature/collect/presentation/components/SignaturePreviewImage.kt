@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
@@ -59,14 +62,18 @@ fun SignaturePreviewImage(
             Card(
 //                modifier = Modifier.size(height = 200.dp, width = 350.dp),
                 modifier = Modifier
-                    .height(height = 200.dp)
+                    .background(Color.Blue)
+                    .height(height = 260.dp)
                     .fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                 border = MaterialTheme.borderStroke(),
             ) {
                 if (image != null) {
                     // Show signature preview
-                    Base64ImageView(image)
+                    Base64ImageView(
+                        base64 = image,
+                        contentScale = ContentScale.Inside
+                    )
 
                 } else {
                     // Show sign button when no signature

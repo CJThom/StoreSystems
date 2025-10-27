@@ -4,6 +4,7 @@ import com.gpcasiapac.storesystems.common.di.ModuleProvider
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.SignatureDao
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.MockOrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetworkDataSource
 import com.gpcasiapac.storesystems.feature.collect.data.repository.OrderRepositoryImpl
@@ -18,6 +19,7 @@ expect val collectDataDatabaseModule: Module
 val daoModule: Module = module {
     single<CollectOrderDao> { get<AppDatabase>().collectOrderDao() }
     single<WorkOrderDao> { get<AppDatabase>().workOrderDao() }
+    single<SignatureDao> { get<AppDatabase>().signatureDao() }
 }
 
 val collectDataModule = module {

@@ -9,6 +9,9 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sear
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 
 @Composable
 fun OrderFulfilmentScreenDestination(
@@ -27,12 +30,17 @@ fun OrderFulfilmentScreenDestination(
         }
     }
 
+    val soundPlayer: SoundPlayer = koinInject()
+    val hapticPerformer: HapticPerformer = koinInject()
+
     OrderFulfilmentScreen(
         state = orderFulfilmentScreenViewModel.viewState.collectAsState().value,
         searchState = searchViewModel.viewState.collectAsState().value,
         onEventSent = { event -> orderFulfilmentScreenViewModel.setEvent(event) },
         onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderFulfilmentScreenViewModel.effect,
-        onOutcome = onOutcome
+        onOutcome = onOutcome,
+        soundPlayer = soundPlayer,
+        hapticPerformer = hapticPerformer,
     )
 }

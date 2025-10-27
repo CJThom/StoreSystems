@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
@@ -91,12 +92,11 @@ fun OrderFulfilmentScreen(
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
     onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
-    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit
+    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
+    soundPlayer: SoundPlayer? = null,
+    hapticPerformer: HapticPerformer? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    // Platform-provided feedback via Koin
-    val soundPlayer = org.koin.compose.koinInject<SoundPlayer>()
-    val hapticPerformer = org.koin.compose.koinInject<HapticPerformer>()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
@@ -137,10 +137,10 @@ fun OrderFulfilmentScreen(
                 }
 
                 is OrderFulfilmentScreenContract.Effect.PlaySound -> {
-                    soundPlayer.play(effect.soundEffect)
+                    soundPlayer?.play(effect.soundEffect)
                 }
                 is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
-                    hapticPerformer.perform(effect.type)
+                    hapticPerformer?.perform(effect.type)
                 }
 
                 is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
@@ -456,6 +456,36 @@ fun OrderFulfilmentScreen(
     }
     //  }
 
+    // Customer name dialog
+    if (state.isCustomerNameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog)
+            },
+            title = { Text("Enter Customer Name") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    Text("This name will be saved with the signature.")
+                    OutlinedTextField(
+                        value = state.customerNameInput,
+                        onValueChange = { onEventSent(OrderFulfilmentScreenContract.Event.CustomerNameChanged(it)) },
+                        singleLine = true,
+                        label = { Text("Customer Name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = state.customerNameInput.trim().isNotEmpty(),
+                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.ConfirmCustomerName) }
+                ) { Text("Confirm") }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 
@@ -573,79 +603,6 @@ private fun CollectionTypeContent(
     }
 }
 
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun MultiOrderListSection(
-    state: OrderFulfilmentScreenContract.State,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    onLookupClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    searchContent: (@Composable () -> Unit)? = null
-) {
-
-    Column(
-        modifier = modifier
-    ) {
-
-        HeaderMedium(
-            text = "Order List",
-            isLoading = state.isLoading,
-            contentPadding = PaddingValues(Dimens.Space.medium)
-        )
-
-        if (searchContent != null) {
-            searchContent()
-        }
-
-        val items = state.collectOrderListItemStateList
-        if (items.isEmpty()) {
-            EmptyOrderPlaceholderCard(onLookupClick)
-        } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-            ) {
-                items.forEach { collectOrderState ->
-                    CheckboxCard(
-                        // Add padding per item for grid spacing
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Dimens.Space.medium),
-                        isChecked = false,
-                        isCheckable = false,
-                        onCheckedChange = {
-
-                        },
-                        onClick = {
-                            onEventSent(
-                                OrderFulfilmentScreenContract.Event.OrderClicked(
-                                    collectOrderState.invoiceNumber
-                                )
-                            )
-                        }
-                    ) {
-                        CollectOrderFulfilmentItem(
-                            customerName = collectOrderState.customerName,
-                            customerType = collectOrderState.customerType,
-                            invoiceNumber = collectOrderState.invoiceNumber,
-                            webOrderNumber = collectOrderState.webOrderNumber,
-                            pickedAt = collectOrderState.pickedAt,
-                            isLoading = state.isLoading,
-                            onDelete = {
-                                onEventSent(
-                                    OrderFulfilmentScreenContract.Event.DeselectOrder(
-                                        collectOrderState.invoiceNumber
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
 // Placeholder card shown when there are no orders
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -717,7 +674,8 @@ private fun OrderFulfilmentScreenPreview(
             onEventSent = {},
             onSearchEventSent = {},
             effectFlow = null,
-            onOutcome = {})
+            onOutcome = {},
+        )
     }
 }
 

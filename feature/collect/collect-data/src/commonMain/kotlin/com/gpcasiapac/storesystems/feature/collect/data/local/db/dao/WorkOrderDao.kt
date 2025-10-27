@@ -31,15 +31,6 @@ interface WorkOrderDao {
     @Query(
         """
         UPDATE work_orders
-        SET signature = :signature, signed_at = :signedAt, signed_by_name = :signedBy
-        WHERE work_order_id = :id
-        """
-    )
-    suspend fun attachSignature(id: String, signature: String, signedAt: Instant, signedBy: String?)
-
-    @Query(
-        """
-        UPDATE work_orders
         SET collecting_type = :type
         WHERE work_order_id = :id
         """
