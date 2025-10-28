@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.model
 
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 
 /**
@@ -7,17 +8,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
  * Stored locally via Room in commonMain.
  */
 data class CollectUserPrefs(
+    val userId: UserId,
     val selectedWorkOrderId: WorkOrderId?,
     val isB2BFilterSelected: Boolean,
     val isB2CFilterSelected: Boolean,
     val sort: SortOption,
-) {
-    companion object {
-        val DEFAULT = CollectUserPrefs(
-            selectedWorkOrderId = null,
-            isB2BFilterSelected = true,
-            isB2CFilterSelected = true,
-            sort = SortOption.TIME_WAITING_DESC,
-        )
-    }
-}
+)

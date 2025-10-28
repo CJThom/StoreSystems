@@ -108,7 +108,7 @@ class OrderListScreenViewModel(
             }
 
             saveCollectUserPrefsUseCase(
-                userId = "demo",
+                userId = UserId("demo"),
                 selectedWorkOrderId = workOrderId,
                 isB2BFilterSelected = true,
                 isB2CFilterSelected = true,

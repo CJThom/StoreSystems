@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs
 
 import com.gpcasiapac.storesystems.core.identity.api.IdentityService
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectUserPrefs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,7 +18,7 @@ class GetCollectSessionIdsFlowUseCase(
 ) {
 
     operator fun invoke(): Flow<CollectSessionIds> {
-        val userIdFlow: Flow<String?> = identityService.observeCurrentUserId().map { it?.value }
+        val userIdFlow: Flow<UserId?> = identityService.observeCurrentUserId()
 
         val prefsFlow: Flow<CollectUserPrefs?> = userIdFlow.flatMapLatest { userId ->
             if (userId == null) {

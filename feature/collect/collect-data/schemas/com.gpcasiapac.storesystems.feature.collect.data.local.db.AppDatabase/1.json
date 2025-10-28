@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "b3248d28dc525ede72039e3a409a67fc",
+    "identityHash": "ddef153edd62bfb5a363b9d96c4877c0",
     "entities": [
       {
         "tableName": "collect_orders",
@@ -317,7 +317,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "signature",
+            "fieldPath": "signatureBase64",
             "columnName": "signature",
             "affinity": "TEXT",
             "notNull": true
@@ -356,28 +356,28 @@
       },
       {
         "tableName": "collect_user_prefs",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `selectedWorkOrderId` TEXT, `isB2BFilterSelected` INTEGER NOT NULL, `isB2CFilterSelected` INTEGER NOT NULL, `sort` TEXT NOT NULL, PRIMARY KEY(`userId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` TEXT NOT NULL, `selected_work_order_id` TEXT, `is_b2b_filter_selected` INTEGER NOT NULL, `is_b2c_filter_selected` INTEGER NOT NULL, `sort` TEXT NOT NULL, PRIMARY KEY(`user_id`))",
         "fields": [
           {
             "fieldPath": "userId",
-            "columnName": "userId",
+            "columnName": "user_id",
             "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "selectedWorkOrderId",
-            "columnName": "selectedWorkOrderId",
+            "columnName": "selected_work_order_id",
             "affinity": "TEXT"
           },
           {
             "fieldPath": "isB2BFilterSelected",
-            "columnName": "isB2BFilterSelected",
+            "columnName": "is_b2b_filter_selected",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "isB2CFilterSelected",
-            "columnName": "isB2CFilterSelected",
+            "columnName": "is_b2c_filter_selected",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -391,14 +391,14 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "userId"
+            "user_id"
           ]
         }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b3248d28dc525ede72039e3a409a67fc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ddef153edd62bfb5a363b9d96c4877c0')"
     ]
   }
 }
