@@ -34,7 +34,7 @@ class LoginUseCase(
         return when (val result = identityService.login(cleanUsername, cleanPassword)) {
             is DataResult.Success -> {
                 // Business logic validation
-                if (result.data.user.username.isBlank() || result.data.token.accessToken.isBlank()) {
+                if (result.data.token.accessToken.isBlank()) {
                     UseCaseResult.Error.LoginFailed
                 } else {
                     // Update feature flag context with authenticated user

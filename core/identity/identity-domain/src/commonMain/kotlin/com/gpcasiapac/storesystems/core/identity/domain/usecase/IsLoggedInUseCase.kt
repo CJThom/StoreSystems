@@ -9,6 +9,6 @@ class IsLoggedInUseCase(
     suspend operator fun invoke(): Boolean {
         val userId = sessionRepository.userIdFlow().first()
         val token = sessionRepository.accessTokenFlow().first()
-        return !userId.isNullOrBlank() && !token.isNullOrBlank()
+        return (userId != null) && !token.isNullOrBlank()
     }
 }

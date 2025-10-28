@@ -3,13 +3,14 @@ package com.gpcasiapac.storesystems.core.identity.data.local.db.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 
 @Entity(tableName = "identity_users")
 data class UserEntity(
 
     @PrimaryKey
     @ColumnInfo(name = "username")
-    val username: String,
+    val username: UserId,
 
     @ColumnInfo(name = "email")
     val email: String,
@@ -28,4 +29,5 @@ data class UserEntity(
 
     @ColumnInfo(name = "last_login_at")
     val lastLoginAt: Long?,
-)
+
+    )

@@ -45,8 +45,6 @@ class SearchViewModel(
         sessionFlow = collectSessionIdsFlowUseCase()
     ) {
 
-    private val userRefId = "mock"
-
     override fun setInitialState(): SearchContract.State = SearchContract.State.empty()
 
     override suspend fun awaitReadiness(): Boolean = true

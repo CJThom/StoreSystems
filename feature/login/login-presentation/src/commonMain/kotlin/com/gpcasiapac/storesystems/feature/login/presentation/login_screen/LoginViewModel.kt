@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.login.presentation.login_screen
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.login.domain.usecase.LoginUseCase
 import kotlinx.coroutines.launch
 
@@ -113,7 +114,7 @@ class LoginViewModel(
                         LoginScreenContract.Effect.ShowToast("MFA required (${result.mfaVersion})")
                     }
                     val uid = viewState.value.username.ifBlank { "user" }
-                    setEffect { LoginScreenContract.Effect.Outcome.MfaRequired(uid) }
+                    setEffect { LoginScreenContract.Effect.Outcome.MfaRequired(UserId(uid)) }
                 } else {
                     onSuccess()
                 }

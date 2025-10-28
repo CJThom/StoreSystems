@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.login.presentation.navigation
 
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.login.api.LoginExternalOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -45,11 +46,11 @@ class LoginNavigationViewModel(
         }
     }
 
-    private fun onMfaRequired(userId: String) {
+    private fun onMfaRequired(userId: UserId) {
         if (checkMfaRequirementUseCase()) {
-            push(LoginFeatureDestination.Mfa(userId))
+            push(LoginFeatureDestination.Mfa(userId.value))
         } else {
-            push(LoginFeatureDestination.Mfa(userId))
+            push(LoginFeatureDestination.Mfa(userId.value))
         }
     }
 }

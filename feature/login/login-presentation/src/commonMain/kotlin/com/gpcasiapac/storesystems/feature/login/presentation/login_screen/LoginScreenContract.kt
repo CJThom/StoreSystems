@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 
 object LoginScreenContract {
 
@@ -30,7 +31,7 @@ object LoginScreenContract {
         // Outcomes emitted to be handled by the feature host/navigation layer
         sealed interface Outcome : Effect {
             data object LoginCompleted : Outcome
-            data class MfaRequired(val userId: String) : Outcome
+            data class MfaRequired(val userId: UserId) : Outcome
         }
     }
 }

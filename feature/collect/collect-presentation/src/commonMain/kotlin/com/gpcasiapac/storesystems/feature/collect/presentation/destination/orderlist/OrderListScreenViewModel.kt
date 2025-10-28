@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
@@ -101,7 +102,7 @@ class OrderListScreenViewModel(
     override fun onStart() {
         viewModelScope.launch {
 
-            val workOrderId = when (val result = createWorkOrderUseCase(userRefId = "demo")) {
+            val workOrderId = when (val result = createWorkOrderUseCase(userId = UserId("demo"))) {
                 is CreateWorkOrderUseCase.UseCaseResult.Error.Unexpected -> null
                 is CreateWorkOrderUseCase.UseCaseResult.Success -> result.workOrderId
             }
@@ -626,6 +627,7 @@ class OrderListScreenViewModel(
             is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isRefreshing = false) }
             }
+
             is FetchOrderListUseCase.UseCaseResult.Error -> {
                 val msg = result.message
                 setState { copy(isRefreshing = false, error = msg) }

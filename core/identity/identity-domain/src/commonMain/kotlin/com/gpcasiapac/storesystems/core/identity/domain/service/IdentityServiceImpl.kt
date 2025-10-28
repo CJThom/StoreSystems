@@ -4,10 +4,13 @@ import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.core.identity.api.IdentityService
 import com.gpcasiapac.storesystems.core.identity.api.model.AuthSession
 import com.gpcasiapac.storesystems.core.identity.api.model.User
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.GetUserUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.IsLoggedInUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.LoginUseCase
 import com.gpcasiapac.storesystems.core.identity.domain.usecase.LogoutUseCase
+import com.gpcasiapac.storesystems.core.identity.domain.usecase.session.ObserveCurrentUserIdFlowUseCase
+import kotlinx.coroutines.flow.Flow
 
 /**
  * IdentityService implementation now lives in identity-domain to keep impl separate from API
@@ -18,6 +21,7 @@ class IdentityServiceImpl(
     private val getUserUseCase: GetUserUseCase,
     private val isLoggedInUseCase: IsLoggedInUseCase,
     private val logoutUseCase: LogoutUseCase,
+    private val observeCurrentUserIdFlowUseCase: ObserveCurrentUserIdFlowUseCase,
 ) : IdentityService {
 
     override suspend fun login(username: String, password: String): DataResult<AuthSession> {
@@ -25,7 +29,7 @@ class IdentityServiceImpl(
         return loginUseCase(username, password)
     }
 
-    override suspend fun getUser(userId: String): User? {
+    override suspend fun getUser(userId: UserId): User? {
         return getUserUseCase(userId)
     }
 
@@ -37,4 +41,7 @@ class IdentityServiceImpl(
         logoutUseCase()
     }
 
+    override fun observeCurrentUserId(): Flow<UserId?> {
+        return observeCurrentUserIdFlowUseCase()
+    }
 }

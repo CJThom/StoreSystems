@@ -69,7 +69,7 @@ val collectDomainModule = module {
     factoryOf(::ObserveCollectUserPrefsUseCase)
     factoryOf(::SaveCollectUserPrefsUseCase)
     factoryOf(::GetCollectSessionIdsFlowUseCase)
-
+    //GetCollectSessionIdsFlowUseCase
     // Register Collect feature's SyncHandler(s)
     factory<SyncHandler> { SubmitOrderSyncHandler(get()) }
 }

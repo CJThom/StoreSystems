@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlin.time.Instant
@@ -21,7 +22,7 @@ data class CollectWorkOrderEntity(
     val workOrderId: WorkOrderId,
 
     @ColumnInfo(name = "user_id")
-    val userId: String,
+    val userId: UserId,
 
     @ColumnInfo(name = "created_at")
     val createdAt: Instant,

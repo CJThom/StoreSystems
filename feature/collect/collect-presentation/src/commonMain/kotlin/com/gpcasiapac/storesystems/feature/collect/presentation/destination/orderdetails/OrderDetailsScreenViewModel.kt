@@ -13,7 +13,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 class OrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
-    private val addOrderListToCollectWorkOrderUseCase: AddOrderListToCollectWorkOrderUseCase,
+    private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val initialInvoice: String,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
@@ -108,32 +108,7 @@ class OrderDetailsScreenViewModel(
 
             is OrderDetailsScreenContract.Event.Select -> {
                 viewModelScope.launch {
-                    val workOrderId: WorkOrderId =
-                        sessionState.value.workOrderId.handleNull() ?: return@launch
-
-                    val current = invoiceKey.value
-
-                    runCatching {
-                        addOrderListToCollectWorkOrderUseCase(
-                            workOrderId = workOrderId,
-                            orderIdList = listOf(current)
-                        )
-                    }.onSuccess {
-                        setEffect {
-                            OrderDetailsScreenContract.Effect.Outcome.Selected(
-                                current
-                            )
-                        }
-                    }.onFailure { t ->
-                        val msg = t.message ?: "Failed to select order. Please try again."
-                        setState { copy(error = msg) }
-                        setEffect {
-                            OrderDetailsScreenContract.Effect.ShowSnackbar(
-                                msg,
-                                duration = SnackbarDuration.Long
-                            )
-                        }
-                    }
+                    handleSelect()
                 }
             }
 
@@ -159,6 +134,41 @@ class OrderDetailsScreenViewModel(
         }
     }
 
+    private suspend fun handleSelect() {
+
+        val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return
+
+        val current = invoiceKey.value
+
+        when (
+            val result = addOrderToCollectWorkOrderUseCase(
+                workOrderId = workOrderId,
+                orderId = current
+            )
+        ) {
+            is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Added -> {
+                setEffect {
+                    OrderDetailsScreenContract.Effect.Outcome.Selected(invoiceNumber = current)
+                }
+            }
+
+            is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Duplicate -> {
+
+            }
+
+            is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Error -> {
+                setState { copy(error = result.message) }
+                setEffect {
+                    OrderDetailsScreenContract.Effect.ShowSnackbar(
+                        message = result.message,
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
+        }
+
+    }
+
     private suspend fun fetchOrders(successToast: String) {
         setState { copy(isLoading = true, error = null) }
 
@@ -166,6 +176,7 @@ class OrderDetailsScreenViewModel(
             is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isLoading = false) }
             }
+
             is FetchOrderListUseCase.UseCaseResult.Error -> {
                 val msg = result.message
                 setState { copy(isLoading = false, error = msg) }
@@ -186,6 +197,5 @@ class OrderDetailsScreenViewModel(
         }
         return this
     }
-
 
 }

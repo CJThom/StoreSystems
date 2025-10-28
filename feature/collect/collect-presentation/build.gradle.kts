@@ -63,6 +63,7 @@ kotlin {
             // Logging
             implementation(libs.kermit)
 
+            implementation(projects.core.identity.identityApi)
             // Feature API (presentation now only provides screens/viewmodels; FeatureEntry moved to collect-impl)
             implementation(projects.feature.collect.collectApi)
             implementation(projects.feature.collect.collectDomain)

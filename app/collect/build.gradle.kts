@@ -76,6 +76,8 @@ kotlin {
             // Login/Identity wiring for DI provided from domain/presentation
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.login.loginDomain)
+
+            implementation(projects.core.identity.identityApi)
             implementation(projects.core.identity.identityDomain)
             implementation(projects.core.identity.identityData)
 

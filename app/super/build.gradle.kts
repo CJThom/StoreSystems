@@ -62,7 +62,7 @@ kotlin {
             implementation(projects.feature.picking.pickingPresentation)
 
             // Domain/data DI for login/identity
-
+            implementation(projects.core.identity.identityApi)
             implementation(projects.core.identity.identityDomain)
             implementation(projects.core.identity.identityData)
 

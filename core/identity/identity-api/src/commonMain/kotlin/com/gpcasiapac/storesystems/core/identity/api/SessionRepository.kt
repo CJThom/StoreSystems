@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.core.identity.api
 
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -7,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
  * Backed by DataStore in identity-data.
  */
 interface SessionRepository {
-    fun userIdFlow(): Flow<String?>
-    suspend fun setUserId(userId: String)
+    fun userIdFlow(): Flow<UserId?>
+    suspend fun setUserId(userId: UserId)
 
     fun accessTokenFlow(): Flow<String?>
     suspend fun setAccessToken(token: String)

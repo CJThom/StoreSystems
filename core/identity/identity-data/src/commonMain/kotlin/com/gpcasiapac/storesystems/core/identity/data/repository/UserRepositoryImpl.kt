@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.core.identity.api.model.AuthSession
 import com.gpcasiapac.storesystems.core.identity.api.model.User
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.core.identity.data.local.db.IdentityDatabase
 import com.gpcasiapac.storesystems.core.identity.data.local.db.dao.IdentityUserDao
 import com.gpcasiapac.storesystems.core.identity.data.mapper.toDomain
@@ -47,7 +48,7 @@ class UserRepositoryImpl(
     }
 
 
-    override suspend fun getUser(userId:String): User? {
+    override suspend fun getUser(userId: UserId): User? {
         return userDao.getByUsername(userId)?.toDomain()
     }
 }

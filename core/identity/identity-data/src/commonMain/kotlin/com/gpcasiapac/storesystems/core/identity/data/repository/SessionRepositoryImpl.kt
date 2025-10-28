@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.gpcasiapac.storesystems.core.identity.api.SessionRepository
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -21,12 +22,12 @@ class SessionRepositoryImpl(
         val ACCESS_TOKEN_KEY = stringPreferencesKey("identity.access_token")
     }
 
-    override fun userIdFlow(): Flow<String?> =
-        dataStore.data.map { it[USER_ID_KEY] }
+    override fun userIdFlow(): Flow<UserId?> =
+        dataStore.data.map { it[USER_ID_KEY]?.let { userIdString -> UserId(userIdString) } }
 
-    override suspend fun setUserId(userId: String) {
+    override suspend fun setUserId(userId: UserId) {
         dataStore.edit { prefs ->
-            prefs[USER_ID_KEY] = userId
+            prefs[USER_ID_KEY] = userId.value
         }
     }
 
