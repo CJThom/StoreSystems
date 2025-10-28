@@ -12,8 +12,8 @@ class SaveCollectUserPrefsUseCase(
     private val repository: CollectUserPrefsRepository,
 ) {
     suspend operator fun invoke(
-        userId: String = "mock-user",
-        selectedWorkOrderId: WorkOrderId,
+        userId: String = "demo",
+        selectedWorkOrderId: WorkOrderId?,
         isB2BFilterSelected: Boolean,
         isB2CFilterSelected: Boolean,
         sort: SortOption,

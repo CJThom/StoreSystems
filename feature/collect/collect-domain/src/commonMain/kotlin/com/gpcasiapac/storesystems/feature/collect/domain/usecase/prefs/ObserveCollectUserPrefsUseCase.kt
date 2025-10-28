@@ -10,7 +10,7 @@ class ObserveCollectUserPrefsUseCase(
     /**
      * Observe Collect user prefs for a specific user id. Temporary default mock value to ease wiring.
      */
-    operator fun invoke(userId: String = "mock-user"): Flow<CollectUserPrefs> {
+    operator fun invoke(userId: String = "demo"): Flow<CollectUserPrefs> {
         return repository.observe(userId)
     }
 

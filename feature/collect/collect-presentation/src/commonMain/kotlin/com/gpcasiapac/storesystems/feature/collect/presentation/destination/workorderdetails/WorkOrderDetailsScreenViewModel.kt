@@ -1,9 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -76,23 +78,16 @@ class WorkOrderDetailsScreenViewModel(
                 error = null
             )
         }
-        val result = fetchOrderListUseCase()
-        result.fold(
-            onSuccess = {
+        when (val result = fetchOrderListUseCase()) {
+            is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isLoading = false) }
-                setEffect { WorkOrderDetailsScreenContract.Effect.ShowToast(successToast) }
-            },
-            onFailure = { t ->
-                val msg = t.message ?: "Failed to refresh orders. Please try again."
-                setState {
-                    copy(
-                        isLoading = false,
-                        error = msg
-                    )
-                }
+            }
+            is FetchOrderListUseCase.UseCaseResult.Error -> {
+                val msg = result.message
+                setState { copy(isLoading = false, error = msg) }
                 setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(msg) }
             }
-        )
+        }
     }
 
 

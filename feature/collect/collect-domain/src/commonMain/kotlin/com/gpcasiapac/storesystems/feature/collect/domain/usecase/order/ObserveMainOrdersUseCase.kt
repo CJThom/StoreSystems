@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.order
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -10,10 +11,10 @@ import kotlinx.coroutines.flow.Flow
  * Thin wrapper around repository to keep VM decoupled and testable.
  */
 class ObserveMainOrdersUseCase(
-    private val orderRepository: OrderRepository,
+    private val orderLocalRepository: OrderLocalRepository,
 ) {
     operator fun invoke(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>> {
-        return orderRepository.observeMainOrders(query)
+        return orderLocalRepository.observeMainOrders(query)
     }
 
 }

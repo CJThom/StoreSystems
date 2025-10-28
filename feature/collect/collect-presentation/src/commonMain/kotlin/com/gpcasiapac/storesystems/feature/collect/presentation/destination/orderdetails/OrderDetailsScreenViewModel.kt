@@ -161,14 +161,13 @@ class OrderDetailsScreenViewModel(
 
     private suspend fun fetchOrders(successToast: String) {
         setState { copy(isLoading = true, error = null) }
-        val result = fetchOrderListUseCase()
-        result.fold(
-            onSuccess = {
+
+        when (val result = fetchOrderListUseCase()) {
+            is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isLoading = false) }
-                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(successToast) }
-            },
-            onFailure = { t ->
-                val msg = t.message ?: "Failed to refresh orders. Please try again."
+            }
+            is FetchOrderListUseCase.UseCaseResult.Error -> {
+                val msg = result.message
                 setState { copy(isLoading = false, error = msg) }
                 setEffect {
                     OrderDetailsScreenContract.Effect.ShowSnackbar(
@@ -177,7 +176,8 @@ class OrderDetailsScreenViewModel(
                     )
                 }
             }
-        )
+        }
+
     }
 
     private fun WorkOrderId?.handleNull(): WorkOrderId? {

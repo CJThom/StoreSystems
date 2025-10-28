@@ -29,10 +29,13 @@ import org.koin.dsl.module
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.ObserveCollectUserPrefsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SaveCollectUserPrefsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.CreateWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
     factoryOf(::ObserveCollectOrderWithCustomerWithLineItemsUseCase)
+    factoryOf(::FetchOrderListUseCase)
     factoryOf(::FetchOrderListUseCase)
     factoryOf(::GetOrderSearchSuggestionListUseCase)
     factoryOf(::ObserveMainOrdersUseCase)
@@ -41,6 +44,7 @@ val collectDomainModule = module {
     factoryOf(::CheckOrderExistsUseCase)
 
     factoryOf(::SaveSignatureUseCase)
+    factoryOf(::ObserveWorkOrderSignatureUseCase)
     factoryOf(::ObserveCollectWorkOrderUseCase)
     factoryOf(::ObserveWorkOrderWithOrderWithCustomersUseCase)
     factoryOf(::ObserveWorkOrderItemsInScanOrderUseCase)
@@ -50,9 +54,12 @@ val collectDomainModule = module {
     factoryOf(::ObserveOrderSelectionUseCase)
     factoryOf(::AddOrderListToCollectWorkOrderUseCase)
     factoryOf(::AddOrderToCollectWorkOrderUseCase)
+    factoryOf(::CreateWorkOrderUseCase)
     factoryOf(::RemoveOrderSelectionUseCase)
     factoryOf(::DeleteWorkOrderUseCase)
     factoryOf(::SubmitOrderUseCase)
+
+
 
     // Preferences use cases
 //    factoryOf(::GetSelectedWorkOrderIdFlowUseCase)

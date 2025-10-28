@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.order
 
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
 /**
@@ -7,11 +8,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderReposi
  * Returns a UseCaseResult so the caller can handle NotFound vs InvalidInput.
  */
 class CheckOrderExistsUseCase(
-    private val orderRepository: OrderRepository,
+    private val orderLocalRepository: OrderLocalRepository,
 ) {
 
     suspend operator fun invoke(invoiceNumber: String): UseCaseResult {
-        val exists = orderRepository.existsInvoice(invoiceNumber)
+        val exists = orderLocalRepository.existsInvoice(invoiceNumber)
         return if (exists) {
             UseCaseResult.Exists(invoiceNumber)
         } else {

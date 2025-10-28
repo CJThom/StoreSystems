@@ -29,6 +29,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetW
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
@@ -431,20 +432,13 @@ class OrderFulfilmentScreenViewModel(
                 error = null
             )
         }
-        val result = fetchOrderListUseCase()
-        result.fold(
-            onSuccess = {
+        when (val result = fetchOrderListUseCase()) {
+            is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isLoading = false) }
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(successToast) }
-            },
-            onFailure = { t ->
-                val msg = t.message ?: "Failed to refresh orders. Please try again."
-                setState {
-                    copy(
-                        isLoading = false,
-                        error = msg
-                    )
-                }
+            }
+            is FetchOrderListUseCase.UseCaseResult.Error -> {
+                val msg = result.message
+                setState { copy(isLoading = false, error = msg) }
                 setEffect {
                     OrderFulfilmentScreenContract.Effect.ShowSnackbar(
                         msg,
@@ -452,7 +446,7 @@ class OrderFulfilmentScreenViewModel(
                     )
                 }
             }
-        )
+        }
     }
 
     private fun onCollectingChanged(type: CollectingType) {

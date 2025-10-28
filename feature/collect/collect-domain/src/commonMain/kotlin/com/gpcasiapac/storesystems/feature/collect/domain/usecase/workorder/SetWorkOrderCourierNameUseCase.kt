@@ -1,13 +1,15 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
 class SetWorkOrderCourierNameUseCase(
-    private val orderRepository: OrderRepository
+    private val orderLocalRepository: OrderLocalRepository,
 ) {
+
     suspend operator fun invoke(workOrderId: WorkOrderId, name: String) {
-         orderRepository.setCourierName(
+         orderLocalRepository.setCourierName(
             workOrderId = workOrderId,
             name = name
         )

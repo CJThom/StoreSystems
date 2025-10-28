@@ -4,10 +4,12 @@ import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.app.superapp.navigation.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.app.superapp.navigation.PickingFeatureDestination
 import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem
+import com.gpcasiapac.storesystems.app.superapp.navigation.TabItem.*
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.navigation.BackStackReducer
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
+import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
 import com.gpcasiapac.storesystems.feature.login.api.LoginFeatureDestination
 import com.gpcasiapac.storesystems.feature.login.api.LoginOutcome
@@ -97,29 +99,31 @@ class SuperGlobalNavigationViewModel :
     private fun handleCollect(outcome: CollectOutcome) {
         when (outcome) {
             is CollectOutcome.OrderSelected -> pushInTab(
-                TabItem.Collect(),
-                CollectFeatureDestination.OrderDetails(outcome.invoiceNumber)
+                Collect(),
+                OrderDetails(outcome.invoiceNumber)
             )
 
             is CollectOutcome.OpenOrderFulfilment -> {
-                popBackInTab(TabItem.Collect(), 1)
-                pushInTab(TabItem.Collect(), CollectFeatureDestination.OrderFulfilment)
+                popBackInTab(Collect(), 1)
+                pushInTab(Collect(), CollectFeatureDestination.OrderFulfilment)
             }
 
-            is CollectOutcome.Back -> popBackInTab(TabItem.Collect(), 1)
+            is CollectOutcome.Back -> popBackInTab(Collect(), 1)
             is CollectOutcome.SignatureRequested -> pushInTab(
-                tab = TabItem.Collect(),
-                key = CollectFeatureDestination.Signature(outcome.customerName)
+                tab = Collect(),
+                key = Signature(outcome.customerName)
             )
 
-            is CollectOutcome.SignatureSaved -> popBackInTab(TabItem.Collect(), 1)
+            is CollectOutcome.SignatureSaved -> popBackInTab(Collect(), 1)
             CollectOutcome.Logout -> { /* TODO: handle logout at shell level if needed */
             }
 
             is CollectOutcome.WorkOrderItemSelected -> pushInTab(
-                TabItem.Collect(),
-                CollectFeatureDestination.WorkOrderDetails(outcome.invoiceNumber)
+                Collect(),
+                WorkOrderDetails(outcome.invoiceNumber)
             )
+
+            CollectOutcome.OpenHistory -> TODO()
         }
     }
 

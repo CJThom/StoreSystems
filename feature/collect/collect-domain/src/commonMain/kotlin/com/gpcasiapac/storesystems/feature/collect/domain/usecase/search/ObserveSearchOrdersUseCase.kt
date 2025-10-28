@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.search
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -10,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
  * This does not apply the main list filters or sort.
  */
 class ObserveSearchOrdersUseCase(
-    private val orderRepository: OrderRepository,
+    private val orderLocalRepository: OrderLocalRepository,
 ) {
 
     operator fun invoke(text: String): Flow<List<CollectOrderWithCustomer>> {
-        return orderRepository.observeSearchOrders(SearchQuery(text))
+        return orderLocalRepository.observeSearchOrders(SearchQuery(text))
     }
 
 }

@@ -11,6 +11,10 @@ import com.gpcasiapac.storesystems.feature.collect.data.network.source.OrderNetw
 import com.gpcasiapac.storesystems.feature.collect.data.repository.OrderRepositoryImpl
 import com.gpcasiapac.storesystems.feature.collect.data.repository.CollectUserPrefsRepositoryImpl
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
+import com.gpcasiapac.storesystems.feature.collect.data.repository.OrderLocalRepositoryImpl
+import com.gpcasiapac.storesystems.feature.collect.data.repository.OrderRemoteRepositoryImpl
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRemoteRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.CollectUserPrefsRepository
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -31,7 +35,13 @@ val collectDataModule = module {
     singleOf(::MockOrderNetworkDataSource) { bind<OrderNetworkDataSource>() }
 
     // Repository bindings (real implementations backed by DB + network).
+    // Keep legacy OrderRepository binding for now to avoid breaking existing consumers.
     singleOf(::OrderRepositoryImpl) { bind<OrderRepository>() }
+
+    // New split repositories
+    singleOf(::OrderRemoteRepositoryImpl) { bind<OrderRemoteRepository>() }
+    singleOf(::OrderLocalRepositoryImpl) { bind<OrderLocalRepository>() }
+
     singleOf(::CollectUserPrefsRepositoryImpl) { bind<CollectUserPrefsRepository>() }
 }
 

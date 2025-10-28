@@ -8,16 +8,18 @@ import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SaveCollectUserPrefsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.CreateWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
@@ -47,7 +49,9 @@ class OrderListScreenViewModel(
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
-    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
+    private val saveCollectUserPrefsUseCase: SaveCollectUserPrefsUseCase,
+    private val createWorkOrderUseCase: CreateWorkOrderUseCase
 ) : MVIViewModel<
         OrderListScreenContract.Event,
         OrderListScreenContract.State,
@@ -95,6 +99,22 @@ class OrderListScreenViewModel(
     }
 
     override fun onStart() {
+        viewModelScope.launch {
+
+            val workOrderId = when (val result = createWorkOrderUseCase(userRefId = "demo")) {
+                is CreateWorkOrderUseCase.UseCaseResult.Error.Unexpected -> null
+                is CreateWorkOrderUseCase.UseCaseResult.Success -> result.workOrderId
+            }
+
+            saveCollectUserPrefsUseCase(
+                userId = "demo",
+                selectedWorkOrderId = workOrderId,
+                isB2BFilterSelected = true,
+                isB2CFilterSelected = true,
+                sort = SortOption.TIME_WAITING_DESC
+            )
+
+        }
 
         viewModelScope.launch {
             observeOrderList()
@@ -602,17 +622,15 @@ class OrderListScreenViewModel(
             )
         }
 
-        val result = fetchOrderListUseCase()
-
-        result.fold(
-            onSuccess = {
+        when (val result = fetchOrderListUseCase()) {
+            is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isRefreshing = false) }
-            },
-            onFailure = { t ->
-                val msg = t.message ?: "Failed to refresh orders. Please try again."
+            }
+            is FetchOrderListUseCase.UseCaseResult.Error -> {
+                val msg = result.message
                 setState { copy(isRefreshing = false, error = msg) }
             }
-        )
+        }
 
     }
 
