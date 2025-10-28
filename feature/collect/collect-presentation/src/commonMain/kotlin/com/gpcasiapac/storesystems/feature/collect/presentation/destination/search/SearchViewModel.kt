@@ -17,6 +17,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddO
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -35,6 +37,8 @@ class SearchViewModel(
     private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
+    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
+    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
         SearchContract.Event,
@@ -289,8 +293,35 @@ class SearchViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
+            val session = sessionState.value
+            val userId = session.userId
+            if (userId == null) {
+                // No user; ignore action
+                return@launch
+            }
+            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
+                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                            is com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                                return@launch
+                            }
+                            else -> { /* ok */ }
+                        }
+                        ensured.workOrderId
+                    }
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                        return@launch
+                    }
+                }
+            } else {
+                session.workOrderId
+            }
+            if (workOrderId == null) {
+                // Nothing to add and no existing work order; only removals requested -> nothing to do
+                return@launch
+            }
             // Commit adds and removals
             toAdd.forEach {
                 addOrderToCollectWorkOrderUseCase(
@@ -323,8 +354,33 @@ class SearchViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
+            val session = sessionState.value
+            val userId = session.userId
+            if (userId == null) {
+                return@launch
+            }
+            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
+                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                            is com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                                return@launch
+                            }
+                            else -> { /* ok */ }
+                        }
+                        ensured.workOrderId
+                    }
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                        return@launch
+                    }
+                }
+            } else {
+                session.workOrderId
+            }
+            if (workOrderId == null) {
+                return@launch
+            }
             toAdd.forEach {
                 addOrderToCollectWorkOrderUseCase(
                     workOrderId = workOrderId,

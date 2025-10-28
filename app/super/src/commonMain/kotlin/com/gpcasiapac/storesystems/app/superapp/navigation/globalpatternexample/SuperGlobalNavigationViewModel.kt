@@ -60,7 +60,7 @@ class SuperGlobalNavigationViewModel :
 
     private fun handleLogin(outcome: LoginOutcome) {
         when (outcome) {
-            is LoginOutcome.MfaRequired -> pushInShell(LoginFeatureDestination.Mfa(outcome.userId))
+            is LoginOutcome.MfaRequired -> pushInShell(LoginFeatureDestination.Mfa(outcome.userId.value))
             is LoginOutcome.LoginCompleted -> enterTabsHost()
             is LoginOutcome.Back -> popBack()
         }

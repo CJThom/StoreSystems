@@ -27,10 +27,12 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.ObserveCollectUserPrefsUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SaveCollectUserPrefsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.CreateCollectUserPrefsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.CreateWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
@@ -58,8 +60,7 @@ val collectDomainModule = module {
     factoryOf(::RemoveOrderSelectionUseCase)
     factoryOf(::DeleteWorkOrderUseCase)
     factoryOf(::SubmitOrderUseCase)
-
-
+    factoryOf(::EnsureWorkOrderSelectionUseCase)
 
     // Preferences use cases
 //    factoryOf(::GetSelectedWorkOrderIdFlowUseCase)
@@ -67,9 +68,9 @@ val collectDomainModule = module {
 //    factoryOf(::GetCollectFiltersFlowUseCase)
 //    factoryOf(::SetCollectFiltersUseCase)
     factoryOf(::ObserveCollectUserPrefsUseCase)
-    factoryOf(::SaveCollectUserPrefsUseCase)
+    factoryOf(::CreateCollectUserPrefsUseCase)
     factoryOf(::GetCollectSessionIdsFlowUseCase)
-    //GetCollectSessionIdsFlowUseCase
+    factoryOf(::UpdateSelectedWorkOrderIdUseCase)
     // Register Collect feature's SyncHandler(s)
     factory<SyncHandler> { SubmitOrderSyncHandler(get()) }
 }

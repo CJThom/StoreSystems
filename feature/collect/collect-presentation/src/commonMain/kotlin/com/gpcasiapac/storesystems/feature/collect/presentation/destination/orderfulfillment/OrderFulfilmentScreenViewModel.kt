@@ -20,6 +20,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
@@ -46,6 +48,8 @@ class OrderFulfilmentScreenViewModel(
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
+    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
+    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
@@ -325,10 +329,31 @@ class OrderFulfilmentScreenViewModel(
                     when (val result = checkOrderExistsUseCase(invoice)) {
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
-                                val workOrderId: WorkOrderId =
-                                    sessionState.value.workOrderId.handleNull() ?: return@launch
+                                val session = sessionState.value
+                                val userId = session.userId
+                                if (userId == null) {
+                                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No user logged in") }
+                                    return@launch
+                                }
+                                val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+                                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+                                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                                            is com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                                                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(u.message) }
+                                                return@launch
+                                            }
+                                            else -> { /* ok */ }
+                                        }
+                                        ensured.workOrderId
+                                    }
+                                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(ensured.message) }
+                                        return@launch
+                                    }
+                                }
                                 val addResult = addOrderToCollectWorkOrderUseCase(
-                                    workOrderId = workOrderId,
+                                    workOrderId = ensuredId,
                                     orderId = result.invoiceNumber
                                 )
                                 when (addResult) {

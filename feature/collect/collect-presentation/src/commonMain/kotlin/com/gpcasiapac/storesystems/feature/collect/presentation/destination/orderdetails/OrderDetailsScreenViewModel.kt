@@ -14,6 +14,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -30,6 +32,8 @@ class OrderDetailsScreenViewModel(
     private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
     private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
+    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
+    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,
     private val initialInvoice: String,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
@@ -135,14 +139,46 @@ class OrderDetailsScreenViewModel(
     }
 
     private suspend fun handleSelect() {
+        val session = sessionState.value
+        val userId = session.userId
+        if (userId == null) {
+            setState { copy(error = "No user logged in") }
+            setEffect {
+                OrderDetailsScreenContract.Effect.ShowSnackbar(
+                    message = "No user logged in",
+                    duration = SnackbarDuration.Long
+                )
+            }
+            return
+        }
 
-        val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return
+        // Ensure there is a valid work order id (create one only on selection)
+        val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+            is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+            is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                // Persist selection to prefs
+                when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                    is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                        setState { copy(error = u.message) }
+                        setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(u.message, duration = SnackbarDuration.Long) }
+                        return
+                    }
+                    else -> { /* ok */ }
+                }
+                ensured.workOrderId
+            }
+            is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                setState { copy(error = ensured.message) }
+                setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(ensured.message, duration = SnackbarDuration.Long) }
+                return
+            }
+        }
 
         val current = invoiceKey.value
 
         when (
             val result = addOrderToCollectWorkOrderUseCase(
-                workOrderId = workOrderId,
+                workOrderId = ensuredId,
                 orderId = current
             )
         ) {

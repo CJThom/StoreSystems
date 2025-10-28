@@ -199,4 +199,8 @@ class OrderLocalRepositoryImpl(
 
     private fun escapeForLike(input: String): String =
         input.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+
+    override suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean {
+        return workOrderDao.getCollectWorkOrderEntity(workOrderId) != null
+    }
 }

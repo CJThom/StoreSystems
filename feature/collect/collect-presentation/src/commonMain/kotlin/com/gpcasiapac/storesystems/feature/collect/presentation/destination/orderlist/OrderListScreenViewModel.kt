@@ -17,10 +17,10 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.SaveCollectUserPrefsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.CreateWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
@@ -51,8 +51,8 @@ class OrderListScreenViewModel(
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val saveCollectUserPrefsUseCase: SaveCollectUserPrefsUseCase,
-    private val createWorkOrderUseCase: CreateWorkOrderUseCase
+    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
+    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase
 ) : MVIViewModel<
         OrderListScreenContract.Event,
         OrderListScreenContract.State,
@@ -100,23 +100,7 @@ class OrderListScreenViewModel(
     }
 
     override fun onStart() {
-        viewModelScope.launch {
-
-            val workOrderId = when (val result = createWorkOrderUseCase(userId = UserId("demo"))) {
-                is CreateWorkOrderUseCase.UseCaseResult.Error.Unexpected -> null
-                is CreateWorkOrderUseCase.UseCaseResult.Success -> result.workOrderId
-            }
-
-            saveCollectUserPrefsUseCase(
-                userId = UserId("demo"),
-                selectedWorkOrderId = workOrderId,
-                isB2BFilterSelected = true,
-                isB2CFilterSelected = true,
-                sort = SortOption.TIME_WAITING_DESC
-            )
-
-        }
-
+        // No eager work order creation here; only ensure/create when user actually adds/commits selections.
         viewModelScope.launch {
             observeOrderList()
         }
@@ -465,11 +449,34 @@ class OrderListScreenViewModel(
     private fun handleSubmitSelectedOrders() {
         val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
+            val session = sessionState.value
+            val userId = session.userId
+            if (userId == null) {
+                setState { copy(error = "No user logged in") }
+                return@launch
+            }
+            // Only ensure/create when there is something to add
+            if (selectedOrderIdList.isEmpty()) return@launch
+            val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+                is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+                is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                    when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                        is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                            setState { copy(error = u.message) }
+                            return@launch
+                        }
+                        else -> { /* ok */ }
+                    }
+                    ensured.workOrderId
+                }
+                is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                    setState { copy(error = ensured.message) }
+                    return@launch
+                }
+            }
 
             addOrderListToCollectWorkOrderUseCase(
-                workOrderId = workOrderId,
+                workOrderId = ensuredId,
                 orderIdList = selectedOrderIdList
             )
 
@@ -514,8 +521,38 @@ class OrderListScreenViewModel(
             return
         }
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
+            val session = sessionState.value
+            val userId = session.userId
+            if (userId == null) {
+                setState { copy(error = "No user logged in") }
+                return@launch
+            }
+            // Ensure/persist only if there are items to add
+            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
+                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                            is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                                setState { copy(error = u.message) }
+                                return@launch
+                            }
+                            else -> { /* ok */ }
+                        }
+                        ensured.workOrderId
+                    }
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                        setState { copy(error = ensured.message) }
+                        return@launch
+                    }
+                }
+            } else {
+                session.workOrderId
+            }
+            if (workOrderId == null) {
+                // Nothing to add and no existing work order; only removals requested -> nothing to do
+                return@launch
+            }
             // Commit adds and removals
             toAdd.forEach {
                 addOrderToCollectWorkOrderUseCase(
@@ -530,7 +567,6 @@ class OrderListScreenViewModel(
                 )
             }
             val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
-            val selected = newExisting
             setState {
                 copy(
                     isMultiSelectionEnabled = false,
@@ -549,8 +585,37 @@ class OrderListScreenViewModel(
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
+            val session = sessionState.value
+            val userId = session.userId
+            if (userId == null) {
+                setState { copy(error = "No user logged in") }
+                return@launch
+            }
+            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
+                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
+                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                            is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
+                                setState { copy(error = u.message) }
+                                return@launch
+                            }
+                            else -> { /* ok */ }
+                        }
+                        ensured.workOrderId
+                    }
+                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
+                        setState { copy(error = ensured.message) }
+                        return@launch
+                    }
+                }
+            } else {
+                session.workOrderId
+            }
+            if (workOrderId == null) {
+                // Nothing to add and no existing work order; only removals requested -> nothing to do
+                return@launch
+            }
             toAdd.forEach {
                 addOrderToCollectWorkOrderUseCase(
                     workOrderId = workOrderId,

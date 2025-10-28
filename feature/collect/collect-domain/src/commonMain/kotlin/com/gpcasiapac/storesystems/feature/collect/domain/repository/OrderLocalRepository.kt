@@ -62,4 +62,7 @@ interface OrderLocalRepository {
     suspend fun insertWorkOrderItem(item: CollectWorkOrderItem): Boolean
 
     suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion>
+
+    // New: existence check for work order
+    suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean
 }

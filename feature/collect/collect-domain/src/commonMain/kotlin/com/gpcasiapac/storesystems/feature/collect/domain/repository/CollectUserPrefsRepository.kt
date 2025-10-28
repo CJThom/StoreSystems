@@ -23,4 +23,10 @@ interface CollectUserPrefsRepository {
     /** Replace and persist the whole preferences object. */
     suspend fun save(collectUserPrefs: CollectUserPrefs)
 
+    /**
+     * Update only the selected work order id for the given user.
+     * @return number of rows updated (0 means the row does not exist)
+     */
+    suspend fun setSelectedWorkOrderId(userId: UserId, selectedWorkOrderId: WorkOrderId?): Int
+
 }

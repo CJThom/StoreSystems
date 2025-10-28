@@ -5,26 +5,29 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectUser
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectUserPrefs
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.CollectUserPrefsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class CollectUserPrefsRepositoryImpl(
-    private val dao: CollectUserPrefsDao,
+    private val collectUserPrefsDao: CollectUserPrefsDao,
 ) : CollectUserPrefsRepository {
 
     override fun observe(userId: UserId): Flow<CollectUserPrefs?> {
-        return dao.observe(userId).map { it?.toDomain() }
+        return collectUserPrefsDao.observe(userId).map { it?.toDomain() }
     }
 
     override suspend fun get(userId: UserId): CollectUserPrefs? {
-        return dao.get(userId)?.toDomain()
+        return collectUserPrefsDao.get(userId)?.toDomain()
     }
 
     override suspend fun save(collectUserPrefs: CollectUserPrefs) {
-        dao.upsert(collectUserPrefs.toEntity())
+        collectUserPrefsDao.upsert(collectUserPrefs.toEntity())
+    }
+
+    override suspend fun setSelectedWorkOrderId(userId: UserId, selectedWorkOrderId: WorkOrderId?): Int {
+        return collectUserPrefsDao.setSelectedWorkOrderId(userId, selectedWorkOrderId)
     }
 
 }

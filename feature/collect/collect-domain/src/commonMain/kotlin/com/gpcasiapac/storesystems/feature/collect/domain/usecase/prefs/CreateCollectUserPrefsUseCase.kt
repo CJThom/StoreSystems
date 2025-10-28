@@ -9,16 +9,16 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.CollectUser
 /**
  * Instantiates a [CollectUserPrefs] and persists it using the repository.
  */
-class SaveCollectUserPrefsUseCase(
-    private val repository: CollectUserPrefsRepository,
+class CreateCollectUserPrefsUseCase(
+    private val collectUserPrefsRepository: CollectUserPrefsRepository,
 ) {
 
     suspend operator fun invoke(
         userId: UserId = UserId("demo"),
-        selectedWorkOrderId: WorkOrderId?,
-        isB2BFilterSelected: Boolean,
-        isB2CFilterSelected: Boolean,
-        sort: SortOption,
+        selectedWorkOrderId: WorkOrderId? = null,
+        isB2BFilterSelected: Boolean = true,
+        isB2CFilterSelected: Boolean = true,
+        sort: SortOption = SortOption.TIME_WAITING_DESC,
     ) {
 
         val collectUserPrefs = CollectUserPrefs(
@@ -29,6 +29,7 @@ class SaveCollectUserPrefsUseCase(
             sort = sort,
         )
 
-        repository.save(collectUserPrefs = collectUserPrefs)
+        collectUserPrefsRepository.save(collectUserPrefs = collectUserPrefs)
+
     }
 }
