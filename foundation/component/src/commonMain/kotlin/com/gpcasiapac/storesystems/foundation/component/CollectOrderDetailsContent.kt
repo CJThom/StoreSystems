@@ -28,7 +28,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 @Composable
 fun CollectOrderDetailsContent(
     customerName: String,
-    customerType: CustomerType,
+    customerType: CustomerTypeParam,
     invoiceNumber: String,
     webOrderNumber: String?,
     modifier: Modifier = Modifier,
@@ -79,7 +79,7 @@ private fun CollectOrderDetailsContentB2BPreview() {
     GPCTheme {
         CollectOrderDetailsContent(
             customerName = "ABC Motorsports PTY Limited",
-            customerType = CustomerType.B2B,
+            customerType = CustomerTypeParam.B2B,
             invoiceNumber = "INV-123456",
             webOrderNumber = "WEB-987654",
             isLoading = false
@@ -93,7 +93,7 @@ private fun CollectOrderDetailsContentB2CPreview() {
     GPCTheme {
         CollectOrderDetailsContent(
             customerName = "Johnathan Citizenship",
-            customerType = CustomerType.B2C,
+            customerType = CustomerTypeParam.B2C,
             invoiceNumber = "INV-123456",
             webOrderNumber = null,
             isLoading = false

@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectPickedAtChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.mapper.toParam
 import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.component.ListItemToolbarScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -53,7 +54,7 @@ fun CollectOrderItem(
     ) {
         CollectOrderDetailsContent(
             customerName = customerName,
-            customerType = customerType,
+            customerType = customerType.toParam(),
             invoiceNumber = invoiceNumber,
             webOrderNumber = webOrderNumber,
             isLoading = isLoading,

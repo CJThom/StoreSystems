@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.history.presentation.composable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,8 +21,11 @@ import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithMetadata
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
+import com.gpcasiapac.storesystems.feature.history.presentation.mapper.toCustomerTypeParam
+import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.component.ListItemToolbarScaffold
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -74,9 +78,10 @@ private fun CollectHistoryItem(
 ) {
     ListItemScaffold(
         modifier = modifier,
-        contentPadding = contendPadding,
+        contentPadding = PaddingValues(),
         toolbar = {
             CollectOrderHistoryToolbar(
+                status = item.status,
                 actions = {
 
                 }
@@ -84,72 +89,30 @@ private fun CollectHistoryItem(
         }
     ) {
         CollectOrderDetailsContent(
-            customerName = customerName,
-            customerType = customerType,
-            invoiceNumber = invoiceNumber,
-            webOrderNumber = webOrderNumber,
-            isLoading = isLoading,
+            customerName = metadata.getCustomerDisplayName(),
+            customerType = metadata.customerType.toCustomerTypeParam(),
+            invoiceNumber = metadata.invoiceNumber,
+            webOrderNumber = metadata.webOrderNumber,
+            isLoading = false,
             contentPadding = PaddingValues(bottom = Dimens.Space.small)
         )
     }
-    ListItem(
-        headlineContent = {
-            Text(
-                text = "Order #${metadata.invoiceNumber}",
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
-        supportingContent = {
-            Column {
-                Text(
-                    text = "Customer: ${metadata.getCustomerDisplayName()}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = formatTimeAgo(item.timestamp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (item.attempts > 0 && item.status == HistoryStatus.FAILED) {
-                    Text(
-                        text = "${item.attempts} attempt${if (item.attempts > 1) "s" else ""}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        },
-        trailingContent = {
-            StatusBadge(status = item.status)
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp)
-    )
 }
 
 @Composable
 private fun RowScope.CollectOrderHistoryToolbar(
+    status: HistoryStatus,
     actions: @Composable RowScope.() -> Unit,
 ) {
     ListItemToolbarScaffold(
         actions = actions,
         overflowMenu = { dismiss ->
-            DropdownMenuItem(
-                text = { Text("Select all by customer") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.SelectAll,
-                        contentDescription = "Select all"
-                    )
-                },
-                onClick = { dismiss() }
-            )
+
         }
     ) {
-        Text("Some Value")
+        Row {
+            StatusBadge(status = status)
+        }
     }
 }
 

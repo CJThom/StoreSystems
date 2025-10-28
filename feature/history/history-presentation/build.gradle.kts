@@ -22,10 +22,11 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.materialIconsExtended)
-            
+
             implementation(projects.common.presentation)
             implementation(projects.common.di)
             implementation(projects.foundation.component)
+            implementation(projects.foundation.designSystem)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.androidx.navigation3.ui)
 

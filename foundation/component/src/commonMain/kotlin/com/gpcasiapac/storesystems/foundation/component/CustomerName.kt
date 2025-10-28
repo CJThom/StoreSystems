@@ -29,7 +29,6 @@ enum class CustomerTypeParam {
     B2B, B2C
 }
 
-// TODO: Move to foundation/components (Depends on CustomerType)
 @Composable
 fun CustomerName(
     customerName: String,
