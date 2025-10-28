@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.sync.SubmitOrderSyncHandler
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetCollectOrderWithCustomerWithLineItemsFlowUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderByInvoiceNumberUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveSearchOrdersUseCase
@@ -31,6 +32,7 @@ import org.koin.dsl.module
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
     factoryOf(::GetCollectOrderWithCustomerWithLineItemsFlowUseCase)
+    factoryOf(::GetOrderByInvoiceNumberUseCase)
     factoryOf(::FetchOrderListUseCase)
     factoryOf(::GetOrderSearchSuggestionListUseCase)
     factoryOf(::ObserveMainOrdersUseCase)

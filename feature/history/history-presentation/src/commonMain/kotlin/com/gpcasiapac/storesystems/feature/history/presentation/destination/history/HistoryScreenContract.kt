@@ -5,16 +5,19 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
-import com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryItemUi
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithMetadata
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
 
 object HistoryScreenContract {
 
     @Immutable
     data class State(
-        val items: List<HistoryItemUi>,
+        val items: List<HistoryItemWithMetadata>,  // Changed: Now uses domain model directly
         val isLoading: Boolean,
         val error: String?,
-        val filter: HistoryFilter = HistoryFilter.ALL
+        val filter: HistoryFilter = HistoryFilter.ALL,
+        val typeFilter: HistoryType? = null,
+        val searchQuery: String = ""
     ) : ViewState
 
     sealed interface Event : ViewEvent {
@@ -24,6 +27,8 @@ object HistoryScreenContract {
         data class DeleteItem(val id: String) : Event
         data class RetryItem(val id: String) : Event
         data class FilterChanged(val filter: HistoryFilter) : Event
+        data class TypeFilterChanged(val type: HistoryType?) : Event
+        data class SearchQueryChanged(val query: String) : Event
         data object ClearError : Event
         data object Back : Event
     }

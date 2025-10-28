@@ -4,8 +4,10 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
 import com.gpcasiapac.storesystems.feature.history.data.mapper.toHistoryItem
 import com.gpcasiapac.storesystems.feature.history.data.mapper.toHistoryItems
 import com.gpcasiapac.storesystems.feature.history.data.mapper.toHistoryItemsWithCollectMetadata
+import com.gpcasiapac.storesystems.feature.history.data.mapper.toHistoryItemsWithMetadata
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithCollectMetadata
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithMetadata
 import com.gpcasiapac.storesystems.feature.history.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,13 +20,20 @@ class HistoryRepositoryImpl(
     private val syncQueueService: SyncQueueService
 ) : HistoryRepository {
     
+    override fun observeHistoryWithMetadata(): Flow<List<HistoryItemWithMetadata>> {
+        return syncQueueService.observeAllTasksWithCollectMetadata()
+            .map { tasks -> tasks.toHistoryItemsWithMetadata() }
+    }
+    
+    override suspend fun getHistoryByEntityId(entityId: String): List<HistoryItemWithMetadata> {
+        return syncQueueService.getTasksWithCollectMetadataByEntityId(entityId)
+            .toHistoryItemsWithMetadata()
+    }
+    
+    @Deprecated("Use observeHistoryWithMetadata() instead")
     override fun observeHistory(): Flow<List<HistoryItem>> {
         return syncQueueService.observeAllTasks()
             .map { syncTasks -> syncTasks.toHistoryItems() }
-    }
-    
-    override suspend fun getHistoryByEntityId(entityId: String): List<HistoryItem> {
-        return syncQueueService.getTasksByEntityId(entityId).toHistoryItems()
     }
     
     override suspend fun deleteHistoryItem(id: String): Result<Unit> {
@@ -48,13 +57,13 @@ class HistoryRepositoryImpl(
             .toHistoryItemsWithCollectMetadata()
     }
     
-    override suspend fun getHistoryByInvoiceNumber(invoiceNumber: String): List<HistoryItemWithCollectMetadata> {
+    override suspend fun getHistoryByInvoiceNumber(invoiceNumber: String): List<HistoryItemWithMetadata> {
         return syncQueueService.getTasksByInvoiceNumber(invoiceNumber)
-            .toHistoryItemsWithCollectMetadata()
+            .toHistoryItemsWithMetadata()
     }
     
-    override suspend fun getHistoryByCustomerNumber(customerNumber: String): List<HistoryItemWithCollectMetadata> {
+    override suspend fun getHistoryByCustomerNumber(customerNumber: String): List<HistoryItemWithMetadata> {
         return syncQueueService.getTasksByCustomerNumber(customerNumber)
-            .toHistoryItemsWithCollectMetadata()
+            .toHistoryItemsWithMetadata()
     }
 }

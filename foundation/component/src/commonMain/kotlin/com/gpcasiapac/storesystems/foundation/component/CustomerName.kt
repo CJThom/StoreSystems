@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.component
+package com.gpcasiapac.storesystems.foundation.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,17 +19,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
 import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
+
+enum class CustomerTypeParam {
+    B2B, B2C
+}
+
 // TODO: Move to foundation/components (Depends on CustomerType)
 @Composable
 fun CustomerName(
     customerName: String,
-    customerType: CustomerType,
+    customerType: CustomerTypeParam,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues()
@@ -44,8 +48,8 @@ fun CustomerName(
     ) {
 
         when (customerType) {
-            CustomerType.B2B -> B2BIcon(isLoading = isLoading)
-            CustomerType.B2C -> B2CIcon(isLoading = isLoading)
+            CustomerTypeParam.B2B -> B2BIcon(isLoading = isLoading)
+            CustomerTypeParam.B2C -> B2CIcon(isLoading = isLoading)
         }
 
         Text(
@@ -64,22 +68,22 @@ fun CustomerName(
 
 private data class CustomerNamePreviewData(
     val name: String,
-    val type: CustomerType
+    val type: CustomerTypeParam
 )
 
 private class CustomerNamePreviewProvider : PreviewParameterProvider<CustomerNamePreviewData> {
     override val values = sequenceOf(
         CustomerNamePreviewData(
             name = "ABC Motorsports PTY Limited",
-            type = CustomerType.B2B
+            type = CustomerTypeParam.B2B
         ),
         CustomerNamePreviewData(
             name = "Johnathan Josiah Citizenship Esq.",
-            type = CustomerType.B2C
+            type = CustomerTypeParam.B2C
         ),
         CustomerNamePreviewData(
             name = "Short Co",
-            type = CustomerType.B2B,
+            type = CustomerTypeParam.B2B,
         )
     )
 

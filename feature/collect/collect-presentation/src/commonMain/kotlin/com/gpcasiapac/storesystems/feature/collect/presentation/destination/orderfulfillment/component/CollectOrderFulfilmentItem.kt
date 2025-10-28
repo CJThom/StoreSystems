@@ -13,10 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetailsContent
+import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectPickedAtChip
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemScaffold
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemToolbarScaffold
+import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
+import com.gpcasiapac.storesystems.foundation.component.ListItemToolbarScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlin.time.Instant

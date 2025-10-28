@@ -22,6 +22,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,7 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryStatusColor
+import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryItemCard
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -80,13 +81,27 @@ private fun Content(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
+        // Search field
+        TextField(
+            value = state.searchQuery,
+            onValueChange = { onEventSent(HistoryScreenContract.Event.SearchQueryChanged(it)) },
+            placeholder = { Text("Search orders, customers...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        
         when {
             state.isLoading -> {
                 CircularProgressIndicator()
                 Text("Loading history…", modifier = Modifier.padding(top = 8.dp))
             }
             state.error != null -> {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
                     Text(
                         text = state.error,
                         color = MaterialTheme.colorScheme.onErrorContainer,
@@ -96,57 +111,11 @@ private fun Content(
             }
             else -> {
                 LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                    items(state.items) { item ->
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = item.title,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            },
-                            supportingContent = {
-                                Column {
-                                    Text(
-                                        text = item.subtitle,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    if (item.attempts != null) {
-                                        Text(
-                                            text = item.attempts,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            },
-                            trailingContent = {
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = when (item.statusColor) {
-                                        HistoryStatusColor.PENDING -> MaterialTheme.colorScheme.secondaryContainer
-                                        HistoryStatusColor.SUCCESS -> MaterialTheme.colorScheme.primaryContainer
-                                        HistoryStatusColor.ERROR -> MaterialTheme.colorScheme.errorContainer
-                                        HistoryStatusColor.INFO -> MaterialTheme.colorScheme.tertiaryContainer
-                                    }
-                                ) {
-                                    Text(
-                                        text = item.statusText,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = when (item.statusColor) {
-                                            HistoryStatusColor.PENDING -> MaterialTheme.colorScheme.onSecondaryContainer
-                                            HistoryStatusColor.SUCCESS -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            HistoryStatusColor.ERROR -> MaterialTheme.colorScheme.onErrorContainer
-                                            HistoryStatusColor.INFO -> MaterialTheme.colorScheme.onTertiaryContainer
-                                        },
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                                .clickable { onEventSent(HistoryScreenContract.Event.OpenItem(item.id)) }
+                    items(state.items, key = { it.id }) { item ->
+                        HistoryItemCard(
+                            item = item,
+                            onClick = { onEventSent(HistoryScreenContract.Event.OpenItem(item.id)) },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

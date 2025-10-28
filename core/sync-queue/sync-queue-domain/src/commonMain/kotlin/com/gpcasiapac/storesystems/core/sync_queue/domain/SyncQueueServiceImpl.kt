@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollect
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.AddTaskAndTriggerSyncUseCase
+import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.EnqueueCollectTaskAndTriggerSyncUseCase
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
  */
 internal class SyncQueueServiceImpl(
     private val addTaskAndTriggerSyncUseCase: AddTaskAndTriggerSyncUseCase,
+    private val enqueueCollectTaskAndTriggerSyncUseCase: EnqueueCollectTaskAndTriggerSyncUseCase,
     private val syncRepository: SyncRepository
 ) : SyncQueueService {
     
@@ -80,7 +82,7 @@ internal class SyncQueueServiceImpl(
         maxAttempts: Int,
         metadata: CollectTaskMetadata
     ): Result<String> {
-        return syncRepository.enqueueCollectTask(
+        return enqueueCollectTaskAndTriggerSyncUseCase(
             taskType = taskType,
             taskId = taskId,
             priority = priority,

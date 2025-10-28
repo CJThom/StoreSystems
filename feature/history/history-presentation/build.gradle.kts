@@ -21,11 +21,14 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
-
+            implementation(compose.materialIconsExtended)
+            
             implementation(projects.common.presentation)
             implementation(projects.common.di)
+            implementation(projects.foundation.component)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.androidx.navigation3.ui)
+
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
