@@ -23,7 +23,7 @@ kotlin {
             implementation(projects.common.presentation)
             implementation(projects.core.identity.identityApi)
             implementation(libs.koin.core)
-           // implementation(projects.core.preferences.preferencesApi)
+            implementation(libs.kermit)
             // Sync queue domain for SyncHandler and models
             implementation(projects.core.syncQueue.syncQueueApi)
         }

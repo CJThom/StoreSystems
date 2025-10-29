@@ -33,6 +33,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSe
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.CreateWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndAddOrderToWorkOrderUseCase
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
@@ -61,6 +62,7 @@ val collectDomainModule = module {
     factoryOf(::DeleteWorkOrderUseCase)
     factoryOf(::SubmitOrderUseCase)
     factoryOf(::EnsureWorkOrderSelectionUseCase)
+    factoryOf(::EnsureAndAddOrderToWorkOrderUseCase)
 
     // Preferences use cases
 //    factoryOf(::GetSelectedWorkOrderIdFlowUseCase)

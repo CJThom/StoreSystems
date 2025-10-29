@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs
 
+import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.core.identity.api.IdentityService
 import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
@@ -11,11 +12,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class GetCollectSessionIdsFlowUseCase(
     private val identityService: IdentityService,
     private val observeCollectUserPrefsUseCase: ObserveCollectUserPrefsUseCase,
+    logger: Logger
 ) {
+
+    private val log = logger.withTag("GetCollectSessionIdsFlowUseCase")
 
     operator fun invoke(): Flow<CollectSessionIds> {
         val userIdFlow: Flow<UserId?> = identityService.observeCurrentUserId()
@@ -29,6 +34,8 @@ class GetCollectSessionIdsFlowUseCase(
         }
 
         return combine(userIdFlow, prefsFlow) { userId, prefs ->
+            log.d { "User ID: $userId, Work Order ID: ${prefs?.selectedWorkOrderId}"}
+
             CollectSessionIds(
                 userId = userId,
                 workOrderId = prefs?.selectedWorkOrderId,

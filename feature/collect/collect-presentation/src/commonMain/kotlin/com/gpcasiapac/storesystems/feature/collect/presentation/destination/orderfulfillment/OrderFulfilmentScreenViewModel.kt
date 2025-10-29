@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
+import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -19,9 +20,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndAddOrderToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
@@ -37,19 +36,26 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.SharingStarted
 
 
 class OrderFulfilmentScreenViewModel(
+    logger: Logger,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase,
     private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
-    private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
-    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
-    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,
+    private val ensureAndAddOrderToWorkOrderUseCase: EnsureAndAddOrderToWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
@@ -63,8 +69,20 @@ class OrderFulfilmentScreenViewModel(
         sessionFlow = collectSessionIdsFlowUseCase()
     ) {
 
+    private val log = logger.withTag("OrderFulfilmentScreenViewModel")
+
     // Shared keyed debouncer for persisting user edits
     private val debouncer = Debouncer(viewModelScope)
+
+    // Shared WorkOrderId flow to drive all downstream observations (Option B)
+    private val workOrderIdFlow by lazy {
+        sessionState
+            .map { it.workOrderId }
+            .onEach { id -> if (id == null) setState { copy(error = "No Work Order Selected") } }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
+    }
 
     override fun setInitialState(): OrderFulfilmentScreenContract.State {
         return OrderFulfilmentScreenContract.State(
@@ -126,47 +144,48 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override suspend fun awaitReadiness(): Boolean {
-        // This placeholder screen has no special readiness requirement
-        return true
+        val collectSessionIds = sessionState.first { it.userId != null }
+        return collectSessionIds.userId != null
     }
 
     override fun handleReadinessFailed() {
-        // Not applicable in this placeholder
+        // TODO:  handleReadinessFailed
     }
 
     override fun onStart() {
-        // Observe header (latest open Work Order entity)
+        // Option B: three independent pipelines sharing workOrderIdFlow
+        // Header (Collect Work Order)
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch // TODO: Make dynamed
-            observeCollectWorkOrderUseCase(workOrderId = workOrderId).collectLatest { wo ->
-                setState {
-                    copy(
-                        collectingType = wo?.collectingType ?: CollectingType.STANDARD,
-                        courierName = wo?.courierName ?: "",
-                        isLoading = false,
-                        error = null
-                    )
+            workOrderIdFlow
+                .flatMapLatest { id -> observeCollectWorkOrderUseCase(id) }
+                .collectLatest { wo ->
+                    setState {
+                        copy(
+                            collectingType = wo?.collectingType ?: CollectingType.STANDARD,
+                            courierName = wo?.courierName ?: "",
+                            isLoading = false,
+                            error = null
+                        )
+                    }
                 }
-            }
         }
-        // Observe ordered items for latest open Work Order
+
+        // Items
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch // TODO: Make dynamed
-            observeWorkOrderItemsInScanOrderUseCase(workOrderId)
+            workOrderIdFlow
+                .flatMapLatest { id -> observeWorkOrderItemsInScanOrderUseCase(id) }
                 .collectLatest { items ->
                     setState { copy(collectOrderListItemStateList = items.toListItemState()) }
                 }
         }
-        // Observe signature (Base64) from dedicated signatures table
+
+        // Signature
         viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch // TODO: Make dynamed
-            observeWorkOrderSignatureUseCase(workOrderId = workOrderId).collectLatest { signature ->
-                // TODO: Set date and customer name
-                setState { copy(signatureBase64 = signature?.signatureBase64) }
-            }
+            workOrderIdFlow
+                .flatMapLatest { id -> observeWorkOrderSignatureUseCase(id) }
+                .collectLatest { signature ->
+                    setState { copy(signatureBase64 = signature?.signatureBase64) }
+                }
         }
     }
 
@@ -330,80 +349,29 @@ class OrderFulfilmentScreenViewModel(
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
                                 val session = sessionState.value
-                                val userId = session.userId
-                                if (userId == null) {
-                                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No user logged in") }
-                                    return@launch
-                                }
-                                val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
-                                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
-                                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
-                                            is com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
-                                                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(u.message) }
-                                                return@launch
-                                            }
-                                            else -> { /* ok */ }
-                                        }
-                                        ensured.workOrderId
-                                    }
-                                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
-                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(ensured.message) }
-                                        return@launch
-                                    }
-                                }
-                                val addResult = addOrderToCollectWorkOrderUseCase(
-                                    workOrderId = ensuredId,
+                                val res = ensureAndAddOrderToWorkOrderUseCase(
+                                    userId = session.userId,
+                                    currentSelectedWorkOrderId = session.workOrderId,
                                     orderId = result.invoiceNumber
                                 )
-                                when (addResult) {
-                                    is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Added -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.Success
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Success
-                                            )
-                                        }
-                                    }
-
-                                    is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Duplicate -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.SelectionChanged
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Warning
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                                                "Order already added: \"${addResult.invoiceNumber}\""
-                                            )
+                                when (res) {
+                                    is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success -> {
+                                        when (val o = res.outcome) {
+                                            is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success.AddOutcome.Added -> {
+                                                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                                                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                                            }
+                                            is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success.AddOutcome.Duplicate -> {
+                                                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
+                                                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
+                                                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${o.invoiceNumber}\"") }
+                                            }
                                         }
                                     }
-
-                                    is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Error -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                                                addResult.message
-                                            )
-                                        }
+                                    is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Error -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(res.message) }
                                     }
                                 }
                             } else {
@@ -612,6 +580,7 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun WorkOrderId?.handleNull(): WorkOrderId? {
+        log.d { "WorkOrderId is $this" }
         if (this == null) {
             setState { copy(error = "No Work Order Selected") }
         }

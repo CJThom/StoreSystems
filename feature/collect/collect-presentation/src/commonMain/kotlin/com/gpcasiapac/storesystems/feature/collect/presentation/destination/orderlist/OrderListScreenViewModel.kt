@@ -457,7 +457,10 @@ class OrderListScreenViewModel(
             }
             // Only ensure/create when there is something to add
             if (selectedOrderIdList.isEmpty()) return@launch
-            val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
+            val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(
+                userId = userId,
+                selectedWorkOrderId = session.workOrderId
+            )) {
                 is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
                 is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
                     when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {

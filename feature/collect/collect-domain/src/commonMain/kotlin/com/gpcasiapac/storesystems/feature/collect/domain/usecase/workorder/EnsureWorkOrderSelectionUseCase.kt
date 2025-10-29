@@ -22,10 +22,14 @@ class EnsureWorkOrderSelectionUseCase(
             UseCaseResult.AlreadySelected(selectedWorkOrderId)
         } else {
             when (val res = createWorkOrderUseCase(userId)) {
-                is CreateWorkOrderUseCase.UseCaseResult.Success ->
+                is CreateWorkOrderUseCase.UseCaseResult.Success -> {
                     UseCaseResult.CreatedNew(res.workOrderId)
-                is CreateWorkOrderUseCase.UseCaseResult.Error ->
+                }
+
+                is CreateWorkOrderUseCase.UseCaseResult.Error -> {
                     UseCaseResult.Error.Unexpected(res.message)
+                }
+
             }
         }
     } catch (t: Throwable) {
@@ -39,4 +43,5 @@ class EnsureWorkOrderSelectionUseCase(
             data class Unexpected(override val message: String) : Error(message)
         }
     }
+
 }
