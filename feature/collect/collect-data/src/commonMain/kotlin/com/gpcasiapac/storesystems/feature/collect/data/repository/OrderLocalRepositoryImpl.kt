@@ -6,7 +6,6 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.SignatureDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.WorkOrderDao
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toDomain
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntity
 import com.gpcasiapac.storesystems.feature.collect.data.mapper.toEntityTriples
@@ -15,17 +14,17 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWith
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrderItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Signature
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionKind
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumberSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
@@ -137,9 +136,12 @@ class OrderLocalRepositoryImpl(
     override suspend fun getMaxWorkOrderItemPosition(workOrderId: WorkOrderId): Long =
         workOrderDao.getMaxPosition(workOrderId)
 
-    override suspend fun insertWorkOrderItem(item: CollectWorkOrderItem): Boolean {
-        val rowId = workOrderDao.insertItem(item.toEntity())
-        return rowId != -1L
+    override suspend fun insertWorkOrderItem(workOrderItem: CollectWorkOrderItem): Long {
+        return workOrderDao.insertOrIgnoreWorkOrderItem(workOrderItem.toEntity())
+    }
+
+    override suspend fun insertWorkOrderItemList(workOrderItemList: List<CollectWorkOrderItem>): List<Long> {
+        return workOrderDao.insertOrIgnoreWorkOrderItemList(workOrderItemList.toEntity())
     }
 
     override suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion> {
@@ -152,7 +154,10 @@ class OrderLocalRepositoryImpl(
             if (SuggestionKind.CUSTOMER_NAME in include) {
                 collectOrderDao.getAllCustomerNames(limit = query.maxTotal).forEach { row ->
                     val name = row.name.trim()
-                    if (name.isNotEmpty()) out += CustomerNameSuggestion(text = name, customerType = row.type)
+                    if (name.isNotEmpty()) out += CustomerNameSuggestion(
+                        text = name,
+                        customerType = row.type
+                    )
                 }
             }
             return out
@@ -161,7 +166,10 @@ class OrderLocalRepositoryImpl(
         if (SuggestionKind.CUSTOMER_NAME in include) {
             collectOrderDao.getCustomerNameSuggestionsPrefix(contains, per).forEach { row ->
                 val name = row.name.trim()
-                if (name.isNotEmpty()) out += CustomerNameSuggestion(text = name, customerType = row.type)
+                if (name.isNotEmpty()) out += CustomerNameSuggestion(
+                    text = name,
+                    customerType = row.type
+                )
             }
         }
         if (SuggestionKind.INVOICE_NUMBER in include) {

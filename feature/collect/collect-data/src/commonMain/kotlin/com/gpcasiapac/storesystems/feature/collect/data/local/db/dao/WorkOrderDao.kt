@@ -12,7 +12,6 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOr
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
-import kotlin.time.Instant
 
 @Dao
 interface WorkOrderDao {
@@ -24,10 +23,10 @@ interface WorkOrderDao {
     suspend fun insertOrReplaceWorkOrderEntity(collectWorkOrderEntity: CollectWorkOrderEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertItems(items: List<CollectWorkOrderItemEntity>): List<Long>
+    suspend fun insertOrIgnoreWorkOrderItemList(workOrderItemList: List<CollectWorkOrderItemEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertItem(item: CollectWorkOrderItemEntity): Long
+    suspend fun insertOrIgnoreWorkOrderItem(workOrderItem: CollectWorkOrderItemEntity): Long
 
     @Query("SELECT COALESCE(MAX(position), 0) FROM work_order_items WHERE work_order_id = :workOrderId")
     suspend fun getMaxPosition(workOrderId: WorkOrderId): Long

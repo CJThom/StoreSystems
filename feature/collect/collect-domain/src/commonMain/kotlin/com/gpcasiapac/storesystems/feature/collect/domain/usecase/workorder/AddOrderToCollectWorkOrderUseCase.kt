@@ -13,7 +13,7 @@ class AddOrderToCollectWorkOrderUseCase(
     suspend operator fun invoke(workOrderId: WorkOrderId, orderId: String): UseCaseResult {
         if (orderId.isBlank()) return UseCaseResult.Error.InvalidInput
         return try {
-            val added: Boolean = orderLocalRepository.write {
+            val rowId: Long = orderLocalRepository.write {
                 val nextPosition = orderLocalRepository.getMaxWorkOrderItemPosition(workOrderId) + 1
                 val item = CollectWorkOrderItem(
                     workOrderId = workOrderId,
@@ -22,7 +22,11 @@ class AddOrderToCollectWorkOrderUseCase(
                 )
                 orderLocalRepository.insertWorkOrderItem(item)
             }
-            if (added) UseCaseResult.Added(orderId) else UseCaseResult.Duplicate(orderId)
+            if (rowId != -1L) {
+                UseCaseResult.Added(orderId)
+            } else {
+                UseCaseResult.Duplicate(orderId)
+            }
         } catch (ce: CancellationException) {
             throw ce // never swallow coroutine cancellation
         } catch (t: Throwable) {

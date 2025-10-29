@@ -59,7 +59,9 @@ interface OrderLocalRepository {
 
     suspend fun getMaxWorkOrderItemPosition(workOrderId: WorkOrderId): Long
 
-    suspend fun insertWorkOrderItem(item: CollectWorkOrderItem): Boolean
+    suspend fun insertWorkOrderItem(workOrderItem: CollectWorkOrderItem): Long
+
+    suspend fun insertWorkOrderItemList(workOrderItemList: List<CollectWorkOrderItem>): List<Long>
 
     suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion>
 
