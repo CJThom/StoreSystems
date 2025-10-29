@@ -12,13 +12,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -33,13 +28,10 @@ class SearchViewModel(
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     // Selection persistence dependencies
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
-    private val addOrderListToCollectWorkOrderUseCase: AddOrderListToCollectWorkOrderUseCase,
-    private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
-    private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
-    private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
-    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
-    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,
-    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
+    private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
+    private val toggleOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleOrderSelectionUseCase,
+    private val toggleAllOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleAllOrderSelectionUseCase,
 ) : MVIViewModel<
         SearchContract.Event,
         SearchContract.State,
@@ -216,57 +208,42 @@ class SearchViewModel(
     }
 
     private fun handleOrderChecked(orderId: String, checked: Boolean) {
+        val s = viewState.value
+        val visibleIds = s.searchOrderItems.map { it.invoiceNumber }.toSet()
+        val res = toggleOrderSelectionUseCase(
+            orderId = orderId,
+            checked = checked,
+            persisted = s.existingDraftIdSet,
+            pendingAdd = s.pendingAddIdSet,
+            pendingRemove = s.pendingRemoveIdSet,
+            visibleIds = visibleIds,
+        )
         setState {
-            var add = pendingAddIdSet.toMutableSet()
-            var remove = pendingRemoveIdSet.toMutableSet()
-            val persisted = existingDraftIdSet
-            if (checked) {
-                if (orderId in remove) {
-                    remove.remove(orderId)
-                } else if (orderId !in persisted) {
-                    add.add(orderId)
-                }
-            } else {
-                if (orderId in persisted) {
-                    remove.add(orderId)
-                } else {
-                    add.remove(orderId)
-                }
-            }
-            val selected = (persisted - remove) union add
-            val visibleIds = searchOrderItems.map { it.invoiceNumber }.toSet()
-            val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in selected }
             copy(
-                pendingAddIdSet = add,
-                pendingRemoveIdSet = remove,
-                selectedOrderIdList = selected,
-                isSelectAllChecked = allSelected
+                pendingAddIdSet = res.pendingAdd,
+                pendingRemoveIdSet = res.pendingRemove,
+                selectedOrderIdList = res.selected,
+                isSelectAllChecked = res.isAllSelected,
             )
         }
     }
 
     private fun handleSelectAll(checked: Boolean) {
-        val visibleIds = viewState.value.searchOrderItems.map { it.invoiceNumber }.toSet()
+        val s = viewState.value
+        val visibleIds = s.searchOrderItems.map { it.invoiceNumber }.toSet()
+        val res = toggleAllOrderSelectionUseCase(
+            checked = checked,
+            persisted = s.existingDraftIdSet,
+            pendingAdd = s.pendingAddIdSet,
+            pendingRemove = s.pendingRemoveIdSet,
+            visibleIds = visibleIds,
+        )
         setState {
-            var add = pendingAddIdSet.toMutableSet()
-            var remove = pendingRemoveIdSet.toMutableSet()
-            val persisted = existingDraftIdSet
-            if (checked) {
-                val currentlySelected = (persisted - remove) union add
-                val toAdd = visibleIds - currentlySelected
-                add.addAll(toAdd.filterNot { it in persisted })
-                remove.removeAll(visibleIds)
-            } else {
-                val persistedVisible = visibleIds.intersect(persisted)
-                remove.addAll(persistedVisible)
-                add.removeAll(visibleIds)
-            }
-            val selected = (persisted - remove) union add
             copy(
-                pendingAddIdSet = add,
-                pendingRemoveIdSet = remove,
-                selectedOrderIdList = selected,
-                isSelectAllChecked = checked
+                pendingAddIdSet = res.pendingAdd,
+                pendingRemoveIdSet = res.pendingRemove,
+                selectedOrderIdList = res.selected,
+                isSelectAllChecked = res.isAllSelected,
             )
         }
     }
@@ -294,46 +271,18 @@ class SearchViewModel(
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
             val session = sessionState.value
-            val userId = session.userId
-            if (userId == null) {
-                // No user; ignore action
-                return@launch
-            }
-            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
-                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
-                            is com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
-                                return@launch
-                            }
-                            else -> { /* ok */ }
-                        }
-                        ensured.workOrderId
-                    }
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
-                        return@launch
-                    }
+            val result = ensureAndApplyOrderSelectionDeltaUseCase(
+                userId = session.userId,
+                currentSelectedWorkOrderId = session.workOrderId,
+                toAdd = toAdd,
+                toRemove = toRemove,
+            )
+            when (result) {
+                is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
+                    // Optionally surface error; for now just ignore
+                    return@launch
                 }
-            } else {
-                session.workOrderId
-            }
-            if (workOrderId == null) {
-                // Nothing to add and no existing work order; only removals requested -> nothing to do
-                return@launch
-            }
-            // Commit adds and removals
-            toAdd.forEach {
-                addOrderToCollectWorkOrderUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
-            }
-            toRemove.forEach {
-                removeOrderSelectionUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
+                else -> Unit
             }
             val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
             setState {
@@ -355,43 +304,17 @@ class SearchViewModel(
         val toRemove = s.pendingRemoveIdSet
         viewModelScope.launch {
             val session = sessionState.value
-            val userId = session.userId
-            if (userId == null) {
-                return@launch
-            }
-            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
-                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
-                            is com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
-                                return@launch
-                            }
-                            else -> { /* ok */ }
-                        }
-                        ensured.workOrderId
-                    }
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
-                        return@launch
-                    }
+            val result = ensureAndApplyOrderSelectionDeltaUseCase(
+                userId = session.userId,
+                currentSelectedWorkOrderId = session.workOrderId,
+                toAdd = toAdd,
+                toRemove = toRemove,
+            )
+            when (result) {
+                is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
+                    return@launch
                 }
-            } else {
-                session.workOrderId
-            }
-            if (workOrderId == null) {
-                return@launch
-            }
-            toAdd.forEach {
-                addOrderToCollectWorkOrderUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
-            }
-            toRemove.forEach {
-                removeOrderSelectionUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
+                else -> Unit
             }
             val finalIds = ((s.existingDraftIdSet + toAdd) - toRemove).toList()
             setState {

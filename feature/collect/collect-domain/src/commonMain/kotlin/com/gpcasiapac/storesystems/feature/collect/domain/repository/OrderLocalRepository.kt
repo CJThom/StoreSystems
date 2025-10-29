@@ -43,7 +43,11 @@ interface OrderLocalRepository {
 
     fun observeWorkOrderItemsInScanOrder(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomer>>
 
-    suspend fun removeWorkOrderItem(workOrderId: WorkOrderId, orderId: String)
+    suspend fun deleteWorkOrderItem(workOrderId: WorkOrderId, orderId: String)
+
+    suspend fun deleteWorkOrderItems(workOrderId: WorkOrderId, orderIds: List<String>)
+
+    suspend fun getWorkOrderItemCount(workOrderId: WorkOrderId): Int
 
     suspend fun deleteWorkOrder(workOrderId: WorkOrderId)
 

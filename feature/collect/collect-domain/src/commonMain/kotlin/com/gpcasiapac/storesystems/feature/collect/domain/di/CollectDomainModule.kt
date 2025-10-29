@@ -21,7 +21,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddO
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -34,6 +33,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Crea
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndAddOrderToWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ApplyOrderSelectionDeltaUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleAllOrderSelectionUseCase
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
@@ -55,14 +59,22 @@ val collectDomainModule = module {
     factoryOf(::SetWorkOrderCourierNameUseCase)
     // Selection use cases
     factoryOf(::ObserveOrderSelectionUseCase)
-    factoryOf(::AddOrderListToCollectWorkOrderUseCase)
+
     factoryOf(::AddOrderToCollectWorkOrderUseCase)
     factoryOf(::CreateWorkOrderUseCase)
     factoryOf(::RemoveOrderSelectionUseCase)
     factoryOf(::DeleteWorkOrderUseCase)
     factoryOf(::SubmitOrderUseCase)
     factoryOf(::EnsureWorkOrderSelectionUseCase)
-    factoryOf(::EnsureAndAddOrderToWorkOrderUseCase)
+    // Deprecated: EnsureAndAddOrderToWorkOrderUseCase replaced by EnsureAndApplyOrderSelectionDeltaUseCase
+    // factoryOf(::EnsureAndAddOrderToWorkOrderUseCase)
+
+    factoryOf(::ApplyOrderSelectionDeltaUseCase)
+    factoryOf(::EnsureAndApplyOrderSelectionDeltaUseCase)
+    factoryOf(::AddScannedInputToWorkOrderUseCase)
+    // Selection calculators as use cases
+    factoryOf(::ToggleOrderSelectionUseCase)
+    factoryOf(::ToggleAllOrderSelectionUseCase)
 
     // Preferences use cases
 //    factoryOf(::GetSelectedWorkOrderIdFlowUseCase)

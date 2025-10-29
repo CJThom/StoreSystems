@@ -5,7 +5,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import kotlinx.coroutines.CancellationException
 
-// TODO: split into seperate usecases ie. scanning
+@Deprecated("Use ApplyOrderSelectionDeltaUseCase()")
 class AddOrderToCollectWorkOrderUseCase(
     private val orderLocalRepository: OrderLocalRepository,
 ) {

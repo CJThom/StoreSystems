@@ -13,7 +13,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndAddOrderToWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 class OrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
-    private val ensureAndAddOrderToWorkOrderUseCase: EnsureAndAddOrderToWorkOrderUseCase,
+    private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val initialInvoice: String,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
@@ -136,25 +136,24 @@ class OrderDetailsScreenViewModel(
 
     private suspend fun handleSelect() {
         val session = sessionState.value
-        val res = ensureAndAddOrderToWorkOrderUseCase(
+        val res = ensureAndApplyOrderSelectionDeltaUseCase(
             userId = session.userId,
             currentSelectedWorkOrderId = session.workOrderId,
-            orderId = invoiceKey.value
+            toAdd = listOf(invoiceKey.value),
+            toRemove = emptyList()
         )
         when (res) {
-            is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success -> {
-                when (val o = res.outcome) {
-                    is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success.AddOutcome.Added -> {
-                        setEffect {
-                            OrderDetailsScreenContract.Effect.Outcome.Selected(invoiceNumber = o.invoiceNumber)
-                        }
+            is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> {
+                val inv = invoiceKey.value
+                if (inv in res.added) {
+                    setEffect {
+                        OrderDetailsScreenContract.Effect.Outcome.Selected(invoiceNumber = inv)
                     }
-                    is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success.AddOutcome.Duplicate -> {
-                        // Optional: show subtle feedback; currently no-op
-                    }
+                } else if (inv in res.duplicates) {
+                    // Optional: show subtle feedback; currently no-op
                 }
             }
-            is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Error -> {
+            is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
                 setState { copy(error = res.message) }
                 setEffect {
                     OrderDetailsScreenContract.Effect.ShowSnackbar(
@@ -162,6 +161,9 @@ class OrderDetailsScreenViewModel(
                         duration = SnackbarDuration.Long
                     )
                 }
+            }
+            is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> {
+                // No changes applied; ignore
             }
         }
     }

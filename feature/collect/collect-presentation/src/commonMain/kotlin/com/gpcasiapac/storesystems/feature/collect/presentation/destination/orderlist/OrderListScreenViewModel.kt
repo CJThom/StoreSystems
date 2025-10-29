@@ -6,7 +6,6 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
-import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
@@ -17,13 +16,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderListToCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddOrderToCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleAllOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderSelected
@@ -45,14 +42,12 @@ class OrderListScreenViewModel(
     private val observeOrderCountUseCase: ObserveOrderCountUseCase,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeSelectedOrderListUseCase: ObserveOrderSelectionUseCase,
-    private val addOrderListToCollectWorkOrderUseCase: AddOrderListToCollectWorkOrderUseCase,
-    private val addOrderToCollectWorkOrderUseCase: AddOrderToCollectWorkOrderUseCase,
-    private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
-    private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase
+    private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
+    private val toggleOrderSelectionUseCase: ToggleOrderSelectionUseCase,
+    private val toggleAllOrderSelectionUseCase: ToggleAllOrderSelectionUseCase,
 ) : MVIViewModel<
         OrderListScreenContract.Event,
         OrderListScreenContract.State,
@@ -206,11 +201,12 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.ConfirmSelectionStay -> {
-                onConfirmSelectionStay()
+                commitSelection()
             }
 
             is OrderListScreenContract.Event.ConfirmSelectionProceed -> {
-                onConfirmSelectionProceed()
+                commitSelection()
+                setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
             }
 
             is OrderListScreenContract.Event.DismissConfirmSelectionDialog -> {
@@ -237,9 +233,6 @@ class OrderListScreenViewModel(
                 setEffect { OrderSelected(event.orderId) }
             }
 
-            is OrderListScreenContract.Event.SubmitSelectedOrders -> {
-                handleSubmitSelectedOrders()
-            }
 
             is OrderListScreenContract.Event.StartNewWorkOrderClicked -> {
                 handleStartNewWorkOrderClick()
@@ -388,125 +381,50 @@ class OrderListScreenViewModel(
     }
 
     private fun handleOrderChecked(orderId: String, checked: Boolean) {
+        val s = viewState.value
+        val visibleIds = s.orders.map { it.invoiceNumber }.toSet()
+        val res = toggleOrderSelectionUseCase(
+            orderId = orderId,
+            checked = checked,
+            persisted = s.existingDraftIdSet,
+            pendingAdd = s.pendingAddIdSet,
+            pendingRemove = s.pendingRemoveIdSet,
+            visibleIds = visibleIds,
+        )
         setState {
-            var add = pendingAddIdSet.toMutableSet()
-            var remove = pendingRemoveIdSet.toMutableSet()
-            val persisted = existingDraftIdSet
-            if (checked) {
-                if (orderId in remove) {
-                    remove.remove(orderId)
-                } else if (orderId !in persisted) {
-                    add.add(orderId)
-                }
-            } else {
-                if (orderId in persisted) {
-                    remove.add(orderId)
-                } else {
-                    add.remove(orderId)
-                }
-            }
-            val selected = (persisted - remove) union add
-            val visibleIds = orders.map { it.invoiceNumber }.toSet()
-            val allSelected = visibleIds.isNotEmpty() && visibleIds.all { it in selected }
             copy(
-                pendingAddIdSet = add,
-                pendingRemoveIdSet = remove,
-                selectedOrderIdList = selected,
-                isSelectAllChecked = allSelected
+                pendingAddIdSet = res.pendingAdd,
+                pendingRemoveIdSet = res.pendingRemove,
+                selectedOrderIdList = res.selected,
+                isSelectAllChecked = res.isAllSelected,
             )
         }
     }
 
     private fun handleSelectAll(checked: Boolean) {
-        val visibleIds = viewState.value.orders.map { it.invoiceNumber }.toSet()
-        setState {
-            var add = pendingAddIdSet.toMutableSet()
-            var remove = pendingRemoveIdSet.toMutableSet()
-            val persisted = existingDraftIdSet
-            if (checked) {
-                // Add all visible that are not already selected
-                val currentlySelected = (persisted - remove) union add
-                val toAdd = visibleIds - currentlySelected
-                add.addAll(toAdd.filterNot { it in persisted })
-                // If any visible were marked for removal, undo that
-                remove.removeAll(visibleIds)
-            } else {
-                // Deselect: mark persisted visible for removal, drop any pending adds among visibles
-                val persistedVisible = visibleIds.intersect(persisted)
-                remove.addAll(persistedVisible)
-                add.removeAll(visibleIds)
-            }
-            val selected = (persisted - remove) union add
-            copy(
-                pendingAddIdSet = add,
-                pendingRemoveIdSet = remove,
-                selectedOrderIdList = selected,
-                isSelectAllChecked = checked
-            )
-        }
-    }
-
-    private fun handleSubmitSelectedOrders() {
-        val selectedOrderIdList = viewState.value.selectedOrderIdList.toList()
-        viewModelScope.launch {
-            val session = sessionState.value
-            val userId = session.userId
-            if (userId == null) {
-                setState { copy(error = "No user logged in") }
-                return@launch
-            }
-            // Only ensure/create when there is something to add
-            if (selectedOrderIdList.isEmpty()) return@launch
-            val ensuredId: WorkOrderId = when (val ensured = ensureWorkOrderSelectionUseCase(
-                userId = userId,
-                selectedWorkOrderId = session.workOrderId
-            )) {
-                is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
-                is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                    when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
-                        is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
-                            setState { copy(error = u.message) }
-                            return@launch
-                        }
-                        else -> { /* ok */ }
-                    }
-                    ensured.workOrderId
-                }
-                is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
-                    setState { copy(error = ensured.message) }
-                    return@launch
-                }
-            }
-
-            addOrderListToCollectWorkOrderUseCase(
-                workOrderId = ensuredId,
-                orderIdList = selectedOrderIdList
-            )
-
-            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-        }
+        val s = viewState.value
+        val visibleIds = s.orders.map { it.invoiceNumber }.toSet()
+        val res = toggleAllOrderSelectionUseCase(
+            checked = checked,
+            persisted = s.existingDraftIdSet,
+            pendingAdd = s.pendingAddIdSet,
+            pendingRemove = s.pendingRemoveIdSet,
+            visibleIds = visibleIds,
+        )
         setState {
             copy(
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false
+                pendingAddIdSet = res.pendingAdd,
+                pendingRemoveIdSet = res.pendingRemove,
+                selectedOrderIdList = res.selected,
+                isSelectAllChecked = res.isAllSelected,
             )
         }
     }
 
     private fun handleStartNewWorkOrderClick() {
-        viewModelScope.launch {
-
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
-
-            addOrderListToCollectWorkOrderUseCase(
-                workOrderId = workOrderId,
-                orderIdList = emptyList()
-            )
-
-            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-        }
+        // No DB work is required here; navigating to the fulfilment/details screen
+        // will handle creation/ensure when the user actually adds something.
+        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         setState {
             copy(
                 isMultiSelectionEnabled = false,
@@ -516,58 +434,29 @@ class OrderListScreenViewModel(
         }
     }
 
-    private fun onConfirmSelectionStay() {
+    private fun commitSelection() {
         val s = viewState.value
         val toAdd = s.pendingAddIdSet
         val toRemove = s.pendingRemoveIdSet
+        // If there's nothing to apply and we are not proceeding, just return early.
         if (toAdd.isEmpty() && toRemove.isEmpty()) {
             return
         }
         viewModelScope.launch {
             val session = sessionState.value
-            val userId = session.userId
-            if (userId == null) {
-                setState { copy(error = "No user logged in") }
-                return@launch
-            }
-            // Ensure/persist only if there are items to add
-            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
-                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
-                            is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
-                                setState { copy(error = u.message) }
-                                return@launch
-                            }
-                            else -> { /* ok */ }
-                        }
-                        ensured.workOrderId
-                    }
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
-                        setState { copy(error = ensured.message) }
-                        return@launch
-                    }
+            val result = ensureAndApplyOrderSelectionDeltaUseCase(
+                userId = session.userId,
+                currentSelectedWorkOrderId = session.workOrderId,
+                toAdd = toAdd,
+                toRemove = toRemove,
+            )
+            when (result) {
+                is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
+                    setState { copy(error = result.message) }
+                    return@launch
                 }
-            } else {
-                session.workOrderId
-            }
-            if (workOrderId == null) {
-                // Nothing to add and no existing work order; only removals requested -> nothing to do
-                return@launch
-            }
-            // Commit adds and removals
-            toAdd.forEach {
-                addOrderToCollectWorkOrderUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
-            }
-            toRemove.forEach {
-                removeOrderSelectionUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
+
+                else -> Unit
             }
             val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
             setState {
@@ -580,69 +469,7 @@ class OrderListScreenViewModel(
                     isSelectAllChecked = false
                 )
             }
-        }
-    }
 
-    private fun onConfirmSelectionProceed() {
-        val s = viewState.value
-        val toAdd = s.pendingAddIdSet
-        val toRemove = s.pendingRemoveIdSet
-        viewModelScope.launch {
-            val session = sessionState.value
-            val userId = session.userId
-            if (userId == null) {
-                setState { copy(error = "No user logged in") }
-                return@launch
-            }
-            val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
-                when (val ensured = ensureWorkOrderSelectionUseCase(userId, session.workOrderId)) {
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                        when (val u = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
-                            is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> {
-                                setState { copy(error = u.message) }
-                                return@launch
-                            }
-                            else -> { /* ok */ }
-                        }
-                        ensured.workOrderId
-                    }
-                    is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> {
-                        setState { copy(error = ensured.message) }
-                        return@launch
-                    }
-                }
-            } else {
-                session.workOrderId
-            }
-            if (workOrderId == null) {
-                // Nothing to add and no existing work order; only removals requested -> nothing to do
-                return@launch
-            }
-            toAdd.forEach {
-                addOrderToCollectWorkOrderUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
-            }
-            toRemove.forEach {
-                removeOrderSelectionUseCase(
-                    workOrderId = workOrderId,
-                    orderId = it
-                )
-            }
-            val finalIds = ((s.existingDraftIdSet + toAdd) - toRemove).toList()
-            setState {
-                copy(
-                    isMultiSelectionEnabled = false,
-                    existingDraftIdSet = finalIds.toSet(),
-                    pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet(),
-                    selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false
-                )
-            }
-            setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
         }
     }
 

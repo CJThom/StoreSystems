@@ -98,17 +98,17 @@ class OrderLocalRepositoryImpl(
         workOrderDao.observeWorkOrderItemsWithOrders(workOrderId)
             .map { list -> list.map { it.orderWithCustomer }.toDomain() }
 
-    override suspend fun removeWorkOrderItem(workOrderId: WorkOrderId, orderId: String) {
-        database.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                workOrderDao.deleteWorkOrderItem(workOrderId = workOrderId, invoiceNumber = orderId)
-                val remaining = workOrderDao.getWorkOrderItemCount(workOrderId)
-                if (remaining == 0) {
-                    workOrderDao.deleteWorkOrder(workOrderId)
-                }
-            }
-        }
+    override suspend fun deleteWorkOrderItem(workOrderId: WorkOrderId, orderId: String) {
+        workOrderDao.deleteWorkOrderItem(workOrderId = workOrderId, invoiceNumber = orderId)
     }
+
+    override suspend fun deleteWorkOrderItems(workOrderId: WorkOrderId, orderIds: List<String>) {
+        if (orderIds.isEmpty()) return
+        workOrderDao.deleteItemsForWorkOrder(workOrderId, orderIds)
+    }
+
+    override suspend fun getWorkOrderItemCount(workOrderId: WorkOrderId): Int =
+        workOrderDao.getWorkOrderItemCount(workOrderId)
 
     override suspend fun deleteWorkOrder(workOrderId: WorkOrderId) {
         workOrderDao.deleteWorkOrder(workOrderId)

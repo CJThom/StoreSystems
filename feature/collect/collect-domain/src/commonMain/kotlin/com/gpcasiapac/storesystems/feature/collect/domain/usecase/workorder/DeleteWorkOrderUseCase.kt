@@ -4,6 +4,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 
+// TODO: Add UseCaseResult
 class DeleteWorkOrderUseCase(
     private val orderLocalRepository: OrderLocalRepository,
 ) {

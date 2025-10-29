@@ -12,6 +12,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSe
  * 2) If a new WO was created, persist the selection in prefs.
  * 3) Add the given order to the work order.
  */
+@Deprecated("Use EnsureAndApplyOrderSelectionDeltaUseCase()")
 class EnsureAndAddOrderToWorkOrderUseCase(
     private val ensureWorkOrderSelectionUseCase: EnsureWorkOrderSelectionUseCase,
     private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,

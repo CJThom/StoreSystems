@@ -20,7 +20,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndAddOrderToWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
@@ -55,7 +55,7 @@ class OrderFulfilmentScreenViewModel(
     private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
-    private val ensureAndAddOrderToWorkOrderUseCase: EnsureAndAddOrderToWorkOrderUseCase,
+    private val addScannedInputToWorkOrderUseCase: AddScannedInputToWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
@@ -349,26 +349,31 @@ class OrderFulfilmentScreenViewModel(
                         is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
                                 val session = sessionState.value
-                                val res = ensureAndAddOrderToWorkOrderUseCase(
+                                when (val res = addScannedInputToWorkOrderUseCase(
                                     userId = session.userId,
                                     currentSelectedWorkOrderId = session.workOrderId,
-                                    orderId = result.invoiceNumber
-                                )
-                                when (res) {
-                                    is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success -> {
-                                        when (val o = res.outcome) {
-                                            is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success.AddOutcome.Added -> {
-                                                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
-                                                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
-                                            }
-                                            is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Success.AddOutcome.Duplicate -> {
-                                                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
-                                                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
-                                                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${o.invoiceNumber}\"") }
-                                            }
-                                        }
+                                    rawInput = invoice
+                                )) {
+                                    is AddScannedInputToWorkOrderUseCase.Result.Added -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
                                     }
-                                    is EnsureAndAddOrderToWorkOrderUseCase.UseCaseResult.Error -> {
+                                    is AddScannedInputToWorkOrderUseCase.Result.Duplicate -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${res.invoiceNumber}\"") }
+                                    }
+                                    is AddScannedInputToWorkOrderUseCase.Result.NotFound -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order not found: \"${res.input}\"") }
+                                    }
+                                    is AddScannedInputToWorkOrderUseCase.Result.InvalidInput -> {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Invalid scan input") }
+                                    }
+                                    is AddScannedInputToWorkOrderUseCase.Result.Error -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(res.message) }

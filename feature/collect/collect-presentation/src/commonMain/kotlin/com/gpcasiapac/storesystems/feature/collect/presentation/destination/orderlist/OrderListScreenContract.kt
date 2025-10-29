@@ -101,7 +101,6 @@ object OrderListScreenContract {
 
         // Submissions / item actions
         data class SubmitOrder(val orderId: String) : Event
-        data object SubmitSelectedOrders : Event
         data object StartNewWorkOrderClicked : Event
 
         // Misc ephemerals
