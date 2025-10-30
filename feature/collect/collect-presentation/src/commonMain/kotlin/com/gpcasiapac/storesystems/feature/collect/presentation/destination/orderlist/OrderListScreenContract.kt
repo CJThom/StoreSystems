@@ -11,6 +11,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
 
 
 object OrderListScreenContract {
@@ -27,12 +28,15 @@ object OrderListScreenContract {
         val filters: Filters,
         val isFilterSheetOpen: Boolean,
 
-        // Selection mode
+        // Shared selection slice (single source of truth for selection UI)
+        val selection: SelectionUiState = SelectionUiState(),
+
+        // Selection mode (legacy fields retained for compatibility; mirrored from `selection`)
         val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
         val selectedOrderIdList: Set<String>,                                // derived UI-checked = (existing - pendingRemove) ∪ pendingAdd
         val isSelectAllChecked: Boolean,
 
-        // Normalized selection-editing model (lives entirely in ViewState)
+        // Normalized selection-editing model (legacy mirror of selection)
         val existingDraftIdSet: Set<String>,                                 // snapshot of persisted IDs at entry into multi-select
         val pendingAddIdSet: Set<String>,                                    // newly selected in this session (not yet persisted)
         val pendingRemoveIdSet: Set<String>,                                 // previously persisted but unchecked in this session (not yet removed)

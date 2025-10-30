@@ -6,6 +6,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
  *
  * This lives in domain to avoid duplicating selection math across multiple ViewModels.
  */
+@Deprecated("Use SelectionHandlerDelegate")
 class ToggleOrderSelectionUseCase {
 
     data class Result(

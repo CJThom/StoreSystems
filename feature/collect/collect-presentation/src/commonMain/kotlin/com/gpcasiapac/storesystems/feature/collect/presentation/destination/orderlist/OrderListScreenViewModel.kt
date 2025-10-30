@@ -19,14 +19,15 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetColle
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleAllOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderSelected
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -45,9 +46,7 @@ class OrderListScreenViewModel(
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
-    private val toggleOrderSelectionUseCase: ToggleOrderSelectionUseCase,
-    private val toggleAllOrderSelectionUseCase: ToggleAllOrderSelectionUseCase,
+    private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase
 ) : MVIViewModel<
         OrderListScreenContract.Event,
         OrderListScreenContract.State,
@@ -55,7 +54,8 @@ class OrderListScreenViewModel(
     SessionHandlerDelegate<CollectSessionIds> by SessionHandler(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
-    ) {
+    ),
+    SelectionHandlerDelegate by SelectionHandlerHandler() {
 
     override fun setInitialState(): OrderListScreenContract.State {
 
@@ -95,6 +95,9 @@ class OrderListScreenViewModel(
     }
 
     override fun onStart() {
+
+        bindSelectionHandler()
+
         // No eager work order creation here; only ensure/create when user actually adds/commits selections.
         viewModelScope.launch {
             observeOrderList()
@@ -185,7 +188,8 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.CancelSelection -> {
-                handleCancelSelection()
+                // Delegate handles in-memory reset without touching DB
+                cancel()
             }
 
             is OrderListScreenContract.Event.CloseFilterSheet -> {
@@ -201,11 +205,11 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.ConfirmSelectionStay -> {
-                commitSelection()
+                confirmStay()
             }
 
             is OrderListScreenContract.Event.ConfirmSelectionProceed -> {
-                commitSelection()
+                confirmProceed()
                 setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
             }
 
@@ -222,11 +226,11 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OrderChecked -> {
-                handleOrderChecked(event.orderId, event.checked)
+                setItemChecked(event.orderId, event.checked)
             }
 
             is OrderListScreenContract.Event.SelectAll -> {
-                handleSelectAll(event.checked)
+                selectAll(event.checked)
             }
 
             is OrderListScreenContract.Event.SubmitOrder -> {
@@ -239,7 +243,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.ToggleSelectionMode -> {
-                handleToggleSelectionMode(event.enabled)
+                toggleMode(event.enabled)
             }
 
             is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
@@ -269,7 +273,6 @@ class OrderListScreenViewModel(
             )
         }
     }
-
 
     // Main list pipeline: respond to filter/sort changes
     private suspend fun observeOrderList() {
@@ -312,7 +315,6 @@ class OrderListScreenViewModel(
         }
     }
 
-
     // Observe current draft selection to control the floating draft bar visibility
     // Delay slightly to avoid racing Room's initial database configuration on first open.
     private suspend fun observeOrderSelections() {
@@ -336,6 +338,50 @@ class OrderListScreenViewModel(
                 )
             }
         }
+    }
+
+    private fun bindSelectionHandler() {
+        // Bind shared selection controller to visible ids and mirror into state
+        bindSelection(
+            scope = viewModelScope,
+            visibleIds = viewState.map { s -> s.orders.map { it.invoiceNumber }.toSet() },
+            setSelection = { sel ->
+                setState {
+                    copy(
+                        selection = sel,
+                        // Mirror to legacy fields for compatibility during migration
+                        isMultiSelectionEnabled = sel.isEnabled,
+                        existingDraftIdSet = sel.existing,
+                        pendingAddIdSet = sel.pendingAdd,
+                        pendingRemoveIdSet = sel.pendingRemove,
+                        selectedOrderIdList = sel.selected,
+                        isSelectAllChecked = sel.isAllSelected,
+                    )
+                }
+            },
+            loadPersisted = {
+                val workOrderId = sessionState.value.workOrderId
+                if (workOrderId == null) emptySet() else observeSelectedOrderListUseCase(workOrderId).first()
+            },
+            commit = { toAdd, toRemove ->
+                val session = sessionState.value
+                when (
+                    val result = ensureAndApplyOrderSelectionDeltaUseCase(
+                        userId = session.userId,
+                        currentSelectedWorkOrderId = session.workOrderId,
+                        toAdd = toAdd,
+                        toRemove = toRemove,
+                    )
+                ) {
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> SelectionCommitResult.Error(
+                        result.message
+                    )
+
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> SelectionCommitResult.Noop
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> SelectionCommitResult.Success
+                }
+            },
+        )
     }
 
 
@@ -380,46 +426,6 @@ class OrderListScreenViewModel(
         setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
     }
 
-    private fun handleOrderChecked(orderId: String, checked: Boolean) {
-        val s = viewState.value
-        val visibleIds = s.orders.map { it.invoiceNumber }.toSet()
-        val res = toggleOrderSelectionUseCase(
-            orderId = orderId,
-            checked = checked,
-            persisted = s.existingDraftIdSet,
-            pendingAdd = s.pendingAddIdSet,
-            pendingRemove = s.pendingRemoveIdSet,
-            visibleIds = visibleIds,
-        )
-        setState {
-            copy(
-                pendingAddIdSet = res.pendingAdd,
-                pendingRemoveIdSet = res.pendingRemove,
-                selectedOrderIdList = res.selected,
-                isSelectAllChecked = res.isAllSelected,
-            )
-        }
-    }
-
-    private fun handleSelectAll(checked: Boolean) {
-        val s = viewState.value
-        val visibleIds = s.orders.map { it.invoiceNumber }.toSet()
-        val res = toggleAllOrderSelectionUseCase(
-            checked = checked,
-            persisted = s.existingDraftIdSet,
-            pendingAdd = s.pendingAddIdSet,
-            pendingRemove = s.pendingRemoveIdSet,
-            visibleIds = visibleIds,
-        )
-        setState {
-            copy(
-                pendingAddIdSet = res.pendingAdd,
-                pendingRemoveIdSet = res.pendingRemove,
-                selectedOrderIdList = res.selected,
-                isSelectAllChecked = res.isAllSelected,
-            )
-        }
-    }
 
     private fun handleStartNewWorkOrderClick() {
         // No DB work is required here; navigating to the fulfilment/details screen

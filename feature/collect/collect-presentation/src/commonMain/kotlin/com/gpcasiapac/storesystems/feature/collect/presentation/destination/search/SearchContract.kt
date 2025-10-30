@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
 
 object SearchContract {
 
@@ -18,11 +19,13 @@ object SearchContract {
         // Hoisted search UI state
         val selectedChips: List<SearchSuggestion>,
         val typedSuffix: String,
-        // Multi-select state for search context
+        // Shared selection slice for search context
+        val selection: SelectionUiState = SelectionUiState(),
+        // Legacy mirrored fields for compatibility
         val isMultiSelectionEnabled: Boolean,
         val selectedOrderIdList: Set<String>,
         val isSelectAllChecked: Boolean,
-        // Normalized selection-editing model (independent from OrderList)
+        // Normalized selection-editing model (legacy mirror)
         val existingDraftIdSet: Set<String>,
         val pendingAddIdSet: Set<String>,
         val pendingRemoveIdSet: Set<String>,
@@ -35,6 +38,7 @@ object SearchContract {
                 searchOrderItems = emptyList(),
                 selectedChips = emptyList(),
                 typedSuffix = "",
+                selection = SelectionUiState(),
                 isMultiSelectionEnabled = false,
                 selectedOrderIdList = emptySet(),
                 isSelectAllChecked = false,

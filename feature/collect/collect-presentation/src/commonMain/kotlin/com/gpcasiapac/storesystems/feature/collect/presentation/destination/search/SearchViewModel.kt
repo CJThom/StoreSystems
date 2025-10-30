@@ -9,15 +9,19 @@ import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerHandler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -30,8 +34,6 @@ class SearchViewModel(
     private val observeOrderSelectionUseCase: ObserveOrderSelectionUseCase,
     private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val toggleOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleOrderSelectionUseCase,
-    private val toggleAllOrderSelectionUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleAllOrderSelectionUseCase,
 ) : MVIViewModel<
         SearchContract.Event,
         SearchContract.State,
@@ -39,65 +41,28 @@ class SearchViewModel(
     SessionHandlerDelegate<CollectSessionIds> by SessionHandler(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
-    ) {
+    ),
+    SelectionHandlerDelegate by SelectionHandlerHandler() {
 
     override fun setInitialState(): SearchContract.State = SearchContract.State.empty()
 
-    override suspend fun awaitReadiness(): Boolean = true
+    override suspend fun awaitReadiness(): Boolean {
+        val collectSessionIds = sessionState.first { it.userId != null }
+        return collectSessionIds.userId != null
+    }
 
     override fun handleReadinessFailed() { /* no-op */
     }
 
     override fun onStart() {
-        // Search results pipeline: immediate reset on blank, debounced for non-blank
+        bindSelectionHandler()
+
         viewModelScope.launch {
-            viewState
-                .map { it.searchText to it.isSearchActive }
-                .flatMapLatest { (text, active) ->
-                    val t = text
-                    when {
-                        !active -> flowOf(emptyList())
-                        t.isBlank() -> flowOf(emptyList()) // immediate clearing without debounce
-                        else -> {
-                            // Debounce only when non-blank to avoid stale UI on backspace-to-blank
-                            QueryFlow.build(
-                                input = flowOf(t),
-                                debounce = SearchDebounce(millis = 150),
-                                keySelector = { it }
-                            ).flatMapLatest { q -> observeSearchOrdersUseCase(q) }
-                        }
-                    }
-                }
-                .map { list -> list.toListItemState() }
-                .collectLatest { results ->
-                    setState { copy(searchOrderItems = results) }
-                }
+            observeSearchResults()
         }
 
-        // Suggestions pipeline: immediate defaults on blank when active, debounced for non-blank
         viewModelScope.launch {
-            viewState
-                .map { it.searchText to it.isSearchActive }
-                .flatMapLatest { (text, active) ->
-                    val t = text
-                    when {
-                        !active -> flowOf(emptyList())
-                        t.isBlank() -> kotlinx.coroutines.flow.flow {
-                            emit(getOrderSearchSuggestionListUseCase(""))
-                        }
-
-                        else -> {
-                            QueryFlow.build(
-                                input = flowOf(t),
-                                debounce = SearchDebounce(millis = 100),
-                                keySelector = { it }
-                            ).mapLatest { q -> getOrderSearchSuggestionListUseCase(q) }
-                        }
-                    }
-                }
-                .collectLatest { suggestions ->
-                    setState { copy(searchSuggestions = suggestions) }
-                }
+            observerSearchSuggestions()
         }
     }
 
@@ -115,21 +80,112 @@ class SearchViewModel(
             is SearchContract.Event.TypedSuffixChanged -> handleTypedSuffixChanged(event.text)
             is SearchContract.Event.RemoveChip -> handleRemoveChip(event.suggestion)
 
-            // Selection events
-            is SearchContract.Event.ToggleSelectionMode -> handleToggleSelectionMode(event.enabled)
-            is SearchContract.Event.OrderChecked -> handleOrderChecked(
-                event.orderId,
-                event.checked
-            )
-
-            is SearchContract.Event.SelectAll -> handleSelectAll(event.checked)
-            SearchContract.Event.CancelSelection -> handleCancelSelection()
+            // Selection events (delegated)
+            is SearchContract.Event.ToggleSelectionMode -> toggleMode(event.enabled)
+            is SearchContract.Event.OrderChecked -> setItemChecked(event.orderId, event.checked)
+            is SearchContract.Event.SelectAll -> selectAll(event.checked)
+            SearchContract.Event.CancelSelection -> cancel()
             SearchContract.Event.ConfirmSelection -> handleConfirmSelection()
-            SearchContract.Event.ConfirmSelectionStay -> handleConfirmSelectionStay()
-            SearchContract.Event.ConfirmSelectionProceed -> handleConfirmSelectionProceed()
+            SearchContract.Event.ConfirmSelectionStay -> confirmStay()
+            SearchContract.Event.ConfirmSelectionProceed -> confirmProceed()
             SearchContract.Event.DismissConfirmSelectionDialog -> { /* no-op for now */
             }
         }
+    }
+
+    // Suggestions pipeline: immediate defaults on blank when active, debounced for non-blank
+    private suspend fun observerSearchSuggestions() {
+        viewState
+            .map { it.searchText to it.isSearchActive }
+            .flatMapLatest { (text, active) ->
+                val t = text
+                when {
+                    !active -> flowOf(emptyList())
+                    t.isBlank() -> flow {
+                        emit(getOrderSearchSuggestionListUseCase(""))
+                    }
+
+                    else -> {
+                        QueryFlow.build(
+                            input = flowOf(t),
+                            debounce = SearchDebounce(millis = 100),
+                            keySelector = { it }
+                        ).mapLatest { q -> getOrderSearchSuggestionListUseCase(q) }
+                    }
+                }
+            }
+            .collectLatest { suggestions ->
+                setState { copy(searchSuggestions = suggestions) }
+            }
+    }
+
+    // Search results pipeline: immediate reset on blank, debounced for non-blank
+    private suspend fun observeSearchResults() {
+        viewState
+            .map { it.searchText to it.isSearchActive }
+            .flatMapLatest { (text, active) ->
+                val t = text
+                when {
+                    !active -> flowOf(emptyList())
+                    t.isBlank() -> flowOf(emptyList()) // immediate clearing without debounce
+                    else -> {
+                        // Debounce only when non-blank to avoid stale UI on backspace-to-blank
+                        QueryFlow.build(
+                            input = flowOf(t),
+                            debounce = SearchDebounce(millis = 150),
+                            keySelector = { it }
+                        ).flatMapLatest { q -> observeSearchOrdersUseCase(q) }
+                    }
+                }
+            }
+            .map { list -> list.toListItemState() }
+            .collectLatest { results ->
+                setState { copy(searchOrderItems = results) }
+            }
+    }
+
+
+    private fun bindSelectionHandler() {
+        // Bind shared selection controller to visible ids and mirror into state
+        bindSelection(
+            scope = viewModelScope,
+            visibleIds = viewState.map { s -> s.searchOrderItems.map { it.invoiceNumber }.toSet() },
+            setSelection = { sel ->
+                setState {
+                    copy(
+                        selection = sel,
+                        // Mirror to legacy fields for compatibility during migration
+                        isMultiSelectionEnabled = sel.isEnabled,
+                        existingDraftIdSet = sel.existing,
+                        pendingAddIdSet = sel.pendingAdd,
+                        pendingRemoveIdSet = sel.pendingRemove,
+                        selectedOrderIdList = sel.selected,
+                        isSelectAllChecked = sel.isAllSelected,
+                    )
+                }
+            },
+            loadPersisted = {
+                val workOrderId = sessionState.value.workOrderId
+                if (workOrderId == null) emptySet() else observeOrderSelectionUseCase(workOrderId).first()
+            },
+            commit = { toAdd, toRemove ->
+                val session = sessionState.value
+                when (val r = ensureAndApplyOrderSelectionDeltaUseCase(
+                    userId = session.userId,
+                    currentSelectedWorkOrderId = session.workOrderId,
+                    toAdd = toAdd,
+                    toRemove = toRemove,
+                )) {
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> SelectionCommitResult.Error(
+                        r.message
+                    )
+
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> SelectionCommitResult.Noop
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> SelectionCommitResult.Success
+                }
+            },
+        )
+
     }
 
     private fun handleSearchTextChanged(text: String) {
@@ -177,158 +233,9 @@ class SearchViewModel(
     }
 
     // ---------------- Selection handling ----------------
-    private fun handleToggleSelectionMode(enabled: Boolean) {
-        if (enabled) {
-            viewModelScope.launch {
-                val workOrderId: WorkOrderId =
-                    sessionState.value.workOrderId.handleNull() ?: return@launch
-                val persisted = observeOrderSelectionUseCase(workOrderId = workOrderId).first()
-                setState {
-                    copy(
-                        isMultiSelectionEnabled = true,
-                        existingDraftIdSet = persisted,
-                        pendingAddIdSet = emptySet(),
-                        pendingRemoveIdSet = emptySet(),
-                        selectedOrderIdList = persisted,
-                        isSelectAllChecked = false,
-                    )
-                }
-            }
-        } else {
-            setState {
-                copy(
-                    isMultiSelectionEnabled = false,
-                    selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false,
-                    pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet(),
-                )
-            }
-        }
-    }
-
-    private fun handleOrderChecked(orderId: String, checked: Boolean) {
-        val s = viewState.value
-        val visibleIds = s.searchOrderItems.map { it.invoiceNumber }.toSet()
-        val res = toggleOrderSelectionUseCase(
-            orderId = orderId,
-            checked = checked,
-            persisted = s.existingDraftIdSet,
-            pendingAdd = s.pendingAddIdSet,
-            pendingRemove = s.pendingRemoveIdSet,
-            visibleIds = visibleIds,
-        )
-        setState {
-            copy(
-                pendingAddIdSet = res.pendingAdd,
-                pendingRemoveIdSet = res.pendingRemove,
-                selectedOrderIdList = res.selected,
-                isSelectAllChecked = res.isAllSelected,
-            )
-        }
-    }
-
-    private fun handleSelectAll(checked: Boolean) {
-        val s = viewState.value
-        val visibleIds = s.searchOrderItems.map { it.invoiceNumber }.toSet()
-        val res = toggleAllOrderSelectionUseCase(
-            checked = checked,
-            persisted = s.existingDraftIdSet,
-            pendingAdd = s.pendingAddIdSet,
-            pendingRemove = s.pendingRemoveIdSet,
-            visibleIds = visibleIds,
-        )
-        setState {
-            copy(
-                pendingAddIdSet = res.pendingAdd,
-                pendingRemoveIdSet = res.pendingRemove,
-                selectedOrderIdList = res.selected,
-                isSelectAllChecked = res.isAllSelected,
-            )
-        }
-    }
-
-    private fun handleCancelSelection() {
-        setState {
-            copy(
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false,
-                pendingAddIdSet = emptySet(),
-                pendingRemoveIdSet = emptySet(),
-            )
-        }
-    }
-
     private fun handleConfirmSelection() {
         // Show dialog; actual commit happens based on user choice
         setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() }
-    }
-
-    private fun handleConfirmSelectionStay() {
-        val s = viewState.value
-        val toAdd = s.pendingAddIdSet
-        val toRemove = s.pendingRemoveIdSet
-        viewModelScope.launch {
-            val session = sessionState.value
-            val result = ensureAndApplyOrderSelectionDeltaUseCase(
-                userId = session.userId,
-                currentSelectedWorkOrderId = session.workOrderId,
-                toAdd = toAdd,
-                toRemove = toRemove,
-            )
-            when (result) {
-                is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
-                    // Optionally surface error; for now just ignore
-                    return@launch
-                }
-                else -> Unit
-            }
-            val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
-            setState {
-                copy(
-                    isMultiSelectionEnabled = false,
-                    existingDraftIdSet = newExisting,
-                    pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet(),
-                    selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false
-                )
-            }
-        }
-    }
-
-    private fun handleConfirmSelectionProceed() {
-        val s = viewState.value
-        val toAdd = s.pendingAddIdSet
-        val toRemove = s.pendingRemoveIdSet
-        viewModelScope.launch {
-            val session = sessionState.value
-            val result = ensureAndApplyOrderSelectionDeltaUseCase(
-                userId = session.userId,
-                currentSelectedWorkOrderId = session.workOrderId,
-                toAdd = toAdd,
-                toRemove = toRemove,
-            )
-            when (result) {
-                is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
-                    return@launch
-                }
-                else -> Unit
-            }
-            val finalIds = ((s.existingDraftIdSet + toAdd) - toRemove).toList()
-            setState {
-                copy(
-                    isMultiSelectionEnabled = false,
-                    existingDraftIdSet = finalIds.toSet(),
-                    pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet(),
-                    selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false,
-                    isSearchActive = false
-                )
-            }
-        }
     }
 
     // --- Hoisted search UI handlers ---

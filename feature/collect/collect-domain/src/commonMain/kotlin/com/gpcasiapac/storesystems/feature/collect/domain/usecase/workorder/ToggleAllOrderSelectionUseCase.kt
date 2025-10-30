@@ -4,6 +4,7 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
  * Pure, synchronous use case that computes the next selection state when the user toggles
  * Select All for the currently visible ids in multi-select mode.
  */
+@Deprecated("Use SelectionHandlerDelegate")
 class ToggleAllOrderSelectionUseCase {
 
     data class Result(
