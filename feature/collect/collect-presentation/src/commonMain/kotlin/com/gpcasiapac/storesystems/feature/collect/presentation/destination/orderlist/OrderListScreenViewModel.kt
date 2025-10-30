@@ -166,21 +166,6 @@ class OrderListScreenViewModel(
         }
     }
 
-    private fun handleSelection(event: SelectionContract.Event) {
-        when (event) {
-            is SelectionContract.Event.ToggleMode -> toggleMode(event.enabled)
-            is SelectionContract.Event.SetItemChecked -> setItemChecked(event.id, event.checked)
-            is SelectionContract.Event.SelectAll -> selectAll(event.checked)
-            SelectionContract.Event.Cancel -> cancel()
-            SelectionContract.Event.Confirm -> handleConfirmSelection()
-            SelectionContract.Event.ConfirmStay -> confirmStay()
-            SelectionContract.Event.ConfirmProceed -> {
-                confirmProceed()
-                setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-            }
-            SelectionContract.Event.DismissConfirmDialog -> { /* no-op */ }
-        }
-    }
 
     private suspend fun handleDraftBarDeleteClicked() {
         val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return
@@ -272,14 +257,16 @@ class OrderListScreenViewModel(
                         toRemove = toRemove,
                     )
                 ) {
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> SelectionCommitResult.Error(
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Error -> SelectionCommitResult.Error(
                         result.message
                     )
 
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> SelectionCommitResult.Noop
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> SelectionCommitResult.Success
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Noop -> SelectionCommitResult.Noop
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
+            onRequestConfirmDialog = { setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() } },
+            onConfirmProceed = { setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected } }
         )
     }
 

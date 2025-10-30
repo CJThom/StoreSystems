@@ -82,18 +82,6 @@ class SearchViewModel(
         }
     }
 
-    private fun handleSelection(event: SelectionContract.Event) {
-        when (event) {
-            is SelectionContract.Event.ToggleMode -> toggleMode(event.enabled)
-            is SelectionContract.Event.SetItemChecked -> setItemChecked(event.id, event.checked)
-            is SelectionContract.Event.SelectAll -> selectAll(event.checked)
-            SelectionContract.Event.Cancel -> cancel()
-            SelectionContract.Event.Confirm -> handleConfirmSelection()
-            SelectionContract.Event.ConfirmStay -> confirmStay()
-            SelectionContract.Event.ConfirmProceed -> confirmProceed()
-            SelectionContract.Event.DismissConfirmDialog -> { /* no-op */ }
-        }
-    }
 
     // Suggestions pipeline: immediate defaults on blank when active, debounced for non-blank
     private suspend fun observerSearchSuggestions() {
@@ -167,14 +155,16 @@ class SearchViewModel(
                     toAdd = toAdd,
                     toRemove = toRemove,
                 )) {
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> SelectionCommitResult.Error(
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Error -> SelectionCommitResult.Error(
                         r.message
                     )
 
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> SelectionCommitResult.Noop
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> SelectionCommitResult.Success
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Noop -> SelectionCommitResult.Noop
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
+            onRequestConfirmDialog = { setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() } },
+            onConfirmProceed = null
         )
 
     }

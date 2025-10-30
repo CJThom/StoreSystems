@@ -16,27 +16,19 @@ class AddScannedInputToWorkOrderUseCase(
     private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
 ) {
 
-    sealed interface Result {
-        data class Added(val invoiceNumber: String) : Result
-        data class Duplicate(val invoiceNumber: String) : Result
-        data class NotFound(val input: String) : Result
-        data object InvalidInput : Result
-        data class Error(val message: String) : Result
-    }
-
     suspend operator fun invoke(
         userId: UserId?,
         currentSelectedWorkOrderId: WorkOrderId?,
         rawInput: String,
-    ): Result {
+    ): UseCaseResult {
         val trimmed = rawInput.trim()
-        if (trimmed.isEmpty()) return Result.InvalidInput
+        if (trimmed.isEmpty()) return UseCaseResult.InvalidInput
 
         // Validate the scanned invoice exists in the local DB
         when (val exists = checkOrderExistsUseCase(trimmed)) {
             is CheckOrderExistsUseCase.UseCaseResult.Error -> {
                 // Not found or other validation error
-                return Result.NotFound(trimmed)
+                return UseCaseResult.NotFound(trimmed)
             }
 
             is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
@@ -49,17 +41,32 @@ class AddScannedInputToWorkOrderUseCase(
                         toRemove = emptyList(),
                     )
                 ) {
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> Result.Error(apply.message)
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> Result.Error("Nothing to apply")
-                    is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> {
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Error -> UseCaseResult.Error(
+                        apply.message
+                    )
+
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Noop -> UseCaseResult.Error(
+                        "Nothing to apply"
+                    )
+
+                    is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> {
                         when {
-                            invoice in apply.added -> Result.Added(invoice)
-                            invoice in apply.duplicates -> Result.Duplicate(invoice)
-                            else -> Result.Error("Unexpected result for invoice: $invoice")
+                            invoice in apply.added -> UseCaseResult.Added(invoice)
+                            invoice in apply.duplicates -> UseCaseResult.Duplicate(invoice)
+                            else -> UseCaseResult.Error("Unexpected result for invoice: $invoice")
                         }
                     }
                 }
             }
         }
     }
+
+    sealed interface UseCaseResult {
+        data class Added(val invoiceNumber: String) : UseCaseResult
+        data class Duplicate(val invoiceNumber: String) : UseCaseResult
+        data class NotFound(val input: String) : UseCaseResult
+        data object InvalidInput : UseCaseResult
+        data class Error(val message: String) : UseCaseResult
+    }
+
 }

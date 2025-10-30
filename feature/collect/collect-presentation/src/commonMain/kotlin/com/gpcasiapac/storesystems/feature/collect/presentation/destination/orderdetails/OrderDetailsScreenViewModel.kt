@@ -143,7 +143,7 @@ class OrderDetailsScreenViewModel(
             toRemove = emptyList()
         )
         when (res) {
-            is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> {
+            is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> {
                 val inv = invoiceKey.value
                 if (inv in res.added) {
                     setEffect {
@@ -153,7 +153,7 @@ class OrderDetailsScreenViewModel(
                     // Optional: show subtle feedback; currently no-op
                 }
             }
-            is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
+            is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Error -> {
                 setState { copy(error = res.message) }
                 setEffect {
                     OrderDetailsScreenContract.Effect.ShowSnackbar(
@@ -162,7 +162,7 @@ class OrderDetailsScreenViewModel(
                     )
                 }
             }
-            is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> {
+            is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Noop -> {
                 // No changes applied; ignore
             }
         }

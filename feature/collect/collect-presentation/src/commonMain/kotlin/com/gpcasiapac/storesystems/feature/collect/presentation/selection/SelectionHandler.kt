@@ -17,6 +17,8 @@ class SelectionHandler : SelectionHandlerDelegate {
     private var lastVisible: Set<String> = emptySet()
     private var loadPersisted: (suspend () -> Set<String>)? = null
     private var commit: (suspend (Set<String>, Set<String>) -> SelectionCommitResult)? = null
+    private var onRequestConfirmDialog: (() -> Unit)? = null
+    private var onConfirmProceedHook: (() -> Unit)? = null
 
     override fun bindSelection(
         scope: CoroutineScope,
@@ -24,10 +26,14 @@ class SelectionHandler : SelectionHandlerDelegate {
         setSelection: (SelectionUiState) -> Unit,
         loadPersisted: suspend () -> Set<String>,
         commit: suspend (toAdd: Set<String>, toRemove: Set<String>) -> SelectionCommitResult,
+        onRequestConfirmDialog: (() -> Unit)?,
+        onConfirmProceed: (() -> Unit)?,
     ) {
         this.scope = scope
         this.loadPersisted = loadPersisted
         this.commit = commit
+        this.onRequestConfirmDialog = onRequestConfirmDialog
+        this.onConfirmProceedHook = onConfirmProceed
 
         scope.launch { visibleIds.collectLatest { onVisibleIdsChanged(it) } }
         scope.launch { state.collectLatest { sel -> setSelection(sel) } }
@@ -47,6 +53,19 @@ class SelectionHandler : SelectionHandlerDelegate {
 
     private fun dispatch(intent: SelectionIntent) {
         _state.update { s -> SelectionReducer.reduce(s, intent, lastVisible) }
+    }
+
+    override fun handleSelection(event: SelectionContract.Event) {
+        when (event) {
+            is SelectionContract.Event.ToggleMode -> toggleMode(event.enabled)
+            is SelectionContract.Event.SetItemChecked -> setItemChecked(event.id, event.checked)
+            is SelectionContract.Event.SelectAll -> selectAll(event.checked)
+            SelectionContract.Event.Cancel -> cancel()
+            SelectionContract.Event.Confirm -> onRequestConfirmDialog?.invoke()
+            SelectionContract.Event.ConfirmStay -> confirmStay()
+            SelectionContract.Event.ConfirmProceed -> confirmProceed()
+            SelectionContract.Event.DismissConfirmDialog -> Unit
+        }
     }
 
     override fun toggleMode(enabled: Boolean) {
@@ -81,7 +100,7 @@ class SelectionHandler : SelectionHandlerDelegate {
 
     override fun confirmProceed() {
         val sc = scope ?: error("SelectionComponent.bindSelection(...) not called")
-        sc.launch { confirmInternal() }
+        sc.launch { confirmInternal(); onConfirmProceedHook?.invoke() }
     }
 
     private suspend fun confirmInternal() {

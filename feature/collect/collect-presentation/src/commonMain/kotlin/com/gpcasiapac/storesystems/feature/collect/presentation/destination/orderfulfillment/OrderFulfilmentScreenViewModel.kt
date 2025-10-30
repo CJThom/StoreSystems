@@ -30,7 +30,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetW
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
@@ -354,26 +353,26 @@ class OrderFulfilmentScreenViewModel(
                                     currentSelectedWorkOrderId = session.workOrderId,
                                     rawInput = invoice
                                 )) {
-                                    is AddScannedInputToWorkOrderUseCase.Result.Added -> {
+                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.Added -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
                                     }
-                                    is AddScannedInputToWorkOrderUseCase.Result.Duplicate -> {
+                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.Duplicate -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${res.invoiceNumber}\"") }
                                     }
-                                    is AddScannedInputToWorkOrderUseCase.Result.NotFound -> {
+                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.NotFound -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order not found: \"${res.input}\"") }
                                     }
-                                    is AddScannedInputToWorkOrderUseCase.Result.InvalidInput -> {
+                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.InvalidInput -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Invalid scan input") }
                                     }
-                                    is AddScannedInputToWorkOrderUseCase.Result.Error -> {
+                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.Error -> {
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                                         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(res.message) }

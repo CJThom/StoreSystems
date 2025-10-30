@@ -18,7 +18,12 @@ interface SelectionHandlerDelegate {
         setSelection: (SelectionUiState) -> Unit,
         loadPersisted: suspend () -> Set<String>,
         commit: suspend (toAdd: Set<String>, toRemove: Set<String>) -> SelectionCommitResult,
+        onRequestConfirmDialog: (() -> Unit)? = null,
+        onConfirmProceed: (() -> Unit)? = null,
     )
+
+    /** Unified entry point to handle shared selection events. */
+    fun handleSelection(event: SelectionContract.Event)
 
     // Handlers the VM can call directly (no extra handler field needed)
     fun toggleMode(enabled: Boolean)

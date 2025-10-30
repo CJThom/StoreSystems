@@ -13,28 +13,17 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
     private val updateSelectedWorkOrderIdUseCase: UpdateSelectedWorkOrderIdUseCase,
     private val applyDeltaUseCase: ApplyOrderSelectionDeltaUseCase,
 ) {
-    sealed interface Result {
-        data object Noop : Result
-        data class Summary(
-            val workOrderId: WorkOrderId,
-            val added: List<String>,
-            val duplicates: List<String>,
-            val removed: Int,
-        ) : Result
-
-        data class Error(val message: String) : Result
-    }
 
     suspend operator fun invoke(
         userId: UserId?,
         currentSelectedWorkOrderId: WorkOrderId?,
         toAdd: Collection<String>,
         toRemove: Collection<String>,
-    ): Result {
-        if (userId == null) return Result.Error("No user logged in")
+    ): UseCaseResult {
+        if (userId == null) return UseCaseResult.Error("No user logged in")
         val addNorm = toAdd.map { it.trim() }.filter { it.isNotEmpty() }
         val removeNorm = toRemove.map { it.trim() }.filter { it.isNotEmpty() }
-        if (addNorm.isEmpty() && removeNorm.isEmpty()) return Result.Noop
+        if (addNorm.isEmpty() && removeNorm.isEmpty()) return UseCaseResult.Noop
 
         val workOrderId: WorkOrderId? = if (addNorm.isNotEmpty()) {
             when (
@@ -52,13 +41,13 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
                         )
                     ) {
                         is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Success -> ensured.workOrderId
-                        is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> return Result.Error(
+                        is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> return UseCaseResult.Error(
                             upd.message
                         )
                     }
                 }
 
-                is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> return Result.Error(
+                is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> return UseCaseResult.Error(
                     ensured.message
                 )
             }
@@ -66,11 +55,11 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
             currentSelectedWorkOrderId
         }
 
-        if (workOrderId == null) return Result.Noop
+        if (workOrderId == null) return UseCaseResult.Noop
 
         return when (val r = applyDeltaUseCase(workOrderId, addNorm, removeNorm)) {
-            is ApplyOrderSelectionDeltaUseCase.Result.Noop -> Result.Noop
-            is ApplyOrderSelectionDeltaUseCase.Result.Summary -> Result.Summary(
+            is ApplyOrderSelectionDeltaUseCase.Result.Noop -> UseCaseResult.Noop
+            is ApplyOrderSelectionDeltaUseCase.Result.Summary -> UseCaseResult.Summary(
                 workOrderId = workOrderId,
                 added = r.added,
                 duplicates = r.duplicates,
@@ -78,4 +67,17 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
             )
         }
     }
+
+    sealed interface UseCaseResult {
+        data object Noop : UseCaseResult
+        data class Summary(
+            val workOrderId: WorkOrderId,
+            val added: List<String>,
+            val duplicates: List<String>,
+            val removed: Int,
+        ) : UseCaseResult
+
+        data class Error(val message: String) : UseCaseResult
+    }
+
 }
