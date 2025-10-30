@@ -4,15 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
-import com.gpcasiapac.storesystems.feature.history.domain.usecase.DeleteHistoryItemUseCase
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryUseCase
-import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryItemUseCase
+import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryUseCase
 import kotlinx.coroutines.launch
 
 class HistoryScreenViewModel(
     private val getHistoryUseCase: GetHistoryUseCase,
-    private val deleteHistoryItemUseCase: DeleteHistoryItemUseCase,
-    private val retryHistoryItemUseCase: RetryHistoryItemUseCase
+    private val retryHistoryUseCase: RetryHistoryUseCase
 ) : MVIViewModel<HistoryScreenContract.Event, HistoryScreenContract.State, HistoryScreenContract.Effect>() {
 
     override fun setInitialState(): HistoryScreenContract.State = HistoryScreenContract.State(
@@ -83,26 +81,19 @@ class HistoryScreenViewModel(
     }
 
     private fun handleDeleteItem(id: String) {
-        viewModelScope.launch {
-            deleteHistoryItemUseCase(id)
-                .onSuccess {
-                    setEffect { HistoryScreenContract.Effect.ShowToast("Item deleted") }
-                }
-                .onFailure { error ->
-                    val message = error.message ?: "Failed to delete item"
-                    setEffect { HistoryScreenContract.Effect.ShowError(message) }
-                }
-        }
+        // Delete is not supported anymore
+        setEffect { HistoryScreenContract.Effect.ShowError("Delete is not supported") }
     }
 
     private fun handleRetryItem(id: String) {
         viewModelScope.launch {
-            retryHistoryItemUseCase(id)
+            // Currently retries all failed tasks (optionally by type). Per-task retry not supported yet.
+            retryHistoryUseCase()
                 .onSuccess {
-                    setEffect { HistoryScreenContract.Effect.ShowToast("Retrying task...") }
+                    setEffect { HistoryScreenContract.Effect.ShowToast("Retry triggered") }
                 }
                 .onFailure { error ->
-                    val message = error.message ?: "Failed to retry item"
+                    val message = error.message ?: "Failed to retry"
                     setEffect { HistoryScreenContract.Effect.ShowError(message) }
                 }
         }

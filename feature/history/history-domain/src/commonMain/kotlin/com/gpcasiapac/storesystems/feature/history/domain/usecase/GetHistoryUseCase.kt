@@ -3,10 +3,8 @@ package com.gpcasiapac.storesystems.feature.history.domain.usecase
 import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
-import com.gpcasiapac.storesystems.feature.history.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -15,11 +13,11 @@ import kotlinx.coroutines.flow.map
  * Supports filtering by status, type, and search query.
  */
 class GetHistoryUseCase(
-    private val historyRepository: HistoryRepository
+    private val observeUnifiedHistoryUseCase: ObserveUnifiedHistoryUseCase
 ) {
     /**
      * Observe all history items.
-     * 
+     *
      * @param statusFilter Filter by status (null = all statuses)
      * @param typeFilter Filter by type (null = all types)
      * @param searchQuery Search in invoice, order, customer numbers and names (null = no search)
@@ -29,7 +27,7 @@ class GetHistoryUseCase(
         typeFilter: HistoryType? = null,
         searchQuery: String? = null
     ): Flow<List<HistoryItem>> {
-        return historyRepository.observeHistory()
+        return observeUnifiedHistoryUseCase()
             .map { items ->
                 items
                     .applyStatusFilter(statusFilter)
@@ -37,7 +35,7 @@ class GetHistoryUseCase(
                     .applySearchFilter(searchQuery)
             }
     }
-    
+
     /**
      * Convenience method for HistoryFilter enum.
      */
@@ -52,58 +50,48 @@ class GetHistoryUseCase(
             HistoryFilter.FAILED -> HistoryStatus.FAILED
             HistoryFilter.COMPLETED -> HistoryStatus.COMPLETED
         }
-        
+
         return invoke(
             statusFilter = statusFilter,
             typeFilter = typeFilter,
             searchQuery = searchQuery
         )
     }
-    
+
     private fun List<HistoryItem>.applyStatusFilter(
         statusFilter: HistoryStatus?
-    ): List<HistoryItem> {
-        return if (statusFilter != null) {
-            filter { it.status == statusFilter }
-        } else {
-            this
-        }
-    }
-    
+    ): List<HistoryItem> = if (statusFilter != null) filter { it.status == statusFilter } else this
+
     private fun List<HistoryItem>.applyTypeFilter(
         typeFilter: HistoryType?
-    ): List<HistoryItem> {
-        return if (typeFilter != null) {
-            when (typeFilter) {
-                HistoryType.ORDER_SUBMISSION -> filterIsInstance<CollectHistoryItem>()
-                else -> this
-            }
-        } else {
-            this
+    ): List<HistoryItem> = if (typeFilter != null) {
+        when (typeFilter) {
+            HistoryType.ORDER_SUBMISSION -> filterIsInstance<CollectHistoryItem>()
+            else -> this
         }
-    }
-    
+    } else this
+
     private fun List<HistoryItem>.applySearchFilter(
         searchQuery: String?
     ): List<HistoryItem> {
         if (searchQuery.isNullOrBlank()) return this
-        
+
         val query = searchQuery.trim().lowercase()
-        
+
         return filter { item ->
             when (item) {
                 is CollectHistoryItem ->
                     item.entityId.lowercase().contains(query) ||
-                    item.metadata.any { md ->
-                        md.invoiceNumber.lowercase().contains(query) ||
-                        md.salesOrderNumber.lowercase().contains(query) ||
-                        md.webOrderNumber?.lowercase()?.contains(query) == true ||
-                        md.customerNumber.lowercase().contains(query) ||
-                        md.accountName?.lowercase()?.contains(query) == true ||
-                        md.firstName?.lowercase()?.contains(query) == true ||
-                        md.lastName?.lowercase()?.contains(query) == true ||
-                        md.getCustomerDisplayName().lowercase().contains(query)
-                    }
+                        item.metadata.any { md ->
+                            md.invoiceNumber.lowercase().contains(query) ||
+                                md.salesOrderNumber.lowercase().contains(query) ||
+                                md.webOrderNumber?.lowercase()?.contains(query) == true ||
+                                md.customerNumber.lowercase().contains(query) ||
+                                md.accountName?.lowercase()?.contains(query) == true ||
+                                md.firstName?.lowercase()?.contains(query) == true ||
+                                md.lastName?.lowercase()?.contains(query) == true ||
+                                md.getCustomerDisplayName().lowercase().contains(query)
+                        }
             }
         }
     }
