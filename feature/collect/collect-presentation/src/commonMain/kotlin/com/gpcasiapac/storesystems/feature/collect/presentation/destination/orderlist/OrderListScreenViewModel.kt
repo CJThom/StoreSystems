@@ -26,8 +26,9 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerHandler
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -55,7 +56,7 @@ class OrderListScreenViewModel(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
     ),
-    SelectionHandlerDelegate by SelectionHandlerHandler() {
+    SelectionHandlerDelegate by SelectionHandler() {
 
     override fun setInitialState(): OrderListScreenContract.State {
 
@@ -71,12 +72,6 @@ class OrderListScreenViewModel(
                 sortOption = SortOption.TIME_WAITING_DESC
             ),
             isFilterSheetOpen = false,
-            isMultiSelectionEnabled = false,
-            selectedOrderIdList = emptySet(),
-            isSelectAllChecked = false,
-            existingDraftIdSet = emptySet(),
-            pendingAddIdSet = emptySet(),
-            pendingRemoveIdSet = emptySet(),
             isDraftBarVisible = false,
             orderCount = 0,
             isSubmitting = false,
@@ -122,26 +117,17 @@ class OrderListScreenViewModel(
     override fun handleEvents(event: OrderListScreenContract.Event) {
         when (event) {
             is OrderListScreenContract.Event.Refresh -> {
-                viewModelScope.launch {
-                    fetchOrderList(successToast = "Orders refreshed")
-                }
+                viewModelScope.launch { fetchOrderList(successToast = "Orders refreshed") }
             }
-
             is OrderListScreenContract.Event.OpenOrder -> {
-                // Single-tap now navigates to OrderDetails without persisting selection; selection happens on OrderDetails SELECT
                 setEffect { OrderSelected(event.orderId) }
             }
-
             is OrderListScreenContract.Event.ScanInvoice -> {
                 val invoice = event.invoiceNumber.trim()
-                // Collapse search on scan (handled by UI via effect)
                 setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
                 viewModelScope.launch {
                     when (val result = checkOrderExistsUseCase(invoice)) {
-                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
-                            setEffect { OrderSelected(result.invoiceNumber) }
-                        }
-
+                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> setEffect { OrderSelected(result.invoiceNumber) }
                         is CheckOrderExistsUseCase.UseCaseResult.Error -> {
                             setEffect { OrderListScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderListScreenContract.Effect.PlaySound(SoundEffect.Error) }
@@ -150,115 +136,49 @@ class OrderListScreenViewModel(
                     }
                 }
             }
+            is OrderListScreenContract.Event.ClearError -> setState { copy(error = null) }
+            is OrderListScreenContract.Event.ToggleCustomerType -> handleToggleCustomerType(event.type, event.checked)
+            is OrderListScreenContract.Event.ApplyFilters -> handleApplyFilters(event.filterChipList)
+            is OrderListScreenContract.Event.RemoveFilterChip -> handleRemoveFilterChip(event.filterChipList)
+            is OrderListScreenContract.Event.ResetFilters -> handleResetFilters()
+            is OrderListScreenContract.Event.SortChanged -> setState { copy(filters = filters.copy(sortOption = event.sortOption)) }
+            is OrderListScreenContract.Event.Back -> setEffect { Back }
+            is OrderListScreenContract.Event.Logout -> setEffect { Logout }
+            is OrderListScreenContract.Event.OpenHistory -> setEffect { OrderListScreenContract.Effect.Outcome.OpenHistory }
 
-            is OrderListScreenContract.Event.ClearError -> {
-                setState { copy(error = null) }
+            is OrderListScreenContract.Event.Selection -> handleSelection(event.event)
+
+            is OrderListScreenContract.Event.CloseFilterSheet -> setState { copy(isFilterSheetOpen = false) }
+            is OrderListScreenContract.Event.DismissSnackbar -> { /* no-op */ }
+            is OrderListScreenContract.Event.OpenFilterSheet -> setState { copy(isFilterSheetOpen = true) }
+            is OrderListScreenContract.Event.SubmitOrder -> setEffect { OrderSelected(event.orderId) }
+            is OrderListScreenContract.Event.StartNewWorkOrderClicked -> handleStartNewWorkOrderClick()
+            is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
+                viewModelScope.launch { handleDraftBarDeleteClicked() }
             }
-
-            is OrderListScreenContract.Event.ToggleCustomerType -> {
-                handleToggleCustomerType(event.type, event.checked)
+            is OrderListScreenContract.Event.DraftBarViewClicked -> {
+                val ids = viewState.value.selection.existing.toList()
+                if (ids.isNotEmpty()) setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
             }
-
-            is OrderListScreenContract.Event.ApplyFilters -> {
-                handleApplyFilters(event.filterChipList)
-            }
-
-            is OrderListScreenContract.Event.RemoveFilterChip -> {
-                handleRemoveFilterChip(event.filterChipList)
-            }
-
-            is OrderListScreenContract.Event.ResetFilters -> {
-                handleResetFilters()
-            }
-
-            is OrderListScreenContract.Event.SortChanged -> {
-                setState { copy(filters = filters.copy(sortOption = event.sortOption)) }
-            }
-
-            is OrderListScreenContract.Event.Back -> {
-                setEffect { Back }
-            }
-
-            is OrderListScreenContract.Event.Logout -> {
-                setEffect { Logout }
-            }
-
-            is OrderListScreenContract.Event.OpenHistory -> {
-                setEffect { OrderListScreenContract.Effect.Outcome.OpenHistory }
-            }
-
-            is OrderListScreenContract.Event.CancelSelection -> {
-                // Delegate handles in-memory reset without touching DB
-                cancel()
-            }
-
-            is OrderListScreenContract.Event.CloseFilterSheet -> {
-                setState { copy(isFilterSheetOpen = false) }
-            }
-
-            is OrderListScreenContract.Event.ConfirmSelection -> {
-                handleConfirmSelection()
-            }
-
             is OrderListScreenContract.Event.ConfirmSearchSelection -> {
                 setEffect { OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog() }
             }
+        }
+    }
 
-            is OrderListScreenContract.Event.ConfirmSelectionStay -> {
-                confirmStay()
-            }
-
-            is OrderListScreenContract.Event.ConfirmSelectionProceed -> {
+    private fun handleSelection(event: SelectionContract.Event) {
+        when (event) {
+            is SelectionContract.Event.ToggleMode -> toggleMode(event.enabled)
+            is SelectionContract.Event.SetItemChecked -> setItemChecked(event.id, event.checked)
+            is SelectionContract.Event.SelectAll -> selectAll(event.checked)
+            SelectionContract.Event.Cancel -> cancel()
+            SelectionContract.Event.Confirm -> handleConfirmSelection()
+            SelectionContract.Event.ConfirmStay -> confirmStay()
+            SelectionContract.Event.ConfirmProceed -> {
                 confirmProceed()
                 setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
             }
-
-            is OrderListScreenContract.Event.DismissConfirmSelectionDialog -> {
-                // no-op
-            }
-
-            is OrderListScreenContract.Event.DismissSnackbar -> {
-
-            }
-
-            is OrderListScreenContract.Event.OpenFilterSheet -> {
-                setState { copy(isFilterSheetOpen = true) }
-            }
-
-            is OrderListScreenContract.Event.OrderChecked -> {
-                setItemChecked(event.orderId, event.checked)
-            }
-
-            is OrderListScreenContract.Event.SelectAll -> {
-                selectAll(event.checked)
-            }
-
-            is OrderListScreenContract.Event.SubmitOrder -> {
-                setEffect { OrderSelected(event.orderId) }
-            }
-
-
-            is OrderListScreenContract.Event.StartNewWorkOrderClicked -> {
-                handleStartNewWorkOrderClick()
-            }
-
-            is OrderListScreenContract.Event.ToggleSelectionMode -> {
-                toggleMode(event.enabled)
-            }
-
-            is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
-                viewModelScope.launch {
-                    handleDraftBarDeleteClicked()
-                }
-            }
-
-            is OrderListScreenContract.Event.DraftBarViewClicked -> {
-                val ids = viewState.value.existingDraftIdSet.toList()
-                if (ids.isNotEmpty()) {
-                    setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-                }
-            }
-
+            SelectionContract.Event.DismissConfirmDialog -> { /* no-op */ }
         }
     }
 
@@ -268,8 +188,7 @@ class OrderListScreenViewModel(
         setState {
             copy(
                 isDraftBarVisible = false,
-                existingDraftIdSet = emptySet(),
-                selectedOrderIdList = if (!isMultiSelectionEnabled) emptySet() else selectedOrderIdList
+                selection = selection.copy(existing = emptySet()),
             )
         }
     }
@@ -289,20 +208,10 @@ class OrderListScreenViewModel(
             .map { list -> list.toListItemState() }
             .collectLatest { items ->
                 setState {
-                    // maintain selection sanity against visible main list
-                    val visibleIds = items.map { it.invoiceNumber }.toSet()
-                    val newSelected =
-                        if (isMultiSelectionEnabled) selectedOrderIdList.intersect(
-                            visibleIds
-                        ) else emptySet()
-                    val allSelected =
-                        isMultiSelectionEnabled && visibleIds.isNotEmpty() && visibleIds.size == newSelected.size
                     copy(
                         orders = items,
                         isLoading = false,
                         error = null,
-                        selectedOrderIdList = newSelected,
-                        isSelectAllChecked = allSelected,
                     )
                 }
             }
@@ -331,9 +240,10 @@ class OrderListScreenViewModel(
             }
         }.collectLatest { persistedSet ->
             setState {
-                val showBar = persistedSet.isNotEmpty() && !isMultiSelectionEnabled
+                val sel = selection
+                val showBar = persistedSet.isNotEmpty() && !sel.isEnabled
                 copy(
-                    existingDraftIdSet = persistedSet,
+                    selection = sel.copy(existing = persistedSet),
                     isDraftBarVisible = showBar
                 )
             }
@@ -346,18 +256,7 @@ class OrderListScreenViewModel(
             scope = viewModelScope,
             visibleIds = viewState.map { s -> s.orders.map { it.invoiceNumber }.toSet() },
             setSelection = { sel ->
-                setState {
-                    copy(
-                        selection = sel,
-                        // Mirror to legacy fields for compatibility during migration
-                        isMultiSelectionEnabled = sel.isEnabled,
-                        existingDraftIdSet = sel.existing,
-                        pendingAddIdSet = sel.pendingAdd,
-                        pendingRemoveIdSet = sel.pendingRemove,
-                        selectedOrderIdList = sel.selected,
-                        isSelectAllChecked = sel.isAllSelected,
-                    )
-                }
+                setState { copy(selection = sel) }
             },
             loadPersisted = {
                 val workOrderId = sessionState.value.workOrderId
@@ -409,19 +308,6 @@ class OrderListScreenViewModel(
         setState { copy(isFilterSheetOpen = false) }
     }
 
-    private fun handleCancelSelection() {
-        // Exit multi-select without touching the DB; clear in-memory pending sets
-        setState {
-            copy(
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false,
-                pendingAddIdSet = emptySet(),
-                pendingRemoveIdSet = emptySet(),
-            )
-        }
-    }
-
     private fun handleConfirmSelection() {
         setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
     }
@@ -431,87 +317,6 @@ class OrderListScreenViewModel(
         // No DB work is required here; navigating to the fulfilment/details screen
         // will handle creation/ensure when the user actually adds something.
         setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-        setState {
-            copy(
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false
-            )
-        }
-    }
-
-    private fun commitSelection() {
-        val s = viewState.value
-        val toAdd = s.pendingAddIdSet
-        val toRemove = s.pendingRemoveIdSet
-        // If there's nothing to apply and we are not proceeding, just return early.
-        if (toAdd.isEmpty() && toRemove.isEmpty()) {
-            return
-        }
-        viewModelScope.launch {
-            val session = sessionState.value
-            val result = ensureAndApplyOrderSelectionDeltaUseCase(
-                userId = session.userId,
-                currentSelectedWorkOrderId = session.workOrderId,
-                toAdd = toAdd,
-                toRemove = toRemove,
-            )
-            when (result) {
-                is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> {
-                    setState { copy(error = result.message) }
-                    return@launch
-                }
-
-                else -> Unit
-            }
-            val newExisting = (s.existingDraftIdSet + toAdd) - toRemove
-            setState {
-                copy(
-                    isMultiSelectionEnabled = false,
-                    existingDraftIdSet = newExisting,
-                    pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet(),
-                    selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false
-                )
-            }
-
-        }
-    }
-
-    private fun handleToggleSelectionMode(enabled: Boolean) {
-        if (enabled) {
-            viewModelScope.launch {
-                val workOrderId: WorkOrderId? = sessionState.value.workOrderId.handleNull()
-
-                val persisted = if (workOrderId == null) {
-                    emptySet()
-                } else {
-                    observeSelectedOrderListUseCase(workOrderId = workOrderId).first()
-                }
-
-                setState {
-                    copy(
-                        isMultiSelectionEnabled = true,
-                        existingDraftIdSet = persisted,
-                        pendingAddIdSet = emptySet(),
-                        pendingRemoveIdSet = emptySet(),
-                        selectedOrderIdList = persisted,
-                        isSelectAllChecked = false
-                    )
-                }
-            }
-        } else {
-            setState {
-                copy(
-                    isMultiSelectionEnabled = false,
-                    selectedOrderIdList = emptySet(),
-                    isSelectAllChecked = false,
-                    pendingAddIdSet = emptySet(),
-                    pendingRemoveIdSet = emptySet()
-                )
-            }
-        }
     }
     // endregion
 

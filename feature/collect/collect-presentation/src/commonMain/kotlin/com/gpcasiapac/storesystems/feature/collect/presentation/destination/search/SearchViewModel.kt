@@ -16,8 +16,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Ensu
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerHandler
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -42,7 +43,7 @@ class SearchViewModel(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
     ),
-    SelectionHandlerDelegate by SelectionHandlerHandler() {
+    SelectionHandlerDelegate by SelectionHandler() {
 
     override fun setInitialState(): SearchContract.State = SearchContract.State.empty()
 
@@ -73,23 +74,24 @@ class SearchViewModel(
             SearchContract.Event.ClearSearch -> handleClearSearch()
             SearchContract.Event.SearchBarBackPressed -> handleSearchOnExpandedChange(false)
             is SearchContract.Event.SearchResultClicked -> handleSearchResultClicked(event.result)
-            is SearchContract.Event.SearchSuggestionClicked -> handleSearchSuggestionClicked(
-                event.suggestion
-            )
-
+            is SearchContract.Event.SearchSuggestionClicked -> handleSearchSuggestionClicked(event.suggestion)
             is SearchContract.Event.TypedSuffixChanged -> handleTypedSuffixChanged(event.text)
             is SearchContract.Event.RemoveChip -> handleRemoveChip(event.suggestion)
 
-            // Selection events (delegated)
-            is SearchContract.Event.ToggleSelectionMode -> toggleMode(event.enabled)
-            is SearchContract.Event.OrderChecked -> setItemChecked(event.orderId, event.checked)
-            is SearchContract.Event.SelectAll -> selectAll(event.checked)
-            SearchContract.Event.CancelSelection -> cancel()
-            SearchContract.Event.ConfirmSelection -> handleConfirmSelection()
-            SearchContract.Event.ConfirmSelectionStay -> confirmStay()
-            SearchContract.Event.ConfirmSelectionProceed -> confirmProceed()
-            SearchContract.Event.DismissConfirmSelectionDialog -> { /* no-op for now */
-            }
+            is SearchContract.Event.Selection -> handleSelection(event.event)
+        }
+    }
+
+    private fun handleSelection(event: SelectionContract.Event) {
+        when (event) {
+            is SelectionContract.Event.ToggleMode -> toggleMode(event.enabled)
+            is SelectionContract.Event.SetItemChecked -> setItemChecked(event.id, event.checked)
+            is SelectionContract.Event.SelectAll -> selectAll(event.checked)
+            SelectionContract.Event.Cancel -> cancel()
+            SelectionContract.Event.Confirm -> handleConfirmSelection()
+            SelectionContract.Event.ConfirmStay -> confirmStay()
+            SelectionContract.Event.ConfirmProceed -> confirmProceed()
+            SelectionContract.Event.DismissConfirmDialog -> { /* no-op */ }
         }
     }
 
@@ -151,18 +153,7 @@ class SearchViewModel(
             scope = viewModelScope,
             visibleIds = viewState.map { s -> s.searchOrderItems.map { it.invoiceNumber }.toSet() },
             setSelection = { sel ->
-                setState {
-                    copy(
-                        selection = sel,
-                        // Mirror to legacy fields for compatibility during migration
-                        isMultiSelectionEnabled = sel.isEnabled,
-                        existingDraftIdSet = sel.existing,
-                        pendingAddIdSet = sel.pendingAdd,
-                        pendingRemoveIdSet = sel.pendingRemove,
-                        selectedOrderIdList = sel.selected,
-                        isSelectAllChecked = sel.isAllSelected,
-                    )
-                }
+                setState { copy(selection = sel) }
             },
             loadPersisted = {
                 val workOrderId = sessionState.value.workOrderId

@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
 
 object SearchContract {
@@ -21,14 +22,6 @@ object SearchContract {
         val typedSuffix: String,
         // Shared selection slice for search context
         val selection: SelectionUiState = SelectionUiState(),
-        // Legacy mirrored fields for compatibility
-        val isMultiSelectionEnabled: Boolean,
-        val selectedOrderIdList: Set<String>,
-        val isSelectAllChecked: Boolean,
-        // Normalized selection-editing model (legacy mirror)
-        val existingDraftIdSet: Set<String>,
-        val pendingAddIdSet: Set<String>,
-        val pendingRemoveIdSet: Set<String>,
     ) : ViewState {
         companion object {
             fun empty(): State = State(
@@ -39,12 +32,6 @@ object SearchContract {
                 selectedChips = emptyList(),
                 typedSuffix = "",
                 selection = SelectionUiState(),
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false,
-                existingDraftIdSet = emptySet(),
-                pendingAddIdSet = emptySet(),
-                pendingRemoveIdSet = emptySet(),
             )
         }
     }
@@ -60,16 +47,8 @@ object SearchContract {
         data class TypedSuffixChanged(val text: String) : Event
         data class RemoveChip(val suggestion: SearchSuggestion) : Event
 
-        // Selection mode & actions (search context)
-        data class ToggleSelectionMode(val enabled: Boolean) : Event
-        data class OrderChecked(val orderId: String, val checked: Boolean) : Event
-        data class SelectAll(val checked: Boolean) : Event
-        data object CancelSelection : Event
-        data object ConfirmSelection : Event
-        // Confirmation dialog actions for search context
-        data object ConfirmSelectionStay : Event
-        data object ConfirmSelectionProceed : Event
-        data object DismissConfirmSelectionDialog : Event
+        // Shared selection wrapper (replaces per-screen selection events)
+        data class Selection(val event: SelectionContract.Event) : Event
     }
 
     sealed interface Effect : ViewSideEffect {

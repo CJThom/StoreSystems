@@ -4,6 +4,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.selection
  * Pure helper for computing multi-select state transitions.
  * Keeps logic identical across view models.
  */
+@Deprecated("Use SelectionHandlerDelegate")
 internal object SelectionCalculator {
 
     data class Result(

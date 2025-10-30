@@ -38,14 +38,17 @@ class AddScannedInputToWorkOrderUseCase(
                 // Not found or other validation error
                 return Result.NotFound(trimmed)
             }
+
             is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
                 val invoice = exists.invoiceNumber
-                return when (val apply = ensureAndApplyOrderSelectionDeltaUseCase(
-                    userId = userId,
-                    currentSelectedWorkOrderId = currentSelectedWorkOrderId,
-                    toAdd = listOf(invoice),
-                    toRemove = emptyList(),
-                )) {
+                return when (
+                    val apply = ensureAndApplyOrderSelectionDeltaUseCase(
+                        userId = userId,
+                        currentSelectedWorkOrderId = currentSelectedWorkOrderId,
+                        toAdd = listOf(invoice),
+                        toRemove = emptyList(),
+                    )
+                ) {
                     is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Error -> Result.Error(apply.message)
                     is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Noop -> Result.Error("Nothing to apply")
                     is EnsureAndApplyOrderSelectionDeltaUseCase.Result.Summary -> {

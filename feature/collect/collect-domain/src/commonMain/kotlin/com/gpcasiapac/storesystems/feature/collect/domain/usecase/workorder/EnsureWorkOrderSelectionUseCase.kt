@@ -21,7 +21,7 @@ class EnsureWorkOrderSelectionUseCase(
         if (selectedWorkOrderId != null && orderLocalRepository.workOrderExists(selectedWorkOrderId)) {
             UseCaseResult.AlreadySelected(selectedWorkOrderId)
         } else {
-            when (val res = createWorkOrderUseCase(userId)) {
+            when (val res = createWorkOrderUseCase(userId = userId)) {
                 is CreateWorkOrderUseCase.UseCaseResult.Success -> {
                     UseCaseResult.CreatedNew(res.workOrderId)
                 }

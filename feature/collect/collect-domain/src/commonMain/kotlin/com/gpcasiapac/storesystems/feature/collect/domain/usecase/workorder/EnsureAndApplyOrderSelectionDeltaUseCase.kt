@@ -21,6 +21,7 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
             val duplicates: List<String>,
             val removed: Int,
         ) : Result
+
         data class Error(val message: String) : Result
     }
 
@@ -36,15 +37,30 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
         if (addNorm.isEmpty() && removeNorm.isEmpty()) return Result.Noop
 
         val workOrderId: WorkOrderId? = if (addNorm.isNotEmpty()) {
-            when (val ensured = ensureWorkOrderSelectionUseCase(userId, currentSelectedWorkOrderId)) {
+            when (
+                val ensured = ensureWorkOrderSelectionUseCase(
+                    userId = userId,
+                    selectedWorkOrderId = currentSelectedWorkOrderId
+                )
+            ) {
                 is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
                 is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
-                    when (val upd = updateSelectedWorkOrderIdUseCase(userId, ensured.workOrderId)) {
+                    when (
+                        val upd = updateSelectedWorkOrderIdUseCase(
+                            userId = userId,
+                            selectedWorkOrderId = ensured.workOrderId
+                        )
+                    ) {
                         is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Success -> ensured.workOrderId
-                        is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> return Result.Error(upd.message)
+                        is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> return Result.Error(
+                            upd.message
+                        )
                     }
                 }
-                is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> return Result.Error(ensured.message)
+
+                is EnsureWorkOrderSelectionUseCase.UseCaseResult.Error -> return Result.Error(
+                    ensured.message
+                )
             }
         } else {
             currentSelectedWorkOrderId

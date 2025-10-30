@@ -46,7 +46,10 @@ class ApplyOrderSelectionDeltaUseCase(
             if (removeDistinct.isNotEmpty()) {
                 val before = repo.getWorkOrderItemCount(workOrderId)
                 if (before > 0) {
-                    repo.deleteWorkOrderItems(workOrderId, removeDistinct)
+                    repo.deleteWorkOrderItems(
+                        workOrderId = workOrderId,
+                        orderIds = removeDistinct
+                    )
                     val after = repo.getWorkOrderItemCount(workOrderId)
                     removedCount = (before - after).coerceAtLeast(0)
                 }

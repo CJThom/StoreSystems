@@ -11,6 +11,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
 
 
@@ -30,16 +31,6 @@ object OrderListScreenContract {
 
         // Shared selection slice (single source of truth for selection UI)
         val selection: SelectionUiState = SelectionUiState(),
-
-        // Selection mode (legacy fields retained for compatibility; mirrored from `selection`)
-        val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
-        val selectedOrderIdList: Set<String>,                                // derived UI-checked = (existing - pendingRemove) ∪ pendingAdd
-        val isSelectAllChecked: Boolean,
-
-        // Normalized selection-editing model (legacy mirror of selection)
-        val existingDraftIdSet: Set<String>,                                 // snapshot of persisted IDs at entry into multi-select
-        val pendingAddIdSet: Set<String>,                                    // newly selected in this session (not yet persisted)
-        val pendingRemoveIdSet: Set<String>,                                 // previously persisted but unchecked in this session (not yet removed)
 
         // Draft bottom bar visibility
         val isDraftBarVisible: Boolean,
@@ -86,18 +77,11 @@ object OrderListScreenContract {
         data object ResetFilters : Event
         data class SortChanged(val sortOption: SortOption) : Event
 
-        // Selection mode & actions
-        data class ToggleSelectionMode(val enabled: Boolean) : Event
-        data class OrderChecked(val orderId: String, val checked: Boolean) : Event
-        data class SelectAll(val checked: Boolean) : Event
-        data object CancelSelection : Event
-        data object ConfirmSelection : Event
+        // Shared selection wrapper (replaces per-screen selection events)
+        data class Selection(val event: SelectionContract.Event) : Event
+
         // Search-origin selection confirm
         data object ConfirmSearchSelection : Event
-        // Dialog actions for multi-select confirmation
-        data object ConfirmSelectionStay : Event
-        data object ConfirmSelectionProceed : Event
-        data object DismissConfirmSelectionDialog : Event
 
         // Draft bottom bar actions
         data object DraftBarDeleteClicked : Event

@@ -1,5 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
+
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
@@ -23,12 +25,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                     sortOption = SortOption.TIME_WAITING_DESC
                 ),
                 isFilterSheetOpen = false,
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false,
-                existingDraftIdSet = emptySet(),
-                pendingAddIdSet = emptySet(),
-                pendingRemoveIdSet = emptySet(),
+                selection = SelectionUiState(),
                 isDraftBarVisible = false,
                 orderCount = orders.size,
                 isSubmitting = false,
@@ -52,15 +49,19 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             val error = base.copy(error = "Failed to load orders")
 
             val multiSelect = base.copy(
-                isMultiSelectionEnabled = true,
-                selectedOrderIdList = setOf(orders[0].invoiceNumber, orders[2].invoiceNumber),
-                isSelectAllChecked = false
+                selection = base.selection.copy(
+                    isEnabled = true,
+                    selected = setOf(orders[0].invoiceNumber, orders[2].invoiceNumber),
+                    isAllSelected = false,
+                )
             )
 
             val multiSelectAll = base.copy(
-                isMultiSelectionEnabled = true,
-                selectedOrderIdList = orders.map { it.invoiceNumber }.toSet(),
-                isSelectAllChecked = true
+                selection = base.selection.copy(
+                    isEnabled = true,
+                    selected = orders.map { it.invoiceNumber }.toSet(),
+                    isAllSelected = true,
+                )
             )
 
             return sequenceOf(

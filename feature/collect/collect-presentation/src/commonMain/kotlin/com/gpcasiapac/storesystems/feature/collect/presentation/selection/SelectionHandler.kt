@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SelectionHandlerHandler : SelectionHandlerDelegate {
+class SelectionHandler : SelectionHandlerDelegate {
 
     private val _state = MutableStateFlow(SelectionUiState())
     override val state: StateFlow<SelectionUiState> = _state

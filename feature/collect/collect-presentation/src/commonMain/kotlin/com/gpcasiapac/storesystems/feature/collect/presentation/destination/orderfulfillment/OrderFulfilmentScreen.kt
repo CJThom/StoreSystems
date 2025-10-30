@@ -68,6 +68,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Signa
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
@@ -245,24 +246,40 @@ fun OrderFulfilmentScreen(
                             onSearchEventSent(SearchContract.Event.RemoveChip(s))
                         },
                         searchOrderItems = searchState.searchOrderItems,
-                        isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
-                        selectedOrderIdList = searchState.selectedOrderIdList,
-                        isSelectAllChecked = searchState.isSelectAllChecked,
+                        isMultiSelectionEnabled = searchState.selection.isEnabled,
+                        selectedOrderIdList = searchState.selection.selected,
+                        isSelectAllChecked = searchState.selection.isAllSelected,
                         isRefreshing = state.isLoading,
                         onOpenOrder = { id ->
                             onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
                         },
                         onCheckedChange = { orderId, checked ->
-                            onSearchEventSent(SearchContract.Event.OrderChecked(orderId, checked))
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.SetItemChecked(orderId, checked)
+                                )
+                            )
                         },
                         onSelectAllToggle = { checked ->
-                            onSearchEventSent(SearchContract.Event.SelectAll(checked))
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.SelectAll(checked)
+                                )
+                            )
                         },
                         onCancelSelection = {
-                            onSearchEventSent(SearchContract.Event.CancelSelection)
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.Cancel
+                                )
+                            )
                         },
                         onEnterSelectionMode = {
-                            onSearchEventSent(SearchContract.Event.ToggleSelectionMode(true))
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.ToggleMode(true)
+                                )
+                            )
                         },
                         onSelectClick = {
                             onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
@@ -440,7 +457,7 @@ fun OrderFulfilmentScreen(
                     TextButton(onClick = {
                         selectionConfirmDialogSpec.value = null
                         if (onSearchEventSent != null) {
-                            onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed))
                         }
                         onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
                     }) { Text(selectSpec.confirmLabel) }
