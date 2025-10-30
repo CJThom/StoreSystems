@@ -1,8 +1,12 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.selection
 
 internal object SelectionReducer {
-    fun reduce(state: SelectionUiState, intent: SelectionIntent, visibleIds: Set<String>): SelectionUiState =
-        when (intent) {
+    fun reduce(
+        state: SelectionUiState,
+        intent: SelectionIntent,
+        visibleIds: Set<String>
+    ): SelectionUiState {
+        return when (intent) {
             is SelectionIntent.ToggleMode -> if (intent.enabled) {
                 state.copy(
                     isEnabled = true,
@@ -16,35 +20,46 @@ internal object SelectionReducer {
 
             is SelectionIntent.ToggleOne -> {
                 val add = state.pendingAdd.toMutableSet()
-                val rem = state.pendingRemove.toMutableSet()
+                val remove = state.pendingRemove.toMutableSet()
                 val id = intent.id
                 if (intent.checked) {
-                    if (id in rem) rem.remove(id) else if (id !in state.existing) add.add(id)
+                    if (id in remove) {
+                        remove.remove(id)
+                    } else {
+                        if (id !in state.existing) add.add(id)
+                    }
                 } else {
-                    if (id in state.existing) rem.add(id) else add.remove(id)
+                    if (id in state.existing) {
+                        remove.add(id)
+                    } else {
+                        add.remove(id)
+                    }
                 }
-                val selected = (state.existing - rem) union add
-                state.copy(pendingAdd = add, pendingRemove = rem, selected = selected)
-                    .recomputeAllSelected(visibleIds)
+                val selected = (state.existing - remove) union add
+                state.copy(
+                    pendingAdd = add,
+                    pendingRemove = remove,
+                    selected = selected
+                ).recomputeAllSelected(visibleIds)
             }
 
             is SelectionIntent.ToggleAll -> {
                 val add = state.pendingAdd.toMutableSet()
-                val rem = state.pendingRemove.toMutableSet()
+                val remove = state.pendingRemove.toMutableSet()
                 if (intent.checked) {
-                    val currentlySelected = (state.existing - rem) union add
+                    val currentlySelected = (state.existing - remove) union add
                     val toAdd = visibleIds - currentlySelected
                     add.addAll(toAdd.filterNot { it in state.existing })
-                    rem.removeAll(visibleIds)
+                    remove.removeAll(visibleIds)
                 } else {
                     val persistedVisible = visibleIds.intersect(state.existing)
-                    rem.addAll(persistedVisible)
+                    remove.addAll(persistedVisible)
                     add.removeAll(visibleIds)
                 }
-                val selected = (state.existing - rem) union add
+                val selected = (state.existing - remove) union add
                 state.copy(
                     pendingAdd = add,
-                    pendingRemove = rem,
+                    pendingRemove = remove,
                     selected = selected,
                     isAllSelected = intent.checked && visibleIds.isNotEmpty(),
                 )
@@ -52,7 +67,10 @@ internal object SelectionReducer {
 
             SelectionIntent.Cancel -> SelectionUiState(existing = state.existing)
         }
+    }
 }
 
-private fun SelectionUiState.recomputeAllSelected(visible: Set<String>): SelectionUiState =
-    copy(isAllSelected = visible.isNotEmpty() && visible.all { it in selected })
+private fun SelectionUiState.recomputeAllSelected(visible: Set<String>): SelectionUiState {
+    return copy(isAllSelected = visible.isNotEmpty() && visible.all { it in selected })
+}
+

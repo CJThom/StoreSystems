@@ -26,9 +26,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -119,15 +118,22 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.Refresh -> {
                 viewModelScope.launch { fetchOrderList(successToast = "Orders refreshed") }
             }
+
             is OrderListScreenContract.Event.OpenOrder -> {
                 setEffect { OrderSelected(event.orderId) }
             }
+
             is OrderListScreenContract.Event.ScanInvoice -> {
                 val invoice = event.invoiceNumber.trim()
                 setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
                 viewModelScope.launch {
                     when (val result = checkOrderExistsUseCase(invoice)) {
-                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> setEffect { OrderSelected(result.invoiceNumber) }
+                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> setEffect {
+                            OrderSelected(
+                                result.invoiceNumber
+                            )
+                        }
+
                         is CheckOrderExistsUseCase.UseCaseResult.Error -> {
                             setEffect { OrderListScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderListScreenContract.Effect.PlaySound(SoundEffect.Error) }
@@ -136,12 +142,24 @@ class OrderListScreenViewModel(
                     }
                 }
             }
+
             is OrderListScreenContract.Event.ClearError -> setState { copy(error = null) }
-            is OrderListScreenContract.Event.ToggleCustomerType -> handleToggleCustomerType(event.type, event.checked)
+            is OrderListScreenContract.Event.ToggleCustomerType -> handleToggleCustomerType(
+                event.type,
+                event.checked
+            )
+
             is OrderListScreenContract.Event.ApplyFilters -> handleApplyFilters(event.filterChipList)
             is OrderListScreenContract.Event.RemoveFilterChip -> handleRemoveFilterChip(event.filterChipList)
             is OrderListScreenContract.Event.ResetFilters -> handleResetFilters()
-            is OrderListScreenContract.Event.SortChanged -> setState { copy(filters = filters.copy(sortOption = event.sortOption)) }
+            is OrderListScreenContract.Event.SortChanged -> setState {
+                copy(
+                    filters = filters.copy(
+                        sortOption = event.sortOption
+                    )
+                )
+            }
+
             is OrderListScreenContract.Event.Back -> setEffect { Back }
             is OrderListScreenContract.Event.Logout -> setEffect { Logout }
             is OrderListScreenContract.Event.OpenHistory -> setEffect { OrderListScreenContract.Effect.Outcome.OpenHistory }
@@ -149,17 +167,21 @@ class OrderListScreenViewModel(
             is OrderListScreenContract.Event.Selection -> handleSelection(event.event)
 
             is OrderListScreenContract.Event.CloseFilterSheet -> setState { copy(isFilterSheetOpen = false) }
-            is OrderListScreenContract.Event.DismissSnackbar -> { /* no-op */ }
+            is OrderListScreenContract.Event.DismissSnackbar -> { /* no-op */
+            }
+
             is OrderListScreenContract.Event.OpenFilterSheet -> setState { copy(isFilterSheetOpen = true) }
             is OrderListScreenContract.Event.SubmitOrder -> setEffect { OrderSelected(event.orderId) }
             is OrderListScreenContract.Event.StartNewWorkOrderClicked -> handleStartNewWorkOrderClick()
             is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
                 viewModelScope.launch { handleDraftBarDeleteClicked() }
             }
+
             is OrderListScreenContract.Event.DraftBarViewClicked -> {
                 val ids = viewState.value.selection.existing.toList()
                 if (ids.isNotEmpty()) setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
             }
+
             is OrderListScreenContract.Event.ConfirmSearchSelection -> {
                 setEffect { OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog() }
             }
@@ -265,8 +287,12 @@ class OrderListScreenViewModel(
                     is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
-            onRequestConfirmDialog = { setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() } },
-            onConfirmProceed = { setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected } }
+            onRequestConfirmDialog = {
+                setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
+            },
+            onConfirmProceed = {
+                setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
+            }
         )
     }
 
