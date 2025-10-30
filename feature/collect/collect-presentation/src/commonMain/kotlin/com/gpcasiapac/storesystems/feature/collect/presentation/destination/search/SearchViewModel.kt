@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
@@ -16,13 +17,12 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Ensu
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -63,7 +63,7 @@ class SearchViewModel(
         }
 
         viewModelScope.launch {
-            observerSearchSuggestions()
+            observeSearchSuggestions()
         }
     }
 
@@ -84,20 +84,15 @@ class SearchViewModel(
 
 
     // Suggestions pipeline: immediate defaults on blank when active, debounced for non-blank
-    private suspend fun observerSearchSuggestions() {
+    private suspend fun observeSearchSuggestions() {
         viewState
             .map { it.searchText to it.isSearchActive }
             .flatMapLatest { (text, active) ->
-                val t = text
                 when {
                     !active -> flowOf(emptyList())
-                    t.isBlank() -> flow {
-                        emit(getOrderSearchSuggestionListUseCase(""))
-                    }
-
                     else -> {
                         QueryFlow.build(
-                            input = flowOf(t),
+                            input = flowOf(text),
                             debounce = SearchDebounce(millis = 100),
                             keySelector = { it }
                         ).mapLatest { q -> getOrderSearchSuggestionListUseCase(q) }
@@ -111,27 +106,45 @@ class SearchViewModel(
 
     // Search results pipeline: immediate reset on blank, debounced for non-blank
     private suspend fun observeSearchResults() {
-        viewState
-            .map { it.searchText to it.isSearchActive }
-            .flatMapLatest { (text, active) ->
-                val t = text
-                when {
-                    !active -> flowOf(emptyList())
-                    t.isBlank() -> flowOf(emptyList()) // immediate clearing without debounce
-                    else -> {
-                        // Debounce only when non-blank to avoid stale UI on backspace-to-blank
-                        QueryFlow.build(
-                            input = flowOf(t),
-                            debounce = SearchDebounce(millis = 150),
-                            keySelector = { it }
-                        ).flatMapLatest { q -> observeSearchOrdersUseCase(q) }
-                    }
-                }
+
+        val queryFlow: Flow<SearchQuery> = QueryFlow.build(
+            input = viewState.map { viewState ->
+                SearchQuery(viewState.searchText)
+            },
+            debounce = SearchDebounce(millis = 150),
+            keySelector = { query ->
+                query.text
             }
-            .map { list -> list.toListItemState() }
-            .collectLatest { results ->
-                setState { copy(searchOrderItems = results) }
-            }
+        )
+
+        queryFlow.flatMapLatest { query ->
+            observeSearchOrdersUseCase(query)
+        }.collectLatest { results ->
+
+            setState { copy(searchOrderItems = results.toListItemState()) }
+        }
+
+
+//        viewState
+//            .map { it.searchText to it.isSearchActive }
+//            .flatMapLatest { (text, active) ->
+//                when {
+//                    !active -> flowOf(emptyList())
+//                    text.isBlank() -> flowOf(emptyList()) // immediate clearing without debounce
+//                    else -> {
+//                        // Debounce only when non-blank to avoid stale UI on backspace-to-blank
+//                        QueryFlow.build(
+//                            input = flowOf(text),
+//                            debounce = SearchDebounce(millis = 150),
+//                            keySelector = { it }
+//                        ).flatMapLatest { q -> observeSearchOrdersUseCase(q) }
+//                    }
+//                }
+//            }
+//            .map { list -> list.toListItemState() }
+//            .collectLatest { results ->
+//                setState { copy(searchOrderItems = results) }
+//            }
     }
 
 

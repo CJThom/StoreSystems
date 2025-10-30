@@ -14,8 +14,8 @@ class ObserveSearchOrdersUseCase(
     private val orderLocalRepository: OrderLocalRepository,
 ) {
 
-    operator fun invoke(text: String): Flow<List<CollectOrderWithCustomer>> {
-        return orderLocalRepository.observeSearchOrders(SearchQuery(text))
+    operator fun invoke(query: SearchQuery): Flow<List<CollectOrderWithCustomer>> {
+        return orderLocalRepository.observeSearchOrders(query)
     }
 
 }
