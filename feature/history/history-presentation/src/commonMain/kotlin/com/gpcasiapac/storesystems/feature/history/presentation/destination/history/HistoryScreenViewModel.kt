@@ -77,8 +77,9 @@ class HistoryScreenViewModel(
     }
 
     private fun handleOpenItem(id: String) {
-        // TODO: Navigate to detail screen in future version
-        setEffect { HistoryScreenContract.Effect.ShowToast("Detail view coming soon") }
+        println("Processing event...")
+        val title = "Invoice #$id"
+        setEffect { HistoryScreenContract.Effect.Outcome.OpenDetails(title = title, groupKey = id) }
     }
 
     private fun handleDeleteItem(id: String) {

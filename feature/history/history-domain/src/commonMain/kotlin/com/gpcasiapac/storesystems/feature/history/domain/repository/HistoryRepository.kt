@@ -1,8 +1,6 @@
 package com.gpcasiapac.storesystems.feature.history.domain.repository
 
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithCollectMetadata
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithMetadata
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -11,15 +9,14 @@ import kotlinx.coroutines.flow.Flow
  */
 interface HistoryRepository {
     /**
-     * Observe all history items with metadata.
-     * This is the primary method for observing history.
+     * Observe all history items (sealed types).
      */
-    fun observeHistoryWithMetadata(): Flow<List<HistoryItemWithMetadata>>
+    fun observeHistory(): Flow<List<HistoryItem>>
     
     /**
      * Get history for a specific entity ID.
      */
-    suspend fun getHistoryByEntityId(entityId: String): List<HistoryItemWithMetadata>
+    suspend fun getHistoryByEntityId(entityId: String): List<HistoryItem>
     
     /**
      * Delete a history item (deletes the corresponding sync task).
@@ -34,20 +31,10 @@ interface HistoryRepository {
     /**
      * Get history by invoice number.
      */
-    suspend fun getHistoryByInvoiceNumber(invoiceNumber: String): List<HistoryItemWithMetadata>
+    suspend fun getHistoryByInvoiceNumber(invoiceNumber: String): List<HistoryItem>
     
     /**
      * Get history by customer number.
      */
-    suspend fun getHistoryByCustomerNumber(customerNumber: String): List<HistoryItemWithMetadata>
-    
-    // DEPRECATED METHODS - Keep for backward compatibility during migration
-    @Deprecated("Use observeHistoryWithMetadata() instead", ReplaceWith("observeHistoryWithMetadata()"))
-    fun observeHistory(): Flow<List<HistoryItem>>
-    
-    @Deprecated("Use observeHistoryWithMetadata() instead")
-    fun observeHistoryWithCollectMetadata(): Flow<List<HistoryItemWithCollectMetadata>>
-    
-    @Deprecated("Use getHistoryByEntityId() instead")
-    suspend fun getHistoryWithCollectMetadataByEntityId(entityId: String): List<HistoryItemWithCollectMetadata>
+    suspend fun getHistoryByCustomerNumber(customerNumber: String): List<HistoryItem>
 }

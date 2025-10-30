@@ -19,12 +19,19 @@ class HistoryNavigationViewModel :
         when (event) {
             is HistoryNavigationContract.Event.Outcome -> handleOutcome(event.outcome)
             is HistoryNavigationContract.Event.PopBack -> pop(event.count)
+            is HistoryNavigationContract.Event.Push -> push(event.key)
         }
     }
 
     private fun handleOutcome(outcome: HistoryOutcome) {
         when (outcome) {
             is HistoryOutcome.Back -> pop()
+            is HistoryOutcome.OpenDetails -> push(
+                HistoryFeatureDestination.HistoryDetails(
+                    title = outcome.title,
+                    groupKey = outcome.groupKey
+                )
+            )
         }
     }
 }

@@ -15,5 +15,5 @@ data class SyncTaskWithCollectMetadataEntity(
         parentColumn = "id",
         entityColumn = "sync_task_id"
     )
-    val metadata: CollectTaskMetadataEntity?
+    val metadata: List<CollectTaskMetadataEntity>
 )

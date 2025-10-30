@@ -5,14 +5,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,7 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryItemCard
+import com.gpcasiapac.storesystems.feature.history.presentation.composable.StatusBadge
+import com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
+import com.gpcasiapac.storesystems.foundation.component.InvoiceSummary
+import com.gpcasiapac.storesystems.foundation.component.InvoiceSummaryCustomerRow
+import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -57,9 +67,14 @@ fun HistoryScreen(
         effectFlow.collectLatest { effect ->
             when (effect) {
                 is HistoryScreenContract.Effect.ShowToast ->
-                    snackbarHostState.showSnackbar(effect.message, duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+
                 is HistoryScreenContract.Effect.ShowError ->
                     snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
+
                 is HistoryScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
@@ -73,7 +88,7 @@ fun HistoryScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-
+                        onEventSent(HistoryScreenContract.Event.Back)
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -102,21 +117,12 @@ private fun Content(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        // Search field
-        TextField(
-            value = state.searchQuery,
-            onValueChange = { onEventSent(HistoryScreenContract.Event.SearchQueryChanged(it)) },
-            placeholder = { Text("Search orders, customers...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        
         when {
             state.isLoading -> {
                 CircularProgressIndicator()
                 Text("Loading history…", modifier = Modifier.padding(top = 8.dp))
             }
+
             state.error != null -> {
                 Card(
                     colors = CardDefaults.cardColors(
@@ -130,35 +136,99 @@ private fun Content(
                     )
                 }
             }
+
             else -> {
+                val groups = remember(state.items) { buildGroups(state.items) }
                 LazyColumn {
-                    items(state.items, key = { it.id }) { item ->
+                    items(groups, key = { it.key }) { group ->
                         CheckboxCard(
-                            isCheckable = false,
-                            isChecked = false,
-                            onCheckedChange = {},
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(
                                     horizontal = Dimens.Space.medium,
                                     vertical = Dimens.Space.small
-                                )
-                                .animateItem()
-                                .animateContentSize(),
-                        ){
-                            HistoryItemCard(
-                                item = item,
-                                onClick = { onEventSent(HistoryScreenContract.Event.OpenItem(item.id)) },
-                                modifier = Modifier.padding(
-                                    start = Dimens.Space.medium,
-                                    top = Dimens.Space.medium,
-                                    bottom = Dimens.Space.small,
-                                    end = Dimens.Space.medium
-                                ),
+                                ).animateItem(),
+                            isCheckable = false,
+                            onCheckedChange = {},
+                            onClick = {
+                                onEventSent(HistoryScreenContract.Event.OpenItem(group.key))
+                            },
+                            isChecked = false,
+                        ) {
+                            GroupedHistoryCard(
+                                invoiceNumbers = group.orderNumbers,
+                                time = group.time
                             )
                         }
                     }
                 }
+
             }
         }
     }
+}
+
+private data class HistoryGroup(
+    val key: String,
+    val title: String,
+    val time: String,
+    val orderNumbers: List<String>,
+    val itemsCount: Int
+)
+
+private fun buildGroups(items: List<com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem>): List<HistoryGroup> {
+    val collectMetas = items
+        .filterIsInstance<com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem>()
+        .flatMap { it.metadata }
+
+    return collectMetas
+        .groupBy { it.invoiceNumber }
+        .filterKeys { it.isNotBlank() }
+        .map { (invoice: String, metas: List<com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata.CollectMetadata>) ->
+            HistoryGroup(
+                key = invoice,
+                title = metas.firstOrNull()?.getCustomerDisplayName() ?: "Unknown",
+                orderNumbers = metas.map { meta -> meta.webOrderNumber ?: meta.invoiceNumber },
+                itemsCount = metas.size,
+                time = metas.firstOrNull()?.orderCreatedAt?.let { formatTimeAgo(it) } ?: ""
+            )
+        }
+        .sortedBy { it.title }
+}
+
+@Composable
+private fun GroupedHistoryCard(
+    invoiceNumbers: List<String>,
+    time: String,
+
+) {
+    ListItemScaffold(
+        content = {
+            Column {
+                InvoiceSummary(invoiceNumbers)
+            }
+        },
+        toolbar = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.Space.small),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row {
+                    Text(
+                        text = time,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.Space.small))
+                    StatusBadge(status = com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING)
+                }
+
+                Button(onClick = {}) {
+                    Text("Retry")
+                }
+
+            }
+        }
+    )
 }

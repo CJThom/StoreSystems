@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "0c3ec73c621c33487263ae001cbfca34",
+    "identityHash": "6a226da291d9c215e9c3da168f91b313",
     "entities": [
       {
         "tableName": "sync_tasks",
@@ -167,12 +167,12 @@
         "indices": [
           {
             "name": "index_collect_task_metadata_sync_task_id",
-            "unique": true,
+            "unique": false,
             "columnNames": [
               "sync_task_id"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_collect_task_metadata_sync_task_id` ON `${TABLE_NAME}` (`sync_task_id`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_collect_task_metadata_sync_task_id` ON `${TABLE_NAME}` (`sync_task_id`)"
           }
         ],
         "foreignKeys": [
@@ -192,7 +192,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c3ec73c621c33487263ae001cbfca34')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6a226da291d9c215e9c3da168f91b313')"
     ]
   }
 }

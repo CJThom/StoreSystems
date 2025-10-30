@@ -66,8 +66,48 @@ class HistoryFeatureEntryImpl : HistoryFeatureEntry {
                 HistoryScreenDestination { outcome ->
                     when (outcome) {
                         is HistoryScreenContract.Effect.Outcome.Back -> onOutcome(HistoryOutcome.Back)
+                        is HistoryScreenContract.Effect.Outcome.OpenDetails -> {
+                            onOutcome(HistoryOutcome.OpenDetails(outcome.title, outcome.groupKey))
+                        }
                     }
                 }
+            }
+
+            entry<HistoryFeatureDestination.HistoryDetails> { details ->
+                val vm: com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenViewModel = koinViewModel()
+                val state by vm.viewState.collectAsStateWithLifecycle()
+
+                LaunchedEffect(details) {
+                    val d = details as HistoryFeatureDestination.HistoryDetails
+                    vm.setEvent(
+                        com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Event.Initialize(
+                            title = d.title,
+                            groupKey = d.groupKey
+                        )
+                    )
+                }
+
+                LaunchedEffect(Unit) {
+                    vm.effect.collect { eff ->
+                        when (eff) {
+                            is com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Effect.Outcome.Back ->
+                                onOutcome(HistoryOutcome.Back)
+                            is com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Effect.ShowError -> { /* no-op here */ }
+                        }
+                    }
+                }
+
+                com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreen(
+                    state = state,
+                    onEvent = vm::setEvent,
+                    effectFlow = vm.effect,
+                    onOutcome = { eff ->
+                        when (eff) {
+                            is com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Effect.Outcome.Back ->
+                                onOutcome(HistoryOutcome.Back)
+                        }
+                    }
+                )
             }
         }
     }

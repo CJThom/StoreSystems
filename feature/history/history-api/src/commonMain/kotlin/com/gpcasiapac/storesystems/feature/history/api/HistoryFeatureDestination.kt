@@ -7,4 +7,7 @@ import kotlinx.serialization.Serializable
 sealed interface HistoryFeatureDestination : NavKey {
     @Serializable
     data object History : HistoryFeatureDestination
+
+    @Serializable
+    data class HistoryDetails(val title: String, val groupKey: String) : HistoryFeatureDestination
 }

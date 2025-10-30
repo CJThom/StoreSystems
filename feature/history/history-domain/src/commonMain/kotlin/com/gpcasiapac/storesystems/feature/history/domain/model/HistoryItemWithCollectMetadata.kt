@@ -35,22 +35,6 @@ data class HistoryItemWithCollectMetadata(
     val phone: String?
 ) {
     /**
-     * Convert to base HistoryItem (without metadata).
-     */
-    fun toHistoryItem(): HistoryItem {
-        return HistoryItem(
-            id = id,
-            type = type,
-            entityId = entityId,
-            status = status,
-            timestamp = timestamp,
-            attempts = attempts,
-            lastError = lastError,
-            priority = priority
-        )
-    }
-    
-    /**
      * Get customer display name based on customer type.
      */
     fun getCustomerDisplayName(): String {

@@ -1,10 +1,10 @@
 package com.gpcasiapac.storesystems.core.sync_queue.api.model
 
 /**
- * API model combining SyncTask with optional CollectTaskMetadata.
+ * API model combining SyncTask with CollectTaskMetadata entries.
  * Exposed by SyncQueueService for tasks that have collect metadata.
  */
 data class SyncTaskWithCollectMetadata(
     val task: SyncTask,
-    val collectMetadata: CollectTaskMetadata?
+    val collectMetadata: List<CollectTaskMetadata>
 )

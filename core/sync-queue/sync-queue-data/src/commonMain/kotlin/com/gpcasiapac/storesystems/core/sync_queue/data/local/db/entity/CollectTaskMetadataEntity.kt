@@ -24,7 +24,7 @@ import kotlin.time.Instant
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["sync_task_id"], unique = true)]
+    indices = [Index(value = ["sync_task_id"], unique = false)]
 )
 data class CollectTaskMetadataEntity(
     @PrimaryKey

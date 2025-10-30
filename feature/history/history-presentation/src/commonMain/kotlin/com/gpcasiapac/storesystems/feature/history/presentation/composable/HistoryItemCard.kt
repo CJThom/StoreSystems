@@ -18,8 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithMetadata
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
+import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.feature.history.presentation.mapper.toCustomerTypeParam
 import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
@@ -35,33 +35,20 @@ import kotlin.time.Instant
 
 /**
  * Main composable for rendering a history item card.
- * Delegates to specific composables based on metadata type.
+ * Delegates to specific composables based on HistoryItem subtype.
  */
 @Composable
 fun HistoryItemCard(
-    item: HistoryItemWithMetadata,
+    item: HistoryItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Render different UI based on metadata type (sealed class)
-    when (val metadata = item.metadata) {
-        is HistoryMetadata.CollectMetadata -> {
-            CollectHistoryItem(
-                item = item,
-                metadata = metadata,
-                onClick = onClick,
-                modifier = modifier
-            )
-        }
-        is HistoryMetadata.NoMetadata -> {
-            GenericHistoryItem(
-                item = item,
-                onClick = onClick,
-                modifier = modifier
-            )
-        }
-        // Future metadata types can be added here:
-        // is HistoryMetadata.PaymentMetadata -> PaymentHistoryItem(...)
+    when (item) {
+        is CollectHistoryItem -> CollectHistoryItemCard(
+            item = item,
+            onClick = onClick,
+            modifier = modifier
+        )
     }
 }
 
@@ -70,22 +57,25 @@ fun HistoryItemCard(
  * Shows order and customer information.
  */
 @Composable
-private fun CollectHistoryItem(
-    item: HistoryItemWithMetadata,
-    metadata: HistoryMetadata.CollectMetadata,
+private fun CollectHistoryItemCard(
+    item: CollectHistoryItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metadata = item.metadata.maxByOrNull { it.orderPickedAt } ?: item.metadata.firstOrNull()
+    if (metadata == null) return
+
     ListItemScaffold(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth(),
         contentPadding = PaddingValues(),
         toolbar = {
-            CollectOrderHistoryToolbar(
-                status = item.status,
-                actions = {
-
-                }
-            )
+//            CollectOrderHistoryToolbar(
+//                status = item.status,
+//                actions = {
+//
+//                }
+//            )
         }
     ) {
         CollectOrderDetailsContent(
@@ -110,9 +100,9 @@ private fun RowScope.CollectOrderHistoryToolbar(
 
         }
     ) {
-        Row {
-            StatusBadge(status = status)
-        }
+//        Row {
+//            StatusBadge(status = status)
+//        }
     }
 }
 
@@ -123,7 +113,7 @@ private fun RowScope.CollectOrderHistoryToolbar(
  */
 @Composable
 private fun GenericHistoryItem(
-    item: HistoryItemWithMetadata,
+    item: HistoryItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -135,18 +125,11 @@ private fun GenericHistoryItem(
             )
         },
         supportingContent = {
-            Column {
-                Text(
-                    text = "Type: ${item.type.name}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = formatTimeAgo(item.timestamp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = formatTimeAgo(item.timestamp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         },
         trailingContent = {
             StatusBadge(status = item.status)
@@ -162,7 +145,7 @@ private fun GenericHistoryItem(
  * Status badge composable.
  */
 @Composable
-private fun StatusBadge(
+fun StatusBadge(
     status: HistoryStatus,
     modifier: Modifier = Modifier
 ) {
@@ -207,7 +190,7 @@ private fun StatusBadge(
  * Format timestamp to relative time string.
  */
 @OptIn(ExperimentalTime::class)
-private fun formatTimeAgo(timestamp: kotlinx.datetime.Instant): String {
+fun formatTimeAgo(timestamp: kotlinx.datetime.Instant): String {
     // Convert kotlinx.datetime.Instant to kotlin.time.Instant
     val ktInstant = Instant.fromEpochMilliseconds(timestamp.toEpochMilliseconds())
     val now = Clock.System.now()

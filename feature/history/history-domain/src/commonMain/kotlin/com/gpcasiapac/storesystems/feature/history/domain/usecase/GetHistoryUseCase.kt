@@ -1,7 +1,8 @@
 package com.gpcasiapac.storesystems.feature.history.domain.usecase
 
+import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItemWithMetadata
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
@@ -10,14 +11,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * Use case to observe history items with metadata.
+ * Use case to observe history items (sealed types).
  * Supports filtering by status, type, and search query.
  */
 class GetHistoryUseCase(
     private val historyRepository: HistoryRepository
 ) {
     /**
-     * Observe all history items with metadata.
+     * Observe all history items.
      * 
      * @param statusFilter Filter by status (null = all statuses)
      * @param typeFilter Filter by type (null = all types)
@@ -27,8 +28,8 @@ class GetHistoryUseCase(
         statusFilter: HistoryStatus? = null,
         typeFilter: HistoryType? = null,
         searchQuery: String? = null
-    ): Flow<List<HistoryItemWithMetadata>> {
-        return historyRepository.observeHistoryWithMetadata()
+    ): Flow<List<HistoryItem>> {
+        return historyRepository.observeHistory()
             .map { items ->
                 items
                     .applyStatusFilter(statusFilter)
@@ -44,7 +45,7 @@ class GetHistoryUseCase(
         filter: HistoryFilter = HistoryFilter.ALL,
         typeFilter: HistoryType? = null,
         searchQuery: String? = null
-    ): Flow<List<HistoryItemWithMetadata>> {
+    ): Flow<List<HistoryItem>> {
         val statusFilter = when (filter) {
             HistoryFilter.ALL -> null
             HistoryFilter.PENDING -> HistoryStatus.PENDING
@@ -59,9 +60,9 @@ class GetHistoryUseCase(
         )
     }
     
-    private fun List<HistoryItemWithMetadata>.applyStatusFilter(
+    private fun List<HistoryItem>.applyStatusFilter(
         statusFilter: HistoryStatus?
-    ): List<HistoryItemWithMetadata> {
+    ): List<HistoryItem> {
         return if (statusFilter != null) {
             filter { it.status == statusFilter }
         } else {
@@ -69,39 +70,40 @@ class GetHistoryUseCase(
         }
     }
     
-    private fun List<HistoryItemWithMetadata>.applyTypeFilter(
+    private fun List<HistoryItem>.applyTypeFilter(
         typeFilter: HistoryType?
-    ): List<HistoryItemWithMetadata> {
+    ): List<HistoryItem> {
         return if (typeFilter != null) {
-            filter { it.type == typeFilter }
+            when (typeFilter) {
+                HistoryType.ORDER_SUBMISSION -> filterIsInstance<CollectHistoryItem>()
+                else -> this
+            }
         } else {
             this
         }
     }
     
-    private fun List<HistoryItemWithMetadata>.applySearchFilter(
+    private fun List<HistoryItem>.applySearchFilter(
         searchQuery: String?
-    ): List<HistoryItemWithMetadata> {
+    ): List<HistoryItem> {
         if (searchQuery.isNullOrBlank()) return this
         
         val query = searchQuery.trim().lowercase()
         
         return filter { item ->
-            // Search in entity ID
-            item.entityId.lowercase().contains(query) ||
-            // Search in metadata if available
-            when (val metadata = item.metadata) {
-                is HistoryMetadata.CollectMetadata -> {
-                    metadata.invoiceNumber.lowercase().contains(query) ||
-                    metadata.salesOrderNumber.lowercase().contains(query) ||
-                    metadata.webOrderNumber?.lowercase()?.contains(query) == true ||
-                    metadata.customerNumber.lowercase().contains(query) ||
-                    metadata.accountName?.lowercase()?.contains(query) == true ||
-                    metadata.firstName?.lowercase()?.contains(query) == true ||
-                    metadata.lastName?.lowercase()?.contains(query) == true ||
-                    metadata.getCustomerDisplayName().lowercase().contains(query)
-                }
-                is HistoryMetadata.NoMetadata -> false
+            when (item) {
+                is CollectHistoryItem ->
+                    item.entityId.lowercase().contains(query) ||
+                    item.metadata.any { md ->
+                        md.invoiceNumber.lowercase().contains(query) ||
+                        md.salesOrderNumber.lowercase().contains(query) ||
+                        md.webOrderNumber?.lowercase()?.contains(query) == true ||
+                        md.customerNumber.lowercase().contains(query) ||
+                        md.accountName?.lowercase()?.contains(query) == true ||
+                        md.firstName?.lowercase()?.contains(query) == true ||
+                        md.lastName?.lowercase()?.contains(query) == true ||
+                        md.getCustomerDisplayName().lowercase().contains(query)
+                    }
             }
         }
     }

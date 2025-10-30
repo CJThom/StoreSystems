@@ -4,17 +4,31 @@ import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
 
 /**
- * Domain model representing a history item.
- * Maps from SyncTask to provide history view.
+ * Sealed history item hierarchy. Each subtype represents a concrete history kind
+ * and may carry strongly-typed metadata specific to that kind.
  */
 @OptIn(ExperimentalTime::class)
-data class HistoryItem(
-    val id: String,
-    val type: HistoryType,
-    val entityId: String,      // Order ID, Invoice ID, etc.
-    val status: HistoryStatus,
-    val timestamp: Instant,
-    val attempts: Int,
-    val lastError: String?,
+sealed interface HistoryItem {
+    val id: String
+    val entityId: String
+    val status: HistoryStatus
+    val timestamp: Instant
+    val attempts: Int
+    val lastError: String?
     val priority: Int
-)
+}
+
+/**
+ * Collect-only history item. Enforces list of CollectMetadata.
+ */
+@OptIn(ExperimentalTime::class)
+data class CollectHistoryItem(
+    override val id: String,
+    override val entityId: String,
+    override val status: HistoryStatus,
+    override val timestamp: Instant,
+    override val attempts: Int,
+    override val lastError: String?,
+    override val priority: Int,
+    val metadata: List<HistoryMetadata.CollectMetadata>
+) : HistoryItem

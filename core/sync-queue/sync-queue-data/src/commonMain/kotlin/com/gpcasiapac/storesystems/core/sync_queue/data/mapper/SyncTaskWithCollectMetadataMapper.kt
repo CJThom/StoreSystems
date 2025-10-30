@@ -9,7 +9,7 @@ import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTask
 fun SyncTaskWithCollectMetadataEntity.toApiModel(): SyncTaskWithCollectMetadata {
     return SyncTaskWithCollectMetadata(
         task = task.toDomain(),
-        collectMetadata = metadata?.toApiModel()
+        collectMetadata = metadata.map { it.toApiModel() }
     )
 }
 

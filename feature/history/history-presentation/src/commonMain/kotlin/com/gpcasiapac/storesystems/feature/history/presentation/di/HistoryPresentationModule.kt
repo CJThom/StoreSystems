@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.feature.history.domain.di.historyDomainModule
 import com.gpcasiapac.storesystems.feature.history.presentation.destination.history.HistoryScreenViewModel
 import com.gpcasiapac.storesystems.feature.history.presentation.entry.HistoryFeatureEntryImpl
 import com.gpcasiapac.storesystems.feature.history.presentation.navigation.HistoryNavigationViewModel
+import com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -18,6 +19,7 @@ val historyPresentationModule = module {
     
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::HistoryNavigationViewModel)
+    viewModelOf(::HistoryDetailsScreenViewModel)
 
     singleOf(::HistoryFeatureEntryImpl) { bind<HistoryFeatureEntry>() }
 }

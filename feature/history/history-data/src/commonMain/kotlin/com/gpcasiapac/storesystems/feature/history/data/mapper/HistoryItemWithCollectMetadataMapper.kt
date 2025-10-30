@@ -12,7 +12,7 @@ import kotlin.time.ExperimentalTime
  */
 @OptIn(ExperimentalTime::class)
 fun SyncTaskWithCollectMetadata.toHistoryItemWithCollectMetadata(): HistoryItemWithCollectMetadata? {
-    val metadata = collectMetadata ?: return null
+    val metadata = collectMetadata.firstOrNull() ?: return null
     
     return HistoryItemWithCollectMetadata(
         // Base history fields from SyncTask
@@ -25,7 +25,7 @@ fun SyncTaskWithCollectMetadata.toHistoryItemWithCollectMetadata(): HistoryItemW
         lastError = task.errorAttempts.lastOrNull()?.errorMessage,
         priority = task.priority,
         
-        // Collect metadata fields
+        // Collect metadata fields (use first element for deprecated model)
         invoiceNumber = metadata.invoiceNumber,
         salesOrderNumber = metadata.salesOrderNumber,
         webOrderNumber = metadata.webOrderNumber,

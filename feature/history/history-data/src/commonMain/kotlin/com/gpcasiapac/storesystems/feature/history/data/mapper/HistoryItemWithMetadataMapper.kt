@@ -9,13 +9,12 @@ import kotlin.time.ExperimentalTime
 
 /**
  * Extension function to map SyncTaskWithCollectMetadata to HistoryItemWithMetadata.
- * Maps collect metadata to sealed HistoryMetadata.CollectMetadata if available,
- * otherwise uses HistoryMetadata.NoMetadata.
+ * Builds a metadataList of sealed HistoryMetadata entries.
+ * Current API exposes at most one CollectMetadata; wrap it into a list if present.
  */
 @OptIn(ExperimentalTime::class)
 fun SyncTaskWithCollectMetadata.toHistoryItemWithMetadata(): HistoryItemWithMetadata {
-    val collectMeta = collectMetadata
-    val metadata = if (collectMeta != null) {
+    val metadataList: List<HistoryMetadata> = collectMetadata.map { collectMeta ->
         HistoryMetadata.CollectMetadata(
             invoiceNumber = collectMeta.invoiceNumber,
             salesOrderNumber = collectMeta.salesOrderNumber,
@@ -29,8 +28,6 @@ fun SyncTaskWithCollectMetadata.toHistoryItemWithMetadata(): HistoryItemWithMeta
             lastName = collectMeta.lastName,
             phone = collectMeta.phone
         )
-    } else {
-        HistoryMetadata.NoMetadata
     }
     
     return HistoryItemWithMetadata(
@@ -42,7 +39,7 @@ fun SyncTaskWithCollectMetadata.toHistoryItemWithMetadata(): HistoryItemWithMeta
         attempts = task.noOfAttempts,
         lastError = task.errorAttempts.lastOrNull()?.errorMessage,
         priority = task.priority,
-        metadata = metadata
+        metadataList = metadataList
     )
 }
 
