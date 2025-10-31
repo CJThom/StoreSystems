@@ -76,7 +76,7 @@ class OrderLocalRepositoryImpl(
     override fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>> {
         val text = query.text.trim()
         if (text.isEmpty()) return flowOf(emptyList())
-        val q = "%${'$'}{escapeForLike(text)}%"
+        val q = "%${escapeForLike(text)}%"
         return collectOrderDao.observeOrdersForSearch(q).map { it.toDomain() }
     }
 
