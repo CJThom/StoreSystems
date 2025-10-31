@@ -19,7 +19,7 @@ class EnqueueCollectTaskAndTriggerSyncUseCase(
         taskId: String,
         priority: Int = 10,
         maxAttempts: Int = 3,
-        metadata: CollectTaskMetadata
+        metadata: List<CollectTaskMetadata>
     ): Result<String> {
         return syncRepository.enqueueCollectTask(
             taskType = taskType,

@@ -51,6 +51,16 @@ class OrderRepositoryImpl(
     private val signatureDao: SignatureDao,
 ) : OrderRepository {
 
+    override suspend fun getWorkOrderByIdSnapshot(workOrderId: String): WorkOrderWithOrderWithCustomers? {
+        val relation = workOrderDao.getWorkOrder(workOrderId) ?: return null
+        val wo = relation.collectWorkOrderEntity.toDomain()
+        val items = relation.collectOrderWithCustomerRelation.toDomain()
+        return WorkOrderWithOrderWithCustomers(
+            collectWorkOrder = wo,
+            collectOrderWithCustomerList = items
+        )
+    }
+
     private val log = logger.withTag("OrderRepository")
 
 

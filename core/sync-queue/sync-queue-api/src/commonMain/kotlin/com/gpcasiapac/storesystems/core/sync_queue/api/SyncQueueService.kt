@@ -77,13 +77,13 @@ interface SyncQueueService {
     suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata>
     
     /**
-     * Enqueue a collect task with metadata.
+     * Enqueue a collect task with multiple metadata rows.
      */
     suspend fun enqueueCollectTask(
         taskType: TaskType,
         taskId: String,
         priority: Int = 0,
         maxAttempts: Int = 3,
-        metadata: CollectTaskMetadata
+        metadata: List<CollectTaskMetadata>
     ): Result<String>
 }

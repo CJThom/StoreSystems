@@ -33,6 +33,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
@@ -474,43 +475,41 @@ class OrderFulfilmentScreenViewModel(
             // Add delay for UX feedback
             delay(1500)
 
-            // Add each order to sync queue
-            val orders = s.collectOrderListItemStateList
-            var successCount = 0
-            var failureCount = 0
-
-            orders.forEach { order ->
-                val result = submitOrderUseCase(order.invoiceNumber)
-
-                result.fold(
-                    onSuccess = { successCount++ },
-                    onFailure = { failureCount++ }
-                )
+            // Submit the entire work order as one batched task
+            val workOrderId = observeLatestOpenWorkOrderIdUseCase(userRefId).first()
+            if (workOrderId == null) {
+                setState { copy(isProcessing = false) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No active work order", duration = SnackbarDuration.Long) }
+                return@launch
             }
+
+            val result = submitOrderUseCase(workOrderId)
 
             setState { copy(isProcessing = false) }
 
-            // Show result feedback
-            if (failureCount == 0) {
-                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
-                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
-                setEffect {
-                    OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                        "Successfully queued $successCount order(s) for sync",
-                        duration = SnackbarDuration.Long
-                    )
+            result.fold(
+                onSuccess = {
+                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
+                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                    setEffect {
+                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                            "Successfully queued ${viewState.value.collectOrderListItemStateList.size} order(s) for sync",
+                            duration = SnackbarDuration.Long
+                        )
+                    }
+                    setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
+                },
+                onFailure = { e ->
+                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                    setEffect {
+                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                            e.message ?: "Failed to queue orders",
+                            duration = SnackbarDuration.Long
+                        )
+                    }
                 }
-                setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
-            } else {
-                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                setEffect {
-                    OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                        "Queued $successCount order(s), $failureCount failed",
-                        duration = SnackbarDuration.Long
-                    )
-                }
-            }
+            )
         }
     }
 

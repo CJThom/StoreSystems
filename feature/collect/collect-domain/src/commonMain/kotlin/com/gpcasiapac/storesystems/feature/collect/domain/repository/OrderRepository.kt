@@ -28,6 +28,12 @@ interface OrderRepository {
     /** Observe the total count of orders in the DB (independent of filters/search). */
     fun observeOrderCount(): Flow<Int>
 
+    /**
+     * Atomic snapshot fetch of a Work Order and its nested orders+customers by id.
+     * Returns null if not found.
+     */
+    suspend fun getWorkOrderByIdSnapshot(workOrderId: String): com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?
+
     fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
 
 

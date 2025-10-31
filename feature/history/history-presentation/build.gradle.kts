@@ -43,7 +43,6 @@ kotlin {
 
             implementation(projects.feature.history.historyApi)
             implementation(projects.feature.history.historyDomain)
-            implementation(projects.feature.history.historyData)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

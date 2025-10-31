@@ -6,49 +6,52 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import java.util.UUID
 
 /**
- * Use case to submit a collect order with full metadata to sync queue.
- * Accepts only the invoice number and fetches the full order data internally.
+ * Submit the given Work Order as a single batched Collect task.
+ * Uses OrderRepository (indirectly) via GetWorkOrderItemsSnapshotUseCase.
  */
 class SubmitOrderUseCase(
     private val syncQueueService: SyncQueueService,
-    private val getOrderByInvoiceNumberUseCase: GetOrderByInvoiceNumberUseCase
+    private val getWorkOrderItemsSnapshotUseCase: GetWorkOrderItemsSnapshotUseCase,
 ) {
     /**
-     * Submit order by invoice number.
-     * Fetches the full order data and creates a CollectTaskMetadata entry for the sync queue.
-     * This metadata will be visible in history.
+     * Batch submit all items belonging to the Work Order.
      */
-    suspend operator fun invoke(invoiceNumber: String): Result<Unit> {
-        // Fetch the full order data by invoice number
-        val orderWithCustomer = getOrderByInvoiceNumberUseCase(invoiceNumber)
+    suspend operator fun invoke(workOrderId: String): Result<Unit> {
+        val items = getWorkOrderItemsSnapshotUseCase(workOrderId)
             .getOrElse { return Result.failure(it) }
-        
-        val metadata = CollectTaskMetadata(
-            id = UUID.randomUUID().toString(),
-            syncTaskId = "", // Will be set by service
-            
-            // Order fields
-            invoiceNumber = orderWithCustomer.order.invoiceNumber,
-            salesOrderNumber = orderWithCustomer.order.salesOrderNumber,
-            webOrderNumber = orderWithCustomer.order.webOrderNumber,
-            orderCreatedAt = orderWithCustomer.order.createdAt,
-            orderPickedAt = orderWithCustomer.order.pickedAt,
-            
-            // Customer fields
-            customerNumber = orderWithCustomer.customer.customerNumber,
-            customerType = orderWithCustomer.customer.customerType.name,
-            accountName = orderWithCustomer.customer.accountName,
-            firstName = orderWithCustomer.customer.firstName,
-            lastName = orderWithCustomer.customer.lastName,
-            phone = orderWithCustomer.customer.phone
-        )
-        
+
+        if (items.isEmpty()) return Result.failure(IllegalStateException("No items to submit for workOrderId=$workOrderId"))
+
+        val metadataList = items.map { owc ->
+            val order = owc.order
+            val customer = owc.customer
+            CollectTaskMetadata(
+                id = UUID.randomUUID().toString(),
+                syncTaskId = "", // Will be set by service
+
+                // Order fields
+                invoiceNumber = order.invoiceNumber,
+                salesOrderNumber = order.salesOrderNumber,
+                webOrderNumber = order.webOrderNumber,
+                orderCreatedAt = order.createdAt,
+                orderPickedAt = order.pickedAt,
+
+                // Customer fields
+                customerNumber = customer.customerNumber,
+                customerType = customer.customerType.name,
+                accountName = customer.accountName,
+                firstName = customer.firstName,
+                lastName = customer.lastName,
+                phone = customer.phone
+            )
+        }
+
         return syncQueueService.enqueueCollectTask(
             taskType = TaskType.COLLECT_SUBMIT_ORDER,
-            taskId = invoiceNumber,
+            taskId = workOrderId, // One SyncTask per Work Order
             priority = 10,
             maxAttempts = 3,
-            metadata = metadata
+            metadata = metadataList
         ).map { Unit }
     }
 }

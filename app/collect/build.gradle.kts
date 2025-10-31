@@ -95,7 +95,6 @@ kotlin {
 
             implementation(projects.feature.history.historyApi)
             implementation(projects.feature.history.historyDomain)
-            implementation(projects.feature.history.historyData)
             implementation(projects.feature.history.historyPresentation)
 
         }

@@ -66,7 +66,7 @@ interface SyncTaskDao {
      * Observe all tasks with collect metadata.
      */
     @Transaction
-    @Query("SELECT * FROM sync_tasks ORDER BY updated_time DESC")
+    @Query("SELECT * FROM sync_tasks ORDER BY added_time DESC")
     fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadataEntity>>
     
     /**

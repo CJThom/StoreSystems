@@ -80,7 +80,7 @@ internal class SyncQueueServiceImpl(
         taskId: String,
         priority: Int,
         maxAttempts: Int,
-        metadata: CollectTaskMetadata
+        metadata: List<CollectTaskMetadata>
     ): Result<String> {
         return enqueueCollectTaskAndTriggerSyncUseCase(
             taskType = taskType,

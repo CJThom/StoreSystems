@@ -72,7 +72,6 @@ include(":feature:login:login-presentation")
 
 include(":feature:history:history-api")
 include(":feature:history:history-domain")
-include(":feature:history:history-data")
 include(":feature:history:history-presentation")
 
 include(":feature:picking:picking-api")

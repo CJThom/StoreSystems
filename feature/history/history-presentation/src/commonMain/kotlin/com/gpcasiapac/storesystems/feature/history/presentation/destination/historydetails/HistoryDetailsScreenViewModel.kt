@@ -2,11 +2,10 @@ package com.gpcasiapac.storesystems.feature.history.presentation.destination.his
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
-import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryUseCase
 import kotlinx.coroutines.launch
 
 class HistoryDetailsScreenViewModel(
-    private val getHistoryUseCase: GetHistoryUseCase,
+    private val getCollectHistoryItemById: com.gpcasiapac.storesystems.feature.history.domain.usecase.GetCollectHistoryItemByIdUseCase,
 ) : MVIViewModel<HistoryDetailsScreenContract.Event, HistoryDetailsScreenContract.State, HistoryDetailsScreenContract.Effect>() {
 
     override fun setInitialState(): HistoryDetailsScreenContract.State =
@@ -41,13 +40,21 @@ class HistoryDetailsScreenViewModel(
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
             try {
-                val key = viewState.value.groupKey
-                viewModelScope.launch {
-                    getHistoryUseCase().collect {
-                        setState { copy(items = it, isLoading = false) }
+                val id = viewState.value.groupKey
+                val result = getCollectHistoryItemById(id)
+                result.onSuccess { item ->
+                    if (item != null) {
+                        setState { copy(items = listOf(item), isLoading = false) }
+                    } else {
+                        val msg = "History item not found"
+                        setState { copy(isLoading = false, error = msg) }
+                        setEffect { HistoryDetailsScreenContract.Effect.ShowError(msg) }
                     }
+                }.onFailure { e ->
+                    val msg = e.message ?: "Failed to load details"
+                    setState { copy(isLoading = false, error = msg) }
+                    setEffect { HistoryDetailsScreenContract.Effect.ShowError(msg) }
                 }
-
             } catch (t: Throwable) {
                 val msg = t.message ?: "Failed to load details"
                 setState { copy(isLoading = false, error = msg) }

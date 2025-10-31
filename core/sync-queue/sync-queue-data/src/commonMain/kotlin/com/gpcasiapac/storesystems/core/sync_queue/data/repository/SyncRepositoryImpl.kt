@@ -175,8 +175,9 @@ class SyncRepositoryImpl(
         taskId: String,
         priority: Int,
         maxAttempts: Int,
-        metadata: CollectTaskMetadata
+        metadata: List<CollectTaskMetadata>
     ): Result<String> = runCatching {
+        require(metadata.isNotEmpty()) { "metadata cannot be empty" }
         val syncTaskId = UUID.randomUUID().toString()
         val now = Clock.System.now()
         
@@ -198,9 +199,9 @@ class SyncRepositoryImpl(
         // Insert task
         syncTaskDao.insertTask(task)
         
-        // Insert metadata with reference to task
-        val metadataEntity = metadata.copy(syncTaskId = syncTaskId).toEntity()
-        collectTaskMetadataDao.insert(metadataEntity)
+        // Insert all metadata rows with reference to task
+        val metadataEntities = metadata.map { it.copy(syncTaskId = syncTaskId).toEntity() }
+        collectTaskMetadataDao.insertAll(metadataEntities)
         
         syncTaskId
     }

@@ -20,6 +20,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.ObserveWorkOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SetWorkOrderCourierNameUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.SubmitOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetWorkOrderItemsSnapshotUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.AddOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ClearOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.selection.ObserveOrderSelectionUseCase
@@ -54,6 +55,7 @@ val collectDomainModule = module {
     factoryOf(::AddOrderSelectionUseCase)
     factoryOf(::RemoveOrderSelectionUseCase)
     factoryOf(::ClearOrderSelectionUseCase)
+    factoryOf(::GetWorkOrderItemsSnapshotUseCase)
     factoryOf(::SubmitOrderUseCase)
 
     // Register Collect feature's SyncHandler(s)

@@ -4,6 +4,7 @@ import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryUseC
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.ObserveCollectHistoryUseCase
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.ObserveUnifiedHistoryUseCase
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryUseCase
+import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetCollectHistoryItemByIdUseCase
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
@@ -12,4 +13,5 @@ val historyDomainModule = module {
     factoryOf(::ObserveUnifiedHistoryUseCase)
     factoryOf(::GetHistoryUseCase)
     factoryOf(::RetryHistoryUseCase)
+    factoryOf(::GetCollectHistoryItemByIdUseCase)
 }
