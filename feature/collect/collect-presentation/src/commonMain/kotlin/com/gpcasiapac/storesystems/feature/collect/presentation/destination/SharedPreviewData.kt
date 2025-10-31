@@ -17,34 +17,26 @@ val sampleLineItemList = listOf(
     CollectOrderLineItemState(
         lineNumber = 1,
         sku = "SKU-001",
-        productNumber = "PROD-001",
-        productDescription = "Product 1 Description",
+        description = "Product 1 Description",
         quantity = 2,
-        unitPrice = 10.50
     ),
     CollectOrderLineItemState(
         lineNumber = 2,
         sku = "SKU-002",
-        productNumber = "PROD-002",
-        productDescription = "Product 2 Description",
+        description = "Product 2 Description",
         quantity = 1,
-        unitPrice = 25.00
     ),
     CollectOrderLineItemState(
         lineNumber = 3,
         sku = "SKU-003",
-        productNumber = "PROD-003",
-        productDescription = "Product 3 Description",
+        description = "Product 3 Description",
         quantity = 10,
-        unitPrice = 100.00
     ),
     CollectOrderLineItemState(
         lineNumber = 4,
         sku = "SKU-003",
-        productNumber = "PROD-003",
-        productDescription = "Product 3 Description",
-        quantity = 10,
-        unitPrice = 100.00
+        description = "Product 3 Description",
+        quantity = 10
     )
 )
 /**
@@ -99,7 +91,7 @@ fun sampleCollectOrderListItemStateList(): List<CollectOrderListItemState> = lis
 fun sampleCollectOrderWithCustomerWithLineItemsState(): CollectOrderWithCustomerWithLineItemsState = CollectOrderWithCustomerWithLineItemsState(
     order = CollectOrderState(
         invoiceNumber = "10341882855",
-        salesOrderNumber = "123456789",
+        orderNumber = "123456789",
         webOrderNumber = "84777189936",
         createdAt = now - 3.days,
         pickedAt = now - 2.days,

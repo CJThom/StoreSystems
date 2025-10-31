@@ -12,22 +12,16 @@ data class CollectOrderCustomerEntity(
     @ColumnInfo(name = "invoice_number")
     val invoiceNumber: String,
 
-    @ColumnInfo(name = "customer_number")
-    val customerNumber: String,
+    @ColumnInfo(name = "number")
+    val number: String,
 
-    @ColumnInfo(name = "customer_type")
-    val customerType: CustomerType,
-
-    @ColumnInfo(name = "account_name")
-    val accountName: String?,
-
-    @ColumnInfo(name = "first_name")
-    val firstName: String?,
-
-    @ColumnInfo(name = "last_name")
-    val lastName: String?,
+    @ColumnInfo(name = "name")
+    val name: String,
 
     @ColumnInfo(name = "phone")
-    val phone: String?
+    val phone: String?,
+
+    @ColumnInfo(name = "customer_type")
+    val customerType: CustomerType
 
 )

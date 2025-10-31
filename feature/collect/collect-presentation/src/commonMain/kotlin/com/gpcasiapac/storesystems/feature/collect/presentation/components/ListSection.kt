@@ -73,7 +73,7 @@ fun ListSectionPreview() {
             ) {
                 sampleLineItemList.forEach { lineItem ->
                     ProductDetails(
-                        description = lineItem.productDescription,
+                        description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
                         isLoading = false,
@@ -98,7 +98,7 @@ fun ListSectionLoadingPreview() {
             ) {
                 sampleLineItemList.forEach { lineItem ->
                     ProductDetails(
-                        description = lineItem.productDescription,
+                        description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
                         isLoading = true,

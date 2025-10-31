@@ -1,0 +1,504 @@
+﻿{
+  "collectOrders": [
+    {
+      "id": "c071286e-f5f1-4799-b10c-0a007606f7a4",
+      "invoiceNumber": "1240364571",
+      "orderNumber": "MQM5682",
+      "webOrderNumber": "WEBMQM0742",
+      "orderChannel": 2,
+      "invoiceDateTime": "2025-10-30T12:11:18.446716+00:00",
+      "createdDateTime": "2025-10-30T12:11:18.4467463+00:00",
+      "customer": {
+        "number": "1110234-7",
+        "name": "Customer 73",
+        "phone": "0898421744",
+        "companyRepresentatives": null
+      },
+      "isLocked": false,
+      "lockedBy": null,
+      "lockedDateTime": null,
+      "lineItems": [
+        {
+          "lineNumber": "7690",
+          "sku": "8351986",
+          "barcode": "63 12345 14013 1",
+          "description": "XX - AIR",
+          "quantity": 83,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "6286",
+          "sku": "8950588",
+          "barcode": "63 12345 19517 1",
+          "description": "XX - AIR",
+          "quantity": 29,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "5783",
+          "sku": "8793193",
+          "barcode": "63 12345 16211 1",
+          "description": "XX - AIR",
+          "quantity": 41,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "2191",
+          "sku": "7276704",
+          "barcode": "63 12345 18312 1",
+          "description": "XX - AIR",
+          "quantity": 33,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "7345",
+          "sku": "5889477",
+          "barcode": "63 12345 12112 1",
+          "description": "XX - AIR",
+          "quantity": 90,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1054",
+          "sku": "7476748",
+          "barcode": "63 12345 20640 1",
+          "description": "XX - AIR",
+          "quantity": 91,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "4180",
+          "sku": "7565912",
+          "barcode": "63 12345 15853 1",
+          "description": "XX - AIR",
+          "quantity": 83,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "6757",
+          "sku": "7438387",
+          "barcode": "63 12345 20714 1",
+          "description": "XX - AIR",
+          "quantity": 49,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "5868",
+          "sku": "6670194",
+          "barcode": "63 12345 15783 1",
+          "description": "XX - AIR",
+          "quantity": 84,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "7968",
+          "sku": "8911315",
+          "barcode": "63 12345 11119 1",
+          "description": "XX - AIR",
+          "quantity": 91,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "id": "e405352b-4744-4f72-803e-2f9b36a18780",
+      "invoiceNumber": "1186903872",
+      "orderNumber": "MQM4676",
+      "webOrderNumber": "WEBMQM0340",
+      "orderChannel": 2,
+      "invoiceDateTime": "2025-10-30T12:11:18.4472473+00:00",
+      "createdDateTime": "2025-10-30T12:11:18.4472473+00:00",
+      "customer": {
+        "number": "1110234-27",
+        "name": "Customer 10",
+        "phone": "0898421912",
+        "companyRepresentatives": null
+      },
+      "isLocked": false,
+      "lockedBy": null,
+      "lockedDateTime": null,
+      "lineItems": [
+        {
+          "lineNumber": "8074",
+          "sku": "8534394",
+          "barcode": "63 12345 13541 1",
+          "description": "XX - AIR",
+          "quantity": 41,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "7923",
+          "sku": "7922784",
+          "barcode": "63 12345 15599 1",
+          "description": "XX - AIR",
+          "quantity": 88,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "8685",
+          "sku": "8979254",
+          "barcode": "63 12345 20515 1",
+          "description": "XX - AIR",
+          "quantity": 2,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "2184",
+          "sku": "5451284",
+          "barcode": "63 12345 12167 1",
+          "description": "XX - AIR",
+          "quantity": 72,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "8789",
+          "sku": "8293134",
+          "barcode": "63 12345 11810 1",
+          "description": "XX - AIR",
+          "quantity": 97,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "5947",
+          "sku": "7399354",
+          "barcode": "63 12345 12043 1",
+          "description": "XX - AIR",
+          "quantity": 93,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "8343",
+          "sku": "8604589",
+          "barcode": "63 12345 11973 1",
+          "description": "XX - AIR",
+          "quantity": 39,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "8124",
+          "sku": "7465893",
+          "barcode": "63 12345 14861 1",
+          "description": "XX - AIR",
+          "quantity": 35,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "9208",
+          "sku": "6043546",
+          "barcode": "63 12345 15004 1",
+          "description": "XX - AIR",
+          "quantity": 54,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "4055",
+          "sku": "6597665",
+          "barcode": "63 12345 15631 1",
+          "description": "XX - AIR",
+          "quantity": 60,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "id": "a909403c-0923-4030-ac29-82cab5a6b92e",
+      "invoiceNumber": "1199193551",
+      "orderNumber": "MQM9732",
+      "webOrderNumber": "WEBMQM0763",
+      "orderChannel": 2,
+      "invoiceDateTime": "2025-10-30T12:11:18.4472588+00:00",
+      "createdDateTime": "2025-10-30T12:11:18.4472588+00:00",
+      "customer": {
+        "number": "1110234-41",
+        "name": "Customer 69",
+        "phone": "0898421703",
+        "companyRepresentatives": null
+      },
+      "isLocked": false,
+      "lockedBy": null,
+      "lockedDateTime": null,
+      "lineItems": [
+        {
+          "lineNumber": "5093",
+          "sku": "6906836",
+          "barcode": "63 12345 11325 1",
+          "description": "XX - AIR",
+          "quantity": 65,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "3972",
+          "sku": "7943952",
+          "barcode": "63 12345 19551 1",
+          "description": "XX - AIR",
+          "quantity": 95,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "5345",
+          "sku": "7747061",
+          "barcode": "63 12345 12386 1",
+          "description": "XX - AIR",
+          "quantity": 1,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "7293",
+          "sku": "7564784",
+          "barcode": "63 12345 12807 1",
+          "description": "XX - AIR",
+          "quantity": 49,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "9543",
+          "sku": "7966455",
+          "barcode": "63 12345 18455 1",
+          "description": "XX - AIR",
+          "quantity": 93,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "2668",
+          "sku": "8527529",
+          "barcode": "63 12345 14055 1",
+          "description": "XX - AIR",
+          "quantity": 52,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "4383",
+          "sku": "7065405",
+          "barcode": "63 12345 13919 1",
+          "description": "XX - AIR",
+          "quantity": 21,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1813",
+          "sku": "7983171",
+          "barcode": "63 12345 19040 1",
+          "description": "XX - AIR",
+          "quantity": 57,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1043",
+          "sku": "7224522",
+          "barcode": "63 12345 20560 1",
+          "description": "XX - AIR",
+          "quantity": 23,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "7583",
+          "sku": "8849891",
+          "barcode": "63 12345 14025 1",
+          "description": "XX - AIR",
+          "quantity": 55,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "id": "40895dd5-04ef-49b4-bfab-9c738d23c067",
+      "invoiceNumber": "1294206210",
+      "orderNumber": "MQM1799",
+      "webOrderNumber": "WEBMQM0768",
+      "orderChannel": 2,
+      "invoiceDateTime": "2025-10-30T12:11:18.4472632+00:00",
+      "createdDateTime": "2025-10-30T12:11:18.4472632+00:00",
+      "customer": {
+        "number": "1110234-43",
+        "name": "Customer 16",
+        "phone": "0898421121",
+        "companyRepresentatives": null
+      },
+      "isLocked": false,
+      "lockedBy": null,
+      "lockedDateTime": null,
+      "lineItems": [
+        {
+          "lineNumber": "5677",
+          "sku": "8325748",
+          "barcode": "63 12345 17425 1",
+          "description": "XX - AIR",
+          "quantity": 73,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "6729",
+          "sku": "7724853",
+          "barcode": "63 12345 14658 1",
+          "description": "XX - AIR",
+          "quantity": 94,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "2061",
+          "sku": "8176067",
+          "barcode": "63 12345 16500 1",
+          "description": "XX - AIR",
+          "quantity": 25,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1541",
+          "sku": "5484677",
+          "barcode": "63 12345 20015 1",
+          "description": "XX - AIR",
+          "quantity": 84,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "9949",
+          "sku": "6819027",
+          "barcode": "63 12345 13465 1",
+          "description": "XX - AIR",
+          "quantity": 79,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "6609",
+          "sku": "8443661",
+          "barcode": "63 12345 17769 1",
+          "description": "XX - AIR",
+          "quantity": 23,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "9222",
+          "sku": "6206432",
+          "barcode": "63 12345 16896 1",
+          "description": "XX - AIR",
+          "quantity": 31,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1401",
+          "sku": "8425777",
+          "barcode": "63 12345 19290 1",
+          "description": "XX - AIR",
+          "quantity": 76,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1787",
+          "sku": "7901593",
+          "barcode": "63 12345 20203 1",
+          "description": "XX - AIR",
+          "quantity": 41,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "2387",
+          "sku": "8494687",
+          "barcode": "63 12345 11474 1",
+          "description": "XX - AIR",
+          "quantity": 75,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "id": "2b3969ab-232a-4a7b-950c-4f1fd8b965e8",
+      "invoiceNumber": "1210249139",
+      "orderNumber": "MQM1951",
+      "webOrderNumber": "WEBMQM0685",
+      "orderChannel": 2,
+      "invoiceDateTime": "2025-10-30T12:11:18.4472675+00:00",
+      "createdDateTime": "2025-10-30T12:11:18.4472676+00:00",
+      "customer": {
+        "number": "1110234-29",
+        "name": "Customer 50",
+        "phone": "0898421512",
+        "companyRepresentatives": null
+      },
+      "isLocked": false,
+      "lockedBy": null,
+      "lockedDateTime": null,
+      "lineItems": [
+        {
+          "lineNumber": "6655",
+          "sku": "8362620",
+          "barcode": "63 12345 17320 1",
+          "description": "XX - AIR",
+          "quantity": 20,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "8797",
+          "sku": "7550741",
+          "barcode": "63 12345 11133 1",
+          "description": "XX - AIR",
+          "quantity": 49,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "7189",
+          "sku": "8448670",
+          "barcode": "63 12345 13986 1",
+          "description": "XX - AIR",
+          "quantity": 94,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "9908",
+          "sku": "7221839",
+          "barcode": "63 12345 11965 1",
+          "description": "XX - AIR",
+          "quantity": 91,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "1859",
+          "sku": "7748591",
+          "barcode": "63 12345 18068 1",
+          "description": "XX - AIR",
+          "quantity": 51,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "4943",
+          "sku": "8110411",
+          "barcode": "63 12345 12447 1",
+          "description": "XX - AIR",
+          "quantity": 12,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "2733",
+          "sku": "8133022",
+          "barcode": "63 12345 17976 1",
+          "description": "XX - AIR",
+          "quantity": 22,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "4853",
+          "sku": "6349340",
+          "barcode": "63 12345 18953 1",
+          "description": "XX - AIR",
+          "quantity": 99,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "8033",
+          "sku": "6945241",
+          "barcode": "63 12345 19896 1",
+          "description": "XX - AIR",
+          "quantity": 96,
+          "imageUrl": null
+        },
+        {
+          "lineNumber": "6827",
+          "sku": "5512785",
+          "barcode": "63 12345 18323 1",
+          "description": "XX - AIR",
+          "quantity": 41,
+          "imageUrl": null
+        }
+      ]
+    }
+  ]
+}

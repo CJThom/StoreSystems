@@ -8,11 +8,9 @@ internal fun CollectOrderLineItem.toState(): CollectOrderLineItemState {
     return CollectOrderLineItemState(
         lineNumber = this.lineNumber,
         sku = this.sku,
-        productNumber = this.productNumber,
-        productDescription = this.productDescription,
+        description = this.description,
         quantity = this.quantity,
-        unitPrice = this.unitPrice,
-        productImageUrl = this.productImageUrl
+        imageUrl = this.imageUrl
     )
 }
 

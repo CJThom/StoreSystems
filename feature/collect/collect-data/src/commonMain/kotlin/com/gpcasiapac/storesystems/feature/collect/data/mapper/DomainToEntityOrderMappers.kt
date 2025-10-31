@@ -8,38 +8,44 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderCust
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLineItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 
-internal fun CollectOrder.toEntity(): CollectOrderEntity =
-    CollectOrderEntity(
-        invoiceNumber = invoiceNumber,
-        salesOrderNumber = salesOrderNumber,
-        webOrderNumber = webOrderNumber,
-        createdAt = createdAt,
-        pickedAt = pickedAt,
+internal fun CollectOrder.toEntity(): CollectOrderEntity {
+    return CollectOrderEntity(
+        id = this.id,
+        invoiceNumber = this.invoiceNumber,
+        orderNumber = this.orderNumber,
+        webOrderNumber = this.webOrderNumber,
+        orderChannel = this.orderChannel,
+        invoiceDateTime = this.invoiceDateTime,
+        createdDateTime = this.createdDateTime,
+        isLocked = this.isLocked,
+        lockedBy = this.lockedBy,
+        lockedDateTime = this.lockedDateTime
     )
+}
 
-internal fun CollectOrderCustomer.toEntity(invoiceNumber: String): CollectOrderCustomerEntity =
-    CollectOrderCustomerEntity(
+internal fun CollectOrderCustomer.toEntity(invoiceNumber: String): CollectOrderCustomerEntity {
+    return CollectOrderCustomerEntity(
         invoiceNumber = invoiceNumber,
-        customerNumber = customerNumber,
-        customerType = customerType,
-        accountName = accountName,
-        firstName = firstName,
-        lastName = lastName,
-        phone = phone,
+        number = this.number,
+        name = this.name,
+        phone = this.phone,
+        customerType = this.customerType
     )
+}
 
-internal fun CollectOrderLineItem.toEntity(invoiceNumber: String): CollectOrderLineItemEntity =
-    CollectOrderLineItemEntity(
+internal fun CollectOrderLineItem.toEntity(invoiceNumber: String): CollectOrderLineItemEntity {
+    return CollectOrderLineItemEntity(
         invoiceNumber = invoiceNumber,
-        lineNumber = lineNumber,
-        sku = sku,
-        productNumber = productNumber,
-        productDescription = productDescription,
-        quantity = quantity,
-        unitPrice = unitPrice,
-        productImageUrl = productImageUrl,
+        lineNumber = this.lineNumber,
+        sku = this.sku,
+        barcode = this.barcode,
+        description = this.description,
+        quantity = this.quantity,
+        imageUrl = this.imageUrl,
     )
+}
 
+// TODO: Wtf
 internal fun List<CollectOrderWithCustomerWithLineItems>.toEntityTriples(): Triple<List<CollectOrderEntity>, List<CollectOrderCustomerEntity>, List<CollectOrderLineItemEntity>> {
     val orders = ArrayList<CollectOrderEntity>(size)
     val customers = ArrayList<CollectOrderCustomerEntity>(size)

@@ -70,7 +70,7 @@ class OrderLocalRepositoryImpl(
         val types = query.customerTypes
         if (types.isEmpty()) return flowOf(emptyList())
         val sort = query.sort.name
-        return collectOrderDao.observeOrdersForMainList(types, sort).map { it.toDomain() }
+        return collectOrderDao.observeOrdersForMainList(sort).map { it.toDomain() }
     }
 
     override fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>> {
@@ -156,7 +156,7 @@ class OrderLocalRepositoryImpl(
                     val name = row.name.trim()
                     if (name.isNotEmpty()) out += CustomerNameSuggestion(
                         text = name,
-                        customerType = row.type
+                        customerType = com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C
                     )
                 }
             }
@@ -168,7 +168,7 @@ class OrderLocalRepositoryImpl(
                 val name = row.name.trim()
                 if (name.isNotEmpty()) out += CustomerNameSuggestion(
                     text = name,
-                    customerType = row.type
+                    customerType = com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C
                 )
             }
         }

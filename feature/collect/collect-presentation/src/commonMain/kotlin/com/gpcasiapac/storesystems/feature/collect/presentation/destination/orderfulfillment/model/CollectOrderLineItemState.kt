@@ -7,11 +7,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLine
 data class CollectOrderLineItemState(
     val lineNumber: Int,
     val sku: String,
-    val productNumber: String,
-    val productDescription: String,
+    val description: String,
     val quantity: Int,
-    val unitPrice: Double,
-    val productImageUrl: String? = null,
+    val imageUrl: String? = null,
 ) {
 
     companion object {
@@ -20,10 +18,8 @@ data class CollectOrderLineItemState(
             CollectOrderLineItemState(
                 lineNumber = index,
                 sku = "SKU-00$index",
-                productNumber = "PROD-00$index",
-                productDescription = "Product $index Description",
+                description = "Product $index Description",
                 quantity = index,
-                unitPrice = index * 10.0
             )
 
         internal fun placeholderList(count: Int = 6): List<CollectOrderLineItemState> =
@@ -36,10 +32,8 @@ internal fun CollectOrderLineItem.toState(): CollectOrderLineItemState {
     return CollectOrderLineItemState(
         lineNumber = lineNumber,
         sku = sku,
-        productNumber = productNumber,
-        productDescription = productDescription,
+        description = description,
         quantity = quantity,
-        unitPrice = unitPrice,
-        productImageUrl = productImageUrl
+        imageUrl = imageUrl
     )
 }

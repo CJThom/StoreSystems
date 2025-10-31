@@ -31,7 +31,7 @@ import kotlinx.coroutines.Dispatchers
         SignatureEntity::class,
         CollectUserPrefsEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(

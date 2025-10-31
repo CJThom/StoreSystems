@@ -14,7 +14,7 @@ fun CollectOrderWithCustomerWithLineItemsState.toSignatureOrderState(): Signatur
         customerName = customer.name,
         lineItems = lineItemList.map { line ->
             SignatureLineItemState(
-                productDescription = line.productDescription,
+                productDescription = line.description,
                 quantity = line.quantity
             )
         }

@@ -124,10 +124,10 @@ private fun ProductListSection(
                     ProductDetails(
                         modifier = Modifier
                             .weight(1f),
-                        description = lineItem.productDescription,
-                        sku = lineItem.productNumber,
+                        description = lineItem.description,
+                        sku = lineItem.sku,
                         quantity = lineItem.quantity,
-                        productImageUrl = lineItem.productImageUrl,
+                        productImageUrl = lineItem.imageUrl,
                         contentPadding = PaddingValues()
                     )
                 }
@@ -136,10 +136,10 @@ private fun ProductListSection(
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)) {
                 lineItemList.forEach { lineItem ->
                     ProductDetails(
-                        description = lineItem.productDescription,
-                        sku = lineItem.productNumber,
+                        description = lineItem.description,
+                        sku = lineItem.sku,
                         quantity = lineItem.quantity,
-                        productImageUrl = lineItem.productImageUrl,
+                        productImageUrl = lineItem.imageUrl,
                         contentPadding = PaddingValues()
                     )
                 }

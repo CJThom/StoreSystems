@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ddef153edd62bfb5a363b9d96c4877c0",
+    "identityHash": "2c17309492fc3d409ce7acd9a62b4de3",
     "entities": [
       {
         "tableName": "collect_orders",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`invoice_number` TEXT NOT NULL, `sales_order_number` TEXT NOT NULL, `web_order_number` TEXT, `created_at` INTEGER NOT NULL, `picked_at` INTEGER NOT NULL, PRIMARY KEY(`invoice_number`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`invoice_number` TEXT NOT NULL, `id` TEXT, `order_number` TEXT NOT NULL, `web_order_number` TEXT, `order_channel` INTEGER NOT NULL, `invoice_date_time` INTEGER NOT NULL, `created_date_time` INTEGER NOT NULL, `is_locked` INTEGER NOT NULL, `locked_by` TEXT, `locked_date_time` INTEGER, PRIMARY KEY(`invoice_number`))",
         "fields": [
           {
             "fieldPath": "invoiceNumber",
@@ -15,8 +15,13 @@
             "notNull": true
           },
           {
-            "fieldPath": "salesOrderNumber",
-            "columnName": "sales_order_number",
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orderNumber",
+            "columnName": "order_number",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -26,16 +31,38 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "createdAt",
-            "columnName": "created_at",
+            "fieldPath": "orderChannel",
+            "columnName": "order_channel",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "pickedAt",
-            "columnName": "picked_at",
+            "fieldPath": "invoiceDateTime",
+            "columnName": "invoice_date_time",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "createdDateTime",
+            "columnName": "created_date_time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isLocked",
+            "columnName": "is_locked",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lockedBy",
+            "columnName": "locked_by",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lockedDateTime",
+            "columnName": "locked_date_time",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -47,7 +74,7 @@
       },
       {
         "tableName": "collect_order_customers",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`invoice_number` TEXT NOT NULL, `customer_number` TEXT NOT NULL, `customer_type` TEXT NOT NULL, `account_name` TEXT, `first_name` TEXT, `last_name` TEXT, `phone` TEXT, PRIMARY KEY(`invoice_number`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`invoice_number` TEXT NOT NULL, `number` TEXT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT, PRIMARY KEY(`invoice_number`))",
         "fields": [
           {
             "fieldPath": "invoiceNumber",
@@ -56,31 +83,16 @@
             "notNull": true
           },
           {
-            "fieldPath": "customerNumber",
-            "columnName": "customer_number",
+            "fieldPath": "number",
+            "columnName": "number",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "customerType",
-            "columnName": "customer_type",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "accountName",
-            "columnName": "account_name",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "firstName",
-            "columnName": "first_name",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "lastName",
-            "columnName": "last_name",
-            "affinity": "TEXT"
           },
           {
             "fieldPath": "phone",
@@ -97,7 +109,7 @@
       },
       {
         "tableName": "collect_order_line_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`line_number` INTEGER NOT NULL, `invoice_number` TEXT NOT NULL, `sku` TEXT NOT NULL, `product_number` TEXT NOT NULL, `product_description` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `unit_price` REAL NOT NULL, `product_image_url` TEXT, PRIMARY KEY(`invoice_number`, `line_number`), FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`line_number` INTEGER NOT NULL, `invoice_number` TEXT NOT NULL, `sku` TEXT NOT NULL, `barcode` TEXT, `description` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `image_url` TEXT, PRIMARY KEY(`invoice_number`, `line_number`), FOREIGN KEY(`invoice_number`) REFERENCES `collect_orders`(`invoice_number`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "lineNumber",
@@ -118,14 +130,13 @@
             "notNull": true
           },
           {
-            "fieldPath": "productNumber",
-            "columnName": "product_number",
-            "affinity": "TEXT",
-            "notNull": true
+            "fieldPath": "barcode",
+            "columnName": "barcode",
+            "affinity": "TEXT"
           },
           {
-            "fieldPath": "productDescription",
-            "columnName": "product_description",
+            "fieldPath": "description",
+            "columnName": "description",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -136,14 +147,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "unitPrice",
-            "columnName": "unit_price",
-            "affinity": "REAL",
-            "notNull": true
-          },
-          {
-            "fieldPath": "productImageUrl",
-            "columnName": "product_image_url",
+            "fieldPath": "imageUrl",
+            "columnName": "image_url",
             "affinity": "TEXT"
           }
         ],
@@ -398,7 +403,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ddef153edd62bfb5a363b9d96c4877c0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2c17309492fc3d409ce7acd9a62b4de3')"
     ]
   }
 }
