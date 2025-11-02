@@ -17,7 +17,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionId
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
@@ -55,7 +55,7 @@ class OrderFulfilmentScreenViewModel(
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addScannedInputToWorkOrderUseCase: AddScannedInputToWorkOrderUseCase,
-    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
+    private val validateScannedInvoiceInputUseCase: ValidateScannedInvoiceInputUseCase,
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
@@ -340,12 +340,12 @@ class OrderFulfilmentScreenViewModel(
             }
 
             is OrderFulfilmentScreenContract.Event.ScanInvoice -> {
-                val invoice = event.invoiceNumber.trim()
+                val invoice = event.rawInput
                 // Collapse search on scan (handled by UI via effect)
                 setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
                 viewModelScope.launch {
-                    when (val result = checkOrderExistsUseCase(invoice)) {
-                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                    when (val result = validateScannedInvoiceInputUseCase(rawInput = invoice)) {
+                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> {
                             if (event.autoSelect) {
                                 val session = sessionState.value
                                 when (val res = addScannedInputToWorkOrderUseCase(
@@ -354,28 +354,88 @@ class OrderFulfilmentScreenViewModel(
                                     rawInput = invoice
                                 )) {
                                     is AddScannedInputToWorkOrderUseCase.UseCaseResult.Added -> {
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                                HapticEffect.Success
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlaySound(
+                                                SoundEffect.Success
+                                            )
+                                        }
                                     }
+
                                     is AddScannedInputToWorkOrderUseCase.UseCaseResult.Duplicate -> {
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.SelectionChanged) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Warning) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order already added: \"${res.invoiceNumber}\"") }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                                HapticEffect.SelectionChanged
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlaySound(
+                                                SoundEffect.Warning
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                                "Order already added: \"${res.invoiceNumber}\""
+                                            )
+                                        }
                                     }
+
                                     is AddScannedInputToWorkOrderUseCase.UseCaseResult.NotFound -> {
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Order not found: \"${res.input}\"") }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                                HapticEffect.Error
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlaySound(
+                                                SoundEffect.Error
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                                "Order not found: \"${res.input}\""
+                                            )
+                                        }
                                     }
+
                                     is AddScannedInputToWorkOrderUseCase.UseCaseResult.InvalidInput -> {
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Invalid scan input") }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                                HapticEffect.Error
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlaySound(
+                                                SoundEffect.Error
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                                "Invalid scan input"
+                                            )
+                                        }
                                     }
+
                                     is AddScannedInputToWorkOrderUseCase.UseCaseResult.Error -> {
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                                        setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(res.message) }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                                HapticEffect.Error
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.PlaySound(
+                                                SoundEffect.Error
+                                            )
+                                        }
+                                        setEffect {
+                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                                res.message
+                                            )
+                                        }
                                     }
                                 }
                             } else {
@@ -387,7 +447,7 @@ class OrderFulfilmentScreenViewModel(
                             }
                         }
 
-                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
                             setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                             setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
@@ -401,7 +461,7 @@ class OrderFulfilmentScreenViewModel(
                 viewModelScope.launch {
                     removeOrderSelectionUseCase(
                         workOrderId = workOrderId,
-                        orderId = event.invoiceNumber
+                        invoiceNumber = event.invoiceNumber
                     )
                 }
             }
@@ -433,6 +493,7 @@ class OrderFulfilmentScreenViewModel(
             is FetchOrderListUseCase.UseCaseResult.Success -> {
                 setState { copy(isLoading = false) }
             }
+
             is FetchOrderListUseCase.UseCaseResult.Error -> {
                 val msg = result.message
                 setState { copy(isLoading = false, error = msg) }
@@ -497,7 +558,9 @@ class OrderFulfilmentScreenViewModel(
 
     private fun confirm() {
         val s = viewState.value
+        val workOrderId = sessionState.value.workOrderId.handleNull() ?: return
         val hasOrders = s.collectOrderListItemStateList.isNotEmpty()
+
         if (!hasOrders) {
             setEffect {
                 OrderFulfilmentScreenContract.Effect.ShowSnackbar(
@@ -549,7 +612,7 @@ class OrderFulfilmentScreenViewModel(
             var failureCount = 0
 
             orders.forEach { order ->
-                val result = submitOrderUseCase(order.invoiceNumber)
+                val result = submitOrderUseCase(workOrderId = workOrderId)
 
                 result.fold(
                     onSuccess = { successCount++ },

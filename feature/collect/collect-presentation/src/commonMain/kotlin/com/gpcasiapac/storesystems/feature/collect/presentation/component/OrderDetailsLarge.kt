@@ -79,8 +79,9 @@ fun OrderDetailsLarge(
 private fun OrderAndCustomerDetails(orderState: CollectOrderWithCustomerWithLineItemsState) {
     OrderDetails(
         invoiceNumber = orderState.order.invoiceNumber,
+        orderNumber = orderState.order.orderNumber,
         webOrderNumber = orderState.order.webOrderNumber,
-        createdAt = orderState.order.pickedAt, // TODO: get Order date
+        createdAt = orderState.order.createdAt,
         pickedAt = orderState.order.pickedAt,
     )
     HorizontalDivider()

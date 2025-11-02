@@ -3,11 +3,11 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.selection
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class SelectionUiState(
+data class SelectionUiState<T>(
     val isEnabled: Boolean = false,
-    val existing: Set<String> = emptySet(),
-    val pendingAdd: Set<String> = emptySet(),
-    val pendingRemove: Set<String> = emptySet(),
-    val selected: Set<String> = emptySet(),
+    val existing: Set<T> = emptySet(),
+    val pendingAdd: Set<T> = emptySet(),
+    val pendingRemove: Set<T> = emptySet(),
+    val selected: Set<T> = emptySet(),
     val isAllSelected: Boolean = false,
 )

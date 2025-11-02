@@ -9,7 +9,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrde
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SaveSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderWithOrderWithCustomersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
@@ -32,7 +32,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSe
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.CreateWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureWorkOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndAddOrderToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
@@ -48,7 +47,7 @@ val collectDomainModule = module {
     factoryOf(::ObserveMainOrdersUseCase)
     factoryOf(::ObserveSearchOrdersUseCase)
     factoryOf(::ObserveOrderCountUseCase)
-    factoryOf(::CheckOrderExistsUseCase)
+    factoryOf(::ValidateScannedInvoiceInputUseCase)
 
     factoryOf(::SaveSignatureUseCase)
     factoryOf(::ObserveWorkOrderSignatureUseCase)

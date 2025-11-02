@@ -19,7 +19,7 @@ fun OrderDetailsScreenDestination(
     LaunchedEffect(Unit) {
         Logger.withTag("OrderDetailsScreenDestination").i { "Starting scan collection for OrderDetails screen" }
         ScanEventsRegistry.provider?.invoke()?.collectLatest { scan ->
-            viewModel.setEvent(OrderDetailsScreenContract.Event.ScanInvoice(scan.text))
+            viewModel.setEvent(OrderDetailsScreenContract.Event.Scan(scan.text))
         }
     }
 

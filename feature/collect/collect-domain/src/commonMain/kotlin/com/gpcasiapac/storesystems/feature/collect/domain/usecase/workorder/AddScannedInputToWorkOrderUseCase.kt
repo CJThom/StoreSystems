@@ -1,8 +1,9 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 
 /**
  * Scan-specific adder that accepts raw input and returns a simple result
@@ -12,7 +13,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrd
  * toAdd = [invoice] and toRemove = emptyList().
  */
 class AddScannedInputToWorkOrderUseCase(
-    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
+    private val validateScannedInvoiceInputUseCase: ValidateScannedInvoiceInputUseCase,
     private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
 ) {
 
@@ -25,13 +26,13 @@ class AddScannedInputToWorkOrderUseCase(
         if (trimmed.isEmpty()) return UseCaseResult.InvalidInput
 
         // Validate the scanned invoice exists in the local DB
-        when (val exists = checkOrderExistsUseCase(trimmed)) {
-            is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+        when (val exists = validateScannedInvoiceInputUseCase(trimmed)) {
+            is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
                 // Not found or other validation error
                 return UseCaseResult.NotFound(trimmed)
             }
 
-            is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+            is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> {
                 val invoice = exists.invoiceNumber
                 return when (
                     val apply = ensureAndApplyOrderSelectionDeltaUseCase(
@@ -62,8 +63,8 @@ class AddScannedInputToWorkOrderUseCase(
     }
 
     sealed interface UseCaseResult {
-        data class Added(val invoiceNumber: String) : UseCaseResult
-        data class Duplicate(val invoiceNumber: String) : UseCaseResult
+        data class Added(val invoiceNumber: InvoiceNumber) : UseCaseResult
+        data class Duplicate(val invoiceNumber: InvoiceNumber) : UseCaseResult
         data class NotFound(val input: String) : UseCaseResult
         data object InvalidInput : UseCaseResult
         data class Error(val message: String) : UseCaseResult

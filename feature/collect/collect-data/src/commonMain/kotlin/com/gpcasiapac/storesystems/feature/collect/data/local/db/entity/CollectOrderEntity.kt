@@ -3,8 +3,8 @@ package com.gpcasiapac.storesystems.feature.collect.data.local.db.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderChannel
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import kotlin.time.Instant
 
 @Entity(tableName = "collect_orders")
@@ -12,7 +12,7 @@ data class CollectOrderEntity(
 
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "invoice_number")
-    val invoiceNumber: String,
+    val invoiceNumber: InvoiceNumber,
 
     // Optional backend id (not PK), stored for traceability
     @ColumnInfo(name = "id")
@@ -43,4 +43,4 @@ data class CollectOrderEntity(
     @ColumnInfo(name = "locked_date_time")
     val lockedDateTime: Instant?,
 
-)
+    )

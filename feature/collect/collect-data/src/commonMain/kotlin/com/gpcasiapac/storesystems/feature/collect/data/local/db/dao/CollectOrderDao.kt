@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
@@ -88,7 +89,7 @@ interface CollectOrderDao {
 
     @Transaction
     @Query("SELECT * FROM collect_orders where invoice_number = :invoiceNumber")
-    fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber:String): Flow<CollectOrderWithCustomerWithLineItemsRelation>
+    fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItemsRelation>
 
     // ---- Suggestions (prefix) ----
     @Query(

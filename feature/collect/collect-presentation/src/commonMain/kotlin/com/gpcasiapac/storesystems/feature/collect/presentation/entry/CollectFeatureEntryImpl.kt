@@ -176,7 +176,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails -> onOutcome(
-                            CollectOutcome.WorkOrderItemSelected(outcome.invoiceNumbers.first())
+                            CollectOutcome.WorkOrderItemSelected(outcome.invoiceNumberList.first())
                         )
 
                         is SignatureScreenContract.Effect.Outcome.SignatureSaved -> {

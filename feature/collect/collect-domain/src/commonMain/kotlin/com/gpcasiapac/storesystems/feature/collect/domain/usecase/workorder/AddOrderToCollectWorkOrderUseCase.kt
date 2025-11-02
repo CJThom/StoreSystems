@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrderItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
@@ -10,22 +11,22 @@ class AddOrderToCollectWorkOrderUseCase(
     private val orderLocalRepository: OrderLocalRepository,
 ) {
 
-    suspend operator fun invoke(workOrderId: WorkOrderId, orderId: String): UseCaseResult {
-        if (orderId.isBlank()) return UseCaseResult.Error.InvalidInput
+    suspend operator fun invoke(workOrderId: WorkOrderId, invoiceNumber: InvoiceNumber): UseCaseResult {
+
         return try {
             val rowId: Long = orderLocalRepository.write {
                 val nextPosition = orderLocalRepository.getMaxWorkOrderItemPosition(workOrderId) + 1
                 val item = CollectWorkOrderItem(
                     workOrderId = workOrderId,
-                    invoiceNumber = orderId,
+                    invoiceNumber = invoiceNumber,
                     position = nextPosition,
                 )
                 orderLocalRepository.insertWorkOrderItem(item)
             }
             if (rowId != -1L) {
-                UseCaseResult.Added(orderId)
+                UseCaseResult.Added(invoiceNumber)
             } else {
-                UseCaseResult.Duplicate(orderId)
+                UseCaseResult.Duplicate(invoiceNumber)
             }
         } catch (ce: CancellationException) {
             throw ce // never swallow coroutine cancellation
@@ -35,8 +36,8 @@ class AddOrderToCollectWorkOrderUseCase(
     }
 
     sealed interface UseCaseResult {
-        data class Added(val invoiceNumber: String) : UseCaseResult
-        data class Duplicate(val invoiceNumber: String) : UseCaseResult
+        data class Added(val invoiceNumber: InvoiceNumber) : UseCaseResult
+        data class Duplicate(val invoiceNumber: InvoiceNumber) : UseCaseResult
         sealed class Error(val message: String) : UseCaseResult {
             data object InvalidInput : Error("Invoice number cannot be empty.")
             data class Unexpected(val reason: String) : Error(reason)

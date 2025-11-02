@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.collect.data.repository
 
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.AppDatabase
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.CollectOrderDao
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.dao.SignatureDao
@@ -61,7 +62,7 @@ class OrderLocalRepositoryImpl(
 
     override fun observeOrderCount(): Flow<Int> = collectOrderDao.observeCount()
 
-    override fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?> {
+    override fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItems?> {
         return collectOrderDao.getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber)
             .map { it.toDomain() }
     }
@@ -98,13 +99,16 @@ class OrderLocalRepositoryImpl(
         workOrderDao.observeWorkOrderItemsWithOrders(workOrderId)
             .map { list -> list.map { it.orderWithCustomer }.toDomain() }
 
-    override suspend fun deleteWorkOrderItem(workOrderId: WorkOrderId, orderId: String) {
-        workOrderDao.deleteWorkOrderItem(workOrderId = workOrderId, invoiceNumber = orderId)
-    }
 
-    override suspend fun deleteWorkOrderItems(workOrderId: WorkOrderId, orderIds: List<String>) {
-        if (orderIds.isEmpty()) return
-        workOrderDao.deleteItemsForWorkOrder(workOrderId, orderIds)
+    override suspend fun deleteWorkOrderItems(
+        workOrderId: WorkOrderId,
+        invoiceNumberList: List<InvoiceNumber>
+    ) {
+        if (invoiceNumberList.isEmpty()) return
+        workOrderDao.deleteItemsForWorkOrder(
+            workOrderId = workOrderId,
+            invoiceNumberList = invoiceNumberList
+        )
     }
 
     override suspend fun getWorkOrderItemCount(workOrderId: WorkOrderId): Int =
@@ -126,15 +130,17 @@ class OrderLocalRepositoryImpl(
         workOrderDao.setCourierName(workOrderId, name)
     }
 
-    override suspend fun existsInvoice(invoiceNumber: String): Boolean =
-        collectOrderDao.existsInvoice(invoiceNumber)
+    override suspend fun existsInvoice(invoiceNumber: String): Boolean {
+        return collectOrderDao.existsInvoice(invoiceNumber)
+    }
 
     override suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder) {
         workOrderDao.insertOrReplaceWorkOrderEntity(collectWorkOrder.toEntity())
     }
 
-    override suspend fun getMaxWorkOrderItemPosition(workOrderId: WorkOrderId): Long =
-        workOrderDao.getMaxPosition(workOrderId)
+    override suspend fun getMaxWorkOrderItemPosition(workOrderId: WorkOrderId): Long {
+        return workOrderDao.getMaxPosition(workOrderId)
+    }
 
     override suspend fun insertWorkOrderItem(workOrderItem: CollectWorkOrderItem): Long {
         return workOrderDao.insertOrIgnoreWorkOrderItem(workOrderItem.toEntity())
@@ -205,8 +211,9 @@ class OrderLocalRepositoryImpl(
         return if (sorted.size <= query.maxTotal) sorted else sorted.take(query.maxTotal)
     }
 
-    private fun escapeForLike(input: String): String =
-        input.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+    private fun escapeForLike(input: String): String {
+        return input.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+    }
 
     override suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean {
         return workOrderDao.getCollectWorkOrderEntity(workOrderId) != null

@@ -18,7 +18,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignaturePreviewOrdersProvider
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
@@ -91,7 +93,7 @@ private fun SingleOrderSummaryHeader(
                 modifier = Modifier.weight(0.35f)
             )
             Text(
-                text = order.invoiceNumber,
+                text = order.invoiceNumber.value,
                 style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -204,12 +206,12 @@ private fun MultiOrderSummaryCard(
         // Build a concise invoice list preview that tends to fit within ~2 lines,
         // without hardcoding heights. We use a simple character budget heuristic
         // and then cap the text to maxLines = 2 with ellipsis.
-        fun buildInvoicesPreview(all: List<String>, charBudget: Int = 120): Pair<String, Int> {
+        fun buildInvoicesPreview(all: List<InvoiceNumber>, charBudget: Int = 120): Pair<String, Int> {
             if (all.isEmpty()) return "" to 0
             val sb = StringBuilder()
             var count = 0
             for (inv in all) {
-                val part = if (sb.isEmpty()) inv else ", $inv"
+                val part = if (sb.isEmpty()) inv.value else ", $inv"
                 if (sb.length + part.length > charBudget) break
                 sb.append(part)
                 count++
@@ -277,7 +279,7 @@ private fun MultiOrderSummaryCard(
 )
 @Composable
 private fun SignatureOrderSummaryPreview(
-    @PreviewParameter(SignatureOrderSummaryOrdersProvider::class) orders: List<SignatureOrderState>
+    @PreviewParameter(SignaturePreviewOrdersProvider::class) orders: List<SignatureOrderState>
 ) {
     GPCTheme {
         SignatureOrderSummary(

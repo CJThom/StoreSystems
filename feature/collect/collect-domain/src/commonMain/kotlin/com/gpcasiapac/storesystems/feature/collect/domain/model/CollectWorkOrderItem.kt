@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.model
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 
 /**
@@ -8,6 +9,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
  */
 data class CollectWorkOrderItem(
     val workOrderId: WorkOrderId,
-    val invoiceNumber: String,
+    val invoiceNumber: InvoiceNumber,
     val position: Long,
 )

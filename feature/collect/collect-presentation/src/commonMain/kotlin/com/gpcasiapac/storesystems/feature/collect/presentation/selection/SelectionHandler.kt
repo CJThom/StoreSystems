@@ -8,24 +8,24 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SelectionHandler : SelectionHandlerDelegate {
+class SelectionHandler<T> : SelectionHandlerDelegate<T> {
 
-    private val _state = MutableStateFlow(SelectionUiState())
-    override val state: StateFlow<SelectionUiState> = _state
+    private val _state = MutableStateFlow(SelectionUiState<T>())
+    override val state: StateFlow<SelectionUiState<T>> = _state
 
     private var scope: CoroutineScope? = null
-    private var lastVisible: Set<String> = emptySet()
-    private var loadPersisted: (suspend () -> Set<String>)? = null
-    private var commit: (suspend (Set<String>, Set<String>) -> SelectionCommitResult)? = null
+    private var lastVisible: Set<T> = emptySet()
+    private var loadPersisted: (suspend () -> Set<T>)? = null
+    private var commit: (suspend (Set<T>, Set<T>) -> SelectionCommitResult)? = null
     private var onRequestConfirmDialog: (() -> Unit)? = null
     private var onConfirmProceedHook: (() -> Unit)? = null
 
     override fun bindSelection(
         scope: CoroutineScope,
-        visibleIds: Flow<Set<String>>,
-        setSelection: (SelectionUiState) -> Unit,
-        loadPersisted: suspend () -> Set<String>,
-        commit: suspend (toAdd: Set<String>, toRemove: Set<String>) -> SelectionCommitResult,
+        visibleIds: Flow<Set<T>>,
+        setSelection: (SelectionUiState<T>) -> Unit,
+        loadPersisted: suspend () -> Set<T>,
+        commit: suspend (toAdd: Set<T>, toRemove: Set<T>) -> SelectionCommitResult,
         onRequestConfirmDialog: (() -> Unit)?,
         onConfirmProceed: (() -> Unit)?,
     ) {
@@ -39,7 +39,7 @@ class SelectionHandler : SelectionHandlerDelegate {
         scope.launch { state.collectLatest { sel -> setSelection(sel) } }
     }
 
-    private fun onVisibleIdsChanged(visible: Set<String>) {
+    private fun onVisibleIdsChanged(visible: Set<T>) {
         lastVisible = visible
         _state.update { s ->
             val all = visible.isNotEmpty() && visible.all { it in s.selected }
@@ -47,15 +47,15 @@ class SelectionHandler : SelectionHandlerDelegate {
         }
     }
 
-    private fun setExisting(existing: Set<String>) {
+    private fun setExisting(existing: Set<T>) {
         _state.update { s -> s.copy(existing = existing) }
     }
 
-    private fun dispatch(intent: SelectionIntent) {
+    private fun dispatch(intent: SelectionIntent<T>) {
         _state.update { s -> SelectionReducer.reduce(s, intent, lastVisible) }
     }
 
-    override fun handleSelection(event: SelectionContract.Event) {
+    override fun handleSelection(event: SelectionContract.Event<T>) {
         when (event) {
             is SelectionContract.Event.ToggleMode -> toggleMode(event.enabled)
             is SelectionContract.Event.SetItemChecked -> setItemChecked(event.id, event.checked)
@@ -81,7 +81,7 @@ class SelectionHandler : SelectionHandlerDelegate {
         }
     }
 
-    override fun setItemChecked(id: String, checked: Boolean) {
+    override fun setItemChecked(id: T, checked: Boolean) {
         dispatch(SelectionIntent.ToggleOne(id, checked))
     }
 

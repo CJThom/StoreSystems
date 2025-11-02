@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLineItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 
 internal fun CollectOrder.toEntity(): CollectOrderEntity {
     return CollectOrderEntity(
@@ -23,7 +24,7 @@ internal fun CollectOrder.toEntity(): CollectOrderEntity {
     )
 }
 
-internal fun CollectOrderCustomer.toEntity(invoiceNumber: String): CollectOrderCustomerEntity {
+internal fun CollectOrderCustomer.toEntity(invoiceNumber: InvoiceNumber): CollectOrderCustomerEntity {
     return CollectOrderCustomerEntity(
         invoiceNumber = invoiceNumber,
         number = this.number,
@@ -33,7 +34,7 @@ internal fun CollectOrderCustomer.toEntity(invoiceNumber: String): CollectOrderC
     )
 }
 
-internal fun CollectOrderLineItem.toEntity(invoiceNumber: String): CollectOrderLineItemEntity {
+internal fun CollectOrderLineItem.toEntity(invoiceNumber: InvoiceNumber): CollectOrderLineItemEntity {
     return CollectOrderLineItemEntity(
         invoiceNumber = invoiceNumber,
         lineNumber = this.lineNumber,

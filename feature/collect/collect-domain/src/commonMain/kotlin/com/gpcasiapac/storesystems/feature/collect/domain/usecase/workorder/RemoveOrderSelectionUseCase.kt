@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 
 /**
@@ -11,19 +12,26 @@ class RemoveOrderSelectionUseCase(
     private val applyDeltaUseCase: ApplyOrderSelectionDeltaUseCase,
 ) {
 
-    suspend operator fun invoke(workOrderId: WorkOrderId, orderId: String): UseCaseResult {
-        val id = orderId.trim()
-        if (id.isEmpty()) return UseCaseResult.InvalidInput()
+    suspend operator fun invoke(
+        workOrderId: WorkOrderId,
+        invoiceNumber: InvoiceNumber
+    ): UseCaseResult {
         return try {
-            when (val r = applyDeltaUseCase(
-                workOrderId = workOrderId,
-                add = emptyList(),
-                remove = listOf(id)
-            )) {
+            when (
+                val result = applyDeltaUseCase(
+                    workOrderId = workOrderId,
+                    add = emptyList(),
+                    remove = listOf(invoiceNumber)
+                )
+            ) {
                 is ApplyOrderSelectionDeltaUseCase.Result.Noop -> UseCaseResult.Noop
                 is ApplyOrderSelectionDeltaUseCase.Result.Summary -> {
-                    if (r.removed > 0) UseCaseResult.Removed(invoiceNumber = id, removedCount = r.removed)
-                    else UseCaseResult.Noop
+                    if (result.removed > 0) {
+                        UseCaseResult.Removed(
+                            invoiceNumber = invoiceNumber,
+                            removedCount = result.removed
+                        )
+                    } else UseCaseResult.Noop
                 }
             }
         } catch (t: Throwable) {
@@ -33,11 +41,16 @@ class RemoveOrderSelectionUseCase(
 
     sealed interface UseCaseResult {
         /** The requested invoice was removed. removedCount should be 1 in normal cases. */
-        data class Removed(val invoiceNumber: String, val removedCount: Int = 1) : UseCaseResult
+        data class Removed(val invoiceNumber: InvoiceNumber, val removedCount: Int = 1) :
+            UseCaseResult
+
         /** Nothing changed (e.g., invoice was not in the work order, or inputs invalid). */
         data object Noop : UseCaseResult
+
         /** Invalid input such as a blank invoice number. */
-        data class InvalidInput(val message: String = "Invoice number cannot be empty.") : UseCaseResult
+        data class InvalidInput(val message: String = "Invoice number cannot be empty.") :
+            UseCaseResult
+
         /** Unexpected failure. */
         data class Error(val message: String) : UseCaseResult
     }

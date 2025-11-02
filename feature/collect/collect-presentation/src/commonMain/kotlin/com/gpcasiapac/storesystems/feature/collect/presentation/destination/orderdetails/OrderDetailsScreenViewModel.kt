@@ -7,9 +7,10 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
@@ -19,9 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -29,8 +28,8 @@ class OrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
     private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase,
-    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
-    private val initialInvoice: String,
+    private val validateScannedInvoiceInputUseCase: ValidateScannedInvoiceInputUseCase,
+    private val initialInvoice: InvoiceNumber,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
         OrderDetailsScreenContract.Event,
@@ -41,7 +40,7 @@ class OrderDetailsScreenViewModel(
         sessionFlow = collectSessionIdsFlowUseCase()
     ) {
 
-    private val invoiceKey = MutableStateFlow(initialInvoice.trim())
+    private val invoiceKey = MutableStateFlow(initialInvoice)
 
     override fun setInitialState(): OrderDetailsScreenContract.State {
         return OrderDetailsScreenContract.State(
@@ -55,13 +54,10 @@ class OrderDetailsScreenViewModel(
         // Single reactive pipeline that switches the observed order when invoiceKey changes
         viewModelScope.launch {
             invoiceKey
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .distinctUntilChanged { a, b -> a.equals(b, ignoreCase = true) }
+                .distinctUntilChanged { a, b -> a == b }
                 .onEach { setState { copy(isLoading = true, error = null) } }
                 .flatMapLatest { invoice ->
                     observeCollectOrderWithCustomerWithLineItemsUseCase(invoice)
-                        .map { domain -> domain?.toState() }
                         .catch { e ->
                             val msg = e.message ?: "Failed to load order"
                             setState { copy(isLoading = false, error = msg) }
@@ -76,7 +72,7 @@ class OrderDetailsScreenViewModel(
                 }
                 .collectLatest { orderState ->
                     if (orderState != null) {
-                        setState { copy(order = orderState, isLoading = false, error = null) }
+                        setState { copy(order = orderState.toState(), isLoading = false, error = null) }
                     } else {
                         setState {
                             copy(
@@ -112,18 +108,19 @@ class OrderDetailsScreenViewModel(
                 }
             }
 
-            is OrderDetailsScreenContract.Event.ScanInvoice -> {
-                val invoice = event.invoiceNumber.trim()
+            is OrderDetailsScreenContract.Event.Scan -> {
+                val raw = event.raw.trim()
                 viewModelScope.launch {
-                    when (val result = checkOrderExistsUseCase(invoice)) {
-                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> {
+                    when (val result = validateScannedInvoiceInputUseCase(raw)) {
+                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> {
                             val target = result.invoiceNumber
-                            if (!target.equals(invoiceKey.value, ignoreCase = true)) {
+                            // TODO: Improve this InvoiceNumber and String comparison
+                            if (!target.value.equals(invoiceKey.value.value, ignoreCase = true)) {
                                 invoiceKey.value = target
                             }
                         }
 
-                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
                             setEffect { OrderDetailsScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderDetailsScreenContract.Effect.PlaySound(SoundEffect.Error) }
                             setEffect { OrderDetailsScreenContract.Effect.ShowSnackbar(result.message) }
@@ -153,6 +150,7 @@ class OrderDetailsScreenViewModel(
                     // Optional: show subtle feedback; currently no-op
                 }
             }
+
             is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Error -> {
                 setState { copy(error = res.message) }
                 setEffect {
@@ -162,6 +160,7 @@ class OrderDetailsScreenViewModel(
                     )
                 }
             }
+
             is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Noop -> {
                 // No changes applied; ignore
             }

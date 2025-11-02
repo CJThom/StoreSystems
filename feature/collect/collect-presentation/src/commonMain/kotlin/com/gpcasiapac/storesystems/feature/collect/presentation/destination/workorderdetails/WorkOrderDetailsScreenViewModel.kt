@@ -1,20 +1,18 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails
 
-import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class WorkOrderDetailsScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
-    private val invoiceNumber: String
+    private val invoiceNumber: InvoiceNumber
 ) : MVIViewModel<
         WorkOrderDetailsScreenContract.Event,
         WorkOrderDetailsScreenContract.State,
@@ -48,13 +46,9 @@ class WorkOrderDetailsScreenViewModel(
         }
     }
 
-    private suspend fun loadOrderDetails(invoiceNumber: String) {
+    private suspend fun loadOrderDetails(invoiceNumber: InvoiceNumber) {
 
-        observeCollectOrderWithCustomerWithLineItemsUseCase(invoiceNumber).catch { throwable ->
-            val errorMessage = throwable.message ?: "An unknown error occurred"
-            setState { copy(isLoading = false, error = errorMessage) }
-            setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(errorMessage) }
-        }.collectLatest { order ->
+        observeCollectOrderWithCustomerWithLineItemsUseCase(invoiceNumber).collectLatest { order ->
             if (order != null) {
                 setState {
                     copy(

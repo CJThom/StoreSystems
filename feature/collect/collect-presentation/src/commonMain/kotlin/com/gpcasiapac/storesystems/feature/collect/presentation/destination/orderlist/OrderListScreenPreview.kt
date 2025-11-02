@@ -3,11 +3,9 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 
 class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenContract.State> {

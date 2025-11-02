@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
@@ -43,7 +44,7 @@ class SearchViewModel(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
     ),
-    SelectionHandlerDelegate by SelectionHandler() {
+    SelectionHandlerDelegate<InvoiceNumber> by SelectionHandler() {
 
     override fun setInitialState(): SearchContract.State = SearchContract.State.empty()
 
@@ -153,8 +154,8 @@ class SearchViewModel(
         bindSelection(
             scope = viewModelScope,
             visibleIds = viewState.map { s -> s.searchOrderItems.map { it.invoiceNumber }.toSet() },
-            setSelection = { sel ->
-                setState { copy(selection = sel) }
+            setSelection = { selection ->
+                setState { copy(selection = selection) }
             },
             loadPersisted = {
                 val workOrderId = sessionState.value.workOrderId
@@ -221,8 +222,8 @@ class SearchViewModel(
         }
     }
 
-    private fun handleSearchResultClicked(result: String) {
-        setState { copy(searchText = result, isSearchActive = false) }
+    private fun handleSearchResultClicked(result: InvoiceNumber) {
+        setState { copy(searchText = result.value, isSearchActive = false) }
         setEffect { SearchContract.Effect.CollapseSearchBar }
     }
 

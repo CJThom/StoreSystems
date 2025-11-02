@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -30,7 +31,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 fun CollectOrderDetailsContent(
     customerName: String,
     customerType: CustomerType,
-    invoiceNumber: String,
+    invoiceNumber: InvoiceNumber,
     webOrderNumber: String?,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
@@ -55,7 +56,7 @@ fun CollectOrderDetailsContent(
         ) {
             Spacer(Modifier.size(2.dp))
             DetailItemSmall(
-                value = invoiceNumber,
+                value = invoiceNumber.value,
                 imageVector = Icons.Outlined.Receipt,
                 isLoading = isLoading,
                 modifier = Modifier
@@ -81,7 +82,7 @@ private fun CollectOrderDetailsContentB2BPreview() {
         CollectOrderDetailsContent(
             customerName = "ABC Motorsports PTY Limited",
             customerType = CustomerType.B2B,
-            invoiceNumber = "INV-123456",
+            invoiceNumber = InvoiceNumber("INV-123456"),
             webOrderNumber = "WEB-987654",
             isLoading = false
         )
@@ -95,7 +96,7 @@ private fun CollectOrderDetailsContentB2CPreview() {
         CollectOrderDetailsContent(
             customerName = "Johnathan Citizenship",
             customerType = CustomerType.B2C,
-            invoiceNumber = "INV-123456",
+            invoiceNumber = InvoiceNumber("INV-123456"),
             webOrderNumber = null,
             isLoading = false
         )

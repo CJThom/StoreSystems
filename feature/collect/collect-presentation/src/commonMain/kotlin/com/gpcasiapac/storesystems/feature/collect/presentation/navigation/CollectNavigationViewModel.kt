@@ -29,7 +29,7 @@ class CollectNavigationViewModel :
 
     private fun handleOutcome(outcome: CollectOutcome) {
         when (outcome) {
-            is CollectOutcome.OrderSelected -> pushOrReplaceTop(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber))
+            is CollectOutcome.OrderSelected -> pushOrReplaceTop(CollectFeatureDestination.OrderDetails(outcome.invoiceNumber.value))
             is CollectOutcome.Back -> pop()
             is CollectOutcome.Logout -> {
                 // Emit external outcome to navigate to login screen
@@ -45,7 +45,7 @@ class CollectNavigationViewModel :
             }
 
             is CollectOutcome.WorkOrderItemSelected -> {
-                pushOrReplaceTop(CollectFeatureDestination.WorkOrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(CollectFeatureDestination.WorkOrderDetails(outcome.invoiceNumber.value))
             }
             is CollectOutcome.OpenOrderFulfilment -> {
                 pop()

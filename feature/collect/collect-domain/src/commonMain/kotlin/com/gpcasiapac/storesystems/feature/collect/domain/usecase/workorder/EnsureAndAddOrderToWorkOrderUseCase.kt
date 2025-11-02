@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 
@@ -22,11 +23,10 @@ class EnsureAndAddOrderToWorkOrderUseCase(
     suspend operator fun invoke(
         userId: UserId?,
         currentSelectedWorkOrderId: WorkOrderId?,
-        orderId: String,
+        invoiceNumber: InvoiceNumber,
     ): UseCaseResult {
 
         if (userId == null) return UseCaseResult.Error.NoUser
-        if (orderId.isBlank()) return UseCaseResult.Error.InvalidOrderId
 
         // Step 1: Ensure or create a Work Order id (creation only happens because caller is adding)
         val workOrderId: WorkOrderId = when (
@@ -61,20 +61,20 @@ class EnsureAndAddOrderToWorkOrderUseCase(
         return when (
             val add = addOrderToCollectWorkOrderUseCase(
                 workOrderId = workOrderId,
-                orderId = orderId
+                invoiceNumber = invoiceNumber
             )
         ) {
             is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Added -> {
                 UseCaseResult.Success(
                     workOrderId = workOrderId,
-                    outcome = UseCaseResult.Success.AddOutcome.Added(orderId)
+                    outcome = UseCaseResult.Success.AddOutcome.Added(invoiceNumber)
                 )
             }
 
             is AddOrderToCollectWorkOrderUseCase.UseCaseResult.Duplicate -> {
                 UseCaseResult.Success(
                     workOrderId = workOrderId,
-                    outcome = UseCaseResult.Success.AddOutcome.Duplicate(orderId)
+                    outcome = UseCaseResult.Success.AddOutcome.Duplicate(invoiceNumber)
                 )
             }
 
@@ -91,8 +91,8 @@ class EnsureAndAddOrderToWorkOrderUseCase(
             val outcome: AddOutcome,
         ) : UseCaseResult {
             sealed interface AddOutcome {
-                data class Added(val invoiceNumber: String) : AddOutcome
-                data class Duplicate(val invoiceNumber: String) : AddOutcome
+                data class Added(val invoiceNumber: InvoiceNumber) : AddOutcome
+                data class Duplicate(val invoiceNumber: InvoiceNumber) : AddOutcome
             }
         }
 

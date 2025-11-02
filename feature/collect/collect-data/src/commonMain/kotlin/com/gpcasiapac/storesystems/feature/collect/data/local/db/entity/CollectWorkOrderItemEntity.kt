@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 
 @Entity(
@@ -34,10 +35,10 @@ data class CollectWorkOrderItemEntity(
     val workOrderId: WorkOrderId,
 
     @ColumnInfo(name = "invoice_number")
-    val invoiceNumber: String,
+    val invoiceNumber: InvoiceNumber,
 
     // Scan/insertion order within a work order (1-based)
     @ColumnInfo(name = "position")
     val position: Long,
 
-)
+    )

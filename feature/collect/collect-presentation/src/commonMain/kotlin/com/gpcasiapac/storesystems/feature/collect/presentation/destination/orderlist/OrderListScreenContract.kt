@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -30,7 +31,7 @@ object OrderListScreenContract {
         val isFilterSheetOpen: Boolean,
 
         // Shared selection slice (single source of truth for selection UI)
-        val selection: SelectionUiState = SelectionUiState(),
+        val selection: SelectionUiState<InvoiceNumber> = SelectionUiState(),
 
         // Draft bottom bar visibility
         val isDraftBarVisible: Boolean,
@@ -59,8 +60,8 @@ object OrderListScreenContract {
         data object Refresh : Event
 
         // Navigation / Scanning
-        data class OpenOrder(val orderId: String) : Event
-        data class ScanInvoice(val invoiceNumber: String) : Event
+        data class OpenOrder(val invoiceNumber: InvoiceNumber) : Event
+        data class ScanInvoice(val rawInput: String) : Event
         data object Back : Event
         data object Logout : Event
         data object OpenHistory : Event
@@ -78,7 +79,7 @@ object OrderListScreenContract {
         data class SortChanged(val sortOption: SortOption) : Event
 
         // Shared selection wrapper (replaces per-screen selection events)
-        data class Selection(val event: SelectionContract.Event) : Event
+        data class Selection(val event: SelectionContract.Event<InvoiceNumber>) : Event
 
         // Search-origin selection confirm
         data object ConfirmSearchSelection : Event
@@ -88,7 +89,7 @@ object OrderListScreenContract {
         data object DraftBarViewClicked : Event
 
         // Submissions / item actions
-        data class SubmitOrder(val orderId: String) : Event
+        data class SubmitOrder(val invoiceNumber: InvoiceNumber) : Event
         data object StartNewWorkOrderClicked : Event
 
         // Misc ephemerals
@@ -124,7 +125,7 @@ object OrderListScreenContract {
         data object CollapseSearchBar : Effect
  
          sealed interface Outcome : Effect {
-            data class OrderSelected(val invoiceNumber: String) : Outcome
+            data class OrderSelected(val invoiceNumber: InvoiceNumber) : Outcome
             data object OrdersSelected : Outcome
             data object Back : Outcome
             data object Logout : Outcome

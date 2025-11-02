@@ -21,11 +21,14 @@ kotlin {
             implementation(projects.common.di)
             implementation(projects.common.kotlin)
             implementation(projects.common.presentation)
-            implementation(projects.core.identity.identityApi)
+
             implementation(libs.koin.core)
             implementation(libs.kermit)
-            // Sync queue domain for SyncHandler and models
+            
+            implementation(projects.core.identity.identityApi)
             implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(projects.feature.collect.collectApi)
+
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

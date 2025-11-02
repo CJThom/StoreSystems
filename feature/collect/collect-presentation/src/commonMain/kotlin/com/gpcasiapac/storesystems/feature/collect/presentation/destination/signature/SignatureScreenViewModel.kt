@@ -72,7 +72,7 @@ class SignatureScreenViewModel(
                 setState { copy(isLoading = true, error = null) }
 
                 val flows = invoiceNumbers.map { invoice ->
-                    observeCollectOrderWithCustomerWithLineItemsUseCase(invoice).map { it }
+                    observeCollectOrderWithCustomerWithLineItemsUseCase(invoice)
                 }
 
                 val combinedFlow = if (flows.size == 1) {

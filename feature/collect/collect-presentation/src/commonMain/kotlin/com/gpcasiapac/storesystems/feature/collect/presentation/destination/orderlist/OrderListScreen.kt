@@ -372,7 +372,7 @@ fun OrderListScreen(
                                 selectedOrderIdList = searchState.selection.selected,
                                 isSelectAllChecked = searchState.selection.isAllSelected,
                                 isRefreshing = state.isRefreshing,
-                                onOpenOrder = { id ->
+                                onOpenInvoice = { id ->
                                     onEventSent(OrderListScreenContract.Event.OpenOrder(id))
                                 },
                                 onCheckedChange = { orderId, checked ->

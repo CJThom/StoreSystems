@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
@@ -110,13 +111,13 @@ object OrderFulfilmentScreenContract {
         data object DismissConfirmSearchSelectionDialog : Event
 
         // Order item click
-        data class OrderClicked(val invoiceNumber: String) : Event
+        data class OrderClicked(val invoiceNumber: InvoiceNumber) : Event
 
         // Scanning
-        data class ScanInvoice(val invoiceNumber: String, val autoSelect: Boolean) : Event
+        data class ScanInvoice(val rawInput: String, val autoSelect: Boolean) : Event
 
         // Deselect an order from Fulfilment item actions
-        data class DeselectOrder(val invoiceNumber: String) : Event
+        data class DeselectOrder(val invoiceNumber: InvoiceNumber) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -150,7 +151,7 @@ object OrderFulfilmentScreenContract {
             data object Back : Outcome
             data object Confirmed : Outcome
             data class SignatureRequested(val customerName: String): Outcome
-            data class NavigateToOrderDetails(val invoiceNumber: String) : Outcome
+            data class NavigateToOrderDetails(val invoiceNumber: InvoiceNumber) : Outcome
             data object SaveAndExit : Outcome
             data object DiscardAndExit : Outcome
         }

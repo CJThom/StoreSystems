@@ -6,12 +6,13 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.CheckOrderExistsUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveMainOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveOrderCountUseCase
@@ -44,7 +45,7 @@ class OrderListScreenViewModel(
     private val fetchOrderListUseCase: FetchOrderListUseCase,
     private val observeSelectedOrderListUseCase: ObserveOrderSelectionUseCase,
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
-    private val checkOrderExistsUseCase: CheckOrderExistsUseCase,
+    private val validateScannedInvoiceInputUseCase: ValidateScannedInvoiceInputUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
     private val ensureAndApplyOrderSelectionDeltaUseCase: EnsureAndApplyOrderSelectionDeltaUseCase
 ) : MVIViewModel<
@@ -55,7 +56,7 @@ class OrderListScreenViewModel(
         initialSession = CollectSessionIds(),
         sessionFlow = collectSessionIdsFlowUseCase()
     ),
-    SelectionHandlerDelegate by SelectionHandler() {
+    SelectionHandlerDelegate<InvoiceNumber> by SelectionHandler() {
 
     override fun setInitialState(): OrderListScreenContract.State {
 
@@ -120,21 +121,18 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
-                setEffect { OrderSelected(event.orderId) }
+                setEffect { OrderSelected(event.invoiceNumber) }
             }
 
             is OrderListScreenContract.Event.ScanInvoice -> {
-                val invoice = event.invoiceNumber.trim()
                 setEffect { OrderListScreenContract.Effect.CollapseSearchBar }
                 viewModelScope.launch {
-                    when (val result = checkOrderExistsUseCase(invoice)) {
-                        is CheckOrderExistsUseCase.UseCaseResult.Exists -> setEffect {
-                            OrderSelected(
-                                result.invoiceNumber
-                            )
+                    when (val result = validateScannedInvoiceInputUseCase(event.rawInput)) {
+                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> setEffect {
+                            OrderSelected(result.invoiceNumber)
                         }
 
-                        is CheckOrderExistsUseCase.UseCaseResult.Error -> {
+                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
                             setEffect { OrderListScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
                             setEffect { OrderListScreenContract.Effect.PlaySound(SoundEffect.Error) }
                             setEffect { OrderListScreenContract.Effect.ShowSnackbar(result.message) }
@@ -171,7 +169,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OpenFilterSheet -> setState { copy(isFilterSheetOpen = true) }
-            is OrderListScreenContract.Event.SubmitOrder -> setEffect { OrderSelected(event.orderId) }
+            is OrderListScreenContract.Event.SubmitOrder -> setEffect { OrderSelected(event.invoiceNumber) }
             is OrderListScreenContract.Event.StartNewWorkOrderClicked -> handleStartNewWorkOrderClick()
             is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
                 viewModelScope.launch { handleDraftBarDeleteClicked() }
@@ -262,8 +260,8 @@ class OrderListScreenViewModel(
         bindSelection(
             scope = viewModelScope,
             visibleIds = viewState.map { s -> s.orders.map { it.invoiceNumber }.toSet() },
-            setSelection = { sel ->
-                setState { copy(selection = sel) }
+            setSelection = { selection ->
+                setState { copy(selection = selection) }
             },
             loadPersisted = {
                 val workOrderId = sessionState.value.workOrderId

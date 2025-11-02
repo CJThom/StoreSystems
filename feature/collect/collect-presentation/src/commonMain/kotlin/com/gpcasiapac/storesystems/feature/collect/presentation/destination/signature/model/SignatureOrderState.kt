@@ -1,12 +1,14 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
+
 /**
  * Lightweight display models for the Signature flow. These contain only the
  * fields necessary for rendering the SignatureOrderSummary and related UI.
  */
 
 data class SignatureOrderState(
-    val invoiceNumber: String,
+    val invoiceNumber: InvoiceNumber,
     val customerName: String,
     val lineItems: List<SignatureLineItemState>
 )

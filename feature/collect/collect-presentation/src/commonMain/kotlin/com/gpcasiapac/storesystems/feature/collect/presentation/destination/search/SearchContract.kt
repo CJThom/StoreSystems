@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
@@ -21,7 +22,7 @@ object SearchContract {
         val selectedChips: List<SearchSuggestion>,
         val typedSuffix: String,
         // Shared selection slice for search context
-        val selection: SelectionUiState = SelectionUiState(),
+        val selection: SelectionUiState<InvoiceNumber> = SelectionUiState(),
     ) : ViewState {
         companion object {
             fun empty(): State = State(
@@ -31,7 +32,7 @@ object SearchContract {
                 searchOrderItems = emptyList(),
                 selectedChips = emptyList(),
                 typedSuffix = "",
-                selection = SelectionUiState(),
+                selection = SelectionUiState<InvoiceNumber>(),
             )
         }
     }
@@ -41,14 +42,14 @@ object SearchContract {
         data class SearchOnExpandedChange(val expand: Boolean) : Event
         data object ClearSearch : Event
         data object SearchBarBackPressed : Event
-        data class SearchResultClicked(val result: String) : Event
+        data class SearchResultClicked(val result: InvoiceNumber) : Event
         data class SearchSuggestionClicked(val suggestion: SearchSuggestion) : Event
         // Hoisted search UI interactions
         data class TypedSuffixChanged(val text: String) : Event
         data class RemoveChip(val suggestion: SearchSuggestion) : Event
 
         // Shared selection wrapper (replaces per-screen selection events)
-        data class Selection(val event: SelectionContract.Event) : Event
+        data class Selection(val event: SelectionContract.Event<InvoiceNumber>) : Event
     }
 
     sealed interface Effect : ViewSideEffect {

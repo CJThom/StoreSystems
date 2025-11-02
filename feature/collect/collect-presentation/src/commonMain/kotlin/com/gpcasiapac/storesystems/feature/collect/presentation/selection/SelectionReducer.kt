@@ -1,11 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.selection
 
 internal object SelectionReducer {
-    fun reduce(
-        state: SelectionUiState,
-        intent: SelectionIntent,
-        visibleIds: Set<String>
-    ): SelectionUiState {
+    fun <T> reduce(
+        state: SelectionUiState<T>,
+        intent: SelectionIntent<T>,
+        visibleIds: Set<T>
+    ): SelectionUiState<T> {
         return when (intent) {
             is SelectionIntent.ToggleMode -> if (intent.enabled) {
                 state.copy(
@@ -65,12 +65,12 @@ internal object SelectionReducer {
                 )
             }
 
-            SelectionIntent.Cancel -> SelectionUiState(existing = state.existing)
+            is SelectionIntent.Cancel -> SelectionUiState(existing = state.existing)
         }
     }
 }
 
-private fun SelectionUiState.recomputeAllSelected(visible: Set<String>): SelectionUiState {
+private fun <T> SelectionUiState<T>.recomputeAllSelected(visible: Set<T>): SelectionUiState<T> {
     return copy(isAllSelected = visible.isNotEmpty() && visible.all { it in selected })
 }
 

@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.Flow
 object SelectionBinding {
 
     /** A group of ready-to-use handler functions for the ViewModel to call from events. */
-    class Handlers internal constructor(
-        private val delegate: SelectionHandlerDelegate,
+    class Handlers<T> internal constructor(
+        private val delegate: SelectionHandlerDelegate<T>,
     ) {
         fun toggleMode(enabled: Boolean) = delegate.toggleMode(enabled)
-        fun checkOne(id: String, checked: Boolean) = delegate.setItemChecked(id, checked)
+        fun checkOne(id: T, checked: Boolean) = delegate.setItemChecked(id, checked)
         fun selectAll(checked: Boolean) = delegate.selectAll(checked)
         fun cancel() = delegate.cancel()
         fun confirmStay() = delegate.confirmStay()
@@ -24,14 +24,14 @@ object SelectionBinding {
     /**
      * Bind the delegate to a visibleIds flow and start mirroring state into the host via setSelection.
      */
-    fun bind(
+    fun <T> bind(
         scope: CoroutineScope,
-        delegate: SelectionHandlerDelegate,
-        visibleIds: Flow<Set<String>>,
-        setSelection: (SelectionUiState) -> Unit,
-        loadPersisted: suspend () -> Set<String>,
-        commit: suspend (toAdd: Set<String>, toRemove: Set<String>) -> SelectionCommitResult,
-    ): Handlers {
+        delegate: SelectionHandlerDelegate<T>,
+        visibleIds: Flow<Set<T>>,
+        setSelection: (SelectionUiState<T>) -> Unit,
+        loadPersisted: suspend () -> Set<T>,
+        commit: suspend (toAdd: Set<T>, toRemove: Set<T>) -> SelectionCommitResult,
+    ): Handlers<T> {
         delegate.bindSelection(
             scope = scope,
             visibleIds = visibleIds,

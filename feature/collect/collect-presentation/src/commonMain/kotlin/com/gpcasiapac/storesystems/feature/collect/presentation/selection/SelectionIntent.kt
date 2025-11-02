@@ -1,8 +1,8 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.selection
 
-sealed interface SelectionIntent {
-    data class ToggleMode(val enabled: Boolean) : SelectionIntent
-    data class ToggleOne(val id: String, val checked: Boolean) : SelectionIntent
-    data class ToggleAll(val checked: Boolean) : SelectionIntent
-    data object Cancel : SelectionIntent
+sealed interface SelectionIntent<out T> {
+    data class ToggleMode(val enabled: Boolean) : SelectionIntent<Nothing>
+    data class ToggleOne<T>(val id: T, val checked: Boolean) : SelectionIntent<T>
+    data class ToggleAll(val checked: Boolean) : SelectionIntent<Nothing>
+    data object Cancel : SelectionIntent<Nothing>
 }

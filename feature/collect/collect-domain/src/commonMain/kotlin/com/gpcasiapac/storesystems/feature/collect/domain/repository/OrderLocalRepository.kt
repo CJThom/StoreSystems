@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.repository
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
@@ -29,7 +30,7 @@ interface OrderLocalRepository {
     // --- Functions moved from legacy OrderRepository (DB-only concerns) ---
     fun observeOrderCount(): Flow<Int>
 
-    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
+    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItems?>
 
     fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
 
@@ -43,9 +44,10 @@ interface OrderLocalRepository {
 
     fun observeWorkOrderItemsInScanOrder(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomer>>
 
-    suspend fun deleteWorkOrderItem(workOrderId: WorkOrderId, orderId: String)
-
-    suspend fun deleteWorkOrderItems(workOrderId: WorkOrderId, orderIds: List<String>)
+    suspend fun deleteWorkOrderItems(
+        workOrderId: WorkOrderId,
+        invoiceNumberList: List<InvoiceNumber>
+    )
 
     suspend fun getWorkOrderItemCount(workOrderId: WorkOrderId): Int
 

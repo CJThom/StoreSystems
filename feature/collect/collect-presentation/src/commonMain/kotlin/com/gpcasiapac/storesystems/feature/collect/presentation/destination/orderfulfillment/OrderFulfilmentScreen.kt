@@ -140,6 +140,7 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.PlaySound -> {
                     soundPlayer?.play(effect.soundEffect)
                 }
+
                 is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
                     hapticPerformer?.perform(effect.type)
                 }
@@ -155,8 +156,8 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
                     onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
                 }
- 
-                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+
+                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }
@@ -224,9 +225,7 @@ fun OrderFulfilmentScreen(
                         },
                         onResultClick = { result ->
                             onSearchEventSent(
-                                SearchContract.Event.SearchResultClicked(
-                                    result
-                                )
+                                SearchContract.Event.SearchResultClicked(result)
                             )
                         },
                         onClearClick = {
@@ -250,7 +249,7 @@ fun OrderFulfilmentScreen(
                         selectedOrderIdList = searchState.selection.selected,
                         isSelectAllChecked = searchState.selection.isAllSelected,
                         isRefreshing = state.isLoading,
-                        onOpenOrder = { id ->
+                        onOpenInvoice = { id ->
                             onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
                         },
                         onCheckedChange = { orderId, checked ->
@@ -361,7 +360,7 @@ fun OrderFulfilmentScreen(
                 }
             }
 
-            if(state.collectOrderListItemStateList.isNotEmpty()){
+            if (state.collectOrderListItemStateList.isNotEmpty()) {
                 item { Box(Modifier.size(Dimens.Space.medium)) }
             }
 
@@ -397,14 +396,17 @@ fun OrderFulfilmentScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
-                            Text(text = "PROCESSING...", style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                text = "PROCESSING...",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         } else {
                             Icon(imageVector = Icons.Outlined.DoneAll, contentDescription = "Done")
                             Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
                             Text(text = "CONFIRM", style = MaterialTheme.typography.labelLarge)
                         }
                     },
-                    onClick = { 
+                    onClick = {
                         if (!state.isProcessing && !state.isLoading) {
                             onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
                         }
@@ -485,7 +487,13 @@ fun OrderFulfilmentScreen(
                     Text("This name will be saved with the signature.")
                     OutlinedTextField(
                         value = state.customerNameInput,
-                        onValueChange = { onEventSent(OrderFulfilmentScreenContract.Event.CustomerNameChanged(it)) },
+                        onValueChange = {
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.CustomerNameChanged(
+                                    it
+                                )
+                            )
+                        },
                         singleLine = true,
                         label = { Text("Customer Name") },
                         modifier = Modifier.fillMaxWidth()
@@ -499,7 +507,11 @@ fun OrderFulfilmentScreen(
                 ) { Text("Confirm") }
             },
             dismissButton = {
-                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) { Text("Cancel") }
+                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) {
+                    Text(
+                        "Cancel"
+                    )
+                }
             }
         )
     }

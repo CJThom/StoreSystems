@@ -36,8 +36,8 @@ import kotlinx.coroutines.Dispatchers
 )
 @TypeConverters(
     TimeConverters::class,
-    CustomerTypeConverters::class,
-    SortOptionConverters::class,
+ //   CustomerTypeConverters::class,
+   // SortOptionConverters::class,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {

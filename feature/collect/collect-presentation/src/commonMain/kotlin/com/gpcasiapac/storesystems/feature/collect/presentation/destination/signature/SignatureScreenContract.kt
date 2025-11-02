@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
 
 object SignatureScreenContract {
@@ -39,7 +40,7 @@ object SignatureScreenContract {
         sealed interface Outcome : Effect {
             data object Back : Outcome
             data class SignatureSaved(val strokes: List<List<Offset>>) : Outcome
-            data class OpenWorkOrderDetails(val invoiceNumbers: List<String>) : Outcome
+            data class OpenWorkOrderDetails(val invoiceNumberList: List<InvoiceNumber>) : Outcome
         }
     }
 }

@@ -19,7 +19,7 @@ interface OrderRepository {
 //    /** Observe the total count of orders in the DB (independent of filters/search). */
 //    fun observeOrderCount(): Flow<Int>
 //
-//    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
+//    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItems?>
 //
 //
 //    // New reactive streams for main list and search results
@@ -60,7 +60,7 @@ interface OrderRepository {
 //    suspend fun setCourierName(workOrderId: WorkOrderId, name: String)
 //
 //    /** Lightweight existence check by invoice number (case-insensitive). */
-//    suspend fun existsInvoice(invoiceNumber: String): Boolean
+//    suspend fun existsInvoice(invoiceNumber: InvoiceNumber): Boolean
 //
 //    suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder)
 //

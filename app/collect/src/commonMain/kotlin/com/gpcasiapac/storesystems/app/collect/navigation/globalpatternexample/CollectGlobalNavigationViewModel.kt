@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.app.collect.navigation.globalpatternexample
 import androidx.navigation3.runtime.NavKey
 import com.gpcasiapac.storesystems.app.collect.navigation.CollectAppNavContract
 import com.gpcasiapac.storesystems.common.presentation.navigation.BaseNavViewModel
-import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.*
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination.OrderFulfilment
@@ -58,7 +57,7 @@ class CollectGlobalNavigationViewModel :
         when (outcome) {
             is CollectOutcome.OrderSelected -> {
                 // From order list, open Order Details for the tapped order
-                pushOrReplaceTop(OrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(OrderDetails(outcome.invoiceNumber.value))
             }
 
             is CollectOutcome.OpenOrderFulfilment -> {
@@ -81,7 +80,7 @@ class CollectGlobalNavigationViewModel :
 
             is CollectOutcome.WorkOrderItemSelected -> {
                 // From fulfilment, open a parked/selected work order item details
-                pushOrReplaceTop(WorkOrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(WorkOrderDetails(outcome.invoiceNumber.value))
             }
 
             CollectOutcome.OpenHistory -> {

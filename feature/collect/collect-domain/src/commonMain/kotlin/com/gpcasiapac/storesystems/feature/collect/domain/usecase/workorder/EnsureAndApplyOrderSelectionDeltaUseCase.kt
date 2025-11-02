@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
 import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.UpdateSelectedWorkOrderIdUseCase
 
@@ -17,15 +18,14 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
     suspend operator fun invoke(
         userId: UserId?,
         currentSelectedWorkOrderId: WorkOrderId?,
-        toAdd: Collection<String>,
-        toRemove: Collection<String>,
+        toAdd: Collection<InvoiceNumber>,
+        toRemove: Collection<InvoiceNumber>,
     ): UseCaseResult {
         if (userId == null) return UseCaseResult.Error("No user logged in")
-        val addNorm = toAdd.map { it.trim() }.filter { it.isNotEmpty() }
-        val removeNorm = toRemove.map { it.trim() }.filter { it.isNotEmpty() }
-        if (addNorm.isEmpty() && removeNorm.isEmpty()) return UseCaseResult.Noop
 
-        val workOrderId: WorkOrderId? = if (addNorm.isNotEmpty()) {
+        if (toAdd.isEmpty() && toRemove.isEmpty()) return UseCaseResult.Noop
+
+        val workOrderId: WorkOrderId? = if (toAdd.isNotEmpty()) {
             when (
                 val ensured = ensureWorkOrderSelectionUseCase(
                     userId = userId,
@@ -35,14 +35,14 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
                 is EnsureWorkOrderSelectionUseCase.UseCaseResult.AlreadySelected -> ensured.workOrderId
                 is EnsureWorkOrderSelectionUseCase.UseCaseResult.CreatedNew -> {
                     when (
-                        val upd = updateSelectedWorkOrderIdUseCase(
+                        val updated = updateSelectedWorkOrderIdUseCase(
                             userId = userId,
                             selectedWorkOrderId = ensured.workOrderId
                         )
                     ) {
                         is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Success -> ensured.workOrderId
                         is UpdateSelectedWorkOrderIdUseCase.UseCaseResult.Error -> return UseCaseResult.Error(
-                            upd.message
+                            updated.message
                         )
                     }
                 }
@@ -57,13 +57,19 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
 
         if (workOrderId == null) return UseCaseResult.Noop
 
-        return when (val r = applyDeltaUseCase(workOrderId, addNorm, removeNorm)) {
+        return when (
+            val result = applyDeltaUseCase(
+                workOrderId = workOrderId,
+                add = toAdd,
+                remove = toRemove
+            )
+        ) {
             is ApplyOrderSelectionDeltaUseCase.Result.Noop -> UseCaseResult.Noop
             is ApplyOrderSelectionDeltaUseCase.Result.Summary -> UseCaseResult.Summary(
                 workOrderId = workOrderId,
-                added = r.added,
-                duplicates = r.duplicates,
-                removed = r.removed,
+                added = result.added,
+                duplicates = result.duplicates,
+                removed = result.removed,
             )
         }
     }
@@ -72,8 +78,8 @@ class EnsureAndApplyOrderSelectionDeltaUseCase(
         data object Noop : UseCaseResult
         data class Summary(
             val workOrderId: WorkOrderId,
-            val added: List<String>,
-            val duplicates: List<String>,
+            val added: List<InvoiceNumber>,
+            val duplicates: List<InvoiceNumber>,
             val removed: Int,
         ) : UseCaseResult
 

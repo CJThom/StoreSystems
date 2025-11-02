@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrderItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
@@ -14,26 +15,15 @@ import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalR
 class ApplyOrderSelectionDeltaUseCase(
     private val repo: OrderLocalRepository,
 ) {
-    sealed interface Result {
-        data object Noop : Result
-        data class Summary(
-            val added: List<String>,
-            val duplicates: List<String>,
-            val removed: Int,
-        ) : Result
-    }
 
     suspend operator fun invoke(
         workOrderId: WorkOrderId,
-        add: Collection<String>,
-        remove: Collection<String>,
+        add: Collection<InvoiceNumber>,
+        remove: Collection<InvoiceNumber>,
     ): Result {
-        val addDistinct = add.map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .distinctBy { it.lowercase() }
-        val removeDistinct = remove.map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .distinctBy { it.lowercase() }
+
+        val addDistinct = add.distinct()
+        val removeDistinct = remove.distinct()
 
         // If in both add and remove, removal wins (do not re-add)
         val addEffective = addDistinct.filterNot { it in removeDistinct }
@@ -48,7 +38,7 @@ class ApplyOrderSelectionDeltaUseCase(
                 if (before > 0) {
                     repo.deleteWorkOrderItems(
                         workOrderId = workOrderId,
-                        orderIds = removeDistinct
+                        invoiceNumberList = removeDistinct
                     )
                     val after = repo.getWorkOrderItemCount(workOrderId)
                     removedCount = (before - after).coerceAtLeast(0)
@@ -56,8 +46,8 @@ class ApplyOrderSelectionDeltaUseCase(
             }
 
             // 2) Add
-            val added = mutableListOf<String>()
-            val duplicates = mutableListOf<String>()
+            val added = mutableListOf<InvoiceNumber>()
+            val duplicates = mutableListOf<InvoiceNumber>()
             if (addEffective.isNotEmpty()) {
                 val start = repo.getMaxWorkOrderItemPosition(workOrderId) + 1
                 val items = addEffective.mapIndexed { idx, inv ->
@@ -87,4 +77,14 @@ class ApplyOrderSelectionDeltaUseCase(
             )
         }
     }
+
+    sealed interface Result {
+        data object Noop : Result
+        data class Summary(
+            val added: List<InvoiceNumber>,
+            val duplicates: List<InvoiceNumber>,
+            val removed: Int,
+        ) : Result
+    }
+
 }

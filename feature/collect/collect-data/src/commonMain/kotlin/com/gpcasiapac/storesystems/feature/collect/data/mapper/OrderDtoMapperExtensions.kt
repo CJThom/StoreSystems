@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.CollectOrderDto
 import com.gpcasiapac.storesystems.feature.collect.data.time.toKotlinInstantOrEpoch0
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
@@ -13,9 +14,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderChannel
 // DTO -> Domain mappers for new structure
 fun CollectOrderDto.toDomain(): CollectOrderWithCustomerWithLineItems {
 
+    val invoiceNumber = InvoiceNumber(this.invoiceNumber)
+
     val order = CollectOrder(
         id = this.id,
-        invoiceNumber = this.invoiceNumber,
+        invoiceNumber = invoiceNumber,
         orderNumber = this.orderNumber,
         webOrderNumber = this.webOrderNumber,
         orderChannel = if (this.orderChannel == 1) OrderChannel.B2B else OrderChannel.B2C,
@@ -27,7 +30,7 @@ fun CollectOrderDto.toDomain(): CollectOrderWithCustomerWithLineItems {
     )
 
     val customer = CollectOrderCustomer(
-        invoiceNumber = this.invoiceNumber,
+        invoiceNumber = invoiceNumber,
         number = this.customer.number,
         name = this.customer.name,
         phone = this.customer.phone,
@@ -36,7 +39,7 @@ fun CollectOrderDto.toDomain(): CollectOrderWithCustomerWithLineItems {
 
     val lineItemList: List<CollectOrderLineItem> = this.lineItems.map { lineItemDto ->
         CollectOrderLineItem(
-            invoiceNumber = this.invoiceNumber,
+            invoiceNumber = invoiceNumber,
             lineNumber = lineItemDto.lineNumber.toIntOrNull() ?: 0,
             sku = lineItemDto.sku,
             barcode = lineItemDto.barcode,
