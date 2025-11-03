@@ -27,8 +27,8 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
 @Composable
 fun CorrespondenceItemRow(
-    type: String,
-    detail: String,
+    title: String,
+    subtitle: String?,
     onCheckChange: () -> Unit,
     modifier: Modifier = Modifier,
     onEdit: (() -> Unit)? = null,
@@ -55,13 +55,15 @@ fun CorrespondenceItemRow(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = type,
+                text = title,
                 style = MaterialTheme.typography.bodyMedium
             )
-            Text(
-                text = detail,
-                style = MaterialTheme.typography.bodySmall,
-            )
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
 
         if (onEdit != null) {
@@ -83,8 +85,8 @@ fun CorrespondenceItemRowPreview() {
     GPCTheme {
         Surface {
             CorrespondenceItemRow(
-                type = "Email",
-                detail = "Send email to customer",
+                title = "Email",
+                subtitle = "Send email to customer",
                 isEnabled = false,
                 onCheckChange = {},
                 onEdit = {}

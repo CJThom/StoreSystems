@@ -137,7 +137,8 @@ class OrderFulfilmentScreenViewModel(
                     detail = "Send invoice to printer",
                     isEnabled = true
                 )
-            )
+            ),
+            isSighted = false
         )
 
     }
@@ -271,6 +272,16 @@ class OrderFulfilmentScreenViewModel(
             // Signature
             is OrderFulfilmentScreenContract.Event.Sign -> {
                 sign()
+            }
+
+            // ID sighted
+            is OrderFulfilmentScreenContract.Event.IdSightedChanged -> {
+                setState { copy(isSighted = event.checked) }
+            }
+
+            // ID Verification (single-select)
+            is OrderFulfilmentScreenContract.Event.IdVerificationChanged -> {
+                setState { copy(idVerification = event.option) }
             }
 
             is OrderFulfilmentScreenContract.Event.ShowCustomerNameDialog -> {

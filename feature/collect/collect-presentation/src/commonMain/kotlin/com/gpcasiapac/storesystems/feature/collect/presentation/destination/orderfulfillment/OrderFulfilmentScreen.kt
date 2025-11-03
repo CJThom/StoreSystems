@@ -24,14 +24,17 @@ import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
@@ -62,9 +65,12 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerificationSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
@@ -72,6 +78,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.selection.Select
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
+import com.gpcasiapac.storesystems.foundation.component.CheckableListItem
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
@@ -526,27 +533,35 @@ private fun ActionsContent(
 ) {
 
 
-    // Compact layout: stack vertically
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        CollectionTypeSection(
-            title = stringResource(Res.string.who_is_collecting),
-            value = state.collectingType,
-            optionList = state.collectionTypeOptionList,
-            onValueChange = { collectionType ->
-                onEventSent(
-                    OrderFulfilmentScreenContract.Event.CollectingChanged(
-                        collectionType
+        Column {
+            CollectionTypeSection(
+                title = stringResource(Res.string.who_is_collecting),
+                value = state.collectingType,
+                optionList = state.collectionTypeOptionList,
+                onValueChange = { collectionType ->
+                    onEventSent(
+                        OrderFulfilmentScreenContract.Event.CollectingChanged(
+                            collectionType
+                        )
                     )
+                },
+            ) { selectedType ->
+                CollectionTypeContent(
+                    state = state,
+                    selectedType = selectedType,
+                    onEventSent = onEventSent
                 )
-            },
-        ) { selectedType ->
-            CollectionTypeContent(
-                state = state,
-                selectedType = selectedType,
-                onEventSent = onEventSent
+            }
+
+            IdVerificationSection(
+                selected = state.idVerification,
+                onSelected = { option ->
+                    onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
+                }
             )
         }
 

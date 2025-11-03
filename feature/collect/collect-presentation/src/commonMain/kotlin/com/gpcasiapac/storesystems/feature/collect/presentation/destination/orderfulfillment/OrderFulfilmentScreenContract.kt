@@ -18,6 +18,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDe
 
 object OrderFulfilmentScreenContract {
 
+    enum class IdVerificationOption { DRIVERS_LICENSE, PASSPORT, OTHER }
 
     @Immutable
     data class State(
@@ -52,6 +53,12 @@ object OrderFulfilmentScreenContract {
         // Customer name capture dialog
         val isCustomerNameDialogVisible: Boolean = false,
         val customerNameInput: String = "",
+
+        // ID sighted checkbox state
+        val isSighted: Boolean = false,
+
+        // ID Verification selection (single-select)
+        val idVerification: IdVerificationOption? = null,
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
@@ -101,6 +108,12 @@ object OrderFulfilmentScreenContract {
         // Correspondence
         data class ToggleCorrespondence(val id: String) : Event
         data class EditCorrespondence(val id: String) : Event
+
+        // ID sighted
+        data class IdSightedChanged(val checked: Boolean) : Event
+
+        // ID Verification (single-select)
+        data class IdVerificationChanged(val option: IdVerificationOption) : Event
 
         // Final action
         data object Confirm : Event

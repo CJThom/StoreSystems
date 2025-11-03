@@ -36,8 +36,8 @@ fun CorrespondenceSection(
         Column {
             correspondenceOptionList.forEach { correspondenceOption ->
                 CorrespondenceItemRow(
-                    type = correspondenceOption.type,
-                    detail = correspondenceOption.detail,
+                    title = correspondenceOption.type,
+                    subtitle = correspondenceOption.detail,
                     isEnabled = correspondenceOption.isEnabled,
                     onCheckChange = {
                         onCheckedChange(correspondenceOption.id)
