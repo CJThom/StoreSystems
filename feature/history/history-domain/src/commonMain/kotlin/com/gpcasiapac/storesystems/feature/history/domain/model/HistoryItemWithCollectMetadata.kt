@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.history.domain.model
 
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
 

@@ -14,8 +14,11 @@ import com.gpcasiapac.storesystems.feature.history.api.HistoryExternalOutcome
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureEntry
 import com.gpcasiapac.storesystems.feature.history.api.HistoryOutcome
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.presentation.destination.history.HistoryScreenContract
 import com.gpcasiapac.storesystems.feature.history.presentation.destination.history.HistoryScreenDestination
+import com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract
+import com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.history.presentation.navigation.HistoryNavigationContract
 import com.gpcasiapac.storesystems.feature.history.presentation.navigation.HistoryNavigationViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -67,43 +70,24 @@ class HistoryFeatureEntryImpl : HistoryFeatureEntry {
                     when (outcome) {
                         is HistoryScreenContract.Effect.Outcome.Back -> onOutcome(HistoryOutcome.Back)
                         is HistoryScreenContract.Effect.Outcome.OpenDetails -> {
-                            onOutcome(HistoryOutcome.OpenDetails(outcome.title, outcome.groupKey))
+                            onOutcome(
+                                HistoryOutcome.OpenDetails(
+                                    type = outcome.type,
+                                    id = outcome.id
+                                )
+                            )
                         }
                     }
                 }
             }
 
             entry<HistoryFeatureDestination.HistoryDetails> { details ->
-                val vm: com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenViewModel = koinViewModel()
-                val state by vm.viewState.collectAsStateWithLifecycle()
-
-                LaunchedEffect(details) {
-                    val d = details as HistoryFeatureDestination.HistoryDetails
-                    vm.setEvent(
-                        com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Event.Initialize(
-                            title = d.title,
-                            groupKey = d.groupKey
-                        )
-                    )
-                }
-
-                LaunchedEffect(Unit) {
-                    vm.effect.collect { eff ->
-                        when (eff) {
-                            is com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Effect.Outcome.Back ->
-                                onOutcome(HistoryOutcome.Back)
-                            is com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Effect.ShowError -> { /* no-op here */ }
-                        }
-                    }
-                }
-
-                com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreen(
-                    state = state,
-                    onEvent = vm::setEvent,
-                    effectFlow = vm.effect,
-                    onOutcome = { eff ->
-                        when (eff) {
-                            is com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract.Effect.Outcome.Back ->
+                HistoryDetailsScreenDestination(
+                    type = details.type,
+                    id = details.id,
+                    onOutcome = { effect ->
+                        when (effect) {
+                            is HistoryDetailsScreenContract.Effect.Outcome.Back ->
                                 onOutcome(HistoryOutcome.Back)
                         }
                     }

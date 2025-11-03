@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,13 +15,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -32,10 +36,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.StatusBadge
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo
-import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
-import com.gpcasiapac.storesystems.foundation.component.InvoiceSummary
+import com.gpcasiapac.storesystems.foundation.component.OutlineCard
+import com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection
 import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
@@ -147,23 +152,33 @@ private fun Content(
                             }
                         }
 
-                        CheckboxCard(
+                        val customerName = remember(historyItem) {
+                            when (historyItem) {
+                                is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> historyItem.metadata.firstOrNull()?.getCustomerDisplayName() ?: ""
+                                else -> ""
+                            }
+                        }
+
+                        OutlineCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
                                     horizontal = Dimens.Space.medium,
                                     vertical = Dimens.Space.small
-                                ).animateItem(),
-                            isCheckable = false,
-                            onCheckedChange = {},
+                                )
+                                .animateItem(),
                             onClick = {
-                                onEventSent(HistoryScreenContract.Event.OpenItem(historyItem.id))
-                            },
-                            isChecked = false,
+                                val type = when (historyItem) {
+                                    is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> HistoryType.ORDER_SUBMISSION
+                                    else -> HistoryType.UNKNOWN
+                                }
+                                onEventSent(HistoryScreenContract.Event.OpenItem(type = type, id = historyItem.id))
+                            }
                         ) {
                             HistoryGroupedCard(
                                 invoiceNumbers = invoiceNumbers,
-                                time = timeText
+                                time = timeText,
+                                customerName = customerName
                             )
                         }
                     }
@@ -175,8 +190,10 @@ private fun Content(
 
 
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HistoryGroupedCard(
+    customerName: String,
     invoiceNumbers: List<String>,
     time: String,
 
@@ -184,7 +201,10 @@ private fun HistoryGroupedCard(
     ListItemScaffold(
         content = {
             Column {
-                InvoiceSummary(invoiceNumbers)
+                InvoiceSummarySection(
+                    invoices = invoiceNumbers,
+                    customerName = customerName
+                )
             }
         },
         toolbar = {
@@ -193,7 +213,9 @@ private fun HistoryGroupedCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = time,
                         style = MaterialTheme.typography.bodySmall,
@@ -202,9 +224,14 @@ private fun HistoryGroupedCard(
                     Spacer(modifier = Modifier.width(Dimens.Space.small))
                     StatusBadge(status = com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING)
                 }
+                Button(
+                    onClick = {},
 
-                Button(onClick = {}) {
-                    Text("Retry")
+                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.ExtraSmallContainerHeight),
+                    modifier = Modifier
+                        .height(ButtonDefaults.ExtraSmallContainerHeight),
+                )  {
+                    Text("Retry", style = ButtonDefaults.textStyleFor(ButtonDefaults.ExtraSmallContainerHeight))
                 }
 
             }

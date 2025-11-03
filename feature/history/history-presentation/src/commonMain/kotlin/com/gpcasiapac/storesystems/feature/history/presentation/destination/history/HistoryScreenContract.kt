@@ -6,7 +6,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 
 object HistoryScreenContract {
 
@@ -23,7 +23,7 @@ object HistoryScreenContract {
     sealed interface Event : ViewEvent {
         data object Load : Event
         data object Refresh : Event
-        data class OpenItem(val id: String) : Event
+        data class OpenItem(val type: HistoryType, val id: String) : Event
         data class DeleteItem(val id: String) : Event
         data class RetryItem(val id: String) : Event
         data class FilterChanged(val filter: HistoryFilter) : Event
@@ -39,7 +39,7 @@ object HistoryScreenContract {
 
         sealed interface Outcome : Effect {
             data object Back : Outcome
-            data class OpenDetails(val title: String, val groupKey: String) : Outcome
+            data class OpenDetails(val type: HistoryType, val id: String) : Outcome
         }
     }
 }

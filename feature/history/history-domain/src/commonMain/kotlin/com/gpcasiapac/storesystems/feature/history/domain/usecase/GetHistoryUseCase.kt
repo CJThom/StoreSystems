@@ -1,10 +1,10 @@
 package com.gpcasiapac.storesystems.feature.history.domain.usecase
 
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

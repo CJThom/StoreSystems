@@ -115,6 +115,20 @@ fun MultipleInvoiceSummary(
     }
 }
 
+@Composable
+fun InvoiceSummarySection(
+    invoices: List<String>,
+    customerName: String?,
+) {
+    Column {
+        InvoiceSummary(invoices)
+        val shouldShowCustomer = !customerName.isNullOrBlank() && invoices.size == 1
+        if (shouldShowCustomer) {
+            InvoiceSummaryCustomerRow(customerName = customerName!!)
+        }
+    }
+}
+
 
 // Build a concise invoice list preview that tends to fit within ~2 lines,
 // without hardcoding heights. We use a simple character budget heuristic

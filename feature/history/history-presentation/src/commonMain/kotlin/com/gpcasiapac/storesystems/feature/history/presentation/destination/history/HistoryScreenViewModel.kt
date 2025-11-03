@@ -3,7 +3,7 @@ package com.gpcasiapac.storesystems.feature.history.presentation.destination.his
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
-import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryType
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryUseCase
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryUseCase
 import kotlinx.coroutines.launch
@@ -36,7 +36,7 @@ class HistoryScreenViewModel(
         when (event) {
             is HistoryScreenContract.Event.Load -> observeHistory()
             is HistoryScreenContract.Event.Refresh -> observeHistory()
-            is HistoryScreenContract.Event.OpenItem -> handleOpenItem(event.id)
+            is HistoryScreenContract.Event.OpenItem -> handleOpenItem(event.type, event.id)
             is HistoryScreenContract.Event.DeleteItem -> handleDeleteItem(event.id)
             is HistoryScreenContract.Event.RetryItem -> handleRetryItem(event.id)
             is HistoryScreenContract.Event.FilterChanged -> handleFilterChanged(event.filter)
@@ -74,10 +74,8 @@ class HistoryScreenViewModel(
         }
     }
 
-    private fun handleOpenItem(id: String) {
-        println("Processing event...")
-        val title = "Invoice #$id"
-        setEffect { HistoryScreenContract.Effect.Outcome.OpenDetails(title = title, groupKey = id) }
+    private fun handleOpenItem(type: HistoryType, id: String) {
+        setEffect { HistoryScreenContract.Effect.Outcome.OpenDetails(type = type, id = id) }
     }
 
     private fun handleDeleteItem(id: String) {

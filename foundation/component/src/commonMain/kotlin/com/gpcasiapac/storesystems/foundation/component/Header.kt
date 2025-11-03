@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.collect.presentation.components
+package com.gpcasiapac.storesystems.foundation.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues

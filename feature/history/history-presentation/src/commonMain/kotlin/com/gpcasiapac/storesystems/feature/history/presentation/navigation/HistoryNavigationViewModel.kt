@@ -28,8 +28,8 @@ class HistoryNavigationViewModel :
             is HistoryOutcome.Back -> pop()
             is HistoryOutcome.OpenDetails -> push(
                 HistoryFeatureDestination.HistoryDetails(
-                    title = outcome.title,
-                    groupKey = outcome.groupKey
+                    type = outcome.type,
+                    id = outcome.id
                 )
             )
         }

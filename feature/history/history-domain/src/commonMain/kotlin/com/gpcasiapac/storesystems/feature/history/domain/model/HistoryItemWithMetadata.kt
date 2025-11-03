@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.history.domain.model
 
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
 
@@ -12,15 +13,15 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
  data class HistoryItemWithMetadata(
     // Base history fields
-    val id: String,
-    val type: HistoryType,
-    val entityId: String,
-    val status: HistoryStatus,
-    val timestamp: Instant,
-    val attempts: Int,
-    val lastError: String?,
-    val priority: Int,
+   val id: String,
+   val type: HistoryType,
+   val entityId: String,
+   val status: HistoryStatus,
+   val timestamp: Instant,
+   val attempts: Int,
+   val lastError: String?,
+   val priority: Int,
     
     // Typed metadata entries (empty when none)
-    val metadataList: List<HistoryMetadata>
+   val metadataList: List<HistoryMetadata>
 )

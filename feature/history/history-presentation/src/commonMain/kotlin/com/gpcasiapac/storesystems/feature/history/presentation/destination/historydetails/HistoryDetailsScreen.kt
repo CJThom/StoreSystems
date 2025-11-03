@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,16 +20,21 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryItemCard
+import com.gpcasiapac.storesystems.feature.history.presentation.mapper.toCustomerTypeParam
 import com.gpcasiapac.storesystems.feature.history.presentation.destination.history.HistoryScreenContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
+import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
+import com.gpcasiapac.storesystems.foundation.component.OutlineCard
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +43,8 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryDetailsScreen(
+    type: HistoryType,
+    id: String,
     state: HistoryDetailsScreenContract.State,
     onEvent: (HistoryDetailsScreenContract.Event) -> Unit,
     effectFlow: Flow<HistoryDetailsScreenContract.Effect>,
@@ -44,10 +52,20 @@ fun HistoryDetailsScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
+    LaunchedEffect(type, id) {
+        onEvent(
+            HistoryDetailsScreenContract.Event.Initialize(type = type, id = id)
+        )
+    }
+
+
     LaunchedEffect(effectFlow) {
         effectFlow.collectLatest { effect ->
             when (effect) {
-                is HistoryDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                is HistoryDetailsScreenContract.Effect.ShowError -> snackbarHostState.showSnackbar(
+                    effect.message
+                )
+
                 is HistoryDetailsScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
@@ -56,7 +74,7 @@ fun HistoryDetailsScreen(
     Scaffold(
         topBar = {
             MBoltAppBar(
-                title = { TopBarTitle( "History Details" ) },
+                title = { TopBarTitle("History Details") },
                 navigationIcon = {
                     IconButton(onClick = { onEvent(HistoryDetailsScreenContract.Event.Back) }) {
                         Icon(
@@ -90,22 +108,91 @@ private fun Content(
                 CircularProgressIndicator()
                 Text("Loading…", modifier = Modifier.padding(top = 8.dp))
             }
+
             state.error != null -> {
                 Text(state.error, color = MaterialTheme.colorScheme.error)
             }
+
             else -> {
+                val item = state.item
                 LazyColumn {
-                    items(state.items, key = { it.id }) { item ->
-                            HistoryItemCard(
-                                item = item,
-                                onClick = { /* can navigate deeper if needed */ },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    item {
+                        HeaderMedium(
+                            text = "Summary",
+                            isLoading = state.isLoading,
+                            contentPadding = PaddingValues(
+                                horizontal = Dimens.Space.medium,
+                                vertical = Dimens.Space.small
                             )
+                        )
+                    }
+                    if (item != null) {
+                        item {
+                            OutlineCard(contentPadding = PaddingValues(Dimens.Space.medium)) {
+                                Column(modifier = Modifier.padding(Dimens.Space.medium)) {
+                                    when (item) {
+                                        is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> {
+                                            val meta = item.metadata.firstOrNull()
+                                            val submittedAt = meta?.orderCreatedAt
+                                            val submittedBy = meta?.getCustomerDisplayName()
+                                            val submittedAtText = submittedAt?.let { com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo(it) } ?: "-"
+                                            val submittedByText = submittedBy ?: "-"
+                                            Text("Submitted at : ${'$'}submittedAtText")
+                                            Text("Submitted by : ${'$'}submittedByText")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Header
+                        item {
+                            HeaderMedium(
+                                text = "Order List",
+                                isLoading = state.isLoading,
+                                contentPadding = PaddingValues(
+                                    horizontal = Dimens.Space.medium,
+                                    vertical = Dimens.Space.small
+                                )
+                            )
+                        }
+                        when (item) {
+                            is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> {
+                                items(item.metadata, key = { it.invoiceNumber }) { line ->
+                                    CollectMetadataRowCard(
+                                        metadata = line,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+
+@androidx.compose.runtime.Composable
+private fun CollectMetadataRowCard(
+    metadata: com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata.CollectMetadata,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier
+) {
+    com.gpcasiapac.storesystems.foundation.component.ListItemScaffold(
+        modifier = modifier,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues()
+    ) {
+        com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent(
+            customerName = metadata.getCustomerDisplayName(),
+            customerType = metadata.customerType.toCustomerTypeParam(),
+            invoiceNumber = metadata.invoiceNumber,
+            webOrderNumber = metadata.webOrderNumber,
+            isLoading = false,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                bottom = com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small
+            )
+        )
     }
 }

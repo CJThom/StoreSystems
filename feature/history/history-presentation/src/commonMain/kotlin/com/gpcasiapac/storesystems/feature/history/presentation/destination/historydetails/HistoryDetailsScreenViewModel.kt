@@ -2,10 +2,11 @@ package com.gpcasiapac.storesystems.feature.history.presentation.destination.his
 
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import kotlinx.coroutines.launch
 
 class HistoryDetailsScreenViewModel(
-    private val getCollectHistoryItemById: com.gpcasiapac.storesystems.feature.history.domain.usecase.GetCollectHistoryItemByIdUseCase,
+    private val getHistoryItemById: com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryItemByIdUseCase,
 ) : MVIViewModel<HistoryDetailsScreenContract.Event, HistoryDetailsScreenContract.State, HistoryDetailsScreenContract.Effect>() {
 
     override fun setInitialState(): HistoryDetailsScreenContract.State =
@@ -20,8 +21,8 @@ class HistoryDetailsScreenViewModel(
     override fun handleEvents(event: HistoryDetailsScreenContract.Event) {
         when (event) {
             is HistoryDetailsScreenContract.Event.Initialize -> initialize(
-                event.title,
-                event.groupKey
+                event.type,
+                event.id
             )
 
             is HistoryDetailsScreenContract.Event.Refresh -> load()
@@ -29,10 +30,10 @@ class HistoryDetailsScreenViewModel(
         }
     }
 
-    private fun initialize(title: String, key: String) {
+    private fun initialize(type: HistoryType, id: String) {
         val current = viewState.value
-        if (current.title == title && current.groupKey == key && current.items.isNotEmpty()) return
-        setState { copy(title = title, groupKey = key) }
+        if (current.type == type && current.id == id && current.item != null) return
+        setState { copy(type = type, id = id) }
         load()
     }
 
@@ -40,11 +41,12 @@ class HistoryDetailsScreenViewModel(
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
             try {
-                val id = viewState.value.groupKey
-                val result = getCollectHistoryItemById(id)
+                val id = viewState.value.id
+                val type = viewState.value.type
+                val result = getHistoryItemById(type ?: HistoryType.UNKNOWN, id)
                 result.onSuccess { item ->
                     if (item != null) {
-                        setState { copy(items = listOf(item), isLoading = false) }
+                        setState { copy(item = item, isLoading = false) }
                     } else {
                         val msg = "History item not found"
                         setState { copy(isLoading = false, error = msg) }

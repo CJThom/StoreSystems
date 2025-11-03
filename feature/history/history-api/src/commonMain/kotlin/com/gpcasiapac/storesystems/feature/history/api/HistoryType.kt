@@ -1,4 +1,4 @@
-package com.gpcasiapac.storesystems.feature.history.domain.model
+package com.gpcasiapac.storesystems.feature.history.api
 
 /**
  * Type of history item.
@@ -7,7 +7,7 @@ package com.gpcasiapac.storesystems.feature.history.domain.model
 enum class HistoryType {
     ORDER_SUBMISSION,
     UNKNOWN;
-    
+
     companion object {
         fun fromTaskTypeName(name: String): HistoryType {
             return when (name) {

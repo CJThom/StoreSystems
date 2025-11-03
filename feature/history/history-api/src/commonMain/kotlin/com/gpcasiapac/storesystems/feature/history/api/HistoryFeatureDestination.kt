@@ -9,5 +9,8 @@ sealed interface HistoryFeatureDestination : NavKey {
     data object History : HistoryFeatureDestination
 
     @Serializable
-    data class HistoryDetails(val title: String, val groupKey: String) : HistoryFeatureDestination
+    data class HistoryDetails(
+        val type: HistoryType,
+        val id: String
+    ) : HistoryFeatureDestination
 }

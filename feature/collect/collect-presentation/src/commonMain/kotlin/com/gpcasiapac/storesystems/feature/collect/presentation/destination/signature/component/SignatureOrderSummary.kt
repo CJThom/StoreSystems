@@ -79,47 +79,10 @@ private fun SingleOrderSummaryHeader(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "Invoice",
-                style = MaterialTheme.typography.titleMedium,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                modifier = Modifier.weight(0.35f)
-            )
-            Text(
-                text = order.invoiceNumber,
-                style = MaterialTheme.typography.titleMedium,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                textAlign = TextAlign.End,
-                modifier = Modifier.weight(0.75f)
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "Customer",
-                style = MaterialTheme.typography.bodyMedium,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                modifier = Modifier.weight(0.35f)
-            )
-            Text(
-                text = order.customerName,
-                style = MaterialTheme.typography.bodyLarge,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.End,
-                maxLines = 1,
-                modifier = Modifier.weight(0.75f)
-            )
-        }
+        com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection(
+            invoices = listOf(order.invoiceNumber),
+            customerName = order.customerName,
+        )
     }
 }
 
@@ -201,56 +164,11 @@ private fun MultiOrderSummaryCard(
     ) {
         val totalQty = orders.sumOf { order -> order.lineItems.sumOf { it.quantity } }
 
-        // Build a concise invoice list preview that tends to fit within ~2 lines,
-        // without hardcoding heights. We use a simple character budget heuristic
-        // and then cap the text to maxLines = 2 with ellipsis.
-        fun buildInvoicesPreview(all: List<String>, charBudget: Int = 120): Pair<String, Int> {
-            if (all.isEmpty()) return "" to 0
-            val sb = StringBuilder()
-            var count = 0
-            for (inv in all) {
-                val part = if (sb.isEmpty()) inv else ", $inv"
-                if (sb.length + part.length > charBudget) break
-                sb.append(part)
-                count++
-            }
-            val remaining = all.size - count
-            return sb.toString() to remaining
-        }
+        // Reuse invoice-only UI from foundation
+        com.gpcasiapac.storesystems.foundation.component.InvoiceSummary(
+            invoices = orders.map { it.invoiceNumber }
+        )
 
-        val invoices = orders.map { it.invoiceNumber }
-        val (invoicePreview, remaining) = buildInvoicesPreview(invoices)
-
-        val invoiceAnnotated = buildAnnotatedString {
-            withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
-                append("Invoices: ")
-            }
-            append(invoicePreview)
-            if (remaining > 0) {
-                append(" +$remaining more")
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = invoiceAnnotated,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(0.85f)
-            )
-            Text(
-                text = "x${orders.size}",
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.End,
-                modifier = Modifier.weight(0.15f)
-            )
-        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
