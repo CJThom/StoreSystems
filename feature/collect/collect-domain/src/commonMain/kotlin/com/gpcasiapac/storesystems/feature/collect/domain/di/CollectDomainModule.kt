@@ -35,12 +35,15 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Ensu
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectOrderWithCustomerWithLineItemsListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ToggleAllOrderSelectionUseCase
 
 val collectDomainModule = module {
     // Use cases only; repository bindings are provided by the data module
     factoryOf(::ObserveCollectOrderWithCustomerWithLineItemsUseCase)
+    factoryOf(::ObserveCollectOrderWithCustomerWithLineItemsListUseCase)
+
     factoryOf(::FetchOrderListUseCase)
     factoryOf(::FetchOrderListUseCase)
     factoryOf(::GetOrderSearchSuggestionListUseCase)
@@ -54,6 +57,7 @@ val collectDomainModule = module {
     factoryOf(::ObserveCollectWorkOrderUseCase)
     factoryOf(::ObserveWorkOrderWithOrderWithCustomersUseCase)
     factoryOf(::ObserveWorkOrderItemsInScanOrderUseCase)
+   // factoryOf(::ObserveCollectOrderWithCustomerWithLineItemsUseCase)
     factoryOf(::SetWorkOrderCollectingTypeUseCase)
     factoryOf(::SetWorkOrderCourierNameUseCase)
     // Selection use cases

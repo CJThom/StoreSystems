@@ -8,13 +8,12 @@ sealed interface SignatureSummaryState {
     data class Single(
         val invoiceNumber: String,
         val customerName: String,
-        override val totalQuantity: Int,
-        val productPreview: ProductPreview? = null,
+        override val totalQuantity: Int
     ) : SignatureSummaryState
 
     data class Multi(
         val orderCount: Int,
-        val invoicePreview: InvoicePreview,
+        val joinedText: String,
         override val totalQuantity: Int,
     ) : SignatureSummaryState
 }
@@ -27,9 +26,4 @@ data class ProductPreview(
 data class ProductLinePreview(
     val description: String,
     val quantity: Int,
-)
-
-data class InvoicePreview(
-    val joinedText: String,
-    val remainingCount: Int,
 )

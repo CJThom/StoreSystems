@@ -32,6 +32,8 @@ interface OrderLocalRepository {
 
     fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItems?>
 
+    fun getCollectOrderWithCustomerWithLineItemsListFlow(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomerWithLineItems>>
+
     fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
 
     fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>>
@@ -73,4 +75,5 @@ interface OrderLocalRepository {
 
     // New: existence check for work order
     suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean
+
 }

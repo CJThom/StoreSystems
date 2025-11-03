@@ -170,7 +170,8 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                     when (outcome) {
                         is SignatureScreenContract.Effect.Outcome.Back -> onOutcome(CollectOutcome.Back)
                         is SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails -> onOutcome(
-                            CollectOutcome.WorkOrderItemSelected(outcome.invoiceNumberList.first())
+                            // No invoice context available from this outcome; navigate back to details via previous stack
+                            CollectOutcome.Back
                         )
 
                         is SignatureScreenContract.Effect.Outcome.SignatureSaved -> {

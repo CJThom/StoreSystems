@@ -10,6 +10,7 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectW
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectWorkOrderItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrderWithCustomersRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderItemWithOrderWithCustomerRelation
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderItemWithOrderWithCustomerWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
@@ -78,4 +79,9 @@ interface WorkOrderDao {
     @Transaction
     @Query("SELECT * FROM work_order_items WHERE work_order_id = :workOrderId ORDER BY position ASC")
     fun observeWorkOrderItemsWithOrders(workOrderId: WorkOrderId): Flow<List<WorkOrderItemWithOrderWithCustomerRelation>>
+
+    @Transaction
+    @Query("SELECT * FROM work_order_items WHERE work_order_id = :workOrderId ORDER BY position ASC")
+    fun getWorkOrderItemWithOrderWithCustomerWithLineItemsRelationListFlow(workOrderId: WorkOrderId): Flow<List<WorkOrderItemWithOrderWithCustomerWithLineItemsRelation>>
+
 }
