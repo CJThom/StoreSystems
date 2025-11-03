@@ -100,7 +100,7 @@ class SuperGlobalNavigationViewModel :
         when (outcome) {
             is CollectOutcome.OrderSelected -> pushInTab(
                 Collect(),
-                OrderDetails(outcome.invoiceNumber)
+                OrderDetails(outcome.invoiceNumber.value)
             )
 
             is CollectOutcome.OpenOrderFulfilment -> {
@@ -120,7 +120,7 @@ class SuperGlobalNavigationViewModel :
 
             is CollectOutcome.WorkOrderItemSelected -> pushInTab(
                 Collect(),
-                WorkOrderDetails(outcome.invoiceNumber)
+                WorkOrderDetails(outcome.invoiceNumber.value)
             )
 
             CollectOutcome.OpenHistory -> TODO()
