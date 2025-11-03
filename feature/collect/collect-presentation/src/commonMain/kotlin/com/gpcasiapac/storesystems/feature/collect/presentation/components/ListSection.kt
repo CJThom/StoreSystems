@@ -76,6 +76,7 @@ fun ListSectionPreview() {
                         description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
+                        productImageUrl = lineItem.imageUrl,
                         isLoading = false,
                         contentPadding = PaddingValues()
                     )
@@ -101,6 +102,7 @@ fun ListSectionLoadingPreview() {
                         description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
+                        productImageUrl = lineItem.imageUrl,
                         isLoading = true,
                         contentPadding = PaddingValues()
                     )

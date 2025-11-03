@@ -37,7 +37,7 @@ fun OrderDetails(
     Column(modifier = modifier.padding(contentPadding)) {
 
         HeaderMedium(
-            text = "Invoice: $invoiceNumber",
+            text = "Invoice: ${invoiceNumber.value}",
         )
 
         Column(

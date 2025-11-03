@@ -134,7 +134,7 @@ private fun ProductListSection(
                 }
             }
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.large)) {
                 lineItemList.forEach { lineItem ->
                     ProductDetails(
                         description = lineItem.description,
