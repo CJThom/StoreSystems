@@ -7,7 +7,9 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.InvoicePreview
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureSummaryState
 
 object SignatureScreenContract {
 
@@ -19,7 +21,12 @@ object SignatureScreenContract {
         val signatureStrokes: List<List<Offset>>,
         val signatureBitmap: ImageBitmap? = null,
         val customerName: String = "",
-        val selectedOrderList: List<SignatureOrderState> = emptyList(),
+        val selectedOrderList: List<SignatureOrderState>,
+        val summary: SignatureSummaryState = SignatureSummaryState.Multi(
+            orderCount = 0,
+            invoicePreview = InvoicePreview(joinedText = "", remainingCount = 0),
+            totalQuantity = 0
+        ),
     ) : ViewState
 
     sealed interface Event : ViewEvent {

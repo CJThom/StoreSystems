@@ -17,70 +17,56 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignaturePreviewOrdersProvider
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.ProductLinePreview
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureSummaryState
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
-//object SignatureOrderSummaryDefaults {
-//    // Centralized weights to avoid magic numbers and keep visuals unchanged
-//    const val LabelWeight = 0.35f
-//    const val ValueWeight = 0.75f
-//}
-
-
 @Composable
 fun SignatureOrderSummary(
-    orders: List<SignatureOrderState>,
+    summary: SignatureSummaryState,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
-
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
-
-        if (orders.size == 1) {
-            SingleOrderSummaryCard(order = orders.first())
-        } else {
-            MultiOrderSummaryCard(orders = orders)
+        when (summary) {
+            is SignatureSummaryState.Single -> SingleOrderSummaryCard(
+                invoiceNumber = summary.invoiceNumber,
+                customerName = summary.customerName,
+                totalQuantity = summary.totalQuantity,
+                productLines = summary.productPreview?.lines ?: emptyList(),
+                productRemainingCount = summary.productPreview?.remainingCount ?: 0,
+            )
+            is SignatureSummaryState.Multi -> MultiOrderSummaryCard(
+                invoiceJoinedText = summary.invoicePreview.joinedText,
+                invoiceRemainingCount = summary.invoicePreview.remainingCount,
+                orderCount = summary.orderCount,
+                totalQuantity = summary.totalQuantity,
+            )
         }
-
     }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SingleOrderSummaryCard(
-    order: SignatureOrderState,
+    invoiceNumber: String,
+    customerName: String,
+    totalQuantity: Int,
+    productLines: List<ProductLinePreview>,
+    productRemainingCount: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        SingleOrderSummaryHeader(order = order)
-        SingleOrderQuantityRow(order = order)
-        // If needed in future: SingleOrderProductsPreview(order)
-    }
-}
-
-// ——— Inlined private components ———
-
-@Composable
-private fun SingleOrderSummaryHeader(
-    order: SignatureOrderState,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
-    ) {
+        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -93,7 +79,7 @@ private fun SingleOrderSummaryHeader(
                 modifier = Modifier.weight(0.35f)
             )
             Text(
-                text = order.invoiceNumber.value,
+                text = invoiceNumber,
                 style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -114,7 +100,7 @@ private fun SingleOrderSummaryHeader(
                 modifier = Modifier.weight(0.35f)
             )
             Text(
-                text = order.customerName,
+                text = customerName,
                 style = MaterialTheme.typography.bodyLarge,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.End,
@@ -122,71 +108,53 @@ private fun SingleOrderSummaryHeader(
                 modifier = Modifier.weight(0.75f)
             )
         }
-    }
-}
 
-@Composable
-private fun SingleOrderQuantityRow(
-    order: SignatureOrderState,
-    modifier: Modifier = Modifier,
-) {
-    val totalQty = order.lineItems.sumOf { it.quantity }
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = "Quantity",
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Text(
-            text = "x${totalQty}",
-            style = MaterialTheme.typography.titleMedium,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-private fun SingleOrderProductsPreview(
-    order: SignatureOrderState,
-    modifier: Modifier = Modifier,
-) {
-    // Simple product lines summary
-    HorizontalDivider()
-
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
-    ) {
-        val previewLines = order.lineItems.take(3)
-        previewLines.forEach { line ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    text = "- ${line.productDescription}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier = Modifier.weight(0.85f)
-                )
-                Text(
-                    text = "x${line.quantity}",
-                    style = MaterialTheme.typography.labelLarge,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier = Modifier.weight(0.15f),
-                    textAlign = TextAlign.End,
-                )
-            }
-        }
-        val remaining = order.lineItems.size - previewLines.size
-        if (remaining > 0) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
-                text = "+$remaining more",
-                maxLines = 1,
-                style = MaterialTheme.typography.labelLarge,
+                text = "Quantity",
+                style = MaterialTheme.typography.bodyLarge
             )
+            Text(
+                text = "x$totalQuantity",
+                style = MaterialTheme.typography.titleMedium,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
+            )
+        }
+
+        if (productLines.isNotEmpty() || productRemainingCount > 0) {
+            HorizontalDivider()
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)) {
+                productLines.forEach { line ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            text = "- ${line.description}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            modifier = Modifier.weight(0.85f)
+                        )
+                        Text(
+                            text = "x${line.quantity}",
+                            style = MaterialTheme.typography.labelLarge,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            modifier = Modifier.weight(0.15f),
+                            textAlign = TextAlign.End,
+                        )
+                    }
+                }
+                if (productRemainingCount > 0) {
+                    Text(
+                        text = "+$productRemainingCount more",
+                        maxLines = 1,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
         }
     }
 }
@@ -194,42 +162,23 @@ private fun SingleOrderProductsPreview(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MultiOrderSummaryCard(
-    orders: List<SignatureOrderState>,
+    invoiceJoinedText: String,
+    invoiceRemainingCount: Int,
+    orderCount: Int,
+    totalQuantity: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        val totalQty = orders.sumOf { order -> order.lineItems.sumOf { it.quantity } }
-
-        // Build a concise invoice list preview that tends to fit within ~2 lines,
-        // without hardcoding heights. We use a simple character budget heuristic
-        // and then cap the text to maxLines = 2 with ellipsis.
-        fun buildInvoicesPreview(all: List<InvoiceNumber>, charBudget: Int = 120): Pair<String, Int> {
-            if (all.isEmpty()) return "" to 0
-            val sb = StringBuilder()
-            var count = 0
-            for (inv in all) {
-                val part = if (sb.isEmpty()) inv.value else ", $inv"
-                if (sb.length + part.length > charBudget) break
-                sb.append(part)
-                count++
-            }
-            val remaining = all.size - count
-            return sb.toString() to remaining
-        }
-
-        val invoices = orders.map { it.invoiceNumber }
-        val (invoicePreview, remaining) = buildInvoicesPreview(invoices)
-
         val invoiceAnnotated = buildAnnotatedString {
             withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
                 append("Invoices: ")
             }
-            append(invoicePreview)
-            if (remaining > 0) {
-                append(" +$remaining more")
+            append(invoiceJoinedText)
+            if (invoiceRemainingCount > 0) {
+                append(" +${invoiceRemainingCount} more")
             }
         }
 
@@ -245,7 +194,7 @@ private fun MultiOrderSummaryCard(
                 modifier = Modifier.weight(0.85f)
             )
             Text(
-                text = "x${orders.size}",
+                text = "x$orderCount",
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -262,7 +211,7 @@ private fun MultiOrderSummaryCard(
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = "x${totalQty}",
+                text = "x$totalQuantity",
                 style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
@@ -272,18 +221,43 @@ private fun MultiOrderSummaryCard(
 }
 
 @Preview(
-    name = "SignatureOrderSummary • Scenarios",
+    name = "SignatureOrderSummary • Single",
     showBackground = true,
     backgroundColor = 0xFFF5F5F5L,
     widthDp = 360
 )
 @Composable
-private fun SignatureOrderSummaryPreview(
-    @PreviewParameter(SignaturePreviewOrdersProvider::class) orders: List<SignatureOrderState>
-) {
-    GPCTheme {
-        SignatureOrderSummary(
-            orders = orders
+private fun SignatureOrderSummarySinglePreview() {
+    val summary = SignatureSummaryState.Single(
+        invoiceNumber = "INV-000123",
+        customerName = "Jane Doe",
+        totalQuantity = 5,
+        productPreview = com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.ProductPreview(
+            lines = listOf(
+                com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.ProductLinePreview("Widget A", 2),
+                com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.ProductLinePreview("Gadget B", 3),
+            ),
+            remainingCount = 1
         )
-    }
+    )
+    GPCTheme { SignatureOrderSummary(summary = summary) }
+}
+
+@Preview(
+    name = "SignatureOrderSummary • Multi",
+    showBackground = true,
+    backgroundColor = 0xFFF5F5F5L,
+    widthDp = 360
+)
+@Composable
+private fun SignatureOrderSummaryMultiPreview() {
+    val summary = SignatureSummaryState.Multi(
+        orderCount = 3,
+        invoicePreview = com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.InvoicePreview(
+            joinedText = "INV1, INV2, INV3",
+            remainingCount = 2
+        ),
+        totalQuantity = 12
+    )
+    GPCTheme { SignatureOrderSummary(summary = summary) }
 }

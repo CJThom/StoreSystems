@@ -99,7 +99,7 @@ fun SignatureScreen(
             Column {
 
                 SignatureOrderSummary(
-                    orders = state.selectedOrderList,
+                    summary = state.summary,
                     modifier = Modifier
                 )
                 OutlinedButton(

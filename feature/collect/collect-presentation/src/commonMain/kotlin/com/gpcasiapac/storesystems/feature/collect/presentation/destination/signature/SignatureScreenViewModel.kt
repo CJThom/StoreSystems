@@ -14,6 +14,9 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Save
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderStateList
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureSummary
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.InvoicePreview
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureSummaryState
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -42,7 +45,13 @@ class SignatureScreenViewModel(
             isSigned = false,
             error = null,
             signatureStrokes = emptyList(),
-            customerName = ""
+            customerName = "",
+            selectedOrderList = emptyList(),
+            summary = SignatureSummaryState.Multi(
+                orderCount = 0,
+                invoicePreview = InvoicePreview(joinedText = "", remainingCount = 0),
+                totalQuantity = 0
+            ),
         )
 
     override suspend fun awaitReadiness(): Boolean {
@@ -58,6 +67,7 @@ class SignatureScreenViewModel(
         viewModelScope.launch {
             val workOrderId: WorkOrderId =
                 sessionState.value.workOrderId.handleNull() ?: return@launch
+
             observeWorkOrderWithOrderWithCustomersUseCase(workOrderId = workOrderId).collectLatest { workOrderWithOrders ->
                 val invoiceNumbers = workOrderWithOrders
                     ?.collectOrderWithCustomerList
@@ -65,7 +75,17 @@ class SignatureScreenViewModel(
                     ?: emptyList()
 
                 if (invoiceNumbers.isEmpty()) {
-                    setState { copy(selectedOrderList = emptyList(), isLoading = false) }
+                    setState {
+                        copy(
+                            selectedOrderList = emptyList(),
+                            isLoading = false,
+                            summary = SignatureSummaryState.Multi(
+                                orderCount = 0,
+                                invoicePreview = InvoicePreview(joinedText = "", remainingCount = 0),
+                                totalQuantity = 0
+                            )
+                        )
+                    }
                     return@collectLatest
                 }
 
@@ -85,7 +105,8 @@ class SignatureScreenViewModel(
                     val nonNullDomain = domainList.filterNotNull()
                     val presentationList = nonNullDomain.map { it.toState() }
                     val signatureOrders = presentationList.toSignatureOrderStateList()
-                    setState { copy(selectedOrderList = signatureOrders, isLoading = false) }
+                    val summary = signatureOrders.toSignatureSummary()
+                    setState { copy(selectedOrderList = signatureOrders, summary = summary, isLoading = false) }
                 }
             }
         }
