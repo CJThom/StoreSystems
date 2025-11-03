@@ -17,6 +17,6 @@ class SubmitOrderSyncHandler(
     override suspend fun handle(task: SyncTask): Result<Unit> {
         // task.taskId represents the workOrderId in the sync queue
         // TODO: Implement actual submission when OrderRepository.submitWorkOrder() is added
-        return Result.success(Unit)
+        return Result.failure(IllegalStateException("Submitting work order is not yet implemented"))
     }
 }

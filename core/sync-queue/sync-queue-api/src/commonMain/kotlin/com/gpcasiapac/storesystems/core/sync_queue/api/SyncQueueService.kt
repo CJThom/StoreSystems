@@ -47,6 +47,11 @@ interface SyncQueueService {
     suspend fun retryFailedTasks(taskType: TaskType? = null): Result<Int>
     
     /**
+     * Retry a single task by id: typically resets status to PENDING.
+     */
+    suspend fun retryTask(taskId: String): Result<Unit>
+    
+    /**
      * Get tasks for a specific entity ID.
      */
     suspend fun getTasksByEntityId(entityId: String): List<SyncTask>

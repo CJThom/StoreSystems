@@ -85,10 +85,9 @@ class HistoryScreenViewModel(
 
     private fun handleRetryItem(id: String) {
         viewModelScope.launch {
-            // Currently retries all failed tasks (optionally by type). Per-task retry not supported yet.
-            retryHistoryUseCase()
+            retryHistoryUseCase(id)
                 .onSuccess {
-                    setEffect { HistoryScreenContract.Effect.ShowToast("Retry triggered") }
+                    setEffect { HistoryScreenContract.Effect.ShowToast("Retry queued") }
                 }
                 .onFailure { error ->
                     val message = error.message ?: "Failed to retry"

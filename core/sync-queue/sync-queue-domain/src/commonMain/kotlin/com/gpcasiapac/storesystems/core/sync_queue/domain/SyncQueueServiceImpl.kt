@@ -5,6 +5,7 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.AddTaskAndTriggerSyncUseCase
 import com.gpcasiapac.storesystems.core.sync_queue.domain.usecase.EnqueueCollectTaskAndTriggerSyncUseCase
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.Flow
 internal class SyncQueueServiceImpl(
     private val addTaskAndTriggerSyncUseCase: AddTaskAndTriggerSyncUseCase,
     private val enqueueCollectTaskAndTriggerSyncUseCase: EnqueueCollectTaskAndTriggerSyncUseCase,
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
+    private val syncTriggerCoordinator: com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCoordinator
 ) : SyncQueueService {
     
     override suspend fun addTaskAndTriggerSync(
@@ -49,6 +51,15 @@ internal class SyncQueueServiceImpl(
     
     override suspend fun retryFailedTasks(taskType: TaskType?): Result<Int> {
         return syncRepository.resetFailedTasks(taskType)
+    }
+
+    override suspend fun retryTask(taskId: String): Result<Unit> {
+        // Reset a single task back to PENDING so the worker can pick it up again
+        return syncRepository.updateTaskStatus(taskId, TaskStatus.PENDING)
+            .onSuccess {
+                // Trigger a sync run so the retried task is processed promptly
+                syncTriggerCoordinator.triggerSync()
+            }
     }
     
     override suspend fun getTasksByEntityId(entityId: String): List<SyncTask> {

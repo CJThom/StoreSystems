@@ -19,6 +19,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -112,76 +116,82 @@ private fun Content(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        when {
-            state.isLoading -> {
-                CircularProgressIndicator()
-                Text("Loading history…", modifier = Modifier.padding(top = 8.dp))
+        // Inline error banner without forking the whole UI
+        state.error?.let { error ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
+        }
 
-            state.error != null -> {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Text(
-                        text = state.error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
+        val isLoading = state.isLoading
+        val itemsList = if (isLoading) List(6) { null } else state.items
 
-            else -> {
-                val items = state.items
-                LazyColumn {
-                    items(items, key = { it.id }) { historyItem ->
-                        val invoiceNumbers = remember(historyItem) {
-                            when (historyItem) {
-                                is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem ->
-                                    historyItem.metadata.map { meta -> meta.webOrderNumber ?: meta.invoiceNumber }
-                                else -> emptyList()
+        LazyColumn {
+            itemsIndexed(itemsList, key = { index, item -> item?.id ?: "skeleton-$index" }) { _, historyItem ->
+                val invoiceNumbers = if (!isLoading && historyItem != null) {
+                    when (historyItem) {
+                        is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem ->
+                            historyItem.metadata.map { meta -> meta.webOrderNumber ?: meta.invoiceNumber }
+                        else -> emptyList()
+                    }
+                } else emptyList()
+
+                val timeText = if (!isLoading && historyItem != null) {
+                    when (historyItem) {
+                        is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem ->
+                            historyItem.metadata.firstOrNull()?.orderCreatedAt?.let { formatTimeAgo(it) } ?: ""
+                        else -> ""
+                    }
+                } else ""
+
+                val customerName = if (!isLoading && historyItem != null) {
+                    when (historyItem) {
+                        is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> historyItem.metadata.firstOrNull()?.getCustomerDisplayName() ?: ""
+                        else -> ""
+                    }
+                } else ""
+
+                val status = if (!isLoading && historyItem != null) {
+                    when (historyItem) {
+                        is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> historyItem.status
+                        else -> com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING
+                    }
+                } else com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING
+
+                OutlineCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = Dimens.Space.medium,
+                            vertical = Dimens.Space.small
+                        )
+                        .animateItem(),
+                    onClick = {
+                        if (!isLoading && historyItem != null) {
+                            val type = when (historyItem) {
+                                is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> HistoryType.ORDER_SUBMISSION
+                                else -> HistoryType.UNKNOWN
                             }
-                        }
-
-                        val timeText = remember(historyItem) {
-                            when (historyItem) {
-                                is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem ->
-                                    historyItem.metadata.firstOrNull()?.orderCreatedAt?.let { formatTimeAgo(it) } ?: ""
-                                else -> ""
-                            }
-                        }
-
-                        val customerName = remember(historyItem) {
-                            when (historyItem) {
-                                is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> historyItem.metadata.firstOrNull()?.getCustomerDisplayName() ?: ""
-                                else -> ""
-                            }
-                        }
-
-                        OutlineCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = Dimens.Space.medium,
-                                    vertical = Dimens.Space.small
-                                )
-                                .animateItem(),
-                            onClick = {
-                                val type = when (historyItem) {
-                                    is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> HistoryType.ORDER_SUBMISSION
-                                    else -> HistoryType.UNKNOWN
-                                }
-                                onEventSent(HistoryScreenContract.Event.OpenItem(type = type, id = historyItem.id))
-                            }
-                        ) {
-                            HistoryGroupedCard(
-                                invoiceNumbers = invoiceNumbers,
-                                time = timeText,
-                                customerName = customerName
-                            )
+                            onEventSent(HistoryScreenContract.Event.OpenItem(type = type, id = historyItem.id))
                         }
                     }
+                ) {
+                    HistoryGroupedCard(
+                        invoiceNumbers = invoiceNumbers,
+                        time = timeText,
+                        customerName = customerName,
+                        isLoading = isLoading,
+                        status = status,
+                        onRetry = if (!isLoading && (status == com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.FAILED || status == com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.REQUIRES_ACTION) && historyItem != null) {
+                            { onEventSent(HistoryScreenContract.Event.RetryItem(historyItem.id)) }
+                        } else null
+                    )
                 }
             }
         }
@@ -196,20 +206,48 @@ private fun HistoryGroupedCard(
     customerName: String,
     invoiceNumbers: List<String>,
     time: String,
-
+    isLoading: Boolean = false,
+    status: com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus = com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING,
+    onRetry: (() -> Unit)? = null,
 ) {
     ListItemScaffold(
         content = {
             Column {
-                InvoiceSummarySection(
-                    invoices = invoiceNumbers,
-                    customerName = customerName
-                )
+                if (isLoading) {
+                    // Skeleton blocks approximating text content
+                    Box(
+                        Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(16.dp)
+                            .placeholder(true, shape = RoundedCornerShape(4.dp))
+                    )
+                    Spacer(Modifier.height(Dimens.Space.small))
+                    Box(
+                        Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(14.dp)
+                            .placeholder(true, shape = RoundedCornerShape(4.dp))
+                    )
+                    Spacer(Modifier.height(Dimens.Space.extraSmall))
+                    Box(
+                        Modifier
+                            .fillMaxWidth(0.5f)
+                            .height(14.dp)
+                            .placeholder(true, shape = RoundedCornerShape(4.dp))
+                    )
+                } else {
+                    InvoiceSummarySection(
+                        invoices = invoiceNumbers,
+                        customerName = customerName
+                    )
+                }
             }
         },
         toolbar = {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.Space.small),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Dimens.Space.small),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -217,23 +255,58 @@ private fun HistoryGroupedCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = time,
+                        text = if (isLoading) " " else time,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.placeholder(isLoading)
                     )
                     Spacer(modifier = Modifier.width(Dimens.Space.small))
-                    StatusBadge(status = com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING)
+                    if (isLoading) {
+                        Box(
+                            Modifier
+                                .width(72.dp)
+                                .height(20.dp)
+                                .placeholder(true, shape = RoundedCornerShape(50))
+                        )
+                    } else {
+                        StatusBadge(status = status)
+                    }
                 }
-                Button(
-                    onClick = {},
-
-                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.ExtraSmallContainerHeight),
-                    modifier = Modifier
-                        .height(ButtonDefaults.ExtraSmallContainerHeight),
-                )  {
-                    Text("Retry", style = ButtonDefaults.textStyleFor(ButtonDefaults.ExtraSmallContainerHeight))
+                if (isLoading) {
+                    Box(
+                        Modifier
+                            .width(64.dp)
+                            .height(ButtonDefaults.ExtraSmallContainerHeight)
+                            .placeholder(true, shape = RoundedCornerShape(8.dp))
+                    )
+                } else {
+                    when (status) {
+                        com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.IN_PROGRESS -> {
+                            CircularProgressIndicator(
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight)
+                            )
+                        }
+                        com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.FAILED,
+                        com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.REQUIRES_ACTION -> {
+                            if (onRetry != null) {
+                                Button(
+                                    onClick = onRetry,
+                                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.ExtraSmallContainerHeight),
+                                    modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
+                                ) {
+                                    Text(
+                                        "Retry",
+                                        style = ButtonDefaults.textStyleFor(ButtonDefaults.ExtraSmallContainerHeight)
+                                    )
+                                }
+                            }
+                        }
+                        else -> {
+                            // No action for other states
+                        }
+                    }
                 }
-
             }
         }
     )

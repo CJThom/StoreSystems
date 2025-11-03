@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.items
@@ -19,7 +21,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -103,71 +110,107 @@ private fun Content(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        when {
-            state.isLoading -> {
-                CircularProgressIndicator()
-                Text("Loading…", modifier = Modifier.padding(top = 8.dp))
+        // Inline error banner without forking the whole UI
+        state.error?.let { error ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(Dimens.Space.medium)) {
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+
+        val isLoading = state.isLoading
+        val item = state.item
+
+        LazyColumn {
+            // Summary header
+            item {
+                HeaderMedium(
+                    text = "Summary",
+                    isLoading = isLoading,
+                    contentPadding = PaddingValues(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.small
+                    )
+                )
             }
 
-            state.error != null -> {
-                Text(state.error, color = MaterialTheme.colorScheme.error)
-            }
-
-            else -> {
-                val item = state.item
-                LazyColumn {
-                    item {
-                        HeaderMedium(
-                            text = "Summary",
-                            isLoading = state.isLoading,
-                            contentPadding = PaddingValues(
-                                horizontal = Dimens.Space.medium,
-                                vertical = Dimens.Space.small
-                            )
+            // Summary information panel (skeleton while loading)
+            item {
+                InfoPanel(
+                    modifier = Modifier.padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small),
+                    contentPadding = PaddingValues(Dimens.Space.medium)
+                ) {
+                    if (isLoading) {
+                        // Two lines approximating: Submitted on / Submitted by
+                        Box(
+                            Modifier
+                                .fillMaxWidth(0.5f)
+                                .height(16.dp)
+                                .placeholder(true, shape = RoundedCornerShape(4.dp))
                         )
-                    }
-                    if (item != null) {
-                        item {
-                            OutlineCard(contentPadding = PaddingValues(Dimens.Space.medium)) {
-                                Column(modifier = Modifier.padding(Dimens.Space.medium)) {
-                                    when (item) {
-                                        is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> {
-                                            val meta = item.metadata.firstOrNull()
-                                            val submittedAt = meta?.orderCreatedAt
-                                            val submittedBy = meta?.getCustomerDisplayName()
-                                            val submittedAtText = submittedAt?.let { com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo(it) } ?: "-"
-                                            val submittedByText = submittedBy ?: "-"
-                                            Text("Submitted at : ${'$'}submittedAtText")
-                                            Text("Submitted by : ${'$'}submittedByText")
-                                        }
-                                    }
-                                }
+                        Spacer(Modifier.height(Dimens.Space.small))
+                        Box(
+                            Modifier
+                                .fillMaxWidth(0.6f)
+                                .height(16.dp)
+                                .placeholder(true, shape = RoundedCornerShape(4.dp))
+                        )
+                    } else {
+                        when (val resolved = item) {
+                            is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> {
+                                SummarySection(resolved)
                             }
+                            else -> { /* no-op */ }
                         }
-                        // Header
-                        item {
-                            HeaderMedium(
-                                text = "Order List",
-                                isLoading = state.isLoading,
-                                contentPadding = PaddingValues(
-                                    horizontal = Dimens.Space.medium,
-                                    vertical = Dimens.Space.small
-                                )
+                    }
+                }
+            }
+
+            // Order List header
+            item {
+                HeaderMedium(
+                    text = "Order List",
+                    isLoading = isLoading,
+                    contentPadding = PaddingValues(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.small
+                    )
+                )
+            }
+
+            if (isLoading) {
+                items(5) { _ ->
+                    CollectMetadataRowCardSkeleton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+            } else {
+                when (val resolved = item) {
+                    is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> {
+                        items(resolved.metadata, key = { it.invoiceNumber }) { line ->
+                            CollectMetadataRowCard(
+                                metadata = line,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             )
                         }
-                        when (item) {
-                            is com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem -> {
-                                items(item.metadata, key = { it.invoiceNumber }) { line ->
-                                    CollectMetadataRowCard(
-                                        metadata = line,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    )
-                                }
-                            }
-                        }
                     }
+                    else -> { /* optional empty state */ }
                 }
             }
         }
@@ -194,5 +237,146 @@ private fun CollectMetadataRowCard(
                 bottom = com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small
             )
         )
+    }
+}
+
+
+@androidx.compose.runtime.Composable
+private fun CollectMetadataRowCardSkeleton(
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier
+) {
+    com.gpcasiapac.storesystems.foundation.component.ListItemScaffold(
+        modifier = modifier,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues()
+    ) {
+        com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent(
+            customerName = "",
+            customerType = com.gpcasiapac.storesystems.foundation.component.CustomerTypeParam.B2C,
+            invoiceNumber = "",
+            webOrderNumber = null,
+            isLoading = true,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                bottom = com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small
+            )
+        )
+    }
+}
+
+
+@Composable
+private fun SummarySection(
+    resolved: com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
+) {
+    val meta = resolved.metadata.firstOrNull()
+    val submittedAtText = meta?.orderCreatedAt
+        ?.let { com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo(it) }
+        ?: "-"
+    val submittedByText = meta?.getCustomerDisplayName() ?: "-"
+    val itemCount = resolved.metadata.size
+
+    // Title row with status
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            text = "Submission",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        com.gpcasiapac.storesystems.feature.history.presentation.composable.StatusBadge(
+            status = resolved.status
+        )
+    }
+
+    Spacer(Modifier.height(com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small))
+
+    // Submitted on/by
+    KeyValueRow(label = "Submitted on", value = submittedAtText)
+    KeyValueRow(label = "Submitted by", value = submittedByText)
+
+    // Items count
+    KeyValueRow(label = "Items", value = itemCount.toString())
+
+    // Attempts
+    KeyValueRow(label = "Attempts", value = resolved.attempts.toString())
+
+    // Last error (only if present)
+    if (!resolved.lastError.isNullOrBlank()) {
+        Spacer(Modifier.height(com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small))
+        ErrorInfo(message = resolved.lastError!!)
+    }
+}
+
+@Composable
+private fun KeyValueRow(
+    label: String,
+    value: String,
+    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    singleLine: Boolean = false,
+    maxValueLines: Int = 3,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = valueColor,
+            modifier = Modifier.weight(1.5f),
+            maxLines = if (singleLine) 1 else maxValueLines,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            softWrap = true,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
+        )
+    }
+}
+
+@Composable
+private fun ErrorInfo(message: String) {
+    androidx.compose.material3.Surface(
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        shape = MaterialTheme.shapes.small
+    ) {
+        Column(modifier = Modifier.padding(com.gpcasiapac.storesystems.foundation.design_system.Dimens.Space.small)) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 5,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun InfoPanel(
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(16.dp),
+    showBorder: Boolean = false,
+    content: @androidx.compose.runtime.Composable () -> Unit,
+) {
+    val border = if (showBorder) {
+        androidx.compose.foundation.BorderStroke(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant)
+    } else null
+
+    androidx.compose.material3.Surface(
+        modifier = modifier,
+        color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 1.dp,
+        shadowElevation = 0.dp,
+        shape = androidx.compose.material3.MaterialTheme.shapes.medium,
+        border = border
+    ) {
+        androidx.compose.foundation.layout.Column(
+            androidx.compose.ui.Modifier.padding(contentPadding)
+        ) { content() }
     }
 }
