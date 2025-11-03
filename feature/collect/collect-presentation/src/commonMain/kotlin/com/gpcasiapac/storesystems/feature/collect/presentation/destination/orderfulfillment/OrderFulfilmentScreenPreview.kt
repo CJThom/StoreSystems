@@ -105,6 +105,10 @@ class OrderFulfilmentScreenStateProvider :
             val singleB2C_IdOther = singleB2C.copy(
                 idVerification = OrderFulfilmentScreenContract.IdVerificationOption.OTHER
             )
+            val singleB2C_IdOther_WithText = singleB2C.copy(
+                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
+                idVerificationOtherText = "Temporary visitor pass"
+            )
 
             val multiB2C = base.copy(
                 collectOrderListItemStateList = orders,

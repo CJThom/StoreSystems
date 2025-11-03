@@ -16,6 +16,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,21 +39,23 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 fun IdVerificationSection(
     selected: OrderFulfilmentScreenContract.IdVerificationOption?,
     onSelected: (OrderFulfilmentScreenContract.IdVerificationOption) -> Unit,
+    otherText: String,
+    onOtherTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
 ) {
     Column(modifier = modifier) {
         HeaderSmall(
             text = "ID Verification",
-            contentPadding = contentPadding
+            //contentPadding = contentPadding
         )
 
         Column(
             modifier = Modifier
                 .selectableGroup()
                 .padding(
-                    start = contentPadding.calculateStartPadding(androidx.compose.ui.platform.LocalLayoutDirection.current),
-                    end = contentPadding.calculateEndPadding(androidx.compose.ui.platform.LocalLayoutDirection.current),
+                    start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                    end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
                 ),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
         ) {
@@ -66,6 +74,20 @@ fun IdVerificationSection(
                 selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
                 onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.OTHER) }
             )
+
+            AnimatedVisibility(
+                visible = selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                OutlinedTextField(
+                    value = otherText,
+                    onValueChange = onOtherTextChange,
+                    singleLine = true,
+                    label = { Text("Specify ID") },
+                    modifier = Modifier                        .fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -111,7 +133,8 @@ private fun IdOptionRow(
 
 // ---- Previews ----
 private data class IdVerificationPreviewData(
-    val selected: OrderFulfilmentScreenContract.IdVerificationOption?
+    val selected: OrderFulfilmentScreenContract.IdVerificationOption?,
+    val otherText: String = ""
 )
 
 private class IdVerificationPreviewProvider : PreviewParameterProvider<IdVerificationPreviewData> {
@@ -132,6 +155,8 @@ private fun IdVerificationSectionPreview(
         IdVerificationSection(
             selected = data.selected,
             onSelected = {},
+            otherText = if (data.selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER) "Some ID" else "",
+            onOtherTextChange = {}
         )
     }
 }

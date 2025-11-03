@@ -281,7 +281,16 @@ class OrderFulfilmentScreenViewModel(
 
             // ID Verification (single-select)
             is OrderFulfilmentScreenContract.Event.IdVerificationChanged -> {
-                setState { copy(idVerification = event.option) }
+                setState {
+                    copy(
+                        idVerification = event.option,
+                        idVerificationOtherText = if (event.option == OrderFulfilmentScreenContract.IdVerificationOption.OTHER) idVerificationOtherText else ""
+                    )
+                }
+            }
+
+            is OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged -> {
+                setState { copy(idVerificationOtherText = event.text) }
             }
 
             is OrderFulfilmentScreenContract.Event.ShowCustomerNameDialog -> {

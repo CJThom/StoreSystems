@@ -59,6 +59,8 @@ object OrderFulfilmentScreenContract {
 
         // ID Verification selection (single-select)
         val idVerification: IdVerificationOption? = null,
+        // Text input shown when 'Other' is selected
+        val idVerificationOtherText: String = "",
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
@@ -114,6 +116,8 @@ object OrderFulfilmentScreenContract {
 
         // ID Verification (single-select)
         data class IdVerificationChanged(val option: IdVerificationOption) : Event
+        // ID Verification 'Other' text input change
+        data class IdVerificationOtherChanged(val text: String) : Event
 
         // Final action
         data object Confirm : Event

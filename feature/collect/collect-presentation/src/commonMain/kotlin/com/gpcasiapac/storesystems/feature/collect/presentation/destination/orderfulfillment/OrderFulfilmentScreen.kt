@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,17 +26,14 @@ import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
@@ -51,10 +50,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import coil3.size.Dimension
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
@@ -65,10 +66,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemRow
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerificationSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
@@ -78,7 +77,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.selection.Select
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
-import com.gpcasiapac.storesystems.foundation.component.CheckableListItem
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
@@ -380,11 +378,54 @@ fun OrderFulfilmentScreen(
                 )
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
-                ActionsContent(
+                CollectorSection(
                     state = state,
                     onEventSent = onEventSent
                 )
             }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SignaturePreviewImage(
+                    onSignClick = {
+                        onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+                    },
+                    onRetakeClick = {
+                        onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+                    },
+                    image = state.signatureBase64
+                )
+            }
+
+            if (state.featureFlags.isCorrespondenceSectionVisible) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(
+                            vertical = Dimens.Space.medium
+                        )
+                    )
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    CorrespondenceSection(
+                        correspondenceOptionList = state.correspondenceOptionList,
+                        onCheckedChange = { id ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                                    id = id
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+
             item(span = { GridItemSpan(maxLineSpan) }) {
                 HorizontalDivider(
                     modifier = Modifier.padding(
@@ -524,75 +565,61 @@ fun OrderFulfilmentScreen(
     }
 }
 
-
 @Composable
-private fun ActionsContent(
+private fun CollectorSection(
     state: OrderFulfilmentScreenContract.State,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
 
-
     Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        modifier = modifier
+            .padding(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+            )
+            .fillMaxWidth()
     ) {
-        Column {
-            CollectionTypeSection(
-                title = stringResource(Res.string.who_is_collecting),
-                value = state.collectingType,
-                optionList = state.collectionTypeOptionList,
-                onValueChange = { collectionType ->
-                    onEventSent(
-                        OrderFulfilmentScreenContract.Event.CollectingChanged(
-                            collectionType
-                        )
+        CollectionTypeSection(
+            title = stringResource(Res.string.who_is_collecting),
+            value = state.collectingType,
+            optionList = state.collectionTypeOptionList,
+            onValueChange = { collectionType ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.CollectingChanged(
+                        collectionType
                     )
-                },
-            ) { selectedType ->
-                CollectionTypeContent(
-                    state = state,
-                    selectedType = selectedType,
-                    onEventSent = onEventSent
                 )
-            }
-
-            IdVerificationSection(
-                selected = state.idVerification,
-                onSelected = { option ->
-                    onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
-                }
+            },
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+            )
+        ) { selectedType ->
+            CollectionTypeContent(
+                state = state,
+                selectedType = selectedType,
+                onEventSent = onEventSent
             )
         }
 
-        HorizontalDivider()
-
-        SignaturePreviewImage(
-            onSignClick = {
-                onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+        IdVerificationSection(
+            selected = state.idVerification,
+            onSelected = { option ->
+                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
             },
-            onRetakeClick = {
-                onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+            otherText = state.idVerificationOtherText,
+            onOtherTextChange = { text ->
+                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged(text))
             },
-            image = state.signatureBase64
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+            )
         )
 
-        if (state.featureFlags.isCorrespondenceSectionVisible) {
-            HorizontalDivider()
-
-            CorrespondenceSection(
-                correspondenceOptionList = state.correspondenceOptionList,
-                onCheckedChange = { id ->
-                    onEventSent(
-                        OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                            id = id
-                        )
-                    )
-                }
-            )
-        }
     }
-
 }
 
 @Composable
