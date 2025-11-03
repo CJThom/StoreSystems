@@ -321,7 +321,7 @@ fun OrderFulfilmentScreen(
                 // Orders grid
                 items(
                     items = state.collectOrderListItemStateList,
-                    key = { it.invoiceNumber },
+                    key = { it.invoiceNumber.value },
                 ) { collectOrderState ->
                     CheckboxCard(
                         modifier = Modifier

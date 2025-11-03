@@ -5,13 +5,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.scanning.ScanEventsRegistry
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
 fun OrderDetailsScreenDestination(
-    invoiceNumber: String,
+    invoiceNumber: InvoiceNumber,
     viewModel: OrderDetailsScreenViewModel = koinViewModel { parametersOf(invoiceNumber) },
     onOutcome: (outcome: OrderDetailsScreenContract.Effect.Outcome) -> Unit,
 ) {

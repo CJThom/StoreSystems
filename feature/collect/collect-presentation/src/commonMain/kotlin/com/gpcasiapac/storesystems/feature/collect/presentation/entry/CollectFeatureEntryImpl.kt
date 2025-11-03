@@ -17,6 +17,7 @@ import com.gpcasiapac.storesystems.feature.collect.api.CollectExternalOutcome
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureDestination
 import com.gpcasiapac.storesystems.feature.collect.api.CollectFeatureEntry
 import com.gpcasiapac.storesystems.feature.collect.api.CollectOutcome
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderdetails.OrderDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
@@ -107,7 +108,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                 metadata = ListDetailSceneStrategy.detailPane(),
             ) { destination ->
 
-                OrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
+                OrderDetailsScreenDestination(invoiceNumber = InvoiceNumber(destination.invoiceNumber)) { outcome ->
                     when (outcome) {
                         is OrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
                             CollectOutcome.Back
@@ -160,7 +161,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
                 metadata = ListDetailSceneStrategy.detailPane(),
             ) { destination ->
 
-                WorkOrderDetailsScreenDestination(invoiceNumber = destination.invoiceNumber) { outcome ->
+                WorkOrderDetailsScreenDestination(invoiceNumber = InvoiceNumber(destination.invoiceNumber)) { outcome ->
                     when (outcome) {
                         is WorkOrderDetailsScreenContract.Effect.Outcome.Back -> onOutcome(
                             CollectOutcome.Back

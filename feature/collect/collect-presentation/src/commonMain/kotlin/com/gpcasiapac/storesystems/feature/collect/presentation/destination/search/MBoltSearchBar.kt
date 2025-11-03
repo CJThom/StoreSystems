@@ -411,7 +411,7 @@ private fun ExpandedSearchSection(
                         }
                         items(
                             items = searchOrderItems,
-                            key = { it.invoiceNumber }
+                            key = { it.invoiceNumber.value }
                         ) { collectOrderState ->
 
                             CheckboxCard(
