@@ -80,10 +80,6 @@ object OrderFulfilmentScreenContract {
         // Errors & navigation
         data object ClearError : Event/**/
         data object Back : Event
-        // Back confirmation dialog actions
-        data object ConfirmBackSave : Event
-        data object ConfirmBackDiscard : Event
-        data object CancelBackDialog : Event
 
         // Collecting selector
         data class CollectingChanged(val type: CollectingType) : Event
@@ -145,14 +141,6 @@ object OrderFulfilmentScreenContract {
         ) : Effect
         data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) : Effect
         data class PlayHaptic(val type: HapticEffect) : Effect
-        // Ask UI to present a 3-button dialog for unsaved progress
-        data class ShowSaveDiscardDialog(
-            val title: String = "Unsaved progress",
-            val message: String = "You have unsaved changes. Save as draft or discard?",
-            val saveLabel: String = "Save",
-            val discardLabel: String = "Discard",
-            val cancelLabel: String = "Cancel",
-        ) : Effect
 
         // Two-button confirm dialog for selection coming from Search in Fulfilment
         data class ShowConfirmSelectionDialog(
@@ -169,8 +157,6 @@ object OrderFulfilmentScreenContract {
             data object Confirmed : Outcome
             data class SignatureRequested(val customerName: String): Outcome
             data class NavigateToOrderDetails(val invoiceNumber: InvoiceNumber) : Outcome
-            data object SaveAndExit : Outcome
-            data object DiscardAndExit : Outcome
         }
     }
 

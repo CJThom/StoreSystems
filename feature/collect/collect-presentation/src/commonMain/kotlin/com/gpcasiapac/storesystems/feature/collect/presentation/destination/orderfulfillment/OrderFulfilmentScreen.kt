@@ -106,8 +106,6 @@ fun OrderFulfilmentScreen(
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
-    val dialogSpec =
-        remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
 
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
@@ -150,9 +148,6 @@ fun OrderFulfilmentScreen(
                     hapticPerformer?.perform(effect.type)
                 }
 
-                is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
-                    dialogSpec.value = effect
-                }
 
                 is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
                     selectionConfirmDialogSpec.value = effect
@@ -463,36 +458,6 @@ fun OrderFulfilmentScreen(
             }
         }
 
-        // Save/Discard dialog
-        val spec = dialogSpec.value
-        if (spec != null) {
-            AlertDialog(
-                onDismissRequest = {
-                    dialogSpec.value = null
-                    onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                },
-                title = { Text(spec.title) },
-                text = { Text(spec.message) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        dialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
-                    }) { Text(spec.saveLabel) }
-                },
-                dismissButton = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
-                        TextButton(onClick = {
-                            dialogSpec.value = null
-                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
-                        }) { Text(spec.discardLabel) }
-                        TextButton(onClick = {
-                            dialogSpec.value = null
-                            onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                        }) { Text(spec.cancelLabel) }
-                    }
-                }
-            )
-        }
 
         // Search selection confirmation dialog (parent-driven, 2-button)
         val selectSpec = selectionConfirmDialogSpec.value
