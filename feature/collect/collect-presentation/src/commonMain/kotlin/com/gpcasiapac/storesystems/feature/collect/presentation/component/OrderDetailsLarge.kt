@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,6 +52,7 @@ fun OrderDetailsLarge(
     modifier: Modifier = Modifier,
     visibleLineItemListCount: Int = orderState.lineItemList.size,
     isProductListExpanded: Boolean = true,
+    isLoading: Boolean = false,
     onViewMoreClick: (() -> Unit)? = null,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -61,7 +63,10 @@ fun OrderDetailsLarge(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-        OrderAndCustomerDetails(orderState = orderState)
+        OrderAndCustomerDetails(
+            orderState = orderState,
+            isLoading = isLoading
+        )
 
         HorizontalDivider()
 
@@ -70,19 +75,24 @@ fun OrderDetailsLarge(
             lineItemList = orderState.lineItemList.take(visibleLineItemListCount),
             isProductListExpanded = isProductListExpanded,
             onViewMoreClick = onViewMoreClick,
-            useGrid = useGridForProducts
+            useGrid = useGridForProducts,
+            isLoading = isLoading
         )
     }
 }
 
 @Composable
-private fun OrderAndCustomerDetails(orderState: CollectOrderWithCustomerWithLineItemsState) {
+private fun OrderAndCustomerDetails(
+    orderState: CollectOrderWithCustomerWithLineItemsState,
+    isLoading: Boolean = false
+) {
     OrderDetails(
         invoiceNumber = orderState.order.invoiceNumber,
         orderNumber = orderState.order.orderNumber,
         webOrderNumber = orderState.order.webOrderNumber,
         createdAt = orderState.order.createdAt,
         pickedAt = orderState.order.pickedAt,
+        isLoading = isLoading
     )
     HorizontalDivider()
     CustomerDetails(
@@ -90,7 +100,8 @@ private fun OrderAndCustomerDetails(orderState: CollectOrderWithCustomerWithLine
         customerNumber = orderState.customer.customerNumber,
         phoneNumber = orderState.customer.mobileNumber,
         customerType = orderState.customer.type,
-        modifier = Modifier
+        modifier = Modifier,
+        isLoading = isLoading
     )
 }
 
@@ -102,6 +113,7 @@ private fun ProductListSection(
     onViewMoreClick: (() -> Unit)?,
     useGrid: Boolean,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -111,7 +123,8 @@ private fun ProductListSection(
     ) {
         HeaderMedium(
             text = "Product list",
-            contentPadding = PaddingValues()
+            contentPadding = PaddingValues(),
+            isLoading = isLoading,
         )
 
         if (useGrid) {
@@ -123,12 +136,12 @@ private fun ProductListSection(
             ) {
                 lineItemList.forEach { lineItem ->
                     ProductDetails(
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                         description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
                         productImageUrl = lineItem.imageUrl,
+                        isLoading = isLoading,
                         contentPadding = PaddingValues()
                     )
                 }
@@ -141,6 +154,7 @@ private fun ProductListSection(
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
                         productImageUrl = lineItem.imageUrl,
+                        isLoading = isLoading,
                         contentPadding = PaddingValues()
                     )
                 }

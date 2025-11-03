@@ -15,6 +15,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -44,7 +45,7 @@ class OrderDetailsScreenViewModel(
 
     override fun setInitialState(): OrderDetailsScreenContract.State {
         return OrderDetailsScreenContract.State(
-            order = null,
+            order = CollectOrderWithCustomerWithLineItemsState.placeholder(), // TODO: Improve placeholder()
             isLoading = true,
             error = null
         )

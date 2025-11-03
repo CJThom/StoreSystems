@@ -60,9 +60,7 @@ fun SignaturePreviewImage(
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
             Card(
-//                modifier = Modifier.size(height = 200.dp, width = 350.dp),
                 modifier = Modifier
-                    .background(Color.Blue)
                     .height(height = 260.dp)
                     .fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),

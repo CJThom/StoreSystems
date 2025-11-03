@@ -94,19 +94,14 @@ fun SignatureScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-         //   verticalArrangement = Arrangement.SpaceBetween
         ) {
 
-            Column(
-          //     modifier = Modifier.weight(0.35F),
-                //    verticalArrangement = Arrangement.SpaceBetween
-            ) {
+            Column {
 
                 SignatureOrderSummary(
                     orders = state.selectedOrderList,
                     modifier = Modifier
                 )
-                //Spacer(Modifier.weight(1F))
                 OutlinedButton(
                     onClick = { onEventSent(SignatureScreenContract.Event.ViewDetailsClicked) },
                     modifier = Modifier
@@ -120,40 +115,30 @@ fun SignatureScreen(
                     )
                 }
                 Spacer(Modifier.size(Dimens.Space.medium))
-
-                //  Spacer(Modifier.size(Dimens.Space.medium))
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
 
-            Column(
-              //  modifier = Modifier.weight(0.65F),
-                //   verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                //  Spacer(Modifier.weight(1F))
+            Column {
                 Spacer(Modifier.size(Dimens.Space.medium))
-//                Box(
-//                    modifier = Modifier.weight(0.7F),
-//                ) {
 
-                    SignHereCanvas(
-                        onComplete = { image ->
-                            onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
-                        },
-                        modifier = Modifier
-                            .padding(Dimens.Space.medium)
-                            .height(260.dp)
-                            .fillMaxWidth(),
-                        strokes = state.signatureStrokes,
-                        onStrokesChange = { strokes ->
-                            onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
-                        },
-                        strokeColor = MaterialTheme.colorScheme.onSurface,
-                        customerName = state.customerName,
-                        onClearClick = { onEventSent(SignatureScreenContract.Event.ClearSignature) },
-                    )
-            //    }
-            Spacer(Modifier.weight(1F))
-                // Spacer(Modifier.size(Dimens.Space.large))
+                SignHereCanvas(
+                    onComplete = { image ->
+                        onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
+                    },
+                    modifier = Modifier
+                        .padding(Dimens.Space.medium)
+                        .height(260.dp)
+                        .fillMaxWidth(),
+                    strokes = state.signatureStrokes,
+                    onStrokesChange = { strokes ->
+                        onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                    },
+                    strokeColor = MaterialTheme.colorScheme.onSurface,
+                    customerName = state.customerName,
+                    onClearClick = { onEventSent(SignatureScreenContract.Event.ClearSignature) },
+                )
+
+                Spacer(Modifier.weight(1F))
 
                 Button(
                     onClick = {
