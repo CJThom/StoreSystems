@@ -23,6 +23,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import com.gpcasiapac.storesystems.foundation.design_system.MBoltIcons
 
 /**
  * Extracted main content for Collect Order details consisting of customer name and identifiers.
@@ -65,7 +66,7 @@ fun CollectOrderDetailsContent(
             if (webOrderNumber != null) {
                 DetailItemSmall(
                     value = webOrderNumber,
-                    imageVector = Icons.Outlined.Web,
+                    imageVector = MBoltIcons.Globe,
                     isLoading = isLoading,
                     modifier = Modifier
                 )
