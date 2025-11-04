@@ -28,11 +28,18 @@ interface SyncTaskDao {
     @Query("SELECT * FROM sync_tasks WHERE task_type = :taskType AND status = :status ORDER BY priority DESC, added_time ASC LIMIT :limit")
     suspend fun getTasksByTypeAndStatus(taskType: String, status: String, limit: Int): List<SyncTaskEntity>
     
-    @Query("SELECT * FROM sync_tasks WHERE status = 'PENDING' ORDER BY priority DESC, added_time ASC LIMIT 1")
+    @Query("SELECT * FROM sync_tasks WHERE status IN ('PENDING','FAILED') AND no_of_attempts < max_attempts ORDER BY priority DESC, added_time ASC LIMIT 1")
     suspend fun getNextPendingTask(): SyncTaskEntity?
     
     @Query("UPDATE sync_tasks SET no_of_attempts = no_of_attempts + 1, last_attempt_time = :lastAttemptTime, updated_time = :updatedTime WHERE id = :taskId")
     suspend fun incrementAttempt(taskId: String, lastAttemptTime: Instant, updatedTime: Instant)
+    
+    /**
+     * Atomically set IN_PROGRESS and increment attempts if eligible.
+     * Returns number of rows affected (1 if started, 0 otherwise).
+     */
+    @Query("UPDATE sync_tasks SET status = 'IN_PROGRESS', no_of_attempts = no_of_attempts + 1, last_attempt_time = :now, updated_time = :now WHERE id = :taskId AND status IN ('PENDING','FAILED') AND no_of_attempts < max_attempts")
+    suspend fun startAttempt(taskId: String, now: Instant): Int
     
     @Query("DELETE FROM sync_tasks WHERE (status = 'COMPLETED' OR status = 'FAILED') AND updated_time < :cutoffTime")
     suspend fun deleteOldTasks(cutoffTime: Instant): Int

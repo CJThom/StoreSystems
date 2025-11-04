@@ -89,6 +89,7 @@ interface SyncQueueService {
         taskId: String,
         priority: Int = 0,
         maxAttempts: Int = 3,
-        metadata: List<CollectTaskMetadata>
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String? = null
     ): Result<String>
 }

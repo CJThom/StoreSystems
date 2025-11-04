@@ -18,6 +18,9 @@ interface SyncRepository {
     /** Get next pending task with highest priority */
     suspend fun getNextPendingTask(): SyncTask?
     
+    /** Atomically mark task IN_PROGRESS and increment attempts; returns the updated attempt number, or null if not started. */
+    suspend fun startAttempt(taskId: String): Int?
+    
     /** Update task status with optional error attempt */
     suspend fun updateTaskStatus(taskId: String, status: TaskStatus, errorAttempt: SyncTaskAttemptError? = null): Result<Unit>
     
@@ -60,12 +63,20 @@ interface SyncRepository {
     /** Get tasks by customer number */
     suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata>
     
+    /** Reset a single task for manual retry; if resetAttempts is true, attempts and errors are cleared. Optionally bump maxAttempts to allow retry without wiping history. */
+    suspend fun resetTaskForRetry(
+        taskId: String,
+        resetAttempts: Boolean = false,
+        bumpMaxAttemptsBy: Int = 0
+    ): Result<Unit>
+    
     /** Enqueue a collect task with metadata list */
     suspend fun enqueueCollectTask(
         taskType: TaskType,
         taskId: String,
         priority: Int = 0,
         maxAttempts: Int = 3,
-        metadata: List<CollectTaskMetadata>
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String? = null
     ): Result<String>
 }

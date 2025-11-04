@@ -19,14 +19,17 @@ class EnqueueCollectTaskAndTriggerSyncUseCase(
         taskId: String,
         priority: Int = 10,
         maxAttempts: Int = 3,
-        metadata: List<CollectTaskMetadata>
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String? = null,
     ): Result<String> {
+        // submittedBy is currently not persisted at repository level; reserved for future persistence.
         return syncRepository.enqueueCollectTask(
             taskType = taskType,
             taskId = taskId,
             priority = priority,
             maxAttempts = maxAttempts,
-            metadata = metadata
+            metadata = metadata,
+            submittedBy = submittedBy
         ).onSuccess {
             // Trigger platform-specific sync after task is added
             syncTriggerCoordinator.triggerSync()

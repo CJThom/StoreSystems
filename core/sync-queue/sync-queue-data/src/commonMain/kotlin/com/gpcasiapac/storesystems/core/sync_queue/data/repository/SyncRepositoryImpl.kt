@@ -57,6 +57,14 @@ class SyncRepositoryImpl(
         return syncTaskDao.getNextPendingTask()?.toDomain()
     }
 
+    override suspend fun startAttempt(taskId: String): Int? = runCatching {
+        val now = Clock.System.now()
+        val rows = syncTaskDao.startAttempt(taskId, now)
+        if (rows == 1) {
+            syncTaskDao.getTaskById(taskId)?.noOfAttempts
+        } else null
+    }.getOrElse { null }
+
     override suspend fun updateTaskStatus(
         taskId: String,
         status: TaskStatus,
@@ -170,12 +178,44 @@ class SyncRepositoryImpl(
         return syncTaskDao.getTasksByCustomerNumber(customerNumber).toApiModels()
     }
     
+    override suspend fun resetTaskForRetry(taskId: String, resetAttempts: Boolean, bumpMaxAttemptsBy: Int): Result<Unit> = runCatching {
+        val now = Clock.System.now()
+        val current = syncTaskDao.getTaskById(taskId) ?: return@runCatching
+
+        // Avoid resurrecting completed/in-progress unexpectedly; allow FAILED/REQUIRES_ACTION/PENDING
+        if (current.status == TaskStatus.COMPLETED.name || current.status == TaskStatus.IN_PROGRESS.name) {
+            return@runCatching
+        }
+
+        val needsBump = !resetAttempts && current.noOfAttempts >= current.maxAttempts
+        val bump = if (needsBump) maxOf(1, bumpMaxAttemptsBy) else bumpMaxAttemptsBy
+
+        val updated = if (resetAttempts) {
+            current.copy(
+                status = TaskStatus.PENDING.name,
+                noOfAttempts = 0,
+                errorAttempts = null,
+                updatedTime = now,
+                lastAttemptTime = null,
+                maxAttempts = current.maxAttempts + bump
+            )
+        } else {
+            current.copy(
+                status = TaskStatus.PENDING.name,
+                updatedTime = now,
+                maxAttempts = current.maxAttempts + bump
+            )
+        }
+        syncTaskDao.updateTask(updated)
+    }
+    
     override suspend fun enqueueCollectTask(
         taskType: TaskType,
         taskId: String,
         priority: Int,
         maxAttempts: Int,
-        metadata: List<CollectTaskMetadata>
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String?
     ): Result<String> = runCatching {
         require(metadata.isNotEmpty()) { "metadata cannot be empty" }
         val syncTaskId = UUID.randomUUID().toString()

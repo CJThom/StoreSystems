@@ -7,12 +7,14 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
 import com.gpcasiapac.storesystems.feature.history.api.HistoryType
+import com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryListItemState
 
 object HistoryScreenContract {
 
     @Immutable
     data class State(
         val items: List<HistoryItem>,
+        val uiItems: List<HistoryListItemState> = emptyList(),
         val isLoading: Boolean,
         val error: String?,
         val filter: HistoryFilter = HistoryFilter.ALL,

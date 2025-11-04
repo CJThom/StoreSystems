@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
 import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryUseCase
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryUseCase
+import com.gpcasiapac.storesystems.feature.history.presentation.mapper.mapToUi
 import kotlinx.coroutines.launch
 
 class HistoryScreenViewModel(
@@ -15,6 +16,7 @@ class HistoryScreenViewModel(
 
     override fun setInitialState(): HistoryScreenContract.State = HistoryScreenContract.State(
         items = emptyList(),
+        uiItems = emptyList(),
         isLoading = true,
         error = null,
         filter = HistoryFilter.ALL,
@@ -61,6 +63,7 @@ class HistoryScreenViewModel(
                     setState {
                         copy(
                             items = items,
+                            uiItems = items.mapToUi(),
                             isLoading = false,
                             error = null
                         )

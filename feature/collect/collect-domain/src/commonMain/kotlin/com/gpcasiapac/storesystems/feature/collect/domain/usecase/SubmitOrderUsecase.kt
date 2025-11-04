@@ -46,12 +46,20 @@ class SubmitOrderUseCase(
             )
         }
 
+        val submittedBy = items.firstOrNull()?.customer?.let { customer ->
+            customer.accountName?.takeIf { it.isNotBlank() } ?: listOfNotNull(customer.firstName, customer.lastName)
+                .filter { !it.isNullOrBlank() }
+                .joinToString(" ")
+                .ifBlank { null }
+        }
+
         return syncQueueService.enqueueCollectTask(
             taskType = TaskType.COLLECT_SUBMIT_ORDER,
             taskId = workOrderId, // One SyncTask per Work Order
             priority = 10,
             maxAttempts = 3,
-            metadata = metadataList
+            metadata = metadataList,
+            submittedBy = submittedBy
         ).map { Unit }
     }
 }

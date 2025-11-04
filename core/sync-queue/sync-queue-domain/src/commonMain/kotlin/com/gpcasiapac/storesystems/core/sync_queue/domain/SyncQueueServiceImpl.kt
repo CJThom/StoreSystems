@@ -55,7 +55,8 @@ internal class SyncQueueServiceImpl(
 
     override suspend fun retryTask(taskId: String): Result<Unit> {
         // Reset a single task back to PENDING so the worker can pick it up again
-        return syncRepository.updateTaskStatus(taskId, TaskStatus.PENDING)
+        // Preserve attempts and bump maxAttempts if at cap so it becomes eligible
+        return syncRepository.resetTaskForRetry(taskId, resetAttempts = false, bumpMaxAttemptsBy = 1)
             .onSuccess {
                 // Trigger a sync run so the retried task is processed promptly
                 syncTriggerCoordinator.triggerSync()
@@ -91,14 +92,16 @@ internal class SyncQueueServiceImpl(
         taskId: String,
         priority: Int,
         maxAttempts: Int,
-        metadata: List<CollectTaskMetadata>
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String?
     ): Result<String> {
         return enqueueCollectTaskAndTriggerSyncUseCase(
             taskType = taskType,
             taskId = taskId,
             priority = priority,
             maxAttempts = maxAttempts,
-            metadata = metadata
+            metadata = metadata,
+            submittedBy = submittedBy
         )
     }
 }
