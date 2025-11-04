@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.foundation.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,13 +12,17 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedToggleButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.TonalToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +34,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
 /**
@@ -44,18 +51,18 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 @Composable
 fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltExpressiveButtonRow(
     modifier: Modifier = Modifier,
-    selected: R,
+    selected: R?,
     onValueChange: (R) -> Unit,
     optionList: List<T>,
     selectionMapper: (T) -> R,
-    equals: (T, R) -> Boolean = { a, b -> a == b },
+    equals: (T, R?) -> Boolean = { a, b -> a == b },
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
         optionList.forEachIndexed { index, option ->
-            ToggleButton(
+            OutlinedToggleButton(
                 checked = equals(option, selected),
                 onCheckedChange = { checked ->
                     if (checked) {
@@ -70,20 +77,26 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltExpressiveButtonRow(
                     optionList.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
+                colors = ToggleButtonDefaults.outlinedToggleButtonColors(
+                    checkedContainerColor = MaterialTheme.colorScheme.secondary,
+                    checkedContentColor = MaterialTheme.colorScheme.onSecondary,
+                ),
                 // Semantics role as single-choice item
                 modifier = Modifier
                     .weight(1f)
                     .semantics { role = Role.RadioButton },
+                contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.ExtraSmallContainerHeight),
             ) {
                 Icon(
                     imageVector = option.icon,
                     contentDescription = option.label,
-                    modifier = Modifier.size(ToggleButtonDefaults.IconSize)
+                    modifier = Modifier.size(Dimens.Size.iconSmall),
                 )
-                Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                Spacer(Modifier.size(Dimens.Space.extraSmall))
                 Text(
                     text = option.label,
-                    maxLines = 1
+                    maxLines = 1,
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }
@@ -129,28 +142,6 @@ private fun MBoltExpressiveButtonRow_DisabledPreview() {
         PreviewOption(1, Icons.Outlined.Person, "Standard"),
         PreviewOption(2, Icons.Outlined.BusinessCenter, "Account", enabled = false),
         PreviewOption(3, Icons.Outlined.LocalShipping, "Courier"),
-    )
-    GPCTheme {
-        Surface {
-            MBoltExpressiveButtonRow(
-                selected = selected,
-                onValueChange = { selected = it },
-                optionList = options,
-                selectionMapper = { it.id },
-                equals = { a, b -> a.id == b }
-            )
-        }
-    }
-}
-
-@Preview(name = "Long labels truncate")
-@Composable
-private fun MBoltExpressiveButtonRow_LongLabelsPreview() {
-    var selected by remember { mutableStateOf(1) }
-    val options = listOf(
-        PreviewOption(1, Icons.Outlined.Person, "Standard (Customer collecting)"),
-        PreviewOption(2, Icons.Outlined.BusinessCenter, "Account Representative Collecting With Very Long Title"),
-        PreviewOption(3, Icons.Outlined.LocalShipping, "Courier Service (Third-Party)")
     )
     GPCTheme {
         Surface {

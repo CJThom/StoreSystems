@@ -43,12 +43,12 @@ data class CollectionTypeSectionDisplayState(
 @Composable
 fun CollectionTypeSection(
     title: String,
-    value: CollectingType,
+    value: CollectingType?,
     onValueChange: (CollectingType) -> Unit,
     optionList: List<CollectionTypeSectionDisplayState>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
-    content: @Composable (selectedType: CollectingType) -> Unit = {}
+    content: @Composable (selectedType: CollectingType?) -> Unit = {}
 ) {
     Column(
         modifier = modifier.padding(contentPadding),

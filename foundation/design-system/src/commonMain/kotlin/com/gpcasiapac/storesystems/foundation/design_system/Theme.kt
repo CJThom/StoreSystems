@@ -48,7 +48,7 @@ fun GPCTheme(
             outline = MaterialTheme.colorScheme.outline,
             variant = MaterialTheme.colorScheme.outlineVariant,
             error = MaterialTheme.colorScheme.error,
-            selected = MaterialTheme.colorScheme.primary,
+            selected = MaterialTheme.colorScheme.secondary,
         )
 
         val extendedScheme = GpcExtendedColorScheme(

@@ -590,7 +590,7 @@ private fun CollectorSection(
 @Composable
 private fun CollectionTypeContent(
     state: OrderFulfilmentScreenContract.State,
-    selectedType: CollectingType,
+    selectedType: CollectingType?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
 ) {
 

@@ -34,7 +34,7 @@ object OrderFulfilmentScreenContract {
         val featureFlags: FeatureFlags,
 
         // Who's collecting
-        val collectingType: CollectingType,
+        val collectingType: CollectingType?,
         val collectionTypeOptionList: List<CollectionTypeSectionDisplayState>,
 
         // Account flow

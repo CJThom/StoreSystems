@@ -244,7 +244,7 @@ val trackingNone = 0 // From Tracking/None (Variable) Theme: Wireframe
 }
 
 object GPC {
-val schemesSecondaryContainer = Color(0xFFECEDF7) // From Schemes/Secondary Container (Variable) Theme: GPC 
+val schemesSecondaryContainer = Color(0xFFDCDFF0) // From Schemes/Secondary Container (Variable) Theme: GPC
 
 val schemesOnSecondary = Color(0xFFFFFFFF) // From Schemes/On Secondary (Variable) Theme: GPC 
 
@@ -288,7 +288,7 @@ val schemesOnTertiaryContainer = Color(0xFF12227D) // From Schemes/On Tertiary C
 
 val schemesInverseSurface = Color(0xFF202020) // From Schemes/Inverse Surface (Variable) Theme: GPC 
 
-val schemesOnPrimaryContainer = Color(0xFF2E2E2E) // From Schemes/On Primary Container (Variable) Theme: GPC 
+val schemesOnPrimaryContainer = Color(0xFF2E2E2E) // From Schemes/On Primary Container (Variable) Theme: GPC
 
 val schemesPrimary = Color(0xFF0C2194) // From Schemes/Primary (Variable) Theme: GPC 
 
@@ -326,7 +326,7 @@ val shapesMedium = 4 // From Shapes/Medium (Variable) Theme: GPC
 
 val schemesTertiary = Color(0xFFFEC72F) // From Schemes/Tertiary (Variable) Theme: GPC 
 
-val schemesPrimaryContainer = Color(0xFFECEDF7) // From Schemes/Primary Container (Variable) Theme: GPC 
+val schemesPrimaryContainer = Color(0xFFECEDF7) // From Schemes/Primary Container (Variable) Theme: GPC
 
 val strokeDefault = 0.75 // From Stroke/Default (Variable) Theme: GPC 
 

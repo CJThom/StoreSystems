@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
@@ -93,7 +94,7 @@ class OrderFulfilmentScreenViewModel(
                 isAccountCollectingFeatureEnabled = false,
                 isCorrespondenceSectionVisible = false,
             ),
-            collectingType = CollectingType.STANDARD,
+            collectingType = null,
             collectionTypeOptionList = listOf(
                 CollectionTypeSectionDisplayState(
                     enabled = true,
@@ -103,7 +104,7 @@ class OrderFulfilmentScreenViewModel(
                 ), CollectionTypeSectionDisplayState(
                     enabled = true,
                     collectingType = CollectingType.ACCOUNT,
-                    icon = Icons.Outlined.BusinessCenter,
+                    icon = Icons.Outlined.Business,
                     label = CollectingType.ACCOUNT.name,
                 ), CollectionTypeSectionDisplayState(
                     enabled = true,
@@ -161,7 +162,7 @@ class OrderFulfilmentScreenViewModel(
                 .collectLatest { wo ->
                     setState {
                         copy(
-                            collectingType = wo?.collectingType ?: CollectingType.STANDARD,
+                            collectingType = wo?.collectingType,
                             courierName = wo?.courierName ?: "",
                             isLoading = false,
                             error = null
@@ -596,6 +597,7 @@ class OrderFulfilmentScreenViewModel(
             }
 
             CollectingType.STANDARD -> Unit
+            else -> Unit
         }
 
         // Start processing - add orders to sync queue
