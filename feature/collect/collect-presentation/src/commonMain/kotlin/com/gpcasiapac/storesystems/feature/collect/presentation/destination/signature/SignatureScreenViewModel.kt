@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
@@ -16,6 +17,11 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class SignatureScreenViewModel(
@@ -64,32 +70,55 @@ class SignatureScreenViewModel(
     }
 
     private suspend fun observeCollectOrders() {
+        sessionState
+            .map { it.workOrderId }
+            .distinctUntilChanged()
+            .flatMapLatest { workOrderId: WorkOrderId? ->
+                if (workOrderId == null) {
+                    // Emit a null marker to be handled downstream
+                    flowOf(null)
+                } else {
+                    // Map the non-null list through as-is
+                    observeCollectOrderWithCustomerWithLineItemsListUseCase(workOrderId)
+                }
+            }.collectLatest { collectOrderListOrNull ->
+                if (collectOrderListOrNull == null) {
+                    // Null work order id: show error and reset summary
+                    setState {
+                        copy(
+                            isLoading = false,
+                            error = "No Work Order Selected",
+                            summary = SignatureSummaryState.Multi(
+                                orderCount = 0,
+                                joinedText = "",
+                                totalQuantity = 0
+                            )
+                        )
+                    }
+                    return@collectLatest
+                }
 
-        val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return // TODO: use flatmap
+                if (collectOrderListOrNull.isEmpty()) {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            summary = SignatureSummaryState.Multi(
+                                orderCount = 0,
+                                joinedText = "",
+                                totalQuantity = 0
+                            )
+                        )
+                    }
+                    return@collectLatest
+                }
 
-        observeCollectOrderWithCustomerWithLineItemsListUseCase(workOrderId = workOrderId).collectLatest { collectOrderList ->
-            if (collectOrderList.isEmpty()) {
                 setState {
                     copy(
-                        isLoading = false,
-                        summary = SignatureSummaryState.Multi(
-                            orderCount = 0,
-                            joinedText = "",
-                            totalQuantity = 0
-                        )
+                        summary = collectOrderListOrNull.toSignatureSummary(),
+                        isLoading = false
                     )
                 }
-                return@collectLatest
             }
-
-            setState {
-                copy(
-                    summary = collectOrderList.toSignatureSummary(),
-                    isLoading = false
-                )
-            }
-
-        }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
