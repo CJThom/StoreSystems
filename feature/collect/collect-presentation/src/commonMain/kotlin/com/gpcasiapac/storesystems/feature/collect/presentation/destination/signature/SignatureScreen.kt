@@ -97,7 +97,6 @@ fun SignatureScreen(
         ) {
 
             Column {
-
                 SignatureOrderSummary(
                     summary = state.summary,
                     modifier = Modifier
@@ -116,6 +115,7 @@ fun SignatureScreen(
                 }
                 Spacer(Modifier.size(Dimens.Space.medium))
             }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
 
             Column {

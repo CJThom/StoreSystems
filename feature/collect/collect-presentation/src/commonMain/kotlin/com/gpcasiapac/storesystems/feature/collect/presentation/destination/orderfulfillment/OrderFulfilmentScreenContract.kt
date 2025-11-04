@@ -49,6 +49,9 @@ object OrderFulfilmentScreenContract {
         val signatureStrokes: List<List<Offset>>,
         // Signature image as Base64 (observed from Work Order)
         val signatureBase64: String? = null,
+        // Signature metadata (observed from Work Order)
+        val signerName: String? = null,
+        val signedDateTime: String? = null,
 
         // Customer name capture dialog
         val isCustomerNameDialogVisible: Boolean = false,

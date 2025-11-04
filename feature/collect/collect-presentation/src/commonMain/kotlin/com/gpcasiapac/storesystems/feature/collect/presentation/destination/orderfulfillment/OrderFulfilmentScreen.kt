@@ -395,7 +395,9 @@ fun OrderFulfilmentScreen(
                     onRetakeClick = {
                         onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
                     },
-                    image = state.signatureBase64
+                    image = state.signatureBase64,
+                    signerName = state.signerName,
+                    signedDateTime = state.signedDateTime
                 )
             }
 

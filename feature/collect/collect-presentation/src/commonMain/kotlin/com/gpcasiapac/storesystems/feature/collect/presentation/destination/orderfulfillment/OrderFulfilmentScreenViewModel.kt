@@ -1,6 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.material.icons.Icons
+import com.gpcasiapac.storesystems.common.kotlin.extension.Components
+import com.gpcasiapac.storesystems.common.kotlin.extension.DateStyle
+import com.gpcasiapac.storesystems.common.kotlin.extension.HourCycle
+import com.gpcasiapac.storesystems.common.kotlin.extension.TimeStyle
+import com.gpcasiapac.storesystems.common.kotlin.extension.formatLocal
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
@@ -185,7 +190,18 @@ class OrderFulfilmentScreenViewModel(
             workOrderIdFlow
                 .flatMapLatest { id -> observeWorkOrderSignatureUseCase(id) }
                 .collectLatest { signature ->
-                    setState { copy(signatureBase64 = signature?.signatureBase64) }
+                    setState {
+                        copy(
+                            signatureBase64 = signature?.signatureBase64,
+                            signerName = signature?.signedByName,
+                            signedDateTime = signature?.signedAt?.formatLocal(
+                                components = Components.DateTime,
+                                dateStyle = DateStyle.Medium,
+                                timeStyle = TimeStyle.Short,
+                                hourCycle = HourCycle.H12,
+                            )
+                        )
+                    }
                 }
         }
     }

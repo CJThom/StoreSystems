@@ -41,6 +41,8 @@ fun SignaturePreviewImage(
     onSignClick: () -> Unit,
     modifier: Modifier = Modifier,
     onRetakeClick: () -> Unit = {},
+    signerName: String? = null,
+    signedDateTime: String? = null,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
     Column(
@@ -90,27 +92,15 @@ fun SignaturePreviewImage(
                     }
                 }
             }
-            // Buttons row
+            // Signature details row at the bottom when image is present
             if (image != null) {
-                Row(
+                SignatureDetails(
+                    name = signerName,
+                    dateTime = signedDateTime,
+                    onRetakeClick = onRetakeClick,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-                ) {
-                    OutlinedButton(
-                        onClick = onRetakeClick,
-                        modifier = Modifier.weight(1f),
-                        //shape = RoundedCornerShape(0.dp, 0.dp, Dimens.Space.small, 0.dp)
-                    ) {
-                        Text("RETAKE")
-                    }
-                    Button(
-                        onClick = onSignClick,
-                        modifier = Modifier.weight(1f),
-                        // shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, Dimens.Space.small),
-                    ) {
-                        Text("VIEW")
-                    }
-                }
+                    contentPadding = PaddingValues()
+                )
             }
         }
     }
@@ -122,7 +112,9 @@ private fun SignaturePreviewImagePreview() {
     GPCTheme {
         SignaturePreviewImage(
             image = "dummy_base64_string",
-            onSignClick = {}
+            onSignClick = {},
+            signerName = "John Doe",
+            signedDateTime = "2025-11-04 17:54"
         )
     }
 }
