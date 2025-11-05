@@ -2,19 +2,12 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.sig
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureLineItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignaturePreviewBuilders
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignaturePreviewOrdersProvider
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureSummaryState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignatureSummaryPreviewData
 
 class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenContract.State> {
     override val values: Sequence<SignatureScreenContract.State>
         get() {
-            // Reuse the exact same SignatureOrderState lists across previews
-            val ordersProvider = SignaturePreviewOrdersProvider()
-            val allOrdersLists: List<List<SignatureOrderState>> = ordersProvider.values.toList()
-
             val base = SignatureScreenContract.State(
                 isLoading = false,
                 isSigned = false,
@@ -22,46 +15,49 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 signatureStrokes = emptyList(),
                 signatureBitmap = null,
                 customerName = "John Appleseed",
-                selectedOrderList = emptyList()
-            )
-
-            // Map each shared orders list into a screen state without recreating the orders
-            val scenarioStates = allOrdersLists.map { orders ->
-                base.copy(selectedOrderList = orders)
-            }
-
-            // Additional UI states (signed, loading, error) using the first shared orders list
-            val firstOrders = allOrdersLists.firstOrNull() ?: emptyList()
-
-            val signed = base.copy(
-                selectedOrderList = firstOrders,
-                isSigned = true,
-                signatureStrokes = listOf(
-                    listOf(
-                        Offset(10f, 10f),
-                        Offset(30f, 40f),
-                        Offset(60f, 20f),
-                        Offset(90f, 50f)
-                    ),
-                    listOf(
-                        Offset(100f, 60f),
-                        Offset(120f, 80f),
-                        Offset(140f, 65f)
-                    )
+                summary = SignatureSummaryState.Multi(
+                    orderCount = 0,
+                    joinedText = "",
+                    totalQuantity = 0
                 )
             )
 
-            val loading = base.copy(
-                selectedOrderList = firstOrders,
-                isLoading = true
-            )
+            // Map shared summaries into screen states
+            val summaryStates = SignatureSummaryPreviewData.summaries.map { summary ->
+                base.copy(summary = summary)
+            }
 
-            val error = base.copy(
-                selectedOrderList = firstOrders,
-                error = "Failed to capture signature. Please try again."
-            )
+            // Add additional UI states using the first shared summary
+            val firstSummary = SignatureSummaryPreviewData.summaries.firstOrNull()
+            val extraStates = if (firstSummary != null) listOf(
+                base.copy(
+                    summary = firstSummary,
+                    isSigned = true,
+                    signatureStrokes = listOf(
+                        listOf(
+                            Offset(10f, 10f),
+                            Offset(30f, 40f),
+                            Offset(60f, 20f),
+                            Offset(90f, 50f)
+                        ),
+                        listOf(
+                            Offset(100f, 60f),
+                            Offset(120f, 80f),
+                            Offset(140f, 65f)
+                        )
+                    )
+                ),
+                base.copy(
+                    summary = firstSummary,
+                    isLoading = true
+                ),
+                base.copy(
+                    summary = firstSummary,
+                    error = "Failed to capture signature. Please try again."
+                )
+            ) else emptyList()
 
-            return (scenarioStates + listOf(signed, loading, error)).asSequence()
+            return (summaryStates + extraStates).asSequence()
         }
 }
 

@@ -99,6 +99,13 @@ class OrderLocalRepositoryImpl(
         workOrderDao.observeWorkOrderItemsWithOrders(workOrderId)
             .map { list -> list.map { it.orderWithCustomer }.toDomain() }
 
+    override fun getCollectOrderWithCustomerWithLineItemsListFlow(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomerWithLineItems>> {
+        return workOrderDao.getWorkOrderItemWithOrderWithCustomerWithLineItemsRelationListFlow(
+            workOrderId
+        ).map { list ->
+            list.map { it.collectOrderWithCustomerWithLineItemsRelation }.toDomain()
+        }
+    }
 
     override suspend fun deleteWorkOrderItems(
         workOrderId: WorkOrderId,

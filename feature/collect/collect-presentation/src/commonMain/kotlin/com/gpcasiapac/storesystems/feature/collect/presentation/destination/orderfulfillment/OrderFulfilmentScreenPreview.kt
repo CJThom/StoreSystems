@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
@@ -48,7 +49,7 @@ class OrderFulfilmentScreenStateProvider :
                     ), CollectionTypeSectionDisplayState(
                         enabled = true,
                         collectingType = CollectingType.ACCOUNT,
-                        icon = Icons.Outlined.BusinessCenter,
+                        icon = Icons.Outlined.Business,
                         label = CollectingType.ACCOUNT.name,
                     ), CollectionTypeSectionDisplayState(
                         enabled = true,

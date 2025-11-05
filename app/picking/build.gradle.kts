@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
 }
 
 kotlin {
@@ -21,18 +20,19 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.preview)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.jetbrains.compose.uiTooling)
+
             implementation(compose.components.resources)
             implementation(projects.foundation.config)
 
             implementation(projects.feature.login.loginPresentation)
             implementation(projects.feature.history.historyPresentation)
             implementation(projects.feature.picking.pickingPresentation)
-            
+
             // Design system theme
             implementation(projects.foundation.designSystem)
         }
@@ -62,7 +62,9 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11
+    }
 }
 
 

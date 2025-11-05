@@ -13,19 +13,19 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // Compose UI
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.uiTooling)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.jetbrains.compose.uiTooling)
+
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             
 
-            implementation(compose.material3AdaptiveNavigationSuite)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
+            //implementation(libs.jetbrains.compose.material3.adaptive.navigation.suite)
+            implementation(libs.jetbrains.compose.material3.adaptive)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation)
 
             implementation(projects.common.presentation)
             implementation(projects.foundation.designSystem)

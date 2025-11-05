@@ -17,30 +17,28 @@ kotlin {
             languageSettings.optIn("kotlinx.coroutines.FlowPreview")
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.uiTooling)
-            implementation(compose.materialIconsExtended)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.jetbrains.compose.uiTooling)
 
             implementation(projects.common.presentation)
             implementation(projects.common.di)
             implementation(projects.foundation.component)
             implementation(projects.foundation.designSystem)
             implementation(libs.androidx.navigation3.runtime)
-            implementation(libs.androidx.navigation3.ui)
-
+            implementation(libs.jetbrains.navigation3.ui)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
 
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime)
+            implementation(libs.jetbrains.lifecycle.runtimeCompose)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
 
             implementation(projects.feature.history.historyApi)
             implementation(projects.feature.history.historyDomain)

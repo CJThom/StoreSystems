@@ -97,9 +97,8 @@ fun SignatureScreen(
         ) {
 
             Column {
-
                 SignatureOrderSummary(
-                    orders = state.selectedOrderList,
+                    summary = state.summary,
                     modifier = Modifier
                 )
                 OutlinedButton(
@@ -116,6 +115,7 @@ fun SignatureScreen(
                 }
                 Spacer(Modifier.size(Dimens.Space.medium))
             }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
 
             Column {

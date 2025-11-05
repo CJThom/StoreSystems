@@ -16,6 +16,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncePreset
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDefaults
+import kotlin.time.Instant
 
 object OrderFulfilmentScreenContract {
 
@@ -35,7 +36,7 @@ object OrderFulfilmentScreenContract {
         val featureFlags: FeatureFlags,
 
         // Who's collecting
-        val collectingType: CollectingType,
+        val collectingType: CollectingType?,
         val collectionTypeOptionList: List<CollectionTypeSectionDisplayState>,
 
         // Account flow
@@ -50,6 +51,9 @@ object OrderFulfilmentScreenContract {
         val signatureStrokes: List<List<Offset>>,
         // Signature image as Base64 (observed from Work Order)
         val signatureBase64: String? = null,
+        // Signature metadata (observed from Work Order)
+        val signerName: String? = null,
+        val signedDateTime: Instant? = null,
 
         // Customer name capture dialog
         val isCustomerNameDialogVisible: Boolean = false,

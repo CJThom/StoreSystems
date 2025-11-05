@@ -395,7 +395,9 @@ fun OrderFulfilmentScreen(
                     onRetakeClick = {
                         onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
                     },
-                    image = state.signatureBase64
+                    image = state.signatureBase64,
+                    signerName = state.signerName,
+                    signedDateTime = state.signedDateTime
                 )
             }
 
@@ -590,7 +592,7 @@ private fun CollectorSection(
 @Composable
 private fun CollectionTypeContent(
     state: OrderFulfilmentScreenContract.State,
-    selectedType: CollectingType,
+    selectedType: CollectingType?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
 ) {
 

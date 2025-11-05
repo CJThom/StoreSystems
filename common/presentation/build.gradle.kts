@@ -21,15 +21,16 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kermit)
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
-            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime)
+
             // Compose core for common presentation tokens
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.ui)
-            implementation(compose.material3)
-            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.jetbrains.compose.uiTooling)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.navigation3.ui)
         }
         androidMain.dependencies {
 

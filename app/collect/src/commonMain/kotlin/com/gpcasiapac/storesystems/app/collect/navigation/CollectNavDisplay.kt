@@ -4,8 +4,8 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -20,7 +20,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun CollectNavDisplay() {
     val appNavigationViewModel: CollectAppNavigationViewModel = koinViewModel()
-    val state by appNavigationViewModel.viewState.collectAsStateWithLifecycle()
+    val state by appNavigationViewModel.viewState.collectAsState()
     val loginEntry: LoginFeatureEntry = koinInject()
     val collectEntry: CollectFeatureEntry = koinInject()
     val historyEntry: HistoryFeatureEntry = koinInject()

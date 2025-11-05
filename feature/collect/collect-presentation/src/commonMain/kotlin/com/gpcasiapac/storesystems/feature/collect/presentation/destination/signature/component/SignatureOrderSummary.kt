@@ -1,16 +1,20 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.component
 
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -18,138 +22,122 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignaturePreviewOrdersProvider
-import com.gpcasiapac.storesystems.foundation.component.InvoiceSummary
-import com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.ProductLinePreview
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureSummaryState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignatureSummaryPreviewData
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
-//object SignatureOrderSummaryDefaults {
-//    // Centralized weights to avoid magic numbers and keep visuals unchanged
-//    const val LabelWeight = 0.35f
-//    const val ValueWeight = 0.75f
-//}
 
+object SignatureOrderSummaryDefaults {
+
+    val maxHeight = 75.dp
+
+}
 
 @Composable
 fun SignatureOrderSummary(
-    orders: List<SignatureOrderState>,
+    summary: SignatureSummaryState,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
-
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+        // verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
+        when (summary) {
+            is SignatureSummaryState.Single -> SingleOrderSummaryCard(
+                invoiceNumber = summary.invoiceNumber,
+                customerName = summary.customerName,
+                totalQuantity = summary.totalQuantity
+            )
 
-        if (orders.size == 1) {
-            SingleOrderSummaryCard(order = orders.first())
-        } else {
-            MultiOrderSummaryCard(orders = orders)
+            is SignatureSummaryState.Multi -> MultiOrderSummaryCard(
+                invoiceJoinedText = summary.joinedText,
+                orderCount = summary.orderCount,
+                totalQuantity = summary.totalQuantity,
+            )
         }
-
     }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SingleOrderSummaryCard(
-    order: SignatureOrderState,
+    invoiceNumber: String,
+    customerName: String,
+    totalQuantity: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        modifier = modifier.height(SignatureOrderSummaryDefaults.maxHeight),
     ) {
-        SingleOrderSummaryHeader(order = order)
-        SingleOrderQuantityRow(order = order)
-        // If needed in future: SingleOrderProductsPreview(order)
-    }
-}
-
-// ——— Inlined private components ———
-
-@Composable
-private fun SingleOrderSummaryHeader(
-    order: SignatureOrderState,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
-    ) {
-        InvoiceSummarySection(
-            invoices = listOf(order.invoiceNumber.value),
-            customerName = order.customerName,
-        )
-    }
-}
-
-@Composable
-private fun SingleOrderQuantityRow(
-    order: SignatureOrderState,
-    modifier: Modifier = Modifier,
-) {
-    val totalQty = order.lineItems.sumOf { it.quantity }
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = "Quantity",
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Text(
-            text = "x${totalQty}",
-            style = MaterialTheme.typography.titleMedium,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-private fun SingleOrderProductsPreview(
-    order: SignatureOrderState,
-    modifier: Modifier = Modifier,
-) {
-    // Simple product lines summary
-    HorizontalDivider()
-
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
-    ) {
-        val previewLines = order.lineItems.take(3)
-        previewLines.forEach { line ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
-                    text = "- ${line.productDescription}",
+                    text = "Invoice",
+                    style = MaterialTheme.typography.titleMedium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier = Modifier.weight(0.35f)
+                )
+                Text(
+                    text = invoiceNumber,
+                    style = MaterialTheme.typography.titleMedium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(0.75f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Customer",
                     style = MaterialTheme.typography.bodyMedium,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
-                    modifier = Modifier.weight(0.85f)
+                    modifier = Modifier.weight(0.35f)
                 )
                 Text(
-                    text = "x${line.quantity}",
-                    style = MaterialTheme.typography.labelLarge,
+                    text = customerName,
+                    style = MaterialTheme.typography.bodyLarge,
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier = Modifier.weight(0.15f),
                     textAlign = TextAlign.End,
+                    maxLines = 1,
+                    modifier = Modifier.weight(0.75f)
                 )
             }
         }
-        val remaining = order.lineItems.size - previewLines.size
-        if (remaining > 0) {
+
+        Spacer(Modifier.weight(1F))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
-                text = "+$remaining more",
-                maxLines = 1,
-                style = MaterialTheme.typography.labelLarge,
+                text = "Quantity",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = "x$totalQuantity",
+                style = MaterialTheme.typography.titleMedium,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
         }
     }
@@ -158,19 +146,44 @@ private fun SingleOrderProductsPreview(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MultiOrderSummaryCard(
-    orders: List<SignatureOrderState>,
+    invoiceJoinedText: String,
+    orderCount: Int,
+    totalQuantity: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        modifier = modifier.height(SignatureOrderSummaryDefaults.maxHeight),
     ) {
-        val totalQty = orders.sumOf { order -> order.lineItems.sumOf { it.quantity } }
+        val invoiceAnnotated = buildAnnotatedString {
+            withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
+                append("Invoices: ")
+            }
+            append(invoiceJoinedText)
+        }
 
-        // Reuse invoice-only UI from foundation
-        InvoiceSummary(
-            invoices = orders.map { it.invoiceNumber.value }
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = invoiceAnnotated,
+                style = MaterialTheme.typography.bodyLarge,
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(0.85f)
+            )
+            Text(
+                text = "x$orderCount",
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(0.15f)
+            )
+        }
+
+        Spacer(Modifier.weight(1F))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -181,7 +194,7 @@ private fun MultiOrderSummaryCard(
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = "x${totalQty}",
+                text = "x$totalQuantity",
                 style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
@@ -190,19 +203,66 @@ private fun MultiOrderSummaryCard(
     }
 }
 
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ProductLinesPreview(
+    productLines: List<ProductLinePreview>,
+    productRemainingCount: Int,
+    modifier: Modifier = Modifier
+) {
+    if (productLines.isNotEmpty() || productRemainingCount > 0) {
+        HorizontalDivider()
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
+        ) {
+            productLines.forEach { line ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        text = "- ${line.description}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.weight(0.85f)
+                    )
+                    Text(
+                        text = "x${line.quantity}",
+                        style = MaterialTheme.typography.labelLarge,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.weight(0.15f),
+                        textAlign = TextAlign.End,
+                    )
+                }
+            }
+            if (productRemainingCount > 0) {
+                Text(
+                    text = "+$productRemainingCount more",
+                    maxLines = 1,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
+    }
+}
+
+private class SignatureOrderSummaryPreviewProvider :
+    PreviewParameterProvider<SignatureSummaryState> {
+    override val values: Sequence<SignatureSummaryState>
+        get() = SignatureSummaryPreviewData.summaries.asSequence()
+}
+
 @Preview(
-    name = "SignatureOrderSummary • Scenarios",
+    name = "SignatureOrderSummary • Parametrized",
     showBackground = true,
     backgroundColor = 0xFFF5F5F5L,
     widthDp = 360
 )
 @Composable
 private fun SignatureOrderSummaryPreview(
-    @PreviewParameter(SignaturePreviewOrdersProvider::class) orders: List<SignatureOrderState>
+    @PreviewParameter(SignatureOrderSummaryPreviewProvider::class) summary: SignatureSummaryState
 ) {
-    GPCTheme {
-        SignatureOrderSummary(
-            orders = orders
-        )
-    }
+    GPCTheme { SignatureOrderSummary(summary = summary) }
 }
+

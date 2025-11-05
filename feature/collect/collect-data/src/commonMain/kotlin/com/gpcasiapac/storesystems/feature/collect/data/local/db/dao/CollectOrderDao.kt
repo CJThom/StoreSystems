@@ -11,7 +11,9 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectO
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
+import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrderWithCustomersWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -90,6 +92,11 @@ interface CollectOrderDao {
     @Transaction
     @Query("SELECT * FROM collect_orders where invoice_number = :invoiceNumber")
     fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItemsRelation>
+
+    @Transaction
+    @Query("SELECT * FROM work_orders where work_order_id = :workOrderId")
+    fun getWorkOrderWithOrderWithCustomersWithLineItemsRelationFlow(workOrderId: WorkOrderId): Flow<WorkOrderWithOrderWithCustomersWithLineItemsRelation?>
+
 
     // ---- Suggestions (prefix) ----
     @Query(

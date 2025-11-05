@@ -2,6 +2,7 @@ package com.gpcasiapac.storesystems.feature.history.presentation.entry
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -30,7 +31,7 @@ class HistoryFeatureEntryImpl : HistoryFeatureEntry {
         onExternalOutcome: (HistoryExternalOutcome) -> Unit,
     ) {
         val navViewModel: HistoryNavigationViewModel = koinViewModel()
-        val state by navViewModel.viewState.collectAsStateWithLifecycle()
+        val state by navViewModel.viewState.collectAsState()
 
         LaunchedEffect(Unit) {
             navViewModel.effect.collect { effect ->

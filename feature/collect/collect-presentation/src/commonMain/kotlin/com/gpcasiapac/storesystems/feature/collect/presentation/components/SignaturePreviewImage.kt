@@ -34,6 +34,7 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStrok
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -42,6 +43,8 @@ fun SignaturePreviewImage(
     onSignClick: () -> Unit,
     modifier: Modifier = Modifier,
     onRetakeClick: () -> Unit = {},
+    signerName: String? = null,
+    signedDateTime: Instant? = null,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
     Column(
@@ -91,27 +94,15 @@ fun SignaturePreviewImage(
                     }
                 }
             }
-            // Buttons row
+            // Signature details row at the bottom when image is present
             if (image != null) {
-                Row(
+                SignatureDetails(
+                    name = signerName,
+                    dateTime = signedDateTime,
+                    onRetakeClick = onRetakeClick,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-                ) {
-                    OutlinedButton(
-                        onClick = onRetakeClick,
-                        modifier = Modifier.weight(1f),
-                        //shape = RoundedCornerShape(0.dp, 0.dp, Dimens.Space.small, 0.dp)
-                    ) {
-                        Text("RETAKE")
-                    }
-                    Button(
-                        onClick = onSignClick,
-                        modifier = Modifier.weight(1f),
-                        // shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, Dimens.Space.small),
-                    ) {
-                        Text("VIEW")
-                    }
-                }
+                    contentPadding = PaddingValues()
+                )
             }
         }
     }
@@ -123,7 +114,9 @@ private fun SignaturePreviewImagePreview() {
     GPCTheme {
         SignaturePreviewImage(
             image = "dummy_base64_string",
-            onSignClick = {}
+            onSignClick = {},
+            signerName = "John Doe",
+            signedDateTime = Instant.fromEpochMilliseconds(1692505600000)
         )
     }
 }

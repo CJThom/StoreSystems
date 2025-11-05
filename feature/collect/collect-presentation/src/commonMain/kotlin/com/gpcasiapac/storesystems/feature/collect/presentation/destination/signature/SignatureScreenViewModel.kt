@@ -4,28 +4,29 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderWithOrderWithCustomersUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectOrderWithCustomerWithLineItemsListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SaveSignatureUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.SignatureScreenContract.Effect.Outcome.Back
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureOrderStateList
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.mapper.toSignatureSummary
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureSummaryState
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.imageBitmapToBase64Encoded
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class SignatureScreenViewModel(
-    private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val observeWorkOrderWithOrderWithCustomersUseCase: ObserveWorkOrderWithOrderWithCustomersUseCase,
-    private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
+    private val observeCollectOrderWithCustomerWithLineItemsListUseCase: ObserveCollectOrderWithCustomerWithLineItemsListUseCase,
     private val saveSignatureUseCase: SaveSignatureUseCase
 ) : MVIViewModel<
         SignatureScreenContract.Event,
@@ -42,12 +43,18 @@ class SignatureScreenViewModel(
             isSigned = false,
             error = null,
             signatureStrokes = emptyList(),
-            customerName = ""
+            signatureBitmap = null, // TODO: use this instead of the strokes?
+            customerName = "",
+            summary = SignatureSummaryState.Multi(
+                orderCount = 0,
+                joinedText = "",
+                totalQuantity = 0
+            ),
         )
 
     override suspend fun awaitReadiness(): Boolean {
-        // No special readiness needed for placeholder signature capture
-        return true
+        val collectSessionIds = sessionState.first { it.userId != null }
+        return collectSessionIds.userId != null
     }
 
     override fun handleReadinessFailed() {
@@ -55,40 +62,63 @@ class SignatureScreenViewModel(
     }
 
     override fun onStart() {
-        viewModelScope.launch {
-            val workOrderId: WorkOrderId =
-                sessionState.value.workOrderId.handleNull() ?: return@launch
-            observeWorkOrderWithOrderWithCustomersUseCase(workOrderId = workOrderId).collectLatest { workOrderWithOrders ->
-                val invoiceNumbers = workOrderWithOrders
-                    ?.collectOrderWithCustomerList
-                    ?.map { it.order.invoiceNumber }
-                    ?: emptyList()
 
-                if (invoiceNumbers.isEmpty()) {
-                    setState { copy(selectedOrderList = emptyList(), isLoading = false) }
+        viewModelScope.launch {
+            observeCollectOrders()
+        }
+
+    }
+
+    private suspend fun observeCollectOrders() {
+        sessionState
+            .map { it.workOrderId }
+            .distinctUntilChanged()
+            .flatMapLatest { workOrderId: WorkOrderId? ->
+                if (workOrderId == null) {
+                    // Emit a null marker to be handled downstream
+                    flowOf(null)
+                } else {
+                    // Map the non-null list through as-is
+                    observeCollectOrderWithCustomerWithLineItemsListUseCase(workOrderId)
+                }
+            }.collectLatest { collectOrderListOrNull ->
+                if (collectOrderListOrNull == null) {
+                    // Null work order id: show error and reset summary
+                    setState {
+                        copy(
+                            isLoading = false,
+                            error = "No Work Order Selected",
+                            summary = SignatureSummaryState.Multi(
+                                orderCount = 0,
+                                joinedText = "",
+                                totalQuantity = 0
+                            )
+                        )
+                    }
                     return@collectLatest
                 }
 
-                setState { copy(isLoading = true, error = null) }
-
-                val flows = invoiceNumbers.map { invoice ->
-                    observeCollectOrderWithCustomerWithLineItemsUseCase(invoice)
+                if (collectOrderListOrNull.isEmpty()) {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            summary = SignatureSummaryState.Multi(
+                                orderCount = 0,
+                                joinedText = "",
+                                totalQuantity = 0
+                            )
+                        )
+                    }
+                    return@collectLatest
                 }
 
-                val combinedFlow = if (flows.size == 1) {
-                    flows.first().map { listOf(it) }
-                } else {
-                    combine(flows) { it.toList() }
-                }
-
-                combinedFlow.collectLatest { domainList ->
-                    val nonNullDomain = domainList.filterNotNull()
-                    val presentationList = nonNullDomain.map { it.toState() }
-                    val signatureOrders = presentationList.toSignatureOrderStateList()
-                    setState { copy(selectedOrderList = signatureOrders, isLoading = false) }
+                setState {
+                    copy(
+                        summary = collectOrderListOrNull.toSignatureSummary(),
+                        isLoading = false
+                    )
                 }
             }
-        }
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -152,8 +182,7 @@ class SignatureScreenViewModel(
             }
 
             is SignatureScreenContract.Event.ViewDetailsClicked -> {
-                val invoices = viewState.value.selectedOrderList.map { it.invoiceNumber }
-                setEffect { SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails(invoices) }
+                setEffect { SignatureScreenContract.Effect.Outcome.OpenWorkOrderDetails }
             }
 
             SignatureScreenContract.Event.ClearSignature -> {

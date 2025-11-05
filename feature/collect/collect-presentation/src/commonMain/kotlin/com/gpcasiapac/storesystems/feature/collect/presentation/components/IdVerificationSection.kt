@@ -5,10 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -30,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderRole
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
 import com.gpcasiapac.storesystems.foundation.component.HeaderSmall
@@ -61,19 +63,19 @@ fun IdVerificationSection(
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
         ) {
             IdOptionRow(
-                text = "Driver's license",
                 selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE,
-                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE) }
+                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE) },
+                label = { Text("Driver's license", style = MaterialTheme.typography.bodyLarge) }
             )
             IdOptionRow(
-                text = "Passport",
                 selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT,
-                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT) }
+                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT) },
+                label = { Text("Passport", style = MaterialTheme.typography.bodyLarge) }
             )
             IdOptionRow(
-                text = "Other",
                 selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
-                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.OTHER) }
+                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.OTHER) },
+                label = { Text("Other", style = MaterialTheme.typography.bodyLarge) }
             )
 
             AnimatedVisibility(
@@ -94,40 +96,38 @@ fun IdVerificationSection(
 }
 
 @Composable
-private fun IdOptionRow(
-    text: String,
+fun IdOptionRow(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
+    label: @Composable () -> Unit,
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
             .selectable(
                 selected = selected,
                 onClick = onClick,
                 role = Role.RadioButton
             ),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.medium,
-        border = MaterialTheme.borderStroke(),
+        border = MaterialTheme.borderStroke(role = if (selected) BorderRole.Selected else BorderRole.Variant),
         tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.Space.medium),
+                .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
                 selected = selected,
                 onClick = null // null for accessibility; row handles clicks
             )
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = Dimens.Space.medium)
-            )
+            Spacer(modifier = Modifier.width(Dimens.Space.medium))
+            label()
         }
     }
 }

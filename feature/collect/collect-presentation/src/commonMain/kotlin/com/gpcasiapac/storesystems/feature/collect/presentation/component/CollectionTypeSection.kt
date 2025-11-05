@@ -26,7 +26,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
-import com.gpcasiapac.storesystems.foundation.component.MBoltSegmentedButtonRow
+import com.gpcasiapac.storesystems.foundation.component.MBoltExpressiveButtonRow
 import com.gpcasiapac.storesystems.foundation.component.MBoltSegmentedRowOptionDisplayParam
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -43,12 +43,12 @@ data class CollectionTypeSectionDisplayState(
 @Composable
 fun CollectionTypeSection(
     title: String,
-    value: CollectingType,
+    value: CollectingType?,
     onValueChange: (CollectingType) -> Unit,
     optionList: List<CollectionTypeSectionDisplayState>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
-    content: @Composable (selectedType: CollectingType) -> Unit = {}
+    content: @Composable (selectedType: CollectingType?) -> Unit = {}
 ) {
     Column(
         modifier = modifier.padding(contentPadding),
@@ -61,7 +61,7 @@ fun CollectionTypeSection(
 
         Spacer(Modifier.size(Dimens.Space.medium))
 
-        MBoltSegmentedButtonRow(
+        MBoltExpressiveButtonRow(
             selected = value,
             optionList = optionList,
             selectionMapper = { option ->
