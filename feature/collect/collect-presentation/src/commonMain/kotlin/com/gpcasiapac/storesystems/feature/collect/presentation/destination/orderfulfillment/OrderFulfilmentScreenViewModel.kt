@@ -194,17 +194,19 @@ class OrderFulfilmentScreenViewModel(
                         copy(
                             signatureBase64 = signature?.signatureBase64,
                             signerName = signature?.signedByName,
-                            signedDateTime = signature?.signedAt?.formatLocal(
-                                components = Components.DateTime,
-                                dateStyle = DateStyle.Medium,
-                                timeStyle = TimeStyle.Short,
-                                hourCycle = HourCycle.H12,
-                            )
+                            signedDateTime = signature?.signedAt
                         )
                     }
                 }
         }
     }
+
+//    signedDateTime = signature?.signedAt?.formatLocal(
+//    components = Components.DateTime,
+//    dateStyle = DateStyle.Medium,
+//    timeStyle = TimeStyle.Short,
+//    hourCycle = HourCycle.H12,
+//    )
 
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: OrderFulfilmentScreenContract.Event) {

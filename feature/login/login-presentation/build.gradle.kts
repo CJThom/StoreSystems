@@ -20,7 +20,7 @@ kotlin {
             implementation(libs.jetbrains.compose.foundation)
             implementation(libs.jetbrains.compose.material3)
             implementation(libs.jetbrains.compose.ui)
-            implementation(libs.androidx.compose.ui.tooling.preview)
+            implementation(libs.jetbrains.compose.uiTooling)
 
 
             // MVI base and feature contracts

@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -42,7 +43,7 @@ fun SignaturePreviewImage(
     modifier: Modifier = Modifier,
     onRetakeClick: () -> Unit = {},
     signerName: String? = null,
-    signedDateTime: String? = null,
+    signedDateTime: Instant? = null,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
     Column(
@@ -114,7 +115,7 @@ private fun SignaturePreviewImagePreview() {
             image = "dummy_base64_string",
             onSignClick = {},
             signerName = "John Doe",
-            signedDateTime = "2025-11-04 17:54"
+            signedDateTime = Instant.fromEpochMilliseconds(1692505600000)
         )
     }
 }

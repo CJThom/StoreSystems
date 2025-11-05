@@ -15,6 +15,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncePreset
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDefaults
+import kotlin.time.Instant
 
 object OrderFulfilmentScreenContract {
 
@@ -51,7 +52,7 @@ object OrderFulfilmentScreenContract {
         val signatureBase64: String? = null,
         // Signature metadata (observed from Work Order)
         val signerName: String? = null,
-        val signedDateTime: String? = null,
+        val signedDateTime: Instant? = null,
 
         // Customer name capture dialog
         val isCustomerNameDialogVisible: Boolean = false,

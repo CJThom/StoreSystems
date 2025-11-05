@@ -26,14 +26,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateLongString
+import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeLongString
+import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeMediumString
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SignatureDetails(
     name: String?,
-    dateTime: String?,
+    dateTime: Instant?,
     onRetakeClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(
@@ -41,32 +45,46 @@ fun SignatureDetails(
         vertical = Dimens.Space.small
     )
 ) {
-    Column(
-        modifier = modifier.padding(contentPadding),
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
+    Row(
+        modifier = modifier
+            .padding(contentPadding)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
     ) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        // Left side: Column with name and date/time
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
         ) {
-            // Left side: name and date/time
-            Text(
-                text = if (!name.isNullOrBlank() && !dateTime.isNullOrBlank()) {
-                    "$name  •  $dateTime"
-                } else {
-                    ""
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
-            )
+            if (!name.isNullOrBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Signed by:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.size(Dimens.Space.extraSmall))
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
+            if (dateTime != null) {
+                Text(
+                    text = dateTime.toLocalDateTimeMediumString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
         }
+        // Right side: Retake button
         OutlinedButton(
             onClick = onRetakeClick,
-
             modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
             contentPadding = ButtonDefaults.ExtraSmallContentPadding,
         ) {
@@ -84,36 +102,96 @@ fun SignatureDetails(
 // ------ Previews with PreviewParameter ------
 private data class SignatureDetailsPreviewData(
     val name: String?,
-    val dateTime: String?
+    val dateTime: Instant?
 )
 
 private class SignatureDetailsPreviewParameterProvider :
     PreviewParameterProvider<SignatureDetailsPreviewData> {
     override val values: Sequence<SignatureDetailsPreviewData> = sequenceOf(
         // Both present (various name lengths and character sets)
-        SignatureDetailsPreviewData(name = "JD", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "John Doe", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Alexandra Johnson", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Maximilian Alexander von Habsburg", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "A very very very very long customer name that should wrap correctly in the row", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "O’Connor", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Anne-Marie", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "李小龍 (Bruce Lee)", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "山田 太郎", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Алексей Петров", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "أحمد محمد", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "José Ángel", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Zoë Kravitz", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Renée Zellweger", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Søren Kierkegaard", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Miyazaki はじめ", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "User 😊✨", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Name-With—Em—Dash", dateTime = "4 Nov 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "Tabbed\tName", dateTime = "4 Nov 2025, 6:36 PM"),
+        SignatureDetailsPreviewData(
+            name = "JD",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ), // 4 Nov 2025, 6:36 PM
+        SignatureDetailsPreviewData(
+            name = "John Doe",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Alexandra Johnson",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Maximilian Alexander von Habsburg",
+            dateTime = Instant.fromEpochMilliseconds(1692505600000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "A very very very very long customer name that should wrap correctly in the row",
+            dateTime = Instant.fromEpochMilliseconds(1692505600000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "O'Connor",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Anne-Marie",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "李小龍 (Bruce Lee)",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "山田 太郎",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Алексей Петров",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "أحمد محمد",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "José Ángel",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Zoë Kravitz",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Renée Zellweger",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Søren Kierkegaard",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Miyazaki はじめ",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "User 😊✨",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Name-With—Em—Dash",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
+        SignatureDetailsPreviewData(
+            name = "Tabbed\tName",
+            dateTime = Instant.fromEpochMilliseconds(1730332560000)
+        ),
         // Longer date string variants
-        SignatureDetailsPreviewData(name = "Long Date Example", dateTime = "4 November 2025, 6:36 PM"),
-        SignatureDetailsPreviewData(name = "24h Time", dateTime = "4 Nov 2025, 18:36"),
-        SignatureDetailsPreviewData(name = "With Seconds", dateTime = "4 Nov 2025, 6:36:59 PM"),
+        SignatureDetailsPreviewData(
+            name = "Long Date Example",
+            dateTime = Instant.fromEpochMilliseconds(1692505600000)
+        ),
+        SignatureDetailsPreviewData(name = "24h Time",    dateTime = Instant.fromEpochMilliseconds(1692505600000)),
+        SignatureDetailsPreviewData(name = "With Seconds",    dateTime = Instant.fromEpochMilliseconds(1692505600000)),
 
         // Both null (nothing shown on the left text)
         SignatureDetailsPreviewData(name = null, dateTime = null),
