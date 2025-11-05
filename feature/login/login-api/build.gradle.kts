@@ -19,7 +19,7 @@ kotlin {
             implementation(projects.core.identity.identityApi)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
-            implementation(compose.runtime)
+            implementation(libs.jetbrains.compose.runtime)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

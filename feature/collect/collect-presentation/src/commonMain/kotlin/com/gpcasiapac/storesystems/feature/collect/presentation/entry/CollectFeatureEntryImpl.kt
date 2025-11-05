@@ -5,8 +5,8 @@ import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -42,7 +42,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
         val collectNavigationViewModel: CollectNavigationViewModel = koinViewModel()
         val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
 
-        val state by collectNavigationViewModel.viewState.collectAsStateWithLifecycle()
+        val state by collectNavigationViewModel.viewState.collectAsState()
 
         LaunchedEffect(Unit) {
             collectNavigationViewModel.effect.collect { effect ->
@@ -164,7 +164,7 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
             }
 
             entry<CollectFeatureDestination.Signature>(
-                metadata = ListDetailSceneStrategy.extraPane(),
+                metadata = ListDetailSceneStrategy.detailPane(),
             ) { destination ->
                 SignatureScreenDestination(customerName = destination.customerName) { outcome ->
                     when (outcome) {
