@@ -55,7 +55,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import coil3.size.Dimension
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
@@ -598,7 +597,7 @@ private fun CollectionTypeContent(
 
     when (selectedType) {
         CollectingType.ACCOUNT -> {
-            if (state.featureFlags.isAccountCollectingFeatureEnabled) {
+            if (state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled) {
                 AccountCollectionContent(
                     searchQuery = state.representativeSearchQuery,
                     onSearchQueryChange = { query ->

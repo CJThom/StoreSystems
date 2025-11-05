@@ -71,7 +71,7 @@ object OrderFulfilmentScreenContract {
     ) : ViewState{
 
         data class FeatureFlags(
-            val isAccountCollectingFeatureEnabled: Boolean,
+            val isAccountRepresentativeSelectionFeatureEnabled: Boolean,
             val isCorrespondenceSectionVisible: Boolean
         )
 

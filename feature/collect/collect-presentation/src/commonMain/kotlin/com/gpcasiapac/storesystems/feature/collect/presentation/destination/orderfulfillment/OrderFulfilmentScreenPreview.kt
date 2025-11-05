@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Business
-import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -34,7 +33,7 @@ class OrderFulfilmentScreenStateProvider :
                 error = null,
 
                 featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
-                    isAccountCollectingFeatureEnabled = true,
+                    isAccountRepresentativeSelectionFeatureEnabled = true,
                     isCorrespondenceSectionVisible = true
                 ),
 
@@ -130,7 +129,7 @@ class OrderFulfilmentScreenStateProvider :
             )
 
             val accountFlowFeatureOff = accountFlow.copy(
-                featureFlags = accountFlow.featureFlags.copy(isAccountCollectingFeatureEnabled = false)
+                featureFlags = accountFlow.featureFlags.copy(isAccountRepresentativeSelectionFeatureEnabled = false)
             )
 
             val courierFlow = base.copy(

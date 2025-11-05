@@ -1,13 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.material.icons.Icons
-import com.gpcasiapac.storesystems.common.kotlin.extension.Components
-import com.gpcasiapac.storesystems.common.kotlin.extension.DateStyle
-import com.gpcasiapac.storesystems.common.kotlin.extension.HourCycle
-import com.gpcasiapac.storesystems.common.kotlin.extension.TimeStyle
-import com.gpcasiapac.storesystems.common.kotlin.extension.formatLocal
 import androidx.compose.material.icons.outlined.Business
-import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.SnackbarDuration
@@ -96,7 +90,7 @@ class OrderFulfilmentScreenViewModel(
             isProcessing = false,
             error = null,
             featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
-                isAccountCollectingFeatureEnabled = false,
+                isAccountRepresentativeSelectionFeatureEnabled = false,
                 isCorrespondenceSectionVisible = false,
             ),
             collectingType = null,
