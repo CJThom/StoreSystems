@@ -16,8 +16,7 @@ class SignatureScreenStateProvider : PreviewParameterProvider<SignatureScreenCon
                 signatureBitmap = null,
                 customerName = "John Appleseed",
                 summary = SignatureSummaryState.Multi(
-                    orderCount = 0,
-                    joinedText = "",
+                    invoiceNumberList = emptyList(),
                     totalQuantity = 0
                 )
             )

@@ -1,7 +1,5 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model
 
-// Render-ready summary state for Signature and (optionally) OrderFulfilment screens.
-// Keep this free of Android UI types.
 sealed interface SignatureSummaryState {
     val totalQuantity: Int
 
@@ -12,8 +10,7 @@ sealed interface SignatureSummaryState {
     ) : SignatureSummaryState
 
     data class Multi(
-        val orderCount: Int,
-        val joinedText: String,
+        val invoiceNumberList: List<String>,
         override val totalQuantity: Int,
     ) : SignatureSummaryState
 }
