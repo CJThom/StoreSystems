@@ -16,6 +16,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrderItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
@@ -169,7 +170,7 @@ class OrderLocalRepositoryImpl(
                     val name = row.name.trim()
                     if (name.isNotEmpty()) out += CustomerNameSuggestion(
                         text = name,
-                        customerType = com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C
+                        customerType = CustomerType.B2C // TODO: get CustomerType from DAO
                     )
                 }
             }
@@ -181,7 +182,7 @@ class OrderLocalRepositoryImpl(
                 val name = row.name.trim()
                 if (name.isNotEmpty()) out += CustomerNameSuggestion(
                     text = name,
-                    customerType = com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C
+                    customerType = CustomerType.B2C // TODO: get CustomerType from DAO
                 )
             }
         }

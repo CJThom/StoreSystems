@@ -52,6 +52,7 @@ class OrderFulfilmentScreenViewModel(
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase,
     private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
+    private val observeCollectionTypeGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectionTypeGatingUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addScannedInputToWorkOrderUseCase: AddScannedInputToWorkOrderUseCase,
@@ -153,7 +154,7 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Option B: three independent pipelines sharing workOrderIdFlow
+        // Option B: independent pipelines sharing workOrderIdFlow
         // Header (Collect Work Order)
         viewModelScope.launch {
             workOrderIdFlow
@@ -190,6 +191,70 @@ class OrderFulfilmentScreenViewModel(
                             signerName = signature?.signedByName,
                             signedDateTime = signature?.signedAt
                         )
+                    }
+                }
+        }
+
+        // Collection type gating derived from orders
+        viewModelScope.launch {
+            workOrderIdFlow
+                .flatMapLatest { id -> observeCollectionTypeGatingUseCase(id) }
+                .collectLatest { gating ->
+                    val prev = viewState.value
+
+                    val accountEnabledByFlag = prev.featureFlags.isAccountRepresentativeSelectionFeatureEnabled && gating.isAccountEnabled
+                    val updatedOptions = prev.collectionTypeOptionList.map { opt ->
+                        when (opt.collectingType) {
+                            CollectingType.STANDARD -> opt.copy(enabled = gating.isStandardEnabled)
+                            CollectingType.ACCOUNT -> opt.copy(enabled = accountEnabledByFlag)
+                            CollectingType.COURIER -> opt.copy(enabled = gating.isCourierEnabled)
+                        }
+                    }
+
+                    val wasSelected = prev.collectingType
+                    val isStillEnabled = when (wasSelected) {
+                        CollectingType.STANDARD -> gating.isStandardEnabled
+                        CollectingType.ACCOUNT -> accountEnabledByFlag
+                        CollectingType.COURIER -> gating.isCourierEnabled
+                        null -> false
+                    }
+
+                    val enabledCount = listOf(
+                        gating.isStandardEnabled,
+                        accountEnabledByFlag,
+                        gating.isCourierEnabled
+                    ).count { it }
+
+                    val newSelection = when {
+                        isStillEnabled -> wasSelected
+                        enabledCount == 1 -> gating.defaultSelection
+                        else -> null
+                    }
+
+                    val selectionCleared = wasSelected != null && newSelection == null && (gating.isStandardEnabled || accountEnabledByFlag || gating.isCourierEnabled)
+
+                    setState {
+                        copy(
+                            collectionTypeOptionList = updatedOptions,
+                            collectingType = newSelection
+                        )
+                    }
+
+                    if (selectionCleared) {
+                        setEffect {
+                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                message = "Selection cleared due to order mix change",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    }
+
+                    // Persist auto-selected default when it changes
+                    if (enabledCount == 1 && newSelection != null && newSelection != wasSelected) {
+                        debouncer.submit(OrderFulfilmentScreenContract.Debounce.CollectingType) {
+                            val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return@submit
+                            setWorkOrderCollectingTypeUseCase(workOrderId = workOrderId, newSelection)
+                        }
                     }
                 }
         }
