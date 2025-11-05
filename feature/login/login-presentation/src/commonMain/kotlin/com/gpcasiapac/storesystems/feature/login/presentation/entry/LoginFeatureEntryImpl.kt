@@ -6,8 +6,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+//import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -37,7 +38,7 @@ class LoginFeatureEntryImpl : LoginFeatureEntry {
     ) {
 
         val loginNavigationViewModel: LoginNavigationViewModel = koinViewModel()
-        val state by loginNavigationViewModel.viewState.collectAsStateWithLifecycle()
+        val state by loginNavigationViewModel.viewState.collectAsState()
 
         LaunchedEffect(Unit) {
             loginNavigationViewModel.effect.collect { effect ->

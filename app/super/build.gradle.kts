@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
 }
 
 kotlin {
@@ -19,23 +18,24 @@ kotlin {
             implementation(libs.koin.androidx.compose)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.preview)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.androidx.compose.ui.tooling.preview)
+
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
-            implementation(compose.animation)
+            implementation(libs.jetbrains.compose.animation)
             
-            implementation(compose.material3AdaptiveNavigationSuite)
+            //implementation(libs.jetbrains.compose.material3.adaptive.navigation.suite)
 
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+            implementation(libs.jetbrains.compose.material3.adaptive)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation3)
 
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.jetbrains.compose.material3.adaptive)
+            implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.kotlinx.serialization.json)
 
@@ -44,7 +44,7 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
 
 
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
 
 
             // Feature APIs and Presentations

@@ -16,10 +16,12 @@ kotlin {
 
             implementation(libs.kermit)
             // Compose UI
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.androidx.compose.ui.tooling.preview)
+
 
             // MVI base and feature contracts
             implementation(projects.common.presentation)
@@ -31,19 +33,19 @@ kotlin {
             implementation(projects.core.identity.identityApi)
 
             // Navigation3 runtime for NavKey/entry registrations
-            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
 
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
+            implementation(libs.jetbrains.compose.material3.adaptive)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation3)
 
             // Coroutines and Lifecycle
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.viewmodelCompose)
+            implementation(libs.jetbrains.lifecycle.runtime)
 
             // Koin DI
             implementation(libs.koin.core)
@@ -59,5 +61,7 @@ android {
     namespace = "com.gpcasiapac.storesystems.feature.login.presentation"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
-    compileOptions { sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11 }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11; targetCompatibility = JavaVersion.VERSION_11
+    }
 }

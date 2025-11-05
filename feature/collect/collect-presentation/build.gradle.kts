@@ -24,30 +24,30 @@ kotlin {
         }
         commonMain.dependencies {
             // Compose UI
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material3)
       //      implementation(libs.compose.material3)
-            implementation(compose.ui)
-            implementation(compose.uiTooling)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.androidx.compose.ui.tooling.preview)
+            //implementation(compose.uiTooling)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
 
-            implementation(compose.material3AdaptiveNavigationSuite)
+            //implementation(libs.jetbrains.compose.material3.adaptive.navigation.suite)
 
 
             // MVI base and navigation contracts
             implementation(projects.common.presentation)
             implementation(projects.common.di)
 
-            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.androidx.navigation3.runtime)
 
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            implementation(libs.androidx.compose.material3.adaptive)
-            implementation(libs.androidx.compose.material3.adaptive.layout)
-            implementation(libs.androidx.compose.material3.adaptive.navigation)
-            implementation(libs.androidx.compose.material3.adaptive.navigation3)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
+            implementation(libs.jetbrains.compose.material3.adaptive)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation3)
 
 
             // Koin and coroutines
@@ -57,8 +57,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
 
             // Lifecycle for ViewModel + viewModelScope
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime)
 
             // Logging
             implementation(libs.kermit)
