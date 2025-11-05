@@ -218,4 +218,14 @@ class OrderLocalRepositoryImpl(
     override suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean {
         return workOrderDao.getCollectWorkOrderEntity(workOrderId) != null
     }
+
+    override suspend fun getWorkOrderByIdSnapshot(workOrderId: WorkOrderId): WorkOrderWithOrderWithCustomers? {
+        val relation = workOrderDao.getWorkOrder(workOrderId) ?: return null
+        val wo = relation.collectWorkOrderEntity.toDomain()
+        val items = relation.collectOrderWithCustomerRelation.toDomain()
+        return WorkOrderWithOrderWithCustomers(
+            collectWorkOrder = wo,
+            collectOrderWithCustomerList = items
+        )
+    }
 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import androidx.compose.ui.graphics.painter.ColorPainter
+import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmallChip
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens

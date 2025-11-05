@@ -3,14 +3,14 @@ package com.gpcasiapac.storesystems.feature.collect.domain.sync
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 
 /**
  * SyncHandler for submitting a work order created by the Collect feature.
  * For v1 we simply delegate to OrderRepository and return its Result.
  */
 class SubmitOrderSyncHandler(
-    private val orderRepository: OrderRepository
+    private val orderLocalRepository: OrderLocalRepository
 ) : SyncHandler {
     override val supportedTypes: Set<TaskType> = setOf(TaskType.COLLECT_SUBMIT_ORDER)
 

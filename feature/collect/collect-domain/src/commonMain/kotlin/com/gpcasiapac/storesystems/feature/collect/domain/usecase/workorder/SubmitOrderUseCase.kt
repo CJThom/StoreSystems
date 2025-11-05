@@ -3,6 +3,8 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetWorkOrderItemsSnapshotUseCase
 import java.util.UUID
 
 /**
@@ -16,7 +18,7 @@ class SubmitOrderUseCase(
     /**
      * Batch submit all items belonging to the Work Order.
      */
-    suspend operator fun invoke(workOrderId: String): Result<Unit> {
+    suspend operator fun invoke(workOrderId: WorkOrderId): Result<Unit> {
         val items = getWorkOrderItemsSnapshotUseCase(workOrderId)
             .getOrElse { return Result.failure(it) }
 
@@ -30,32 +32,27 @@ class SubmitOrderUseCase(
                 syncTaskId = "", // Will be set by service
 
                 // Order fields
-                invoiceNumber = order.invoiceNumber,
-                salesOrderNumber = order.salesOrderNumber,
+                invoiceNumber = order.invoiceNumber.value,
+                salesOrderNumber = order.orderNumber,
                 webOrderNumber = order.webOrderNumber,
-                orderCreatedAt = order.createdAt,
-                orderPickedAt = order.pickedAt,
+                orderCreatedAt = order.createdDateTime,
+                orderPickedAt = order.invoiceDateTime,
 
                 // Customer fields
-                customerNumber = customer.customerNumber,
+                customerNumber = customer.number,
                 customerType = customer.customerType.name,
-                accountName = customer.accountName,
-                firstName = customer.firstName,
-                lastName = customer.lastName,
+                accountName = customer.name,
+                firstName = customer.name, //TODO Remove firstnmae and lastname.
+                lastName = customer.name,
                 phone = customer.phone
             )
         }
 
-        val submittedBy = items.firstOrNull()?.customer?.let { customer ->
-            customer.accountName?.takeIf { it.isNotBlank() } ?: listOfNotNull(customer.firstName, customer.lastName)
-                .filter { !it.isNullOrBlank() }
-                .joinToString(" ")
-                .ifBlank { null }
-        }
+        val submittedBy = "Staff ID" //TODO Need to supply workday id.
 
         return syncQueueService.enqueueCollectTask(
             taskType = TaskType.COLLECT_SUBMIT_ORDER,
-            taskId = workOrderId, // One SyncTask per Work Order
+            taskId = workOrderId.value, // One SyncTask per Work Order
             priority = 10,
             maxAttempts = 3,
             metadata = metadataList,

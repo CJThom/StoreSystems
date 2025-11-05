@@ -56,7 +56,7 @@ fun CollectOrderItem(
         CollectOrderDetailsContent(
             customerName = customerName,
             customerType = customerType.toParam(),
-            invoiceNumber = invoiceNumber,
+            invoiceNumber = invoiceNumber.value,
             webOrderNumber = webOrderNumber,
             isLoading = isLoading,
             contentPadding = PaddingValues(bottom = Dimens.Space.small)

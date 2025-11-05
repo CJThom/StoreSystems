@@ -63,7 +63,7 @@ fun CollectOrderFulfilmentItem(
         CollectOrderDetailsContent(
             customerName = customerName,
             customerType = customerType.toParam(),
-            invoiceNumber = invoiceNumber,
+            invoiceNumber = invoiceNumber.value,
             webOrderNumber = webOrderNumber,
             isLoading = isLoading
         )

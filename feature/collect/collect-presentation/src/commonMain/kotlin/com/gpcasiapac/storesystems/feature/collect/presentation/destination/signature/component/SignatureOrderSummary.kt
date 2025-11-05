@@ -19,6 +19,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.model.SignatureOrderState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.preview.SignaturePreviewOrdersProvider
+import com.gpcasiapac.storesystems.foundation.component.InvoiceSummary
+import com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
@@ -79,8 +82,8 @@ private fun SingleOrderSummaryHeader(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
-        com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection(
-            invoices = listOf(order.invoiceNumber),
+        InvoiceSummarySection(
+            invoices = listOf(order.invoiceNumber.value),
             customerName = order.customerName,
         )
     }
@@ -165,8 +168,8 @@ private fun MultiOrderSummaryCard(
         val totalQty = orders.sumOf { order -> order.lineItems.sumOf { it.quantity } }
 
         // Reuse invoice-only UI from foundation
-        com.gpcasiapac.storesystems.foundation.component.InvoiceSummary(
-            invoices = orders.map { it.invoiceNumber }
+        InvoiceSummary(
+            invoices = orders.map { it.invoiceNumber.value }
         )
 
         Row(
@@ -195,7 +198,7 @@ private fun MultiOrderSummaryCard(
 )
 @Composable
 private fun SignatureOrderSummaryPreview(
-    @PreviewParameter(SignatureOrderSummaryOrdersProvider::class) orders: List<SignatureOrderState>
+    @PreviewParameter(SignaturePreviewOrdersProvider::class) orders: List<SignatureOrderState>
 ) {
     GPCTheme {
         SignatureOrderSummary(

@@ -14,118 +14,63 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Query parameters for observing orders. Start minimal: only search text.
- * Extend later with sort, filters, paging, etc.
- */
-data class OrderQuery(
-    val searchText: String = "",
-)
-
-// Main-list query for filters + sort
-data class MainOrderQuery(
-    val customerTypes: Set<com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType>,
-    val sort: com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption,
-)
-
-// Search-only query for debounced search text
-data class SearchQuery(
-    val text: String,
-)
 
 interface OrderRepository {
-    /** Observe the total count of orders in the DB (independent of filters/search). */
-    fun observeOrderCount(): Flow<Int>
+//    /** Observe the total count of orders in the DB (independent of filters/search). */
+//    fun observeOrderCount(): Flow<Int>
+//
+//    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItems?>
+//
+//
+//    // New reactive streams for main list and search results
+//    fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
+//
+//    fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>>
+//
+//    /**
+//     * Lightweight, indexed search suggestions from the DB.
+//     */
+//    suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion>
+//
+//
+//    /** Observe signature record (image + name + timestamp) for the latest open Work Order. */
+//    fun getWorkOrderSignatureFlow(workOrderId: WorkOrderId): Flow<Signature?>
+//
+//    /** Observe the latest open Work Order (without joining orders). */
+//    fun getCollectWorkOrderFlow(workOrderId: WorkOrderId): Flow<CollectWorkOrder?>
+//
+//    /** Observe the full latest open Work Order with its orders (signature included). */
+//    fun getWorkOrderWithOrderWithCustomerFlow(workOrderId: WorkOrderId): Flow<WorkOrderWithOrderWithCustomers?>
+//
+//    /** New: Observe ordered list of orders (domain) for a given Work Order id. */
+//    fun observeWorkOrderItemsInScanOrder(workOrderId: WorkOrderId): Flow<List<CollectOrderWithCustomer>>
+//
+//    /** Remove a single order ID from the selection. */
+//    suspend fun removeWorkOrderItem(workOrderId: WorkOrderId, orderId: String)
+//
+//    /** Clear the selection. */
+//    suspend fun deleteWorkOrder(workOrderId: WorkOrderId)
+//
+//    suspend fun insertOrReplaceSignature(signature: Signature)
+//
+//    // New: persist collecting type selection for the latest open Work Order
+//    suspend fun setCollectingType(workOrderId: WorkOrderId, type: CollectingType)
+//
+//    // New: persist courier name for the latest open Work Order
+//    suspend fun setCourierName(workOrderId: WorkOrderId, name: String)
+//
+//    /** Lightweight existence check by invoice number (case-insensitive). */
+//    suspend fun existsInvoice(invoiceNumber: InvoiceNumber): Boolean
+//
+//    suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder)
+//
+//    // Split: compute next position in the use case, then insert prepared item
+//    suspend fun getMaxWorkOrderItemPosition(workOrderId: WorkOrderId): Long
+//
+//    suspend fun insertWorkOrderItem(item: CollectWorkOrderItem): Boolean
+//
+//    // Transaction boundary for atomic multi-step writes. All repository calls inside this block
+//    // will run within a single writer transaction.
+//    suspend fun <T> write(block: suspend () -> T): T
 
-    /**
-     * Atomic snapshot fetch of a Work Order and its nested orders+customers by id.
-     * Returns null if not found.
-     */
-    suspend fun getWorkOrderByIdSnapshot(workOrderId: String): com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?
-
-    fun getCollectOrderWithCustomerWithLineItemsFlow(invoiceNumber: String): Flow<CollectOrderWithCustomerWithLineItems?>
-
-
-    // New reactive streams for main list and search results
-    fun observeMainOrders(query: MainOrderQuery): Flow<List<CollectOrderWithCustomer>>
-
-    fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>>
-
-    /**
-     * Lightweight, indexed search suggestions from the DB.
-     */
-    suspend fun getSearchSuggestions(query: SuggestionQuery): List<com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion>
-
-    /**
-     * Trigger a refresh/sync. In fake repo this seeds demo data.
-     */
-    suspend fun refreshOrders(): Result<Unit>
-
-
-    /** Observe the set of selected order IDs for the given user scope. */
-    fun getSelectedIdListFlow(userRefId: String): Flow<Set<String>>
-
-    /** Observe the signature (Base64) for the latest open Work Order for the given user. */
-    fun observeLatestOpenWorkOrderSignature(userRefId: String): Flow<String?>
-
-    /** Observe signature record (image + name + timestamp) for the latest open Work Order. */
-    fun observeLatestOpenWorkOrderSignatureRecord(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.SignatureRecord?>
-
-    /** Observe the latest open Work Order (without joining orders). */
-    fun observeLatestOpenWorkOrder(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder?>
-
-    /** Observe the full latest open Work Order with its orders (signature included). */
-    fun observeLatestOpenWorkOrderWithOrders(userRefId: String): Flow<com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers?>
-
-    /** New: Observe latest open Work Order id for user. */
-    fun observeLatestOpenWorkOrderId(userRefId: String): Flow<String?>
-
-    /** New: Observe ordered list of orders (domain) for a given Work Order id. */
-    fun observeWorkOrderItemsInScanOrder(workOrderId: String): Flow<List<CollectOrderWithCustomer>>
-
-    /** Replace the entire set of selected IDs. */
-    suspend fun setSelectedIdList(orderIdList: List<String>, userRefId: String)
-
-    /** Add a single order ID to the selection. Returns true if newly added, false if it already existed. */
-    suspend fun addSelectedId(orderId: String, userRefId: String): Boolean
-
-    /** Remove a single order ID from the selection. */
-    suspend fun removeSelectedId(orderId: String, userRefId: String)
-
-    /** Append a batch of order IDs to the current draft (creates draft if missing). */
-    suspend fun appendSelectedIds(orderIdList: List<String>, userRefId: String)
-
-    /** Remove a batch of order IDs from the current draft. */
-    suspend fun removeSelectedIds(orderIdList: List<String>, userRefId: String)
-
-    /** Clear the selection. */
-    suspend fun clear(userRefId: String)
-
-    // Work order lifecycle
-    suspend fun createWorkOrder(
-        userId: String,
-        invoiceNumbers: List<String>
-    ): Result<String> // returns workOrderId
-
-    // TODO: Keep for Mutliple open WorkOrders
-    suspend fun attachSignatureToWorkOrder(
-        workOrderId: String,
-        signature: String,        // keep String (compat with your current model)
-        signedByName: String?
-    ): Result<Unit>
-
-    suspend fun attachSignatureToLatestOpenWorkOrder(
-        userRefId: String,
-        signature: String,
-        signedByName: String?
-    ): Result<Unit>
-
-    // New: persist collecting type selection for the latest open Work Order
-    suspend fun setCollectingType(userRefId: String, type: com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType): Result<Unit>
-
-    // New: persist courier name for the latest open Work Order
-    suspend fun setCourierName(userRefId: String, name: String): Result<Unit>
-
-    /** Lightweight existence check by invoice number (case-insensitive). */
-    suspend fun existsInvoice(invoiceNumber: String): Boolean
 }
