@@ -19,7 +19,7 @@ class ObserveUnifiedHistoryUseCase(
         )
         if (sources.isEmpty()) return flowOf(emptyList())
         return combine(sources) { lists ->
-            lists.flatMap { it }.sortedByDescending { it.timestamp }
+            lists.flatMap { it }
         }
     }
 }

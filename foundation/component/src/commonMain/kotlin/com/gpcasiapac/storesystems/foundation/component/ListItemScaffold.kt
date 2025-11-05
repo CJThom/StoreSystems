@@ -36,6 +36,7 @@ fun ListItemScaffold(
         end = Dimens.Space.medium,
         bottom = Dimens.Space.small
     ),
+    header: (@Composable () -> Unit)? = null,
     toolbar: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
@@ -44,10 +45,15 @@ fun ListItemScaffold(
             .height(IntrinsicSize.Min)
             .padding(contentPadding),
     ) {
-        content()
-
+        //Header
+        header?.invoke()
         Spacer(Modifier.weight(1f))
 
+        //Content
+        content()
+        Spacer(Modifier.weight(1f))
+
+        //Toolbar
         if (toolbar != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -28,6 +28,7 @@ import com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection
 import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -40,6 +41,23 @@ fun HistoryGroupedCard(
     onRetry: (() -> Unit)? = null,
 ) {
     ListItemScaffold(
+        header = {
+            HistoryHeader(
+                modifier = Modifier
+                    .placeholder(isLoading, shape = RoundedCornerShape(4.dp)),
+                username = "65895231",
+                timeAgo = Clock.System.now(),
+                enabledRetry = when (status) {
+                    HistoryStatus.FAILED, HistoryStatus.REQUIRES_ACTION -> true
+                    else -> false
+                },
+                onRetryClick = {
+                    onRetry?.invoke()
+                },
+                isRetrying = status == HistoryStatus.IN_PROGRESS,
+                status = status,
+            )
+        },
         content = {
             Column {
                 if (isLoading) {
@@ -73,70 +91,7 @@ fun HistoryGroupedCard(
             }
         },
         toolbar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = Dimens.Space.small),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (isLoading) " " else time,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.placeholder(isLoading)
-                    )
-                    Spacer(modifier = Modifier.width(Dimens.Space.small))
-                    if (isLoading) {
-                        Box(
-                            Modifier
-                                .width(72.dp)
-                                .height(20.dp)
-                                .placeholder(true, shape = RoundedCornerShape(50))
-                        )
-                    } else {
-                        StatusBadge(status = status)
-                    }
-                }
-                if (isLoading) {
-                    Box(
-                        Modifier
-                            .width(64.dp)
-                            .height(ButtonDefaults.ExtraSmallContainerHeight)
-                            .placeholder(true, shape = RoundedCornerShape(8.dp))
-                    )
-                } else {
-                    when (status) {
-                        HistoryStatus.IN_PROGRESS -> {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight)
-                            )
-                        }
-                        HistoryStatus.FAILED,
-                        HistoryStatus.REQUIRES_ACTION -> {
-                            if (onRetry != null) {
-                                OutlinedButton(
-                                    onClick = onRetry,
-                                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.ExtraSmallContainerHeight),
-                                    modifier = Modifier.height(ButtonDefaults.ExtraSmallContainerHeight),
-                                ) {
-                                    Text(
-                                        "Retry",
-                                        style = ButtonDefaults.textStyleFor(ButtonDefaults.ExtraSmallContainerHeight)
-                                    )
-                                }
-                            }
-                        }
-                        else -> {
-                            // No action for other states
-                        }
-                    }
-                }
-            }
+
         }
     )
 }

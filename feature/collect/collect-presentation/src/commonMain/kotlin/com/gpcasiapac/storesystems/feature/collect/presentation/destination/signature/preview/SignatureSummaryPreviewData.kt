@@ -22,26 +22,22 @@ object SignatureSummaryPreviewData {
         ),
         // Multi: a couple invoices
         SignatureSummaryState.Multi(
-            orderCount = 2,
-            joinedText = "1013000001, 1013000002",
+            invoiceNumberList = listOf("1013000001", "1013000002"),
             totalQuantity = 12
         ),
         // Multi: few invoices
         SignatureSummaryState.Multi(
-            orderCount = 3,
-            joinedText = "1013000001, 1013000002, 1013000003",
+            invoiceNumberList = listOf("1013000001", "1013000002", "1013000003"),
             totalQuantity = 12
         ),
         // Multi: many invoices, tests truncation/ellipsis use-cases in UI
         SignatureSummaryState.Multi(
-            orderCount = 8,
-            joinedText = "1013000001, 1013000002, 1013000003, 1013000004, 1013000005",
+            invoiceNumberList = listOf("1013000001", "1013000002", "1013000003", "1013000004", "1013000005", "1013000006", "1013000007", "1013000008"),
             totalQuantity = 87
         ),
-        // Multi: extremely long joined text to test wrapping/ellipsis
+        // Multi: long list to test wrapping/ellipsis
         SignatureSummaryState.Multi(
-            orderCount = 5,
-            joinedText = "1013000001, 1013000002, 1013000003, 1013000004",
+            invoiceNumberList = listOf("1013000001", "1013000002", "1013000003", "1013000004"),
             totalQuantity = 999
         )
     )

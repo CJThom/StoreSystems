@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
@@ -18,7 +17,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -46,8 +44,7 @@ class SignatureScreenViewModel(
             signatureBitmap = null, // TODO: use this instead of the strokes?
             customerName = "",
             summary = SignatureSummaryState.Multi(
-                orderCount = 0,
-                joinedText = "",
+                invoiceNumberList = emptyList(),
                 totalQuantity = 0
             ),
         )
@@ -89,8 +86,7 @@ class SignatureScreenViewModel(
                             isLoading = false,
                             error = "No Work Order Selected",
                             summary = SignatureSummaryState.Multi(
-                                orderCount = 0,
-                                joinedText = "",
+                                invoiceNumberList = emptyList(),
                                 totalQuantity = 0
                             )
                         )
@@ -103,8 +99,7 @@ class SignatureScreenViewModel(
                         copy(
                             isLoading = false,
                             summary = SignatureSummaryState.Multi(
-                                orderCount = 0,
-                                joinedText = "",
+                                invoiceNumberList = emptyList(),
                                 totalQuantity = 0
                             )
                         )

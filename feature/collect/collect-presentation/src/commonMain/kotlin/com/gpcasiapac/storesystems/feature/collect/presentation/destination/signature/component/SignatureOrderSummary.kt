@@ -47,7 +47,6 @@ fun SignatureOrderSummary(
         modifier = modifier
             .fillMaxWidth()
             .padding(contentPadding),
-        // verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
     ) {
         when (summary) {
             is SignatureSummaryState.Single -> SingleOrderSummaryCard(
@@ -57,8 +56,7 @@ fun SignatureOrderSummary(
             )
 
             is SignatureSummaryState.Multi -> MultiOrderSummaryCard(
-                invoiceJoinedText = summary.joinedText,
-                orderCount = summary.orderCount,
+                invoiceNumberList = summary.invoiceNumberList,
                 totalQuantity = summary.totalQuantity,
             )
         }
@@ -78,6 +76,7 @@ private fun SingleOrderSummaryCard(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -146,20 +145,22 @@ private fun SingleOrderSummaryCard(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MultiOrderSummaryCard(
-    invoiceJoinedText: String,
-    orderCount: Int,
+    invoiceNumberList: List<String>,
     totalQuantity: Int,
     modifier: Modifier = Modifier
 ) {
+
+    val orderCount = invoiceNumberList.size
+    val invoiceAnnotated = buildAnnotatedString {
+        withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
+            append("Invoices: ")
+        }
+        append(invoiceNumberList.joinToString(", "))
+    }
+
     Column(
         modifier = modifier.height(SignatureOrderSummaryDefaults.maxHeight),
     ) {
-        val invoiceAnnotated = buildAnnotatedString {
-            withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
-                append("Invoices: ")
-            }
-            append(invoiceJoinedText)
-        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
