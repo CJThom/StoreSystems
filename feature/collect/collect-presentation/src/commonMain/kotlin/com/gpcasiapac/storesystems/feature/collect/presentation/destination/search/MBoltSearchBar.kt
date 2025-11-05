@@ -82,7 +82,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderSmall
+import com.gpcasiapac.storesystems.foundation.component.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState

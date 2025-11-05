@@ -1,5 +1,6 @@
 package com.gpcasiapac.storesystems.feature.history.api
 
 sealed interface HistoryExternalOutcome {
-    // Placeholder for external outcomes emitted by the History host to the app
+    // Emitted when the History host requests to be closed (e.g., back on root)
+    data object Exit : HistoryExternalOutcome
 }

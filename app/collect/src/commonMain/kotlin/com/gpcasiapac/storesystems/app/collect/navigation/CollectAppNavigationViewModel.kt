@@ -44,7 +44,8 @@ class CollectAppNavigationViewModel :
     }
 
     private fun handleHistoryExternalOutcome(externalOutcome: HistoryExternalOutcome) {
-        // Currently no external outcomes from history feature
-        // Add handling here if history feature emits external outcomes in the future
+        when (externalOutcome) {
+            is HistoryExternalOutcome.Exit -> pop()
+        }
     }
 }

@@ -3,7 +3,6 @@ package com.gpcasiapac.storesystems.feature.collect.domain.usecase.order
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
-import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
 /**

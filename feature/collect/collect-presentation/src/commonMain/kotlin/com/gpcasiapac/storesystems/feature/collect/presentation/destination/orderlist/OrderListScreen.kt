@@ -23,7 +23,10 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.CloudCircle
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PunchClock
+import androidx.compose.material.icons.filled.SyncLock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FabPosition
@@ -296,7 +299,7 @@ fun OrderListScreen(
                         onEventSent(OrderListScreenContract.Event.OpenHistory)
                     }) {
                         Icon(
-                            imageVector = Icons.Default.CloudCircle,
+                            imageVector = Icons.Filled.History,
                             contentDescription = "History"
                         )
                     }

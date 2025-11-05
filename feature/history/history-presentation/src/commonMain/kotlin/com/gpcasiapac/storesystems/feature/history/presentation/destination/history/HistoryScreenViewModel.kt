@@ -3,34 +3,34 @@ package com.gpcasiapac.storesystems.feature.history.presentation.destination.his
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryFilter
-import com.gpcasiapac.storesystems.feature.history.domain.usecase.DeleteHistoryItemUseCase
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.usecase.GetHistoryUseCase
-import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryItemUseCase
-import com.gpcasiapac.storesystems.feature.history.presentation.mapper.toUi
+import com.gpcasiapac.storesystems.feature.history.domain.usecase.RetryHistoryUseCase
+import com.gpcasiapac.storesystems.feature.history.presentation.mapper.mapToUi
 import kotlinx.coroutines.launch
 
 class HistoryScreenViewModel(
     private val getHistoryUseCase: GetHistoryUseCase,
-    private val deleteHistoryItemUseCase: DeleteHistoryItemUseCase,
-    private val retryHistoryItemUseCase: RetryHistoryItemUseCase
+    private val retryHistoryUseCase: RetryHistoryUseCase
 ) : MVIViewModel<HistoryScreenContract.Event, HistoryScreenContract.State, HistoryScreenContract.Effect>() {
 
     override fun setInitialState(): HistoryScreenContract.State = HistoryScreenContract.State(
         items = emptyList(),
+        uiItems = emptyList(),
         isLoading = true,
         error = null,
-        filter = HistoryFilter.ALL
+        filter = HistoryFilter.ALL,
+        typeFilter = null,
+        searchQuery = ""
     )
 
     override suspend fun awaitReadiness(): Boolean {
-        // No special readiness check needed for v1
         return true
     }
 
     override fun handleReadinessFailed() { /* no-op */ }
 
     override fun onStart() {
-        // Start observing history when view state is first collected
         observeHistory()
     }
 
@@ -38,10 +38,12 @@ class HistoryScreenViewModel(
         when (event) {
             is HistoryScreenContract.Event.Load -> observeHistory()
             is HistoryScreenContract.Event.Refresh -> observeHistory()
-            is HistoryScreenContract.Event.OpenItem -> handleOpenItem(event.id)
+            is HistoryScreenContract.Event.OpenItem -> handleOpenItem(event.type, event.id)
             is HistoryScreenContract.Event.DeleteItem -> handleDeleteItem(event.id)
             is HistoryScreenContract.Event.RetryItem -> handleRetryItem(event.id)
             is HistoryScreenContract.Event.FilterChanged -> handleFilterChanged(event.filter)
+            is HistoryScreenContract.Event.TypeFilterChanged -> handleTypeFilterChanged(event.type)
+            is HistoryScreenContract.Event.SearchQueryChanged -> handleSearchQueryChanged(event.query)
             is HistoryScreenContract.Event.ClearError -> clearError()
             is HistoryScreenContract.Event.Back -> setEffect { HistoryScreenContract.Effect.Outcome.Back }
         }
@@ -52,13 +54,16 @@ class HistoryScreenViewModel(
             setState { copy(isLoading = true, error = null) }
             
             try {
-                getHistoryUseCase().collect { historyItems ->
-                    val uiItems = historyItems.toUi()
-                    val filteredItems = applyFilter(uiItems, viewState.value.filter)
-                    
+                val state = viewState.value
+                getHistoryUseCase.invoke(
+                    filter = state.filter,
+                    typeFilter = state.typeFilter,
+                    searchQuery = state.searchQuery.takeIf { it.isNotBlank() }
+                ).collect { items ->
                     setState {
                         copy(
-                            items = filteredItems,
+                            items = items,
+                            uiItems = items.mapToUi(),
                             isLoading = false,
                             error = null
                         )
@@ -72,58 +77,39 @@ class HistoryScreenViewModel(
         }
     }
 
-    private fun handleOpenItem(id: String) {
-        // TODO: Navigate to detail screen in future version
-        setEffect { HistoryScreenContract.Effect.ShowToast("Detail view coming soon") }
+    private fun handleOpenItem(type: HistoryType, id: String) {
+        setEffect { HistoryScreenContract.Effect.Outcome.OpenDetails(type = type, id = id) }
     }
 
     private fun handleDeleteItem(id: String) {
-        viewModelScope.launch {
-            deleteHistoryItemUseCase(id)
-                .onSuccess {
-                    setEffect { HistoryScreenContract.Effect.ShowToast("Item deleted") }
-                }
-                .onFailure { error ->
-                    val message = error.message ?: "Failed to delete item"
-                    setEffect { HistoryScreenContract.Effect.ShowError(message) }
-                }
-        }
+        // Delete is not supported anymore
+        setEffect { HistoryScreenContract.Effect.ShowError("Delete is not supported") }
     }
 
     private fun handleRetryItem(id: String) {
         viewModelScope.launch {
-            retryHistoryItemUseCase(id)
+            retryHistoryUseCase(id)
                 .onSuccess {
-                    setEffect { HistoryScreenContract.Effect.ShowToast("Retrying task...") }
+                    setEffect { HistoryScreenContract.Effect.ShowToast("Retry queued") }
                 }
                 .onFailure { error ->
-                    val message = error.message ?: "Failed to retry item"
+                    val message = error.message ?: "Failed to retry"
                     setEffect { HistoryScreenContract.Effect.ShowError(message) }
                 }
         }
     }
 
     private fun handleFilterChanged(filter: HistoryFilter) {
-        val filteredItems = applyFilter(viewState.value.items, filter)
-        setState { copy(filter = filter, items = filteredItems) }
+        setState { copy(filter = filter) }
+        // Filters are applied in the use case via Flow transformation
     }
-
-    private fun applyFilter(
-        items: List<com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryItemUi>,
-        filter: HistoryFilter
-    ): List<com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryItemUi> {
-        return when (filter) {
-            HistoryFilter.ALL -> items
-            HistoryFilter.PENDING -> items.filter { 
-                it.status == com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.PENDING 
-            }
-            HistoryFilter.FAILED -> items.filter { 
-                it.status == com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.FAILED 
-            }
-            HistoryFilter.COMPLETED -> items.filter { 
-                it.status == com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus.COMPLETED 
-            }
-        }
+    
+    private fun handleTypeFilterChanged(type: HistoryType?) {
+        setState { copy(typeFilter = type) }
+    }
+    
+    private fun handleSearchQueryChanged(query: String) {
+        setState { copy(searchQuery = query) }
     }
 
     private fun clearError() {

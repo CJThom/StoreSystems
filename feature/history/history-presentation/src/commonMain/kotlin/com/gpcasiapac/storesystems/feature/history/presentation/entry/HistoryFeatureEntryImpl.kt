@@ -15,8 +15,11 @@ import com.gpcasiapac.storesystems.feature.history.api.HistoryExternalOutcome
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureEntry
 import com.gpcasiapac.storesystems.feature.history.api.HistoryOutcome
+import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.presentation.destination.history.HistoryScreenContract
 import com.gpcasiapac.storesystems.feature.history.presentation.destination.history.HistoryScreenDestination
+import com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenContract
+import com.gpcasiapac.storesystems.feature.history.presentation.destination.historydetails.HistoryDetailsScreenDestination
 import com.gpcasiapac.storesystems.feature.history.presentation.navigation.HistoryNavigationContract
 import com.gpcasiapac.storesystems.feature.history.presentation.navigation.HistoryNavigationViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -67,8 +70,29 @@ class HistoryFeatureEntryImpl : HistoryFeatureEntry {
                 HistoryScreenDestination { outcome ->
                     when (outcome) {
                         is HistoryScreenContract.Effect.Outcome.Back -> onOutcome(HistoryOutcome.Back)
+                        is HistoryScreenContract.Effect.Outcome.OpenDetails -> {
+                            onOutcome(
+                                HistoryOutcome.OpenDetails(
+                                    type = outcome.type,
+                                    id = outcome.id
+                                )
+                            )
+                        }
                     }
                 }
+            }
+
+            entry<HistoryFeatureDestination.HistoryDetails> { details ->
+                HistoryDetailsScreenDestination(
+                    type = details.type,
+                    id = details.id,
+                    onOutcome = { effect ->
+                        when (effect) {
+                            is HistoryDetailsScreenContract.Effect.Outcome.Back ->
+                                onOutcome(HistoryOutcome.Back)
+                        }
+                    }
+                )
             }
         }
     }

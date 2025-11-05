@@ -14,10 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectOrderDetailsContent
+import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectPickedAtChip
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemScaffold
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.ListItemToolbarScaffold
+import com.gpcasiapac.storesystems.feature.collect.presentation.mapper.toParam
+import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
+import com.gpcasiapac.storesystems.foundation.component.ListItemToolbarScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlin.time.Instant
@@ -61,8 +62,8 @@ fun CollectOrderFulfilmentItem(
     ) {
         CollectOrderDetailsContent(
             customerName = customerName,
-            customerType = customerType,
-            invoiceNumber = invoiceNumber,
+            customerType = customerType.toParam(),
+            invoiceNumber = invoiceNumber.value,
             webOrderNumber = webOrderNumber,
             isLoading = isLoading
         )

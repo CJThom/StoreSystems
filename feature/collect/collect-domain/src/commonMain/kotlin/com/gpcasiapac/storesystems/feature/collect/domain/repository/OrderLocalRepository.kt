@@ -76,4 +76,5 @@ interface OrderLocalRepository {
     // New: existence check for work order
     suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean
 
+    suspend fun getWorkOrderByIdSnapshot(workOrderId: WorkOrderId): WorkOrderWithOrderWithCustomers?
 }

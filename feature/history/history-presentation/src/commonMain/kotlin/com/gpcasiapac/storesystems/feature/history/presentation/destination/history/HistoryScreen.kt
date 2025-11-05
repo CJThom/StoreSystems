@@ -1,35 +1,40 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.destination.history
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryStatusColor
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
+import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryGroupedCard
+import com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo
+import com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryListItemState
+import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
+import com.gpcasiapac.storesystems.foundation.component.OutlineCard
+import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -47,9 +52,14 @@ fun HistoryScreen(
         effectFlow.collectLatest { effect ->
             when (effect) {
                 is HistoryScreenContract.Effect.ShowToast ->
-                    snackbarHostState.showSnackbar(effect.message, duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+
                 is HistoryScreenContract.Effect.ShowError ->
                     snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
+
                 is HistoryScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
@@ -57,9 +67,21 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("History") },
-                modifier = Modifier.fillMaxWidth(),
+            MBoltAppBar(
+                title = {
+                    TopBarTitle("History")
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        onEventSent(HistoryScreenContract.Event.Back)
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
@@ -80,77 +102,58 @@ private fun Content(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        when {
-            state.isLoading -> {
-                CircularProgressIndicator()
-                Text("Loading history…", modifier = Modifier.padding(top = 8.dp))
+        // Inline error banner without forking the whole UI
+        state.error?.let { error ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
-            state.error != null -> {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
-                    Text(
-                        text = state.error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
-            else -> {
-                LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                    items(state.items) { item ->
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = item.title,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            },
-                            supportingContent = {
-                                Column {
-                                    Text(
-                                        text = item.subtitle,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    if (item.attempts != null) {
-                                        Text(
-                                            text = item.attempts,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            },
-                            trailingContent = {
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = when (item.statusColor) {
-                                        HistoryStatusColor.PENDING -> MaterialTheme.colorScheme.secondaryContainer
-                                        HistoryStatusColor.SUCCESS -> MaterialTheme.colorScheme.primaryContainer
-                                        HistoryStatusColor.ERROR -> MaterialTheme.colorScheme.errorContainer
-                                        HistoryStatusColor.INFO -> MaterialTheme.colorScheme.tertiaryContainer
-                                    }
-                                ) {
-                                    Text(
-                                        text = item.statusText,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = when (item.statusColor) {
-                                            HistoryStatusColor.PENDING -> MaterialTheme.colorScheme.onSecondaryContainer
-                                            HistoryStatusColor.SUCCESS -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            HistoryStatusColor.ERROR -> MaterialTheme.colorScheme.onErrorContainer
-                                            HistoryStatusColor.INFO -> MaterialTheme.colorScheme.onTertiaryContainer
-                                        },
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                                .clickable { onEventSent(HistoryScreenContract.Event.OpenItem(item.id)) }
+        }
+
+        val isLoading = state.isLoading
+        val itemsList: List<HistoryListItemState?> = if (isLoading) List(6) { null } else state.uiItems
+
+        LazyColumn {
+            itemsIndexed(itemsList, key = { index, item -> item?.id ?: "skeleton-$index" }) { _, item ->
+                val invoiceNumbers = if (!isLoading && item != null) item.invoiceNumbers else emptyList()
+                val timeText = if (!isLoading && item != null) item.submittedAt?.let { formatTimeAgo(it) } ?: "" else ""
+                val customerName = if (!isLoading && item != null) item.customerName else ""
+                val status = if (!isLoading && item != null) item.status else HistoryStatus.PENDING
+
+                OutlineCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = Dimens.Space.medium,
+                            vertical = Dimens.Space.small
                         )
+                        .animateItem(),
+                    onClick = {
+                        if (!isLoading && item != null) {
+                            onEventSent(HistoryScreenContract.Event.OpenItem(type = item.type, id = item.id))
+                        }
                     }
+                ) {
+                    HistoryGroupedCard(
+                        invoiceNumbers = invoiceNumbers,
+                        time = timeText,
+                        customerName = customerName,
+                        isLoading = isLoading,
+                        status = status,
+                        onRetry = if (!isLoading && item?.canRetry == true) {
+                            { onEventSent(HistoryScreenContract.Event.RetryItem(item.id)) }
+                        } else null
+                    )
                 }
             }
         }
     }
 }
+
+
+

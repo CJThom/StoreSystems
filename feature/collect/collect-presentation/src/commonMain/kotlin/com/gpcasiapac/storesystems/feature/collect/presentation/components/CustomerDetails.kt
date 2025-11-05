@@ -14,7 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.presentation.component.CustomerName
+import com.gpcasiapac.storesystems.feature.collect.presentation.mapper.toParam
+import com.gpcasiapac.storesystems.foundation.component.CustomerName
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -44,7 +45,7 @@ fun CustomerDetails(
 
         CustomerName(
             customerName = customerName,
-            customerType = customerType,
+            customerType = customerType.toParam(),
             modifier = Modifier,
             contentPadding = PaddingValues(Dimens.Space.medium)
         )

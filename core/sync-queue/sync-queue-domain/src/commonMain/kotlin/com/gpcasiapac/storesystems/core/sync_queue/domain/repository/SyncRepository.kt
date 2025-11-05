@@ -1,7 +1,9 @@
 package com.gpcasiapac.storesystems.core.sync_queue.domain.repository
 
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +17,9 @@ interface SyncRepository {
     
     /** Get next pending task with highest priority */
     suspend fun getNextPendingTask(): SyncTask?
+    
+    /** Atomically mark task IN_PROGRESS and increment attempts; returns the updated attempt number, or null if not started. */
+    suspend fun startAttempt(taskId: String): Int?
     
     /** Update task status with optional error attempt */
     suspend fun updateTaskStatus(taskId: String, status: TaskStatus, errorAttempt: SyncTaskAttemptError? = null): Result<Unit>
@@ -42,4 +47,36 @@ interface SyncRepository {
     
     /** Get tasks by the actual entity ID they reference */
     suspend fun getTasksByEntityId(entityId: String): List<SyncTask>
+    
+    /** Observe all tasks with collect metadata */
+    fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>>
+    
+    /** Get task with collect metadata by ID */
+    suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?>
+    
+    /** Get tasks by entity ID with collect metadata */
+    suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata>
+    
+    /** Get tasks by invoice number */
+    suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata>
+    
+    /** Get tasks by customer number */
+    suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata>
+    
+    /** Reset a single task for manual retry; if resetAttempts is true, attempts and errors are cleared. Optionally bump maxAttempts to allow retry without wiping history. */
+    suspend fun resetTaskForRetry(
+        taskId: String,
+        resetAttempts: Boolean = false,
+        bumpMaxAttemptsBy: Int = 0
+    ): Result<Unit>
+    
+    /** Enqueue a collect task with metadata list */
+    suspend fun enqueueCollectTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int = 0,
+        maxAttempts: Int = 3,
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String? = null
+    ): Result<String>
 }

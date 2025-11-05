@@ -12,7 +12,7 @@ kotlin {
         commonMain.dependencies {
             // Core dependencies
             implementation(projects.core.syncQueue.syncQueueApi)
-            
+            implementation(projects.feature.history.historyApi)
             // External dependencies
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)

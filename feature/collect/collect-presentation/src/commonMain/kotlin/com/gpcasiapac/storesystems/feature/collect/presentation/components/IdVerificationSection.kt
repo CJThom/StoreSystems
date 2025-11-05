@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderRole
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
+import com.gpcasiapac.storesystems.foundation.component.HeaderSmall
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 

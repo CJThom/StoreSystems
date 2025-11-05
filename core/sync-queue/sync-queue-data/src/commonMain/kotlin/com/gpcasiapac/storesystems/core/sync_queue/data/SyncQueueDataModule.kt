@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.core.sync_queue.data
 
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.SyncQueueDatabase
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.CollectTaskMetadataDao
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.SyncTaskDao
 import com.gpcasiapac.storesystems.core.sync_queue.data.repository.SyncRepositoryImpl
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
@@ -15,6 +16,7 @@ expect val syncQueueDatabaseModule: Module
 // DAO module
 val syncQueueDaoModule = module {
     single<SyncTaskDao> { get<SyncQueueDatabase>().syncTaskDao() }
+    single<CollectTaskMetadataDao> { get<SyncQueueDatabase>().collectTaskMetadataDao() }
 }
 
 // Repository module

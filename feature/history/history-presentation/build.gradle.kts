@@ -22,9 +22,12 @@ kotlin {
             implementation(libs.jetbrains.compose.material3)
             implementation(libs.jetbrains.compose.ui)
             implementation(libs.jetbrains.compose.uiTooling)
+            implementation(libs.material.icons.extended)
 
             implementation(projects.common.presentation)
             implementation(projects.common.di)
+            implementation(projects.foundation.component)
+            implementation(projects.foundation.designSystem)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.jetbrains.navigation3.ui)
 
@@ -40,7 +43,6 @@ kotlin {
 
             implementation(projects.feature.history.historyApi)
             implementation(projects.feature.history.historyDomain)
-            implementation(projects.feature.history.historyData)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

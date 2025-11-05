@@ -11,6 +11,7 @@ object HistoryNavigationContract {
     sealed interface Event : ViewEvent {
         data class Outcome(val outcome: HistoryOutcome) : Event
         data class PopBack(val count: Int = 1) : Event
+        data class Push(val key: com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination) : Event
     }
 
     sealed interface Effect : ViewSideEffect {

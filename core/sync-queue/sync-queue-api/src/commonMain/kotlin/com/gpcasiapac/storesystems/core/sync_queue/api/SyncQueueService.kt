@@ -1,6 +1,8 @@
 package com.gpcasiapac.storesystems.core.sync_queue.api
 
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import kotlinx.coroutines.flow.Flow
 
@@ -45,7 +47,49 @@ interface SyncQueueService {
     suspend fun retryFailedTasks(taskType: TaskType? = null): Result<Int>
     
     /**
+     * Retry a single task by id: typically resets status to PENDING.
+     */
+    suspend fun retryTask(taskId: String): Result<Unit>
+    
+    /**
      * Get tasks for a specific entity ID.
      */
     suspend fun getTasksByEntityId(entityId: String): List<SyncTask>
+    
+    /**
+     * Observe all tasks with collect metadata.
+     */
+    fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>>
+    
+    /**
+     * Get task with collect metadata by ID.
+     */
+    suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?>
+    
+    /**
+     * Get tasks by entity ID with collect metadata.
+     */
+    suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata>
+    
+    /**
+     * Get tasks by invoice number.
+     */
+    suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata>
+    
+    /**
+     * Get tasks by customer number.
+     */
+    suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata>
+    
+    /**
+     * Enqueue a collect task with multiple metadata rows.
+     */
+    suspend fun enqueueCollectTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int = 0,
+        maxAttempts: Int = 3,
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String? = null
+    ): Result<String>
 }
