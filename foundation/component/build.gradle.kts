@@ -19,8 +19,8 @@ kotlin {
             implementation(libs.jetbrains.compose.ui)
             implementation(libs.jetbrains.compose.uiTooling)
 
-            implementation(compose.materialIconsExtended)
-            implementation(compose.components.resources)
+            implementation(libs.material.icons.extended)
+            implementation(libs.components.resources)
             
 
             //implementation(libs.jetbrains.compose.material3.adaptive.navigation.suite)

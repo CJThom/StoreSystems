@@ -43,7 +43,7 @@ class SubmitOrderUseCase(
                 customerType = customer.customerType.name,
                 accountName = customer.name,
                 firstName = customer.name, //TODO Remove firstnmae and lastname.
-                lastName = customer.name,
+                lastName = "",
                 phone = customer.phone
             )
         }
