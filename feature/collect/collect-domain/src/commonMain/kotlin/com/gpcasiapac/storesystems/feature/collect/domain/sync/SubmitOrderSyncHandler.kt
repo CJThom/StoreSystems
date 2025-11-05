@@ -4,6 +4,8 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.SyncHandler
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 /**
  * SyncHandler for submitting a work order created by the Collect feature.
@@ -17,6 +19,11 @@ class SubmitOrderSyncHandler(
     override suspend fun handle(task: SyncTask): Result<Unit> {
         // task.taskId represents the workOrderId in the sync queue
         // TODO: Implement actual submission when OrderRepository.submitWorkOrder() is added
-        return Result.failure(IllegalStateException("Submitting work order is not yet implemented"))
+        delay(8000)
+        return if (Random.nextInt(2, 4) % 2 == 0) {
+            Result.success(Unit)
+        } else {
+            Result.failure(IllegalStateException("There was an error submitting the order: ${task.taskId}, retry later."))
+        }
     }
 }

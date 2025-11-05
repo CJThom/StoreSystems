@@ -36,6 +36,7 @@ import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.CollectMetadataRowCard
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.CollectMetadataRowCardSkeleton
+import com.gpcasiapac.storesystems.feature.history.presentation.composable.ErrorInfo
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.InfoPanel
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.SummarySection
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
@@ -168,10 +169,13 @@ private fun Content(
                                 .height(16.dp)
                                 .placeholder(true, shape = RoundedCornerShape(4.dp))
                         )
+
                     } else {
                         when (val resolved = item) {
                             is CollectHistoryItem -> {
                                 SummarySection(resolved)
+
+
                             }
 
                             else -> { /* no-op */
@@ -179,6 +183,22 @@ private fun Content(
                         }
                     }
                 }
+            }
+
+            item {
+                when (val resolved = item) {
+                    is CollectHistoryItem -> {
+                        if (!resolved.lastError.isNullOrBlank()) {
+                            Box(modifier = Modifier.padding(horizontal = Dimens.Space.medium, vertical = Dimens.Space.small)) {
+                                ErrorInfo(message = resolved.lastError!!, attempts = resolved.attempts)
+                            }
+                        }
+                    }
+
+                    else -> { /* no-op */
+                    }
+                }
+
             }
 
             // Order List header
