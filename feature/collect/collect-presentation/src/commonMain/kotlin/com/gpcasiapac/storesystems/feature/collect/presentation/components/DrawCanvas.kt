@@ -68,31 +68,6 @@ fun DrawCanvas(
     var lastDrawTime by remember { mutableLongStateOf(0L) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
 
-    val scrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                // Allow parent scrolling when not actively drawing
-                return if (isDrawing) {
-                    // Consume all scroll events during drawing
-                    available
-                } else {
-                    Offset.Zero
-                }
-            }
-
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                return Offset.Zero
-            }
-        }
-    }
-
     // Local mutable copy to allow incremental updates then publish via callback
     // Remove dependency on strokes to prevent state resets during drawing
     var localStrokes by remember { mutableStateOf(strokes) }
@@ -134,10 +109,6 @@ fun DrawCanvas(
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .padding(contentPadding)
-            .nestedScroll(scrollConnection)
-            .background(background)
-            .border(border, shape)
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(pass = PointerEventPass.Initial)

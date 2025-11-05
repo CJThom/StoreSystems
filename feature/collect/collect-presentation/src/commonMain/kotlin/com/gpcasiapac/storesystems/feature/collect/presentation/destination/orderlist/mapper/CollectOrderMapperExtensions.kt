@@ -7,10 +7,10 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 internal fun CollectOrder.toState(): CollectOrderState {
     return CollectOrderState(
         invoiceNumber = this.invoiceNumber,
-        salesOrderNumber = this.salesOrderNumber,
+        orderNumber = this.orderNumber,
         webOrderNumber = this.webOrderNumber,
-        createdAt = this.createdAt,
-        pickedAt = this.pickedAt
+        createdAt = this.createdDateTime,
+        pickedAt = this.invoiceDateTime
     )
 }
 

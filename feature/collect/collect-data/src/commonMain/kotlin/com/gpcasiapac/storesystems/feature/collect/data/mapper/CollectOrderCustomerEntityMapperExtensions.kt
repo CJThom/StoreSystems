@@ -5,12 +5,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderCust
 
 fun CollectOrderCustomerEntity.toDomain(): CollectOrderCustomer {
     return CollectOrderCustomer(
-        customerNumber = this.customerNumber,
-        customerType = this.customerType,
-        accountName = this.accountName,
-        firstName = this.firstName,
-        lastName = this.lastName,
+        invoiceNumber = this.invoiceNumber,
+        number = this.number,
+        name = this.name,
         phone = this.phone,
+        customerType = this.customerType
     )
 }
 

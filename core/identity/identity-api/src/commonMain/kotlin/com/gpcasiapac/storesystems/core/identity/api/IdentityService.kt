@@ -2,24 +2,20 @@ package com.gpcasiapac.storesystems.core.identity.api
 
 import com.gpcasiapac.storesystems.common.kotlin.DataResult
 import com.gpcasiapac.storesystems.core.identity.api.model.AuthSession
-import com.gpcasiapac.storesystems.core.identity.api.model.Token
 import com.gpcasiapac.storesystems.core.identity.api.model.User
+import com.gpcasiapac.storesystems.core.identity.api.model.value.UserId
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Public facade for identity operations. Implemented in identity-impl using domain use cases.
  */
 interface IdentityService {
     suspend fun login(username: String, password: String): DataResult<AuthSession>
-    suspend fun getCurrentUser(): DataResult<User>
+    suspend fun getUser(userId: UserId): User?
     suspend fun isLoggedIn(): Boolean
-    suspend fun logout(): LogoutResult
-    suspend fun refreshToken(refreshToken: String): DataResult<Token>
+    suspend fun logout()
+
+    /** Flow of the current logged-in user's id, or null if not logged in. */
+    fun observeCurrentUserId(): Flow<UserId?>
 }
 
-sealed interface LogoutResult {
-    data object Success : LogoutResult
-    sealed class Error(val message: String) : LogoutResult {
-        data object NetworkError : Error("Network error. Please try again.")
-        data object ServiceUnavailable : Error("Logout service unavailable. Please try again later.")
-    }
-}

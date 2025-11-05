@@ -88,21 +88,27 @@ fun SignHereCanvas(
     // We overlay the guideline and hint on top of DrawCanvas. Since the overlay is not clickable
     // and has no pointer input modifiers, pointer events fall through to DrawCanvas below.
     Box(modifier = modifier.padding(contentPadding)) {
-        DrawCanvas(
-            modifier = Modifier.fillMaxSize(),
-            strokes = strokes,
-            onStrokesChange = onStrokesChange,
-            contentPadding = PaddingValues(),
-            shape = shape,
+        Surface(
+            color = background,
             border = border,
-            background = background,
-            strokeWidth = strokeWidth,
-            strokeColor = strokeColor,
-            exportWidth = exportWidth,
-            exportHeight = exportHeight,
-            onComplete = onComplete,
-            completionDelayMs = completionDelayMs
-        )
+            shape = shape,
+        ) {
+            DrawCanvas(
+                modifier = Modifier.fillMaxSize(),
+                strokes = strokes,
+                onStrokesChange = onStrokesChange,
+                contentPadding = PaddingValues(),
+                shape = shape,
+                border = border,
+                background = background,
+                strokeWidth = strokeWidth,
+                strokeColor = strokeColor,
+                exportWidth = exportWidth,
+                exportHeight = exportHeight,
+                onComplete = onComplete,
+                completionDelayMs = completionDelayMs
+            )
+        }
 
         ClearButtonRow(
             visible = showClearButton && strokes.isNotEmpty(),

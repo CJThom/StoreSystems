@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,10 +50,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import coil3.size.Dimension
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
@@ -65,9 +69,11 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Actio
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerificationSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
@@ -100,8 +106,6 @@ fun OrderFulfilmentScreen(
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
-    val dialogSpec =
-        remember { mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog?>(null) }
 
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
@@ -139,13 +143,11 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.PlaySound -> {
                     soundPlayer?.play(effect.soundEffect)
                 }
+
                 is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
                     hapticPerformer?.perform(effect.type)
                 }
 
-                is OrderFulfilmentScreenContract.Effect.ShowSaveDiscardDialog -> {
-                    dialogSpec.value = effect
-                }
 
                 is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
                     selectionConfirmDialogSpec.value = effect
@@ -154,8 +156,8 @@ fun OrderFulfilmentScreen(
                 is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
                     onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
                 }
- 
-                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+
+                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
             }
         }
     }
@@ -223,9 +225,7 @@ fun OrderFulfilmentScreen(
                         },
                         onResultClick = { result ->
                             onSearchEventSent(
-                                SearchContract.Event.SearchResultClicked(
-                                    result
-                                )
+                                SearchContract.Event.SearchResultClicked(result)
                             )
                         },
                         onClearClick = {
@@ -245,24 +245,40 @@ fun OrderFulfilmentScreen(
                             onSearchEventSent(SearchContract.Event.RemoveChip(s))
                         },
                         searchOrderItems = searchState.searchOrderItems,
-                        isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
-                        selectedOrderIdList = searchState.selectedOrderIdList,
-                        isSelectAllChecked = searchState.isSelectAllChecked,
+                        isMultiSelectionEnabled = searchState.selection.isEnabled,
+                        selectedOrderIdList = searchState.selection.selected,
+                        isSelectAllChecked = searchState.selection.isAllSelected,
                         isRefreshing = state.isLoading,
-                        onOpenOrder = { id ->
+                        onOpenInvoice = { id ->
                             onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
                         },
                         onCheckedChange = { orderId, checked ->
-                            onSearchEventSent(SearchContract.Event.OrderChecked(orderId, checked))
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.SetItemChecked(orderId, checked)
+                                )
+                            )
                         },
                         onSelectAllToggle = { checked ->
-                            onSearchEventSent(SearchContract.Event.SelectAll(checked))
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.SelectAll(checked)
+                                )
+                            )
                         },
                         onCancelSelection = {
-                            onSearchEventSent(SearchContract.Event.CancelSelection)
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.Cancel
+                                )
+                            )
                         },
                         onEnterSelectionMode = {
-                            onSearchEventSent(SearchContract.Event.ToggleSelectionMode(true))
+                            onSearchEventSent(
+                                SearchContract.Event.Selection(
+                                    SelectionContract.Event.ToggleMode(true)
+                                )
+                            )
                         },
                         onSelectClick = {
                             onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
@@ -305,7 +321,7 @@ fun OrderFulfilmentScreen(
                 // Orders grid
                 items(
                     items = state.collectOrderListItemStateList,
-                    key = { it.invoiceNumber },
+                    key = { it.invoiceNumber.value },
                 ) { collectOrderState ->
                     CheckboxCard(
                         modifier = Modifier
@@ -344,7 +360,7 @@ fun OrderFulfilmentScreen(
                 }
             }
 
-            if(state.collectOrderListItemStateList.isNotEmpty()){
+            if (state.collectOrderListItemStateList.isNotEmpty()) {
                 item { Box(Modifier.size(Dimens.Space.medium)) }
             }
 
@@ -357,11 +373,54 @@ fun OrderFulfilmentScreen(
                 )
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
-                ActionsContent(
+                CollectorSection(
                     state = state,
                     onEventSent = onEventSent
                 )
             }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SignaturePreviewImage(
+                    onSignClick = {
+                        onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+                    },
+                    onRetakeClick = {
+                        onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+                    },
+                    image = state.signatureBase64
+                )
+            }
+
+            if (state.featureFlags.isCorrespondenceSectionVisible) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(
+                            vertical = Dimens.Space.medium
+                        )
+                    )
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    CorrespondenceSection(
+                        correspondenceOptionList = state.correspondenceOptionList,
+                        onCheckedChange = { id ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                                    id = id
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+
             item(span = { GridItemSpan(maxLineSpan) }) {
                 HorizontalDivider(
                     modifier = Modifier.padding(
@@ -380,14 +439,17 @@ fun OrderFulfilmentScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
-                            Text(text = "PROCESSING...", style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                text = "PROCESSING...",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         } else {
                             Icon(imageVector = Icons.Outlined.DoneAll, contentDescription = "Done")
                             Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
                             Text(text = "CONFIRM", style = MaterialTheme.typography.labelLarge)
                         }
                     },
-                    onClick = { 
+                    onClick = {
                         if (!state.isProcessing && !state.isLoading) {
                             onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
                         }
@@ -396,36 +458,6 @@ fun OrderFulfilmentScreen(
             }
         }
 
-        // Save/Discard dialog
-        val spec = dialogSpec.value
-        if (spec != null) {
-            AlertDialog(
-                onDismissRequest = {
-                    dialogSpec.value = null
-                    onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                },
-                title = { Text(spec.title) },
-                text = { Text(spec.message) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        dialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackSave)
-                    }) { Text(spec.saveLabel) }
-                },
-                dismissButton = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
-                        TextButton(onClick = {
-                            dialogSpec.value = null
-                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmBackDiscard)
-                        }) { Text(spec.discardLabel) }
-                        TextButton(onClick = {
-                            dialogSpec.value = null
-                            onEventSent(OrderFulfilmentScreenContract.Event.CancelBackDialog)
-                        }) { Text(spec.cancelLabel) }
-                    }
-                }
-            )
-        }
 
         // Search selection confirmation dialog (parent-driven, 2-button)
         val selectSpec = selectionConfirmDialogSpec.value
@@ -440,7 +472,7 @@ fun OrderFulfilmentScreen(
                     TextButton(onClick = {
                         selectionConfirmDialogSpec.value = null
                         if (onSearchEventSent != null) {
-                            onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed))
                         }
                         onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
                     }) { Text(selectSpec.confirmLabel) }
@@ -468,7 +500,13 @@ fun OrderFulfilmentScreen(
                     Text("This name will be saved with the signature.")
                     OutlinedTextField(
                         value = state.customerNameInput,
-                        onValueChange = { onEventSent(OrderFulfilmentScreenContract.Event.CustomerNameChanged(it)) },
+                        onValueChange = {
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.CustomerNameChanged(
+                                    it
+                                )
+                            )
+                        },
                         singleLine = true,
                         label = { Text("Customer Name") },
                         modifier = Modifier.fillMaxWidth()
@@ -482,25 +520,31 @@ fun OrderFulfilmentScreen(
                 ) { Text("Confirm") }
             },
             dismissButton = {
-                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) { Text("Cancel") }
+                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) {
+                    Text(
+                        "Cancel"
+                    )
+                }
             }
         )
     }
 }
 
-
 @Composable
-private fun ActionsContent(
+private fun CollectorSection(
     state: OrderFulfilmentScreenContract.State,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
 
-
-    // Compact layout: stack vertically
     Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        modifier = modifier
+            .padding(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+            )
+            .fillMaxWidth()
     ) {
         CollectionTypeSection(
             title = stringResource(Res.string.who_is_collecting),
@@ -513,6 +557,10 @@ private fun ActionsContent(
                     )
                 )
             },
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+            )
         ) { selectedType ->
             CollectionTypeContent(
                 state = state,
@@ -521,34 +569,22 @@ private fun ActionsContent(
             )
         }
 
-        HorizontalDivider()
-
-        SignaturePreviewImage(
-            onSignClick = {
-                onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+        IdVerificationSection(
+            selected = state.idVerification,
+            onSelected = { option ->
+                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
             },
-            onRetakeClick = {
-                onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+            otherText = state.idVerificationOtherText,
+            onOtherTextChange = { text ->
+                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged(text))
             },
-            image = state.signatureBase64
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+            )
         )
 
-        if (state.featureFlags.isCorrespondenceSectionVisible) {
-            HorizontalDivider()
-
-            CorrespondenceSection(
-                correspondenceOptionList = state.correspondenceOptionList,
-                onCheckedChange = { id ->
-                    onEventSent(
-                        OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
-                            id = id
-                        )
-                    )
-                }
-            )
-        }
     }
-
 }
 
 @Composable

@@ -11,7 +11,9 @@ import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
+import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeShortString
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.HeaderMedium
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemMedium
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.MBoltIcons
@@ -22,7 +24,8 @@ import kotlin.time.Instant
 
 @Composable
 fun OrderDetails(
-    invoiceNumber: String,
+    invoiceNumber: InvoiceNumber,
+    orderNumber: String,
     webOrderNumber: String?,
     createdAt: Instant,
     pickedAt: Instant,
@@ -34,7 +37,7 @@ fun OrderDetails(
     Column(modifier = modifier.padding(contentPadding)) {
 
         HeaderMedium(
-            text = "Invoice: $invoiceNumber",
+            text = "Invoice: ${invoiceNumber.value}",
         )
 
         Column(
@@ -50,7 +53,7 @@ fun OrderDetails(
                 DetailItemMedium(
                     modifier = Modifier.weight(1F),
                     label = "Sales Order Number",
-                    value = invoiceNumber,
+                    value = orderNumber,
                     imageVector = Icons.Outlined.Receipt,
                     isLoading = isLoading
                 )
@@ -75,7 +78,7 @@ fun OrderDetails(
                 DetailItemMedium(
                     modifier = Modifier.weight(1F),
                     label = "Created",
-                    value = createdAt.toString(), // TODO: Format
+                    value = createdAt.toLocalDateTimeShortString(),
                     imageVector = MBoltIcons.CalendarAddOn,
                     isLoading = isLoading
                 )
@@ -83,7 +86,7 @@ fun OrderDetails(
                 DetailItemMedium(
                     modifier = Modifier.weight(1F),
                     label = "Picked",
-                    value = pickedAt.toString(), // TODO: Format
+                    value = pickedAt.toLocalDateTimeShortString(),
                     imageVector = Icons.Outlined.BackHand,
                     isLoading = isLoading
                 )
@@ -99,7 +102,8 @@ fun OrderDetails(
 @Composable
 fun OrderDetailsPreview() {
     OrderDetails(
-        invoiceNumber = "123456",
+        invoiceNumber = InvoiceNumber("123456"),
+        orderNumber = "SO123456",
         webOrderNumber = "W123456",
         createdAt = Clock.System.now() - 10.days,
         pickedAt = Clock.System.now(),

@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.data.local.db.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 
 @Entity(
     tableName = "collect_order_line_items",
@@ -17,20 +18,26 @@ import androidx.room.ForeignKey
     ]
 )
 data class CollectOrderLineItemEntity(
+
     @ColumnInfo(name = "line_number")
     val lineNumber: Int,
+
     @ColumnInfo(name = "invoice_number", index = true)
-    val invoiceNumber: String,
+    val invoiceNumber: InvoiceNumber,
+
     @ColumnInfo(name = "sku")
     val sku: String,
-    @ColumnInfo(name = "product_number")
-    val productNumber: String,
-    @ColumnInfo(name = "product_description")
-    val productDescription: String,
+
+    @ColumnInfo(name = "barcode")
+    val barcode: String?,
+
+    @ColumnInfo(name = "description")
+    val description: String,
+
     @ColumnInfo(name = "quantity")
     val quantity: Int,
-    @ColumnInfo(name = "unit_price")
-    val unitPrice: Double,
-    @ColumnInfo(name = "product_image_url")
-    val productImageUrl: String? = null,
-)
+
+    @ColumnInfo(name = "image_url")
+    val imageUrl: String?,
+
+    )

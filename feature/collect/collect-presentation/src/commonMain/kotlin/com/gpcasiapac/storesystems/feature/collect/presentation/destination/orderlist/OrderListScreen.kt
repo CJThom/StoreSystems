@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.HeaderSection
@@ -66,6 +67,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.ToolbarFabContainer
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -105,12 +107,12 @@ fun OrderListScreen(
     )
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
-        canScroll = { !state.isMultiSelectionEnabled }
+        canScroll = { !state.selection.isEnabled }
     )
 
     // When entering multi-select, smoothly expand the top app bar so it isn't hidden
-    LaunchedEffect(state.isMultiSelectionEnabled) {
-        if (state.isMultiSelectionEnabled) {
+    LaunchedEffect(state.selection.isEnabled) {
+        if (state.selection.isEnabled) {
             val appBarState = scrollBehavior.state
             val anim = Animatable(appBarState.heightOffset)
             anim.animateTo(
@@ -213,7 +215,7 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.CollapseSearchBar -> {
                     onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(false))
                 }
- 
+
                 is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
                     // Adapt to SearchContract dialog spec for reuse of common dialog UI
                     searchConfirmDialogSpec.value =
@@ -249,10 +251,10 @@ fun OrderListScreen(
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
-            val hasDraft = state.isDraftBarVisible && state.existingDraftIdSet.isNotEmpty()
+            val hasDraft = state.isDraftBarVisible && state.selection.existing.isNotEmpty()
 
             AnimatedVisibility(
-                visible = !state.isMultiSelectionEnabled,
+                visible = !state.selection.isEnabled,
                 enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
                         scaleIn(
                             initialScale = 0.2f,
@@ -268,7 +270,7 @@ fun OrderListScreen(
             ) {
                 ToolbarFabContainer(
                     hasDraft = hasDraft,
-                    count = state.existingDraftIdSet.size,
+                    count = state.selection.existing.size,
                     onNewTask = { onEventSent(OrderListScreenContract.Event.StartNewWorkOrderClicked) },
                     onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
                     onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) },
@@ -293,7 +295,7 @@ fun OrderListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         onEventSent(OrderListScreenContract.Event.OpenHistory)
                     }) {
                         Icon(
@@ -318,7 +320,7 @@ fun OrderListScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         AnimatedVisibility(
-                            visible = !state.isMultiSelectionEnabled,
+                            visible = !state.selection.isEnabled,
                             enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) + expandVertically(
                                 animationSpec = tween(250)
                             ),
@@ -369,31 +371,41 @@ fun OrderListScreen(
                                     onSearchEventSent(SearchContract.Event.RemoveChip(s))
                                 },
                                 searchOrderItems = searchState.searchOrderItems,
-                                isMultiSelectionEnabled = searchState.isMultiSelectionEnabled,
-                                selectedOrderIdList = searchState.selectedOrderIdList,
-                                isSelectAllChecked = searchState.isSelectAllChecked,
+                                isMultiSelectionEnabled = searchState.selection.isEnabled,
+                                selectedOrderIdList = searchState.selection.selected,
+                                isSelectAllChecked = searchState.selection.isAllSelected,
                                 isRefreshing = state.isRefreshing,
-                                onOpenOrder = { id ->
+                                onOpenInvoice = { id ->
                                     onEventSent(OrderListScreenContract.Event.OpenOrder(id))
                                 },
                                 onCheckedChange = { orderId, checked ->
                                     onSearchEventSent(
-                                        SearchContract.Event.OrderChecked(
-                                            orderId = orderId,
-                                            checked = checked
+                                        SearchContract.Event.Selection(
+                                            SelectionContract.Event.SetItemChecked(
+                                                id = orderId,
+                                                checked = checked
+                                            )
                                         )
                                     )
                                 },
                                 onSelectAllToggle = { checked ->
-                                    onSearchEventSent(SearchContract.Event.SelectAll(checked))
+                                    onSearchEventSent(
+                                        SearchContract.Event.Selection(
+                                            SelectionContract.Event.SelectAll(checked)
+                                        )
+                                    )
                                 },
                                 onCancelSelection = {
-                                    onSearchEventSent(SearchContract.Event.CancelSelection)
+                                    onSearchEventSent(
+                                        SearchContract.Event.Selection(
+                                            SelectionContract.Event.Cancel
+                                        )
+                                    )
                                 },
                                 onEnterSelectionMode = {
                                     onSearchEventSent(
-                                        SearchContract.Event.ToggleSelectionMode(
-                                            enabled = true
+                                        SearchContract.Event.Selection(
+                                            SelectionContract.Event.ToggleMode(true)
                                         )
                                     )
                                 },
@@ -426,7 +438,7 @@ fun OrderListScreen(
         ) {
             item {
                 AnimatedVisibility(
-                    visible = !state.isMultiSelectionEnabled,
+                    visible = !state.selection.isEnabled,
                     enter = expandVertically(animationSpec = tween(250)) + fadeIn(),
                     exit = shrinkVertically(animationSpec = tween(200)) + fadeOut()
                 ) {
@@ -439,10 +451,13 @@ fun OrderListScreen(
             }
             stickyHeader {
                 OrderListToolbar(
-                    isMultiSelectionEnabled = state.isMultiSelectionEnabled,
-                    customerTypeFilterList = state.customerTypeFilterList,
-                    selectedCount = state.selectedOrderIdList.size,
-                    isSelectAllChecked = state.isSelectAllChecked,
+                    isMultiSelectionEnabled = state.selection.isEnabled,
+                    customerTypeFilterList = buildSet {
+                        if (state.filters.showB2B) add(CustomerType.B2B)
+                        if (state.filters.showB2C) add(CustomerType.B2C)
+                    },
+                    selectedCount = state.selection.selected.size,
+                    isSelectAllChecked = state.selection.isAllSelected,
                     isLoading = state.isRefreshing,
                     scrollBehavior = stickyHeaderScrollBehavior,
                     onToggleCustomerType = { type, checked ->
@@ -455,25 +470,37 @@ fun OrderListScreen(
                     },
                     onSelectAction = {
                         onEventSent(
-                            OrderListScreenContract.Event.ToggleSelectionMode(
-                                enabled = true
+                            OrderListScreenContract.Event.Selection(
+                                SelectionContract.Event.ToggleMode(true)
                             )
                         )
                     },
                     onSelectAllToggle = { checked ->
-                        onEventSent(OrderListScreenContract.Event.SelectAll(checked))
+                        onEventSent(
+                            OrderListScreenContract.Event.Selection(
+                                SelectionContract.Event.SelectAll(checked)
+                            )
+                        )
                     },
                     onCancelClick = {
-                        onEventSent(OrderListScreenContract.Event.CancelSelection)
+                        onEventSent(
+                            OrderListScreenContract.Event.Selection(
+                                SelectionContract.Event.Cancel
+                            )
+                        )
                     },
                     onSelectClick = {
-                        onEventSent(OrderListScreenContract.Event.ConfirmSelection)
+                        onEventSent(
+                            OrderListScreenContract.Event.Selection(
+                                SelectionContract.Event.Confirm
+                            )
+                        )
                     },
                 )
             }
             items(
                 items = state.orders,
-                key = { it.invoiceNumber }) { collectOrderState ->
+                key = { it.invoiceNumber.value }) { collectOrderState ->
                 CheckboxCard(
                     modifier = Modifier
                         .padding(
@@ -482,16 +509,18 @@ fun OrderListScreen(
                         )
                         .animateItem()
                         .animateContentSize(),
-                    isCheckable = state.isMultiSelectionEnabled,
-                    isChecked = state.selectedOrderIdList.contains(collectOrderState.invoiceNumber),
+                    isCheckable = state.selection.isEnabled,
+                    isChecked = state.selection.selected.contains(collectOrderState.invoiceNumber),
                     onClick = {
                         onEventSent(OrderListScreenContract.Event.OpenOrder(collectOrderState.invoiceNumber))
                     },
                     onCheckedChange = { isChecked ->
                         onEventSent(
-                            OrderListScreenContract.Event.OrderChecked(
-                                orderId = collectOrderState.invoiceNumber,
-                                checked = isChecked
+                            OrderListScreenContract.Event.Selection(
+                                SelectionContract.Event.SetItemChecked(
+                                    id = collectOrderState.invoiceNumber,
+                                    checked = isChecked
+                                )
                             )
                         )
                     }
@@ -508,7 +537,7 @@ fun OrderListScreen(
                             start = Dimens.Space.medium,
                             top = Dimens.Space.medium,
                             bottom = Dimens.Space.small,
-                            end = if (state.isMultiSelectionEnabled) 0.dp else Dimens.Space.medium
+                            end = if (state.selection.isEnabled) 0.dp else Dimens.Space.medium
                         ),
                     )
                 }
@@ -522,19 +551,35 @@ fun OrderListScreen(
                 spec = spec,
                 onProceed = {
                     confirmDialogSpec.value = null
-                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
+                    onEventSent(
+                        OrderListScreenContract.Event.Selection(
+                            SelectionContract.Event.ConfirmProceed
+                        )
+                    )
                 },
                 onSelect = {
                     confirmDialogSpec.value = null
-                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionStay)
+                    onEventSent(
+                        OrderListScreenContract.Event.Selection(
+                            SelectionContract.Event.ConfirmStay
+                        )
+                    )
                 },
                 onCancel = {
                     confirmDialogSpec.value = null
-                    onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+                    onEventSent(
+                        OrderListScreenContract.Event.Selection(
+                            SelectionContract.Event.DismissConfirmDialog
+                        )
+                    )
                 },
                 onDismissRequest = {
                     confirmDialogSpec.value = null
-                    onEventSent(OrderListScreenContract.Event.DismissConfirmSelectionDialog)
+                    onEventSent(
+                        OrderListScreenContract.Event.Selection(
+                            SelectionContract.Event.DismissConfirmDialog
+                        )
+                    )
                 }
             )
         }
@@ -551,21 +596,29 @@ fun OrderListScreen(
                 ),
                 onProceed = {
                     searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.ConfirmSelectionProceed)
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed))
                     // Also trigger proceed outcome on main VM to keep behavior
-                    onEventSent(OrderListScreenContract.Event.ConfirmSelectionProceed)
+                    onEventSent(
+                        OrderListScreenContract.Event.Selection(
+                            SelectionContract.Event.ConfirmProceed
+                        )
+                    )
                 },
                 onSelect = {
                     searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.ConfirmSelectionStay)
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmStay))
                 },
                 onCancel = {
                     searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
+                    onSearchEventSent(
+                        SearchContract.Event.Selection(
+                            SelectionContract.Event.DismissConfirmDialog
+                        )
+                    )
                 },
                 onDismissRequest = {
                     searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.DismissConfirmSelectionDialog)
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.DismissConfirmDialog))
                 }
             )
         }

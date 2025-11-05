@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlin.time.Instant
 
 @Entity(
@@ -23,11 +24,11 @@ data class SignatureEntity(
     // 1:1 relation: use workOrderId as the primary key
     @PrimaryKey
     @ColumnInfo(name = "work_order_id")
-    val workOrderId: String,
+    val workOrderId: WorkOrderId,
 
     // Base64-encoded PNG/JPEG string (keeping compatibility with current app flow)
     @ColumnInfo(name = "signature")
-    val signature: String,
+    val signatureBase64: String,
 
     @ColumnInfo(name = "signed_at")
     val signedAt: Instant,

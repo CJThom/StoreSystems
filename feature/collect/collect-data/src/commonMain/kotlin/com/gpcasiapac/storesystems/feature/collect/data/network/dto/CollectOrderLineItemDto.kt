@@ -5,18 +5,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CollectOrderLineItemDto(
-    @SerialName("line_number")
-    val lineNumber: Int,
+
+    @SerialName("lineNumber")
+    val lineNumber: String,
+
     @SerialName("sku")
     val sku: String,
-    @SerialName("product_number")
-    val productNumber: String,
-    @SerialName("product_description")
-    val productDescription: String,
+
+    @SerialName("barcode")
+    val barcode: String? = null,
+
+    @SerialName("description")
+    val description: String,
+
     @SerialName("quantity")
     val quantity: Int,
-    @SerialName("unit_price")
-    val unitPrice: Double,
-    @SerialName("product_image_url")
-    val productImageUrl: String? = null,
+
+    @SerialName("imageUrl")
+    val imageUrl: String? = null,
+
 )

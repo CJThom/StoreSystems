@@ -73,6 +73,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
@@ -101,7 +102,7 @@ fun MBoltSearchBar(
     onSearch: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     onBackPressed: () -> Unit,
-    onResultClick: (String) -> Unit,
+    onResultClick: (InvoiceNumber) -> Unit,
     onSuggestionClicked: (SearchSuggestion) -> Unit = {},
     onClearClick: () -> Unit,
     recentSearches: List<String>,
@@ -115,11 +116,11 @@ fun MBoltSearchBar(
     // New: full search results as order items for the expanded grid
     searchOrderItems: List<CollectOrderListItemState> = emptyList(),
     isMultiSelectionEnabled: Boolean,
-    selectedOrderIdList: Set<String>,
+    selectedOrderIdList: Set<InvoiceNumber>,
     isSelectAllChecked: Boolean,
     isRefreshing: Boolean,
-    onOpenOrder: (String) -> Unit,
-    onCheckedChange: (String, Boolean) -> Unit,
+    onOpenInvoice: (InvoiceNumber) -> Unit,
+    onCheckedChange: (InvoiceNumber, Boolean) -> Unit,
     onSelectAllToggle: (Boolean) -> Unit,
     onCancelSelection: () -> Unit,
     onEnterSelectionMode: () -> Unit,
@@ -183,7 +184,7 @@ fun MBoltSearchBar(
             selectedOrderIdList = selectedOrderIdList,
             isSelectAllChecked = isSelectAllChecked,
             isRefreshing = isRefreshing,
-            onOpenOrder = onOpenOrder,
+            onOpenOrder = onOpenInvoice,
             onCheckedChange = onCheckedChange,
             onSelectAllToggle = onSelectAllToggle,
             onCancelSelection = onCancelSelection,
@@ -265,16 +266,16 @@ private fun ExpandedSearchSection(
     searchOrderItems: List<CollectOrderListItemState>,
     recentSearches: List<String>,
     isMultiSelectionEnabled: Boolean,
-    selectedOrderIdList: Set<String>,
+    selectedOrderIdList: Set<InvoiceNumber>,
     isSelectAllChecked: Boolean,
     isRefreshing: Boolean,
-    onOpenOrder: (String) -> Unit,
-    onCheckedChange: (String, Boolean) -> Unit,
+    onOpenOrder: (InvoiceNumber) -> Unit,
+    onCheckedChange: (InvoiceNumber, Boolean) -> Unit,
     onSelectAllToggle: (Boolean) -> Unit,
     onCancelSelection: () -> Unit,
     onEnterSelectionMode: () -> Unit,
     onSelectClick: () -> Unit,
-    onResultClick: (String) -> Unit,
+    onResultClick: (InvoiceNumber) -> Unit,
     placeholderText: String,
 ) {
     Surface {
@@ -396,7 +397,7 @@ private fun ExpandedSearchSection(
                                     .clickable {
                                         overlayKeyboardController?.hide()
                                         overlayFocusManager.clearFocus(force = true)
-                                        onResultClick(result)
+                                       // onResultClick(result)
                                     }
                             )
                         }
@@ -410,7 +411,7 @@ private fun ExpandedSearchSection(
                         }
                         items(
                             items = searchOrderItems,
-                            key = { it.invoiceNumber }
+                            key = { it.invoiceNumber.value }
                         ) { collectOrderState ->
 
                             CheckboxCard(
@@ -697,7 +698,7 @@ fun MBoltSearchBarCollapsedPreview() {
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
             isRefreshing = false,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},
@@ -742,7 +743,7 @@ fun MBoltSearchBarExpandedSuggestionsPreview() {
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
             isRefreshing = false,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},
@@ -779,7 +780,7 @@ fun MBoltSearchBarExpandedOrdersPreview() {
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
             isRefreshing = false,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},
@@ -817,7 +818,7 @@ fun MBoltSearchBarExpandedMultiSelectPreview() {
             selectedOrderIdList = selected,
             isSelectAllChecked = false,
             isRefreshing = false,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},
@@ -855,7 +856,7 @@ fun MBoltSearchBarExpandedSelectAllPreview() {
             selectedOrderIdList = allIds,
             isSelectAllChecked = true,
             isRefreshing = false,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},
@@ -891,7 +892,7 @@ fun MBoltSearchBarExpandedNoResultsPreview() {
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
             isRefreshing = false,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},
@@ -928,7 +929,7 @@ fun MBoltSearchBarExpandedRefreshingPreview() {
             selectedOrderIdList = emptySet(),
             isSelectAllChecked = false,
             isRefreshing = true,
-            onOpenOrder = {},
+            onOpenInvoice = {},
             onCheckedChange = { _, _ -> },
             onEnterSelectionMode = {},
             onSelectAllToggle = {},

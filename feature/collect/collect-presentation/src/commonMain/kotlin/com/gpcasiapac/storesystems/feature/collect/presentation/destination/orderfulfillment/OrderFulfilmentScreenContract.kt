@@ -6,6 +6,7 @@ import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
@@ -18,6 +19,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDe
 
 object OrderFulfilmentScreenContract {
 
+    enum class IdVerificationOption { DRIVERS_LICENSE, PASSPORT, OTHER }
 
     @Immutable
     data class State(
@@ -53,6 +55,14 @@ object OrderFulfilmentScreenContract {
         val isCustomerNameDialogVisible: Boolean = false,
         val customerNameInput: String = "",
 
+        // ID sighted checkbox state
+        val isSighted: Boolean = false,
+
+        // ID Verification selection (single-select)
+        val idVerification: IdVerificationOption? = null,
+        // Text input shown when 'Other' is selected
+        val idVerificationOtherText: String = "",
+
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
     ) : ViewState{
@@ -71,10 +81,6 @@ object OrderFulfilmentScreenContract {
         // Errors & navigation
         data object ClearError : Event/**/
         data object Back : Event
-        // Back confirmation dialog actions
-        data object ConfirmBackSave : Event
-        data object ConfirmBackDiscard : Event
-        data object CancelBackDialog : Event
 
         // Collecting selector
         data class CollectingChanged(val type: CollectingType) : Event
@@ -102,6 +108,14 @@ object OrderFulfilmentScreenContract {
         data class ToggleCorrespondence(val id: String) : Event
         data class EditCorrespondence(val id: String) : Event
 
+        // ID sighted
+        data class IdSightedChanged(val checked: Boolean) : Event
+
+        // ID Verification (single-select)
+        data class IdVerificationChanged(val option: IdVerificationOption) : Event
+        // ID Verification 'Other' text input change
+        data class IdVerificationOtherChanged(val text: String) : Event
+
         // Final action
         data object Confirm : Event
 
@@ -111,13 +125,13 @@ object OrderFulfilmentScreenContract {
         data object DismissConfirmSearchSelectionDialog : Event
 
         // Order item click
-        data class OrderClicked(val invoiceNumber: String) : Event
+        data class OrderClicked(val invoiceNumber: InvoiceNumber) : Event
 
         // Scanning
-        data class ScanInvoice(val invoiceNumber: String, val autoSelect: Boolean) : Event
+        data class ScanInvoice(val rawInput: String, val autoSelect: Boolean) : Event
 
         // Deselect an order from Fulfilment item actions
-        data class DeselectOrder(val invoiceNumber: String) : Event
+        data class DeselectOrder(val invoiceNumber: InvoiceNumber) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -128,14 +142,6 @@ object OrderFulfilmentScreenContract {
         ) : Effect
         data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) : Effect
         data class PlayHaptic(val type: HapticEffect) : Effect
-        // Ask UI to present a 3-button dialog for unsaved progress
-        data class ShowSaveDiscardDialog(
-            val title: String = "Unsaved progress",
-            val message: String = "You have unsaved changes. Save as draft or discard?",
-            val saveLabel: String = "Save",
-            val discardLabel: String = "Discard",
-            val cancelLabel: String = "Cancel",
-        ) : Effect
 
         // Two-button confirm dialog for selection coming from Search in Fulfilment
         data class ShowConfirmSelectionDialog(
@@ -151,9 +157,7 @@ object OrderFulfilmentScreenContract {
             data object Back : Outcome
             data object Confirmed : Outcome
             data class SignatureRequested(val customerName: String): Outcome
-            data class NavigateToOrderDetails(val invoiceNumber: String) : Outcome
-            data object SaveAndExit : Outcome
-            data object DiscardAndExit : Outcome
+            data class NavigateToOrderDetails(val invoiceNumber: InvoiceNumber) : Outcome
         }
     }
 

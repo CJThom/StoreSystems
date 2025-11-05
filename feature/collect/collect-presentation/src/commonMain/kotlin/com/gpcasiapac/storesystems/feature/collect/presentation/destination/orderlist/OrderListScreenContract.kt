@@ -7,10 +7,13 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
 
 
 object OrderListScreenContract {
@@ -24,19 +27,11 @@ object OrderListScreenContract {
         val isRefreshing: Boolean,
 
         // Filters & sort
-        val customerTypeFilterList: Set<CustomerType>,
+        val filters: Filters,
         val isFilterSheetOpen: Boolean,
-        val sortOption: SortOption,
 
-        // Selection mode
-        val isMultiSelectionEnabled: Boolean,                               // selection mode enabled (checkboxes visible)
-        val selectedOrderIdList: Set<String>,                                // derived UI-checked = (existing - pendingRemove) ∪ pendingAdd
-        val isSelectAllChecked: Boolean,
-
-        // Normalized selection-editing model (lives entirely in ViewState)
-        val existingDraftIdSet: Set<String>,                                 // snapshot of persisted IDs at entry into multi-select
-        val pendingAddIdSet: Set<String>,                                    // newly selected in this session (not yet persisted)
-        val pendingRemoveIdSet: Set<String>,                                 // previously persisted but unchecked in this session (not yet removed)
+        // Shared selection slice (single source of truth for selection UI)
+        val selection: SelectionUiState<InvoiceNumber> = SelectionUiState(),
 
         // Draft bottom bar visibility
         val isDraftBarVisible: Boolean,
@@ -50,7 +45,14 @@ object OrderListScreenContract {
 
         // Error
         val error: String?,
-    ) : ViewState
+    ) : ViewState {
+        @Immutable
+        data class Filters(
+            val showB2B: Boolean,
+            val showB2C: Boolean,
+            val sortOption: SortOption,
+        )
+    }
 
 
     sealed interface Event : ViewEvent {
@@ -58,8 +60,8 @@ object OrderListScreenContract {
         data object Refresh : Event
 
         // Navigation / Scanning
-        data class OpenOrder(val orderId: String) : Event
-        data class ScanInvoice(val invoiceNumber: String) : Event
+        data class OpenOrder(val invoiceNumber: InvoiceNumber) : Event
+        data class ScanInvoice(val rawInput: String) : Event
         data object Back : Event
         data object Logout : Event
         data object OpenHistory : Event
@@ -76,26 +78,18 @@ object OrderListScreenContract {
         data object ResetFilters : Event
         data class SortChanged(val sortOption: SortOption) : Event
 
-        // Selection mode & actions
-        data class ToggleSelectionMode(val enabled: Boolean) : Event
-        data class OrderChecked(val orderId: String, val checked: Boolean) : Event
-        data class SelectAll(val checked: Boolean) : Event
-        data object CancelSelection : Event
-        data object ConfirmSelection : Event
+        // Shared selection wrapper (replaces per-screen selection events)
+        data class Selection(val event: SelectionContract.Event<InvoiceNumber>) : Event
+
         // Search-origin selection confirm
         data object ConfirmSearchSelection : Event
-        // Dialog actions for multi-select confirmation
-        data object ConfirmSelectionStay : Event
-        data object ConfirmSelectionProceed : Event
-        data object DismissConfirmSelectionDialog : Event
 
         // Draft bottom bar actions
         data object DraftBarDeleteClicked : Event
         data object DraftBarViewClicked : Event
 
         // Submissions / item actions
-        data class SubmitOrder(val orderId: String) : Event
-        data object SubmitSelectedOrders : Event
+        data class SubmitOrder(val invoiceNumber: InvoiceNumber) : Event
         data object StartNewWorkOrderClicked : Event
 
         // Misc ephemerals
@@ -131,7 +125,7 @@ object OrderListScreenContract {
         data object CollapseSearchBar : Effect
  
          sealed interface Outcome : Effect {
-            data class OrderSelected(val invoiceNumber: String) : Outcome
+            data class OrderSelected(val invoiceNumber: InvoiceNumber) : Outcome
             data object OrdersSelected : Outcome
             data object Back : Outcome
             data object Logout : Outcome

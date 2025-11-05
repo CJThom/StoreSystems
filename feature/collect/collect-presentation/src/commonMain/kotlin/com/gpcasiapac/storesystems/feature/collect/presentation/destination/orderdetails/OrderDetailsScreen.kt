@@ -3,13 +3,18 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -46,11 +51,11 @@ fun OrderDetailsScreen(
     onEventSent: (event: OrderDetailsScreenContract.Event) -> Unit,
     effectFlow: Flow<OrderDetailsScreenContract.Effect>?,
     onOutcome: (outcome: OrderDetailsScreenContract.Effect.Outcome) -> Unit,
+    soundPlayer: SoundPlayer? = null,
+    hapticPerformer: HapticPerformer? = null,
 ) {
+
     val snackbarHostState = remember { SnackbarHostState() }
-    // Platform feedback
-    val soundPlayer: SoundPlayer = koinInject()
-    val hapticPerformer: HapticPerformer = koinInject()
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -65,11 +70,11 @@ fun OrderDetailsScreen(
                 }
 
                 is OrderDetailsScreenContract.Effect.PlaySound -> {
-                    soundPlayer.play(effect.soundEffect)
+                    soundPlayer?.play(effect.soundEffect)
                 }
 
                 is OrderDetailsScreenContract.Effect.PlayHaptic -> {
-                    hapticPerformer.perform(effect.hapticEffect)
+                    hapticPerformer?.perform(effect.hapticEffect)
                 }
 
                 is OrderDetailsScreenContract.Effect.Outcome -> onOutcome(effect)
@@ -102,30 +107,29 @@ fun OrderDetailsScreen(
                         onEventSent(OrderDetailsScreenContract.Event.Select)
                     }
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Check,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                     Text("SELECT")
                 }
             }
         }
     ) { padding ->
-        if (state.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (state.error != null) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = state.error)
-            }
-        } else if (state.order != null) {
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-            ) {
+
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+        ) {
+            if (state.order == null) {
+                // TODO: Add Error state
+            } else {
                 OrderDetailsLarge(
-                    orderState = state.order
+                    orderState = state.order,
+                    isLoading = state.isLoading
                 )
             }
         }
@@ -135,45 +139,50 @@ fun OrderDetailsScreen(
 @Preview
 @Composable
 private fun OrderDetailsScreenPreview() {
-    val previewModule = org.koin.dsl.module {
-        single<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer> { com.gpcasiapac.storesystems.common.feedback.sound.FakeSoundPlayer() }
-        single<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer> { com.gpcasiapac.storesystems.common.feedback.haptic.FakeHapticPerformer() }
-    }
-    org.koin.compose.KoinApplication(application = { modules(previewModule) }) {
-        GPCTheme {
-            OrderDetailsScreen(
-                state = OrderDetailsScreenContract.State(
-                    isLoading = false,
-                    error = null,
-                    order = CollectOrderWithCustomerWithLineItemsState.placeholder()
-                ),
-                onEventSent = {},
-                effectFlow = null,
-                onOutcome = {}
-            )
-        }
+    GPCTheme {
+        OrderDetailsScreen(
+            state = OrderDetailsScreenContract.State(
+                isLoading = false,
+                error = null,
+                order = CollectOrderWithCustomerWithLineItemsState.placeholder()
+            ),
+            onEventSent = {},
+            effectFlow = null,
+            onOutcome = {}
+        )
     }
 }
 
 @Preview
 @Composable
 private fun OrderDetailsScreenLoadingPreview() {
-    val previewModule = org.koin.dsl.module {
-        single<com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer> { com.gpcasiapac.storesystems.common.feedback.sound.FakeSoundPlayer() }
-        single<com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer> { com.gpcasiapac.storesystems.common.feedback.haptic.FakeHapticPerformer() }
+    GPCTheme {
+        OrderDetailsScreen(
+            state = OrderDetailsScreenContract.State(
+                isLoading = true,
+                error = null,
+                order = CollectOrderWithCustomerWithLineItemsState.placeholder()
+            ),
+            onEventSent = {},
+            effectFlow = null,
+            onOutcome = {}
+        )
     }
-    org.koin.compose.KoinApplication(application = { modules(previewModule) }) {
-        GPCTheme {
-            OrderDetailsScreen(
-                state = OrderDetailsScreenContract.State(
-                    isLoading = true,
-                    error = null,
-                    order = null
-                ),
-                onEventSent = {},
-                effectFlow = null,
-                onOutcome = {}
-            )
-        }
+}
+
+@Preview
+@Composable
+private fun OrderDetailsScreenErrorPreview() {
+    GPCTheme {
+        OrderDetailsScreen(
+            state = OrderDetailsScreenContract.State(
+                isLoading = false,
+                error = null,
+                order = null
+            ),
+            onEventSent = {},
+            effectFlow = null,
+            onOutcome = {}
+        )
     }
 }

@@ -1,11 +1,11 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist
 
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
+
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestionType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SortOption
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.sampleCollectOrderListItemStateList
 
 class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenContract.State> {
@@ -17,15 +17,13 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 orders = orders,
                 isLoading = false,
                 isRefreshing = false,
-                customerTypeFilterList = setOf(CustomerType.B2B, CustomerType.B2C),
+                filters = OrderListScreenContract.State.Filters(
+                    showB2B = true,
+                    showB2C = true,
+                    sortOption = SortOption.TIME_WAITING_DESC
+                ),
                 isFilterSheetOpen = false,
-                sortOption = SortOption.TIME_WAITING_DESC,
-                isMultiSelectionEnabled = false,
-                selectedOrderIdList = emptySet(),
-                isSelectAllChecked = false,
-                existingDraftIdSet = emptySet(),
-                pendingAddIdSet = emptySet(),
-                pendingRemoveIdSet = emptySet(),
+                selection = SelectionUiState(),
                 isDraftBarVisible = false,
                 orderCount = orders.size,
                 isSubmitting = false,
@@ -34,7 +32,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             )
 
             val withFilters = base.copy(
-                customerTypeFilterList = setOf(CustomerType.B2C),
+                filters = base.filters.copy(showB2B = false, showB2C = true),
                 orders = orders.filter { it.customerType == CustomerType.B2C }
             )
 
@@ -49,15 +47,19 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
             val error = base.copy(error = "Failed to load orders")
 
             val multiSelect = base.copy(
-                isMultiSelectionEnabled = true,
-                selectedOrderIdList = setOf(orders[0].invoiceNumber, orders[2].invoiceNumber),
-                isSelectAllChecked = false
+                selection = base.selection.copy(
+                    isEnabled = true,
+                    selected = setOf(orders[0].invoiceNumber, orders[2].invoiceNumber),
+                    isAllSelected = false,
+                )
             )
 
             val multiSelectAll = base.copy(
-                isMultiSelectionEnabled = true,
-                selectedOrderIdList = orders.map { it.invoiceNumber }.toSet(),
-                isSelectAllChecked = true
+                selection = base.selection.copy(
+                    isEnabled = true,
+                    selected = orders.map { it.invoiceNumber }.toSet(),
+                    isAllSelected = true,
+                )
             )
 
             return sequenceOf(

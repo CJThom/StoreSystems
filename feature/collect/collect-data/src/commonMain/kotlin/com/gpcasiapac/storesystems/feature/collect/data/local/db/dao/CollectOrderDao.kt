@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
@@ -32,15 +33,15 @@ interface CollectOrderDao {
     fun observeCount(): Flow<Int>
 
     @Transaction
-    @Query("SELECT * FROM collect_orders ORDER BY picked_at DESC")
+    @Query("SELECT * FROM collect_orders ORDER BY created_date_time DESC")
     fun getCollectOrderWithCustomerWithLineItemsRelationListFlow(): Flow<List<CollectOrderWithCustomerWithLineItemsRelation>>
 
     @Transaction
-    @Query("SELECT * FROM collect_orders ORDER BY picked_at DESC")
+    @Query("SELECT * FROM collect_orders ORDER BY created_date_time DESC")
     fun getCollectOrderWithCustomerRelationListFlow(): Flow<List<CollectOrderWithCustomerRelation>>
 
     @Transaction
-    @Query("SELECT * FROM collect_orders WHERE invoice_number IN (:invoiceNumbers) ORDER BY picked_at DESC")
+    @Query("SELECT * FROM collect_orders WHERE invoice_number IN (:invoiceNumbers) ORDER BY created_date_time DESC")
     fun getCollectOrderWithCustomerRelationListFlow(invoiceNumbers: Set<String>): Flow<List<CollectOrderWithCustomerRelation>>
 
     // Main list: filtered by customer types and sorted by option (placeholder for name sort)
@@ -50,17 +51,15 @@ interface CollectOrderDao {
         SELECT * FROM collect_orders
         WHERE invoice_number IN (
            SELECT invoice_number FROM collect_order_customers
-           WHERE customer_type IN (:customerTypes)
         )
         ORDER BY
-          CASE WHEN :sort = 'TIME_WAITING_ASC' THEN picked_at END ASC,
-          CASE WHEN :sort = 'TIME_WAITING_DESC' THEN picked_at END DESC,
+          CASE WHEN :sort = 'TIME_WAITING_ASC' THEN created_date_time END ASC,
+          CASE WHEN :sort = 'TIME_WAITING_DESC' THEN created_date_time END DESC,
           CASE WHEN :sort = 'NAME_ASC' THEN invoice_number END ASC,
           CASE WHEN :sort = 'NAME_DESC' THEN invoice_number END DESC
         """
     )
     fun observeOrdersForMainList(
-        customerTypes: Set<CustomerType>,
         sort: String,
     ): Flow<List<CollectOrderWithCustomerRelation>>
 
@@ -73,17 +72,16 @@ interface CollectOrderDao {
           invoice_number LIKE :q ESCAPE '!' COLLATE NOCASE OR
           (web_order_number IS NOT NULL AND web_order_number LIKE :q ESCAPE '!'
             COLLATE NOCASE) OR
-          (sales_order_number IS NOT NULL AND sales_order_number LIKE :q ESCAPE '!'
+          (order_number IS NOT NULL AND order_number LIKE :q ESCAPE '!'
             COLLATE NOCASE) OR
           invoice_number IN (
              SELECT invoice_number FROM collect_order_customers WHERE (
-               (account_name IS NOT NULL AND account_name LIKE :q ESCAPE '!' COLLATE NOCASE)
-               OR ((first_name || ' ' || last_name) LIKE :q ESCAPE '!' COLLATE NOCASE)
+               (name IS NOT NULL AND name LIKE :q ESCAPE '!' COLLATE NOCASE)
                OR (phone IS NOT NULL AND phone LIKE :q ESCAPE '!' COLLATE NOCASE)
              )
           )
         )
-        ORDER BY picked_at DESC
+        ORDER BY created_date_time DESC
         """
     )
     fun observeOrdersForSearch(q: String): Flow<List<CollectOrderWithCustomerRelation>>
@@ -91,7 +89,7 @@ interface CollectOrderDao {
 
     @Transaction
     @Query("SELECT * FROM collect_orders where invoice_number = :invoiceNumber")
-    fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber:String): Flow<CollectOrderWithCustomerWithLineItemsRelation>
+    fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItemsRelation>
 
     // ---- Suggestions (prefix) ----
     @Query(
@@ -115,9 +113,9 @@ interface CollectOrderDao {
 
     @Query(
         """
-        SELECT sales_order_number FROM collect_orders
-        WHERE sales_order_number IS NOT NULL
-          AND sales_order_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
+        SELECT order_number FROM collect_orders
+        WHERE order_number IS NOT NULL
+          AND order_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
         LIMIT :limit
         """
     )
@@ -125,17 +123,9 @@ interface CollectOrderDao {
 
     @Query(
         """
-        SELECT DISTINCT 
-           COALESCE(
-             NULLIF(TRIM(account_name), ''),
-             TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))
-           ) AS name,
-           customer_type AS type
+        SELECT DISTINCT name AS name
         FROM collect_order_customers
-        WHERE (
-          (account_name IS NOT NULL AND account_name LIKE :prefix ESCAPE '!' COLLATE NOCASE)
-          OR ((first_name || ' ' || last_name) LIKE :prefix ESCAPE '!' COLLATE NOCASE)
-        )
+        WHERE name IS NOT NULL AND name LIKE :prefix ESCAPE '!' COLLATE NOCASE
         LIMIT :limit
         """
     )
@@ -144,24 +134,16 @@ interface CollectOrderDao {
     // New: fetch all distinct customer names (for initial expanded state with empty query)
     @Query(
         """
-        SELECT DISTINCT 
-           COALESCE(
-             NULLIF(TRIM(account_name), ''),
-             TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))
-           ) AS name,
-           customer_type AS type
+        SELECT DISTINCT name AS name
         FROM collect_order_customers
-        WHERE (
-          (account_name IS NOT NULL AND TRIM(account_name) <> '')
-          OR (COALESCE(first_name, '') <> '' OR COALESCE(last_name, '') <> '')
-        )
+        WHERE name IS NOT NULL AND TRIM(name) <> ''
         ORDER BY name COLLATE NOCASE ASC
         LIMIT :limit
         """
     )
     suspend fun getAllCustomerNames(limit: Int): List<CustomerNameRow>
 
-    data class CustomerNameRow(val name: String, val type: CustomerType)
+    data class CustomerNameRow(val name: String)
 
     @Query(
         """

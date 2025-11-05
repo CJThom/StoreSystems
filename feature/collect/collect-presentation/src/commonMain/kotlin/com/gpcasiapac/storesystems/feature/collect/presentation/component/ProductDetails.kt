@@ -4,10 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -21,13 +25,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
-import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
-import com.gpcasiapac.storesystems.foundation.component.ListItemToolbarScaffold
+import androidx.compose.ui.graphics.painter.ColorPainter
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmall
 import com.gpcasiapac.storesystems.foundation.component.detailitem.DetailItemSmallChip
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
@@ -37,7 +43,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 object ProductDetailsDefaults {
     val minWidth = 250.dp
     val contentPadding = PaddingValues(Dimens.Space.medium)
-    val imageSize = 100.dp
+    val imageSize = 90.dp
 }
 
 /**
@@ -55,7 +61,7 @@ fun ProductDetails(
     description: String,
     sku: String,
     quantity: Int,
-    productImageUrl: String? = null,
+    productImageUrl: String?,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     minWidth: Dp = ProductDetailsDefaults.minWidth,
@@ -63,26 +69,24 @@ fun ProductDetails(
 ) {
     ListItemScaffold(
         modifier = modifier.widthIn(min = minWidth),
-        contentPadding = contentPadding,
-        toolbar = {
-            ListItemToolbarScaffold(
-                actions = {},
-                overflowMenu = null
-            ) {
+        contentPadding = contentPadding
+    ) {
+        Column {
+            ProductDetailsContent(
+                description = description,
+                sku = sku,
+                productImageUrl = productImageUrl,
+                isLoading = isLoading
+            ){
                 DetailItemSmallChip(
                     value = quantity.toString(),
                     imageVector = Icons.Outlined.ShoppingCart, // TODO: Get Deployed Code Icon,
                     isLoading = isLoading,
+                    contentPadding = PaddingValues(Dimens.Space.extraSmall),
                 )
             }
+
         }
-    ) {
-        ProductDetailsContent(
-            description = description,
-            sku = sku,
-            productImageUrl = productImageUrl,
-            isLoading = isLoading
-        )
     }
 }
 
@@ -90,13 +94,13 @@ fun ProductDetails(
 /**
  * Product image container with light gray background matching the design
  */
+// TODO: Add better loading and error states
 @Composable
 private fun ProductImageContainer(
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
     contentDescription: String? = null
 ) {
-
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
@@ -104,25 +108,69 @@ private fun ProductImageContainer(
             .padding(Dimens.Space.extraSmall),
         contentAlignment = Alignment.Center
     ) {
-        if (imageUrl.isNullOrBlank()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(MaterialTheme.shapes.small)
-                    .placeholder(true)
-            )
-        } else {
-            coil3.compose.AsyncImage(
-                model = imageUrl,
-                contentDescription = contentDescription,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(MaterialTheme.shapes.small),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-            )
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(MaterialTheme.shapes.small),
+            placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceVariant),
+            error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
+            fallback = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentScale = ContentScale.Crop,
+            clipToBounds = true
+        )
+    }
+}
+
+
+@Composable
+private fun ProductDetailsContent(
+    description: String,
+    sku: String,
+    productImageUrl: String?,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
+    toolbarContent: @Composable () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
+
+        ProductImageContainer(
+            modifier = Modifier.size(ProductDetailsDefaults.imageSize),
+            imageUrl = productImageUrl,
+            contentDescription = description
+        )
+
+        Column() {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
+            ) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .placeholder(isLoading)
+                )
+
+                DetailItemSmall(
+                    value = sku,
+                    imageVector = Icons.Default.Search,
+                    isLoading = isLoading,
+                )
+            }
+            Spacer(Modifier.weight(1F))
+            toolbarContent()
         }
     }
 }
+
 
 // Preview functions
 @Preview
@@ -133,7 +181,8 @@ private fun ProductDetailsPreview() {
             ProductDetails(
                 description = "Dupli-Color Vinyl & Fabric Paint Gloss Black",
                 sku = "A9442910",
-                quantity = 2
+                productImageUrl = "https://www.repco.com.au/medias/sys_master/images/sys-master/images/h28/h48/10883906109470/A5731777/A5731777.jpg",
+                quantity = 2,
             )
         }
     }
@@ -149,48 +198,8 @@ private fun ProductDetailsLoadingPreview() {
                 description = "Dupli-Color Vinyl & Fabric Paint Gloss Black",
                 sku = "A9442910",
                 quantity = 2,
+                productImageUrl = null,
                 isLoading = true
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProductDetailsContent(
-    description: String,
-    sku: String,
-    productImageUrl: String?,
-    isLoading: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
-    ) {
-        ProductImageContainer(
-            modifier = Modifier.size(ProductDetailsDefaults.imageSize),
-            imageUrl = productImageUrl,
-            contentDescription = description
-        )
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space.extraSmall)
-        ) {
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .placeholder(isLoading)
-            )
-
-            DetailItemSmall(
-                value = sku,
-                imageVector = Icons.Default.Search,
-                isLoading = isLoading,
             )
         }
     }

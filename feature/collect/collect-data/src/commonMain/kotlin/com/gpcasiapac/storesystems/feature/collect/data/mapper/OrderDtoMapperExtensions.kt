@@ -1,54 +1,62 @@
 package com.gpcasiapac.storesystems.feature.collect.data.mapper
 
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderCustomerEntity
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderEntity
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectOrderLineItemEntity
-import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.data.network.dto.CollectOrderDto
+import com.gpcasiapac.storesystems.feature.collect.data.time.toKotlinInstantOrEpoch0
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrder
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderCustomer
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderLineItem
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
-import kotlin.time.Instant
+import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderChannel
 
-fun CollectOrderDto.toRelation(): CollectOrderWithCustomerWithLineItemsRelation {
-    return CollectOrderWithCustomerWithLineItemsRelation(
-        orderEntity = CollectOrderEntity(
-            invoiceNumber = this.invoiceNumber,
-            salesOrderNumber = this.salesOrderNumber,
-            webOrderNumber = this.webOrderNumber,
-            createdAt = Instant.fromEpochMilliseconds(this.createdAtEpochMillis),
-            pickedAt = Instant.fromEpochMilliseconds(this.pickedAtEpochMillis)
-        ),
-        customerEntity = CollectOrderCustomerEntity(
-            invoiceNumber = this.invoiceNumber,
-            customerNumber = this.customerNumber,
-            customerType = customerTypeFrom(this.customerType),
-            accountName = this.accountName,
-            firstName = this.customerFirstName,
-            lastName = this.customerLastName,
-            phone = this.customerPhone
-        ),
-        lineItemEntityList = this.lineItemDtoList.map {
-            CollectOrderLineItemEntity(
-                invoiceNumber = this.invoiceNumber,
-                lineNumber = it.lineNumber,
-                sku = it.sku,
-                productNumber = it.productNumber,
-                productDescription = it.productDescription,
-                quantity = it.quantity,
-                unitPrice = it.unitPrice,
-                productImageUrl = it.productImageUrl
-            )
-        }
+
+// DTO -> Domain mappers for new structure
+fun CollectOrderDto.toDomain(): CollectOrderWithCustomerWithLineItems {
+
+    val invoiceNumber = InvoiceNumber(this.invoiceNumber)
+
+    val order = CollectOrder(
+        id = this.id,
+        invoiceNumber = invoiceNumber,
+        orderNumber = this.orderNumber,
+        webOrderNumber = this.webOrderNumber,
+        orderChannel = if (this.orderChannel == 1) OrderChannel.B2B else OrderChannel.B2C,
+        invoiceDateTime = this.invoiceDateTime.toKotlinInstantOrEpoch0(),
+        createdDateTime = this.createdDateTime.toKotlinInstantOrEpoch0(),
+        isLocked = this.isLocked,
+        lockedBy = this.lockedBy,
+        lockedDateTime = this.lockedDateTime.toKotlinInstantOrEpoch0()
     )
-}
 
-fun List<CollectOrderDto>.toRelation(): List<CollectOrderWithCustomerWithLineItemsRelation> {
-    return this.map { it.toRelation() }
-}
+    val customer = CollectOrderCustomer(
+        invoiceNumber = invoiceNumber,
+        number = this.customer.number,
+        name = this.customer.name,
+        phone = this.customer.phone,
+        customerType = if (this.orderChannel == 1) CustomerType.B2B else CustomerType.B2C,
+    )
 
-private fun customerTypeFrom(customerType: String): CustomerType {
-    return when (customerType.trim().uppercase()) {
-        "B2B" -> CustomerType.B2B
-        "B2C" -> CustomerType.B2C
-        else -> error("Unknown customerType: $customerType")
+    val lineItemList: List<CollectOrderLineItem> = this.lineItems.map { lineItemDto ->
+        CollectOrderLineItem(
+            invoiceNumber = invoiceNumber,
+            lineNumber = lineItemDto.lineNumber.toIntOrNull() ?: 0,
+            sku = lineItemDto.sku,
+            barcode = lineItemDto.barcode,
+            description = lineItemDto.description,
+            quantity = lineItemDto.quantity,
+            imageUrl = lineItemDto.imageUrl,
+        )
     }
+
+    return CollectOrderWithCustomerWithLineItems(
+        order = order,
+        customer = customer,
+        lineItemList = lineItemList,
+    )
+
+}
+
+fun List<CollectOrderDto>.toDomain(): List<CollectOrderWithCustomerWithLineItems> {
+    return this.map { it.toDomain() }
 }

@@ -4,49 +4,43 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
- data class CollectOrderDto(
+data class CollectOrderDto(
 
-    // Legacy fields (kept for backward compatibility with existing JSON/migrations)
-    @SerialName("customer_type")
-    val customerType: String,
+    @SerialName("id")
+    val id: String,
 
-    // Legacy: some feeds still provide company/legacy name as customer_name
-    @SerialName("customer_name")
-    val customerName: String,
-
-    // Preferred company/account name for B2B
-    @SerialName("account_name")
-    val accountName: String? = null,
-
-    // New grouped customer fields
-    @SerialName("customer_first_name")
-    val customerFirstName: String? = null,
-
-    @SerialName("customer_last_name")
-    val customerLastName: String? = null,
-
-    @SerialName("customer_phone")
-    val customerPhone: String? = null,
-
-    @SerialName("customer_number")
-    val customerNumber: String,
-
-    @SerialName("invoice_number")
+    @SerialName("invoiceNumber")
     val invoiceNumber: String,
 
-    @SerialName("sales_order_number")
-    val salesOrderNumber: String,
+    @SerialName("orderNumber")
+    val orderNumber: String,
 
-    @SerialName("web_order_number")
+    @SerialName("webOrderNumber")
     val webOrderNumber: String?,
 
-    @SerialName("created_at_epoch_ms")
-    val createdAtEpochMillis: Long,
+    @SerialName("orderChannel")
+    val orderChannel: Int,
 
-    @SerialName("picked_at_epoch_ms")
-    val pickedAtEpochMillis: Long,
+    @SerialName("invoiceDateTime")
+    val invoiceDateTime: String,
 
-    @SerialName("line_items")
-    val lineItemDtoList: List<CollectOrderLineItemDto> = emptyList()
+    @SerialName("createdDateTime")
+    val createdDateTime: String,
+
+    @SerialName("customer")
+    val customer: CollectOrderCustomerDto,
+
+    @SerialName("isLocked")
+    val isLocked: Boolean,
+
+    @SerialName("lockedBy")
+    val lockedBy: String? = null,
+
+    @SerialName("lockedDateTime")
+    val lockedDateTime: String? = null,
+
+    @SerialName("lineItems")
+    val lineItems: List<CollectOrderLineItemDto> = emptyList(),
 
 )
+

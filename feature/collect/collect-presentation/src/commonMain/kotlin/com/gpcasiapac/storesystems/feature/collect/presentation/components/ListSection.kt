@@ -74,9 +74,10 @@ fun ListSectionPreview() {
             ) {
                 sampleLineItemList.forEach { lineItem ->
                     ProductDetails(
-                        description = lineItem.productDescription,
+                        description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
+                        productImageUrl = lineItem.imageUrl,
                         isLoading = false,
                         contentPadding = PaddingValues()
                     )
@@ -99,9 +100,10 @@ fun ListSectionLoadingPreview() {
             ) {
                 sampleLineItemList.forEach { lineItem ->
                     ProductDetails(
-                        description = lineItem.productDescription,
+                        description = lineItem.description,
                         sku = lineItem.sku,
                         quantity = lineItem.quantity,
+                        productImageUrl = lineItem.imageUrl,
                         isLoading = true,
                         contentPadding = PaddingValues()
                     )

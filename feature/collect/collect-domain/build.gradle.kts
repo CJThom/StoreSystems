@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -16,11 +17,18 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
             implementation(projects.common.di)
             implementation(projects.common.kotlin)
+            implementation(projects.common.presentation)
+
             implementation(libs.koin.core)
-            // Sync queue domain for SyncHandler and models
+            implementation(libs.kermit)
+            
+            implementation(projects.core.identity.identityApi)
             implementation(projects.core.syncQueue.syncQueueApi)
+            implementation(projects.feature.collect.collectApi)
+
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
     }

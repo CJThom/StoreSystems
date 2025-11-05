@@ -1,11 +1,12 @@
 package com.gpcasiapac.storesystems.feature.collect.domain.model
 
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
+
 
 data class CollectOrderCustomer(
-    val customerNumber: String,
-    val customerType: CustomerType,
-    val accountName: String?,
-    val firstName: String?,
-    val lastName: String?,
-    val phone: String?
+    val invoiceNumber: InvoiceNumber,
+    val number: String,
+    val name: String,
+    val phone: String?,
+    val customerType: CustomerType
 )

@@ -92,6 +92,24 @@ class OrderFulfilmentScreenStateProvider :
                 collectOrderListItemStateList = orders.take(1)
             )
 
+            val singleB2C_Sighted = singleB2C.copy(
+                isSighted = true
+            )
+
+            val singleB2C_IdDL = singleB2C.copy(
+                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE
+            )
+            val singleB2C_IdPassport = singleB2C.copy(
+                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT
+            )
+            val singleB2C_IdOther = singleB2C.copy(
+                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.OTHER
+            )
+            val singleB2C_IdOther_WithText = singleB2C.copy(
+                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
+                idVerificationOtherText = "Temporary visitor pass"
+            )
+
             val multiB2C = base.copy(
                 collectOrderListItemStateList = orders,
                 collectingType = CollectingType.STANDARD,
@@ -131,6 +149,10 @@ class OrderFulfilmentScreenStateProvider :
 
             return sequenceOf(
                 singleB2C,
+                singleB2C_Sighted,
+                singleB2C_IdDL,
+                singleB2C_IdPassport,
+                singleB2C_IdOther,
                 multiB2C,
                 accountFlow,
                 accountFlowFeatureOff,

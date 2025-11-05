@@ -12,6 +12,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectPickedAtChip
@@ -33,7 +34,7 @@ import kotlin.time.Instant
 fun CollectOrderFulfilmentItem(
     customerName: String,
     customerType: CustomerType,
-    invoiceNumber: String,
+    invoiceNumber: InvoiceNumber,
     webOrderNumber: String?,
     pickedAt: Instant,
     modifier: Modifier = Modifier,
@@ -104,7 +105,7 @@ private fun CollectOrderFulfilmentItemPreview() {
         CollectOrderFulfilmentItem(
             customerName = "ABC Motorsports PTY Limited",
             customerType = CustomerType.B2B,
-            invoiceNumber = "INV-123456",
+            invoiceNumber = InvoiceNumber("INV-123456"),
             webOrderNumber = "WEB-987654",
             pickedAt = Instant.parse("2025-09-29T00:00:00Z"),
             isLoading = false,

@@ -2,12 +2,13 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.wor
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
 fun WorkOrderDetailsScreenDestination(
-    invoiceNumber: String,
+    invoiceNumber: InvoiceNumber,
     viewModel: WorkOrderDetailsScreenViewModel = koinViewModel { parametersOf(invoiceNumber) },
     onOutcome: (outcome: WorkOrderDetailsScreenContract.Effect.Outcome) -> Unit,
 ) {

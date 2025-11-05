@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.foundation.component.CollectOrderDetailsContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectPickedAtChip
@@ -26,7 +27,7 @@ import kotlin.time.Instant
 fun CollectOrderItem(
     customerName: String,
     customerType: CustomerType,
-    invoiceNumber: String,
+    invoiceNumber: InvoiceNumber,
     webOrderNumber: String?,
     pickedAt: Instant,
     modifier: Modifier = Modifier,
@@ -38,7 +39,7 @@ fun CollectOrderItem(
         bottom = Dimens.Space.small
     ),
     showAbsoluteTimeInitially: Boolean = false,
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable (RowScope.() -> Unit) = {}
 ) {
     ListItemScaffold(
         modifier = modifier,
@@ -101,7 +102,7 @@ private fun CollectOrderItemPreview() {
         CollectOrderItem(
             customerName = "ABC Motorsports PTY Limited",
             customerType = CustomerType.B2B,
-            invoiceNumber = "INV-123456",
+            invoiceNumber = InvoiceNumber("INV-123456"),
             webOrderNumber = "WEB-987654",
             pickedAt = Instant.parse("2025-09-29T00:00:00Z"),
             isLoading = false

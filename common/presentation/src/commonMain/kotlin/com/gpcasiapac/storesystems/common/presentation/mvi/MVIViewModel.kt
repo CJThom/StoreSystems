@@ -87,4 +87,5 @@ abstract class MVIViewModel<Event : ViewEvent, UiState : ViewState, Effect : Vie
             awaitReadiness()
         } ?: false
     }
+
 }

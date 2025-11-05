@@ -2,7 +2,16 @@ package com.gpcasiapac.storesystems.feature.collect.domain.repository
 
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomerWithLineItems
-import com.gpcasiapac.storesystems.feature.collect.domain.model.OrderSearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrderItem
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.Signature
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionQuery
+import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrderWithCustomers
+import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
 
 /**

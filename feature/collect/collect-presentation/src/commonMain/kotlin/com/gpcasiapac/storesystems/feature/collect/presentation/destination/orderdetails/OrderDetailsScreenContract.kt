@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.model.CollectOrderWithCustomerWithLineItemsState
 
 object OrderDetailsScreenContract {
@@ -19,11 +20,11 @@ object OrderDetailsScreenContract {
     ) : ViewState
 
     sealed interface Event : ViewEvent {
-        data class Refresh(val invoiceNumber: String) : Event
+        data class Refresh(val invoiceNumber: InvoiceNumber) : Event
         data object Back : Event
         data object Select : Event
         // New: handle scans directly on the details screen
-        data class ScanInvoice(val invoiceNumber: String) : Event
+        data class Scan(val raw: String) : Event
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -38,9 +39,9 @@ object OrderDetailsScreenContract {
 
         sealed interface Outcome : Effect {
             data object Back : Outcome
-            data class Selected(val invoiceNumber: String) : Outcome
+            data class Selected(val invoiceNumber: InvoiceNumber) : Outcome
             // New: Navigate to another order details (re-open with new invoice)
-            data class OrderSelected(val invoiceNumber: String) : Outcome
+            data class OrderSelected(val invoiceNumber: InvoiceNumber) : Outcome
         }
     }
 }

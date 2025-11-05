@@ -42,7 +42,7 @@ class CollectGlobalNavigationViewModel :
     private fun handleLoginOutcome(outcome: LoginOutcome) {
         when (outcome) {
             is LoginOutcome.MfaRequired -> {
-                push(LoginFeatureDestination.Mfa(outcome.userId))
+                push(LoginFeatureDestination.Mfa(outcome.userId.value))
             }
 
             is LoginOutcome.LoginCompleted -> {
@@ -57,7 +57,7 @@ class CollectGlobalNavigationViewModel :
         when (outcome) {
             is CollectOutcome.OrderSelected -> {
                 // From order list, open Order Details for the tapped order
-                pushOrReplaceTop(OrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(OrderDetails(outcome.invoiceNumber.value))
             }
 
             is CollectOutcome.OpenOrderFulfilment -> {
@@ -80,7 +80,7 @@ class CollectGlobalNavigationViewModel :
 
             is CollectOutcome.WorkOrderItemSelected -> {
                 // From fulfilment, open a parked/selected work order item details
-                pushOrReplaceTop(WorkOrderDetails(outcome.invoiceNumber))
+                pushOrReplaceTop(WorkOrderDetails(outcome.invoiceNumber.value))
             }
 
             CollectOutcome.OpenHistory -> {
