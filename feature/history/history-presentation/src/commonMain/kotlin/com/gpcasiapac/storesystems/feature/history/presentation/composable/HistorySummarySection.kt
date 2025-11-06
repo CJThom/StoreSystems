@@ -1,172 +1,81 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.composable
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeString
 import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
+import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlin.time.Clock
 
 @Composable
 fun SummarySection(
-    resolved: CollectHistoryItem
-) {
-    val meta = resolved.metadata.firstOrNull()
-    val submittedAtText = meta?.orderCreatedAt?.let { formatTimeAgo(it) } ?: "-"
-    val submittedByText = meta?.getCustomerDisplayName() ?: "-"
-    val itemCount = resolved.metadata.size
-
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            text = "Status",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        StatusBadge(status = resolved.status)
-    }
-
-    Spacer(Modifier.height(Dimens.Space.medium))
-
-    KeyValueRow(label = "Submitted on", value = submittedAtText)
-    Spacer(Modifier.height(Dimens.Space.small))
-    KeyValueRow(label = "Submitted by", value = submittedByText)
-//    KeyValueRow(label = "Items", value = itemCount.toString())
-//    KeyValueRow(label = "Attempts", value = resolved.attempts.toString())
-}
-
-@Composable
-fun KeyValueRow(
-    label: String,
-    value: String,
-    valueColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    singleLine: Boolean = false,
-    maxValueLines: Int = 3,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = valueColor,
-            modifier = Modifier.weight(1.5f),
-            maxLines = if (singleLine) 1 else maxValueLines,
-            overflow = TextOverflow.Ellipsis,
-            softWrap = true,
-            textAlign = TextAlign.End
-        )
-    }
-}
-
-@Composable
-fun ErrorInfo(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
-    message: String,
-    attempts: Int,
-    shape: Shape = RoundedCornerShape(8.dp),
+    item: HistoryItem
 ) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.error,
-                shape = shape
-            ),
-        color = MaterialTheme.colorScheme.errorContainer,
-        shape = shape,
-        tonalElevation = 0.dp,
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(contentPadding),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier
-                    .size(Dimens.Size.iconSmall)
-                    .padding(Dimens.Space.small),
-            )
-
+    Column(modifier = modifier) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                maxLines = 4,
-                modifier = Modifier.weight(1f),
-                overflow = TextOverflow.Ellipsis
+                text = "Status",
+                style = MaterialTheme.typography.titleSmall
             )
+            HistoryStatusText(status = item.status)
+        }
 
-            Text(
-                text = attempts.toString(),
-                modifier = Modifier.padding(Dimens.Space.small),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
+        Spacer(Modifier.height(Dimens.Space.medium))
+        KeyValueRow(label = "Submitted on", value = item.timestamp.toLocalDateTimeString())
+        Spacer(Modifier.height(Dimens.Space.small))
+        KeyValueRow(label = "Submitted by", value = item.attempts.toString())
+    }
+}
+
+@Preview
+@Composable
+fun CollectHistoryItemPreview() {
+    GPCTheme {
+        Surface {
+            SummarySection(
+                modifier = Modifier.padding(10.dp),
+                item = CollectHistoryItem(
+                    id = "",
+                    entityId = "",
+                    status = HistoryStatus.COMPLETED,
+                    timestamp = Clock.System.now(),
+                    attempts = 0,
+                    lastError = null,
+                    priority = 0,
+                    metadata = listOf(
+                        HistoryMetadata.CollectMetadata(
+                            invoiceNumber = "123456",
+                            webOrderNumber = "123456",
+                            accountName = "John Doe",
+                            customerNumber = "12345678",
+                            orderCreatedAt = Clock.System.now(),
+                            customerType = "B2B",
+                            phone = "123456789",
+                            lastName = "",
+                            firstName = "",
+                            orderPickedAt = Clock.System.now(),
+                            salesOrderNumber = "REF123"
+                        )
+                    )
+                )
             )
         }
-    }
-}
-
-
-@Composable
-fun InfoPanel(
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(16.dp),
-    showBorder: Boolean = false,
-    content: @Composable () -> Unit,
-) {
-    val border = if (showBorder) {
-        BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant
-        )
-    } else null
-
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 1.dp,
-        shadowElevation = 0.dp,
-        shape = MaterialTheme.shapes.medium,
-        border = border
-    ) {
-        Column(Modifier.padding(contentPadding)) { content() }
     }
 }

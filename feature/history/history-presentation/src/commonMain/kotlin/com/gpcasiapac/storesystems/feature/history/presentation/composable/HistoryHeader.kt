@@ -1,9 +1,13 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.composable
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,12 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -31,11 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.foundation.placeholder
-import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
+import com.gpcasiapac.storesystems.common.kotlin.extension.toTimeAgoString
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -43,10 +43,9 @@ import kotlin.time.Instant
 fun HistoryHeader(
     modifier: Modifier = Modifier,
     username: String,
-    timeAgo: Instant,
+    time: Instant?,
     status: HistoryStatus,
     enabledRetry: Boolean = true,
-    isRetrying: Boolean = false,
     onRetryClick: () -> Unit
 ) {
     Row(
@@ -56,9 +55,20 @@ fun HistoryHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            HistoryStatusIcon(
-                status = status
-            )
+            Crossfade(
+                targetState = status,
+                label = "HistoryStatusCrossfade"
+            ) { currentStatus ->
+                if (currentStatus == HistoryStatus.IN_PROGRESS || currentStatus == HistoryStatus.RETRYING) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(Dimens.Size.iconMedium),
+                        strokeWidth = Dimens.Stroke.normal,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    HistoryStatusIcon(status = currentStatus)
+                }
+            }
             Spacer(modifier = Modifier.width(Dimens.Space.small))
 
             Column {
@@ -67,20 +77,16 @@ fun HistoryHeader(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = timeAgo.toString(),
+                    text = time?.toTimeAgoString() ?: "",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
         }
-        if(isRetrying){
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(Dimens.Size.iconExtraLarge)
-                    .padding(Dimens.Space.medium),
-                strokeWidth = 2.dp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }else{
+        AnimatedVisibility(
+            visible = status == HistoryStatus.FAILED || status == HistoryStatus.REQUIRES_ACTION,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
             OutlinedIconButton(
                 enabled = enabledRetry,
                 colors = IconButtonDefaults.outlinedIconButtonColors(
@@ -88,7 +94,7 @@ fun HistoryHeader(
                     disabledContentColor = Color.Gray
                 ),
                 border = BorderStroke(
-                    1.dp,
+                    Dimens.Stroke.normal,
                     if (enabledRetry) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
                 ),
                 shape = CircleShape,
@@ -116,9 +122,8 @@ fun HistoryHeaderPreviewRetrying() {
                 vertical = Dimens.Space.small
             ),
             username = "Username",
-            timeAgo = Instant.fromEpochMilliseconds(1695737600000),
+            time = Instant.fromEpochMilliseconds(1695737600000),
             onRetryClick = {},
-            isRetrying = true,
             enabledRetry = false,
             status = HistoryStatus.COMPLETED
         )
@@ -135,10 +140,29 @@ fun HistoryHeaderPreviewDisabledRetry() {
                 vertical = Dimens.Space.small
             ),
             username = "Username",
-            timeAgo = Instant.fromEpochMilliseconds(1695737600000),
+            time = Instant.fromEpochMilliseconds(1695737600000),
             onRetryClick = {},
             enabledRetry = false,
             status = HistoryStatus.COMPLETED
+        )
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun HistoryHeaderLoadingPreview() {
+    GPCTheme {
+        HistoryHeader(
+            modifier = Modifier.padding(
+                horizontal = Dimens.Space.medium,
+                vertical = Dimens.Space.small
+            ),
+            username = "Username",
+            time = Instant.fromEpochMilliseconds(1695737600000),
+            onRetryClick = {},
+            enabledRetry = true,
+            status = HistoryStatus.IN_PROGRESS
         )
     }
 }
@@ -153,10 +177,28 @@ fun HistoryHeaderPreview() {
                 vertical = Dimens.Space.small
             ),
             username = "Username",
-            timeAgo = Instant.fromEpochMilliseconds(1695737600000),
+            time = Clock.System.now(),
             onRetryClick = {},
             enabledRetry = true,
             status = HistoryStatus.PENDING
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HistoryHeaderRetryingPreview() {
+    GPCTheme {
+        HistoryHeader(
+            modifier = Modifier.padding(
+                horizontal = Dimens.Space.medium,
+                vertical = Dimens.Space.small
+            ),
+            username = "Username",
+            time = Clock.System.now(),
+            onRetryClick = {},
+            enabledRetry = true,
+            status = HistoryStatus.REQUIRES_ACTION
         )
     }
 }

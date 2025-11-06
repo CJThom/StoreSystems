@@ -68,6 +68,26 @@ fun ListItemScaffold(
 
 @Preview(name = "ListItemScaffold", showBackground = true)
 @Composable
+private fun ListItemScaffoldWithHeaderPreview() {
+    GPCTheme {
+        ListItemScaffold(
+            header = {
+                Text("Header content")
+            },
+            contentPadding = PaddingValues(),
+            toolbar = {
+                Text("Toolbar content")
+            }
+        ) {
+            Text("Body content goes here")
+        }
+    }
+}
+
+
+
+@Preview(name = "ListItemScaffold", showBackground = true)
+@Composable
 private fun ListItemScaffoldPreview() {
     GPCTheme {
         ListItemScaffold(

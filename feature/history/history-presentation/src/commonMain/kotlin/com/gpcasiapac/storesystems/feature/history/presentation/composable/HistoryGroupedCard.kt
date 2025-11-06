@@ -1,41 +1,32 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.composable
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.foundation.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.foundation.component.InvoiceSummarySection
 import com.gpcasiapac.storesystems.foundation.component.ListItemScaffold
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HistoryGroupedCard(
     customerName: String,
     invoiceNumbers: List<String>,
-    time: String,
+    time: Instant?,
     isLoading: Boolean = false,
     status: HistoryStatus = HistoryStatus.PENDING,
     onRetry: (() -> Unit)? = null,
@@ -46,7 +37,7 @@ fun HistoryGroupedCard(
                 modifier = Modifier
                     .placeholder(isLoading, shape = RoundedCornerShape(4.dp)),
                 username = "65895231",
-                timeAgo = Clock.System.now(),
+                time = time,
                 enabledRetry = when (status) {
                     HistoryStatus.FAILED, HistoryStatus.REQUIRES_ACTION -> true
                     else -> false
@@ -54,40 +45,17 @@ fun HistoryGroupedCard(
                 onRetryClick = {
                     onRetry?.invoke()
                 },
-                isRetrying = status == HistoryStatus.IN_PROGRESS,
                 status = status,
             )
         },
         content = {
-            Column {
-                if (isLoading) {
-                    // Skeleton blocks approximating text content
-                    Box(
-                        Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(16.dp)
-                            .placeholder(true, shape = RoundedCornerShape(4.dp))
-                    )
-                    Spacer(Modifier.height(Dimens.Space.small))
-                    Box(
-                        Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(14.dp)
-                            .placeholder(true, shape = RoundedCornerShape(4.dp))
-                    )
-                    Spacer(Modifier.height(Dimens.Space.extraSmall))
-                    Box(
-                        Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(14.dp)
-                            .placeholder(true, shape = RoundedCornerShape(4.dp))
-                    )
-                } else {
-                    InvoiceSummarySection(
-                        invoices = invoiceNumbers,
-                        customerName = customerName
-                    )
-                }
+            Column() {
+                InvoiceSummarySection(
+                    modifier = Modifier.padding(vertical = Dimens.Space.extraSmall)
+                        .placeholder(isLoading),
+                    invoices = invoiceNumbers,
+                    customerName = customerName
+                )
             }
         },
         toolbar = {
@@ -103,7 +71,7 @@ private fun HistoryGroupedCardLoadingPreview() {
         HistoryGroupedCard(
             customerName = "",
             invoiceNumbers = emptyList(),
-            time = "",
+            time = Instant.fromEpochMilliseconds(1762423975),
             isLoading = true,
             status = HistoryStatus.PENDING,
             onRetry = null
@@ -118,7 +86,7 @@ private fun HistoryGroupedCardSuccessPreview() {
         HistoryGroupedCard(
             customerName = "Jane Customer",
             invoiceNumbers = listOf("INV-10001", "INV-10002"),
-            time = "2h ago",
+            time = Instant.fromEpochMilliseconds(1762423975),
             isLoading = false,
             status = HistoryStatus.COMPLETED,
             onRetry = null
@@ -133,7 +101,7 @@ private fun HistoryGroupedCardInProgressPreview() {
         HistoryGroupedCard(
             customerName = "John Shopper",
             invoiceNumbers = listOf("INV-12345"),
-            time = "Just now",
+            time = Instant.fromEpochMilliseconds(1762423975),
             isLoading = false,
             status = HistoryStatus.IN_PROGRESS,
             onRetry = null
@@ -148,7 +116,7 @@ private fun HistoryGroupedCardFailedPreview() {
         HistoryGroupedCard(
             customerName = "Alex Customer",
             invoiceNumbers = listOf("INV-99999"),
-            time = "1d ago",
+            time = Instant.fromEpochMilliseconds(1762423975),
             isLoading = false,
             status = HistoryStatus.FAILED,
             onRetry = {}
