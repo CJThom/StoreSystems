@@ -8,6 +8,4 @@ data class CollectionTypeGating(
     val isStandardEnabled: Boolean,
     val isAccountEnabled: Boolean,
     val isCourierEnabled: Boolean,
-    // Optional default selection when exactly one is enabled
-    val defaultSelection: CollectingType?
 )
