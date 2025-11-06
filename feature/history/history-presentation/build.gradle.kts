@@ -28,6 +28,7 @@ kotlin {
             implementation(projects.common.di)
             implementation(projects.foundation.component)
             implementation(projects.foundation.designSystem)
+            implementation(projects.common.kotlin)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.jetbrains.navigation3.ui)
 

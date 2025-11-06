@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryGroupedCard
-import com.gpcasiapac.storesystems.feature.history.presentation.composable.formatTimeAgo
 import com.gpcasiapac.storesystems.feature.history.presentation.model.HistoryListItemState
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.OutlineCard
@@ -37,6 +36,7 @@ import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +121,7 @@ private fun Content(
         LazyColumn {
             itemsIndexed(itemsList, key = { index, item -> item?.id ?: "skeleton-$index" }) { _, item ->
                 val invoiceNumbers = if (!isLoading && item != null) item.invoiceNumbers else emptyList()
-                val timeText = if (!isLoading && item != null) item.submittedAt?.let { formatTimeAgo(it) } ?: "" else ""
+                val submittedTime = if (!isLoading && item != null) item.submittedAt else Clock.System.now()
                 val customerName = if (!isLoading && item != null) item.customerName else ""
                 val status = if (!isLoading && item != null) item.status else HistoryStatus.PENDING
 
@@ -141,7 +141,7 @@ private fun Content(
                 ) {
                     HistoryGroupedCard(
                         invoiceNumbers = invoiceNumbers,
-                        time = timeText,
+                        time = submittedTime,
                         customerName = customerName,
                         isLoading = isLoading,
                         status = status,

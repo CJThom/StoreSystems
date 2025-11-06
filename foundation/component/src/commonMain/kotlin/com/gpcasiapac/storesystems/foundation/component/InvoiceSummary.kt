@@ -117,10 +117,11 @@ fun MultipleInvoiceSummary(
 
 @Composable
 fun InvoiceSummarySection(
+    modifier: Modifier = Modifier,
     invoices: List<String>,
     customerName: String?,
 ) {
-    Column {
+    Column(modifier = modifier) {
         InvoiceSummary(invoices)
         val shouldShowCustomer = !customerName.isNullOrBlank() && invoices.size == 1
         if (shouldShowCustomer) {
