@@ -38,6 +38,12 @@ fun IdVerification(
     Column(modifier = modifier) {
         HeaderSmall(
             text = "ID Verification",
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+                bottom = Dimens.Space.medium
+            )
         )
         Column(
             modifier = Modifier

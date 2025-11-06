@@ -547,6 +547,7 @@ private fun CollectorSection(
             )
             .fillMaxWidth()
     ) {
+
         CollectionTypeSection(
             title = stringResource(Res.string.who_is_collecting),
             value = state.collectingType,
@@ -558,37 +559,42 @@ private fun CollectorSection(
                     )
                 )
             },
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-            )
-        ) { selectedType ->
-            CollectionTypeContent(
-                state = state,
-                selectedType = selectedType,
-                onEventSent = onEventSent
-            )
-        }
-
-        IdVerification(
-            checked = state.idVerified,
-            onCheckedChange = { checked ->
-                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
+            // Hoisted params (no ViewModel dependency inside the section)
+            isAccountRepresentativeSelectionEnabled = state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled,
+            representativeSearchQuery = state.representativeSearchQuery,
+            onRepresentativeSearchQueryChange = { query ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(query)
+                )
             },
+            representatives = state.representativeList,
+            selectedRepresentativeIds = state.selectedRepresentativeIds,
+            onRepresentativeSelected = { id, isSelected ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.RepresentativeSelected(id, isSelected)
+                )
+            },
+            idVerified = state.idVerified,
+            onIdVerifiedChange = { checked ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked)
+                )
+            },
+            courierName = state.courierName,
+            onCourierNameChange = { name ->
+                onEventSent(OrderFulfilmentScreenContract.Event.CourierNameChanged(name))
+            },
+            isLoading = state.isLoading,
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
             )
         )
 
-//        IdVerificationSelection(
-//            selected = state.idVerification,
-//            onSelected = { option ->
-//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
-//            },
-//            otherText = state.idVerificationOtherText,
-//            onOtherTextChange = { text ->
-//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged(text))
+//        IdVerification(
+//            checked = state.idVerified,
+//            onCheckedChange = { checked ->
+//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
 //            },
 //            contentPadding = PaddingValues(
 //                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
@@ -603,34 +609,58 @@ private fun CollectorSection(
 private fun CollectionTypeContent(
     state: OrderFulfilmentScreenContract.State,
     selectedType: CollectingType?,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
 
     when (selectedType) {
         CollectingType.ACCOUNT -> {
-            if (state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled) {
-                AccountCollectionContent(
-                    searchQuery = state.representativeSearchQuery,
-                    onSearchQueryChange = { query ->
+            Column {
+
+                if (state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled) {
+                    AccountCollectionContent(
+                        searchQuery = state.representativeSearchQuery,
+                        onSearchQueryChange = { query ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(
+                                    query
+                                )
+                            )
+                        },
+                        representatives = state.representativeList,
+                        selectedRepresentativeIds = state.selectedRepresentativeIds,
+                        onRepresentativeSelected = { id, isSelected ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.RepresentativeSelected(
+                                    id,
+                                    isSelected
+                                )
+                            )
+                        },
+                        isLoading = state.isLoading
+                    )
+                }
+
+                IdVerification(
+                    checked = state.idVerified,
+                    onCheckedChange = { checked ->
                         onEventSent(
-                            OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(
-                                query
+                            OrderFulfilmentScreenContract.Event.IdVerificationChecked(
+                                checked
                             )
                         )
                     },
-                    representatives = state.representativeList,
-                    selectedRepresentativeIds = state.selectedRepresentativeIds,
-                    onRepresentativeSelected = { id, isSelected ->
-                        onEventSent(
-                            OrderFulfilmentScreenContract.Event.RepresentativeSelected(
-                                id,
-                                isSelected
-                            )
-                        )
-                    },
-                    isLoading = state.isLoading
+                    contentPadding = PaddingValues(vertical = Dimens.Space.medium)
+//                    contentPadding = PaddingValues(
+//                     Dimens.Space.medium,
+//                    )
+//                    contentPadding = PaddingValues(
+//                        start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+//                        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+//                    )
                 )
             }
+
         }
 
         CollectingType.COURIER -> {
@@ -641,11 +671,23 @@ private fun CollectionTypeContent(
                 },
                 isLoading = state.isLoading,
                 modifier = Modifier,
-                contentPadding = PaddingValues(bottom = Dimens.Space.medium)
+                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
             )
         }
 
         else -> {
+            IdVerification(
+                checked = state.idVerified,
+                onCheckedChange = { checked ->
+                    onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
+                },
+                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
+                // contentPadding = PaddingValues()
+//                contentPadding = PaddingValues(
+//                    start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+//                    end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+//                )
+            )
             // No additional UI for STANDARD
         }
     }
