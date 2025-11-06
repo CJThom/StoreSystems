@@ -66,9 +66,9 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.component.Collec
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerification
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerificationSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
@@ -570,20 +570,31 @@ private fun CollectorSection(
             )
         }
 
-        IdVerificationSection(
-            selected = state.idVerification,
-            onSelected = { option ->
-                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
-            },
-            otherText = state.idVerificationOtherText,
-            onOtherTextChange = { text ->
-                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged(text))
+        IdVerification(
+            checked = state.idVerified,
+            onCheckedChange = { checked ->
+                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
             },
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
             )
         )
+
+//        IdVerificationSelection(
+//            selected = state.idVerification,
+//            onSelected = { option ->
+//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
+//            },
+//            otherText = state.idVerificationOtherText,
+//            onOtherTextChange = { text ->
+//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged(text))
+//            },
+//            contentPadding = PaddingValues(
+//                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+//                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+//            )
+//        )
 
     }
 }

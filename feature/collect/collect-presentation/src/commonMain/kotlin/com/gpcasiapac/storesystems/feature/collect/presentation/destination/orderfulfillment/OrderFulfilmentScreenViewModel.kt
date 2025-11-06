@@ -16,6 +16,7 @@ import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDel
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectionTypeGating
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
@@ -47,6 +48,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.combine
 
 
 class OrderFulfilmentScreenViewModel(
@@ -62,7 +64,8 @@ class OrderFulfilmentScreenViewModel(
     private val validateScannedInvoiceInputUseCase: ValidateScannedInvoiceInputUseCase,
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
-    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
+    private val observeSignButtonGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveSignButtonGatingUseCase
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -174,6 +177,10 @@ class OrderFulfilmentScreenViewModel(
             observeCollectionTypeGating()
         }
 
+        viewModelScope.launch {
+            observeSignGating()
+        }
+
     }
 
     // TABLE OF CONTENTS - All possible events handled here
@@ -246,18 +253,9 @@ class OrderFulfilmentScreenViewModel(
                 setState { copy(isSighted = event.checked) }
             }
 
-            // ID Verification (single-select)
-            is OrderFulfilmentScreenContract.Event.IdVerificationChanged -> {
-                setState {
-                    copy(
-                        idVerification = event.option,
-                        idVerificationOtherText = if (event.option == OrderFulfilmentScreenContract.IdVerificationOption.OTHER) idVerificationOtherText else ""
-                    )
-                }
-            }
-
-            is OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged -> {
-                setState { copy(idVerificationOtherText = event.text) }
+            // ID verification checkbox
+            is OrderFulfilmentScreenContract.Event.IdVerificationChecked -> {
+                setState { copy(idVerified = event.checked) }
             }
 
             is OrderFulfilmentScreenContract.Event.ShowCustomerNameDialog -> {
@@ -553,6 +551,27 @@ class OrderFulfilmentScreenViewModel(
         }
     }
 
+    private suspend fun observeSignGating() {
+        // Base domain gating that ignores the ID verification requirement (handled in presentation)
+        val baseFlow = workOrderIdFlow
+            .flatMapLatest { id -> observeSignButtonGatingUseCase(id) }
+
+        // Presentation-held ID verification flag
+        val idVerificationFlow = viewState
+            .map { state -> state.idVerified }
+            .distinctUntilChanged()
+
+        baseFlow
+            .combine(idVerificationFlow) { base, hasId ->
+                if (base.isEnabled && !hasId) {
+                    base.copy(isEnabled = false, reasons = listOf(SignButtonGating.Reason("no_id_verification")))
+                } else base
+            }
+            .collectLatest { gating ->
+                setState { copy(signGating = gating) }
+            }
+    }
+
     private fun onCorrespondenceToggled(id: String) {
         setState {
             val updatedOptions = correspondenceOptionList.map {
@@ -625,8 +644,25 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun sign() {
+        val gating = viewState.value.signGating
+        if (gating != null && !gating.isEnabled) {
+            val message = mapSignReasonsToMessage(gating.reasons)
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(message) }
+            return
+        }
         // Open customer name dialog before navigating to signature screen
         setState { copy(isCustomerNameDialogVisible = true) }
+    }
+
+    private fun mapSignReasonsToMessage(reasons: List<SignButtonGating.Reason>): String {
+        val r = reasons.firstOrNull()?.value ?: return "Cannot sign"
+        return when (r) {
+            "no_orders" -> "No orders added"
+            "no_collection_type" -> "Please select who is collecting"
+            "courier_name_missing" -> "Please enter the courier name"
+            "no_id_verification" -> "Please confirm you've verified the customer's ID"
+            else -> "Cannot sign"
+        }
     }
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {

@@ -8,8 +8,8 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
@@ -19,8 +19,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDe
 import kotlin.time.Instant
 
 object OrderFulfilmentScreenContract {
-
-    enum class IdVerificationOption { DRIVERS_LICENSE, PASSPORT, OTHER }
 
     @Immutable
     data class State(
@@ -62,13 +60,14 @@ object OrderFulfilmentScreenContract {
         // ID sighted checkbox state
         val isSighted: Boolean = false,
 
-        // ID Verification selection (single-select)
-        val idVerification: IdVerificationOption? = null,
-        // Text input shown when 'Other' is selected
-        val idVerificationOtherText: String = "",
+        // ID verification (single boolean)
+        val idVerified: Boolean = false,
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
+
+        // Sign button gating
+        val signGating: SignButtonGating? = null,
     ) : ViewState{
 
         data class FeatureFlags(
@@ -115,10 +114,8 @@ object OrderFulfilmentScreenContract {
         // ID sighted
         data class IdSightedChanged(val checked: Boolean) : Event
 
-        // ID Verification (single-select)
-        data class IdVerificationChanged(val option: IdVerificationOption) : Event
-        // ID Verification 'Other' text input change
-        data class IdVerificationOtherChanged(val text: String) : Event
+        // ID verification checkbox
+        data class IdVerificationChecked(val checked: Boolean) : Event
 
         // Final action
         data object Confirm : Event

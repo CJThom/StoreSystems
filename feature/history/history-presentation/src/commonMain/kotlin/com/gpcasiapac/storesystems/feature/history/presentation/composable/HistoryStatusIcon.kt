@@ -11,12 +11,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.EscalatorWarning
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -49,7 +46,7 @@ fun HistoryStatusIcon(
         HistoryStatus.COMPLETED -> Icons.Default.Check
         HistoryStatus.FAILED -> Icons.Default.Close
         HistoryStatus.RETRYING -> Icons.Default.Refresh
-        HistoryStatus.REQUIRES_ACTION -> Icons.Default.Stop
+        HistoryStatus.REQUIRES_ACTION -> Icons.Outlined.ErrorOutline
     }
 
     Box(
