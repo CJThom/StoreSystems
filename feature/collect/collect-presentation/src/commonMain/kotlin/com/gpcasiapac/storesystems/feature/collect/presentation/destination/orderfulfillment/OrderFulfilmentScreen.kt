@@ -63,7 +63,6 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorde
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CollectOrderFulfilmentItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerification
@@ -72,6 +71,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.components.Signa
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -93,18 +93,15 @@ import storesystems.feature.collect.collect_presentation.generated.resources.who
 @Composable
 fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
-    searchState: SearchContract.State?,
+    // searchState: SearchContract.State?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
+    // onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
     soundPlayer: SoundPlayer? = null,
     hapticPerformer: HapticPerformer? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
 
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
@@ -112,20 +109,20 @@ fun OrderFulfilmentScreen(
     }
 
     // Search bar state management for the expanded overlay
-    val searchBarState = rememberSearchBarState(
-        initialValue = SearchBarValue.Collapsed
-    )
+//    val searchBarState = rememberSearchBarState(
+//        initialValue = SearchBarValue.Collapsed
+//    )
 
     // Keep search bar animation in sync with SearchViewModel
-    if (searchState != null) {
-        LaunchedEffect(searchState.isSearchActive) {
-            if (searchState.isSearchActive) {
-                searchBarState.animateToExpanded()
-            } else {
-                searchBarState.animateToCollapsed()
-            }
-        }
-    }
+//    if (searchState != null) {
+//        LaunchedEffect(searchState.isSearchActive) {
+//            if (searchState.isSearchActive) {
+//                searchBarState.animateToExpanded()
+//            } else {
+//                searchBarState.animateToCollapsed()
+//            }
+//        }
+//    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -153,7 +150,7 @@ fun OrderFulfilmentScreen(
                 }
 
                 is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
-                    onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
+                    //   onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
                 }
 
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
@@ -201,118 +198,131 @@ fun OrderFulfilmentScreen(
 
             // Search bar (full span)
             // Required hacky hiding to simulate 'Lookup' button expansion
-            if ((searchState != null && onSearchEventSent != null)) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    MBoltSearchBar(
-                        query = searchState.searchText,
-                        onQueryChange = { query ->
-                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                        },
-                        searchBarState = searchBarState,
-                        onSearch = { query ->
-                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                        },
-                        onExpandedChange = { isExpanded ->
-                            onSearchEventSent(
-                                SearchContract.Event.SearchOnExpandedChange(
-                                    isExpanded
-                                )
-                            )
-                        },
-                        onBackPressed = {
-                            onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
-                        },
-                        onResultClick = { result ->
-                            onSearchEventSent(
-                                SearchContract.Event.SearchResultClicked(result)
-                            )
-                        },
-                        onClearClick = {
-                            onSearchEventSent(SearchContract.Event.ClearSearch)
-                        },
-                        recentSearches = emptyList(),
-                        suggestions = searchState.searchSuggestions,
-                        onSuggestionClicked = { s ->
-                            onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
-                        },
-                        selectedChips = searchState.selectedChips,
-                        typedSuffix = searchState.typedSuffix,
-                        onTypedSuffixChange = { text ->
-                            onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
-                        },
-                        onRemoveChip = { s ->
-                            onSearchEventSent(SearchContract.Event.RemoveChip(s))
-                        },
-                        searchOrderItems = searchState.searchOrderItems,
-                        isMultiSelectionEnabled = searchState.selection.isEnabled,
-                        selectedOrderIdList = searchState.selection.selected,
-                        isSelectAllChecked = searchState.selection.isAllSelected,
-                        isRefreshing = state.isLoading,
-                        onOpenInvoice = { id ->
-                            onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
-                        },
-                        onCheckedChange = { orderId, checked ->
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.SetItemChecked(orderId, checked)
-                                )
-                            )
-                        },
-                        onSelectAllToggle = { checked ->
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.SelectAll(checked)
-                                )
-                            )
-                        },
-                        onCancelSelection = {
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.Cancel
-                                )
-                            )
-                        },
-                        onEnterSelectionMode = {
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.ToggleMode(true)
-                                )
-                            )
-                        },
-                        onSelectClick = {
-                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(
-                                if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
-                            ),
-                        placeholderText = "Search by Order #, Name, Phone",
-                        collapsedContentPadding = PaddingValues(
-                            horizontal = Dimens.Space.medium,
-                            vertical = Dimens.Space.small
-                        ),
-                        collapsedShape = CircleShape,
-                        collapsedColors = SearchBarDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            inputFieldColors = SearchBarDefaults.inputFieldColors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ),
-                        collapsedBorder = MaterialTheme.borderStroke()
-                    )
-                }
+            //  if ((searchState != null && onSearchEventSent != null)) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SearchDestination(
+                    placeholderText = "Search by Order #, Name, Phone",
+                    collapsedShape = CircleShape,
+                    collapsedColors = SearchBarDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        inputFieldColors = SearchBarDefaults.inputFieldColors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
+                    ),
+                    collapsedBorder = MaterialTheme.borderStroke()
+                )
+//                    MBoltSearchBar(
+//                        query = searchState.searchText,
+//                        onQueryChange = { query ->
+//                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+//                        },
+//                        searchBarState = searchBarState,
+//                        onSearch = { query ->
+//                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+//                        },
+//                        onExpandedChange = { isExpanded ->
+//                            onSearchEventSent(
+//                                SearchContract.Event.SearchOnExpandedChange(
+//                                    isExpanded
+//                                )
+//                            )
+//                        },
+//                        onBackPressed = {
+//                            onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
+//                        },
+//                        onResultClick = { result ->
+//                            onSearchEventSent(
+//                                SearchContract.Event.SearchResultClicked(result)
+//                            )
+//                        },
+//                        onClearClick = {
+//                            onSearchEventSent(SearchContract.Event.ClearSearch)
+//                        },
+//                        recentSearches = emptyList(),
+//                        suggestions = searchState.searchSuggestions,
+//                        onSuggestionClicked = { s ->
+//                            onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
+//                        },
+//                        selectedChips = searchState.selectedChips,
+//                        typedSuffix = searchState.typedSuffix,
+//                        onTypedSuffixChange = { text ->
+//                            onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
+//                        },
+//                        onRemoveChip = { s ->
+//                            onSearchEventSent(SearchContract.Event.RemoveChip(s))
+//                        },
+//                        searchOrderItems = searchState.searchOrderItems,
+//                        isMultiSelectionEnabled = searchState.selection.isEnabled,
+//                        selectedOrderIdList = searchState.selection.selected,
+//                        isSelectAllChecked = searchState.selection.isAllSelected,
+//                        isRefreshing = state.isLoading,
+//                        onOpenInvoice = { id ->
+//                            onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
+//                        },
+//                        onCheckedChange = { orderId, checked ->
+//                            onSearchEventSent(
+//                                SearchContract.Event.Selection(
+//                                    SelectionContract.Event.SetItemChecked(orderId, checked)
+//                                )
+//                            )
+//                        },
+//                        onSelectAllToggle = { checked ->
+//                            onSearchEventSent(
+//                                SearchContract.Event.Selection(
+//                                    SelectionContract.Event.SelectAll(checked)
+//                                )
+//                            )
+//                        },
+//                        onCancelSelection = {
+//                            onSearchEventSent(
+//                                SearchContract.Event.Selection(
+//                                    SelectionContract.Event.Cancel
+//                                )
+//                            )
+//                        },
+//                        onEnterSelectionMode = {
+//                            onSearchEventSent(
+//                                SearchContract.Event.Selection(
+//                                    SelectionContract.Event.ToggleMode(true)
+//                                )
+//                            )
+//                        },
+//                        onSelectClick = {
+//                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
+//                        },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .then(
+//                                if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
+//                            ),
+//                        placeholderText = "Search by Order #, Name, Phone",
+//                        collapsedContentPadding = PaddingValues(
+//                            horizontal = Dimens.Space.medium,
+//                            vertical = Dimens.Space.small
+//                        ),
+//                        collapsedShape = CircleShape,
+//                        collapsedColors = SearchBarDefaults.colors(
+//                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+//                            inputFieldColors = SearchBarDefaults.inputFieldColors(
+//                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+//                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+//                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+//                            )
+//                        ),
+//                        collapsedBorder = MaterialTheme.borderStroke()
+//                    )
+                //  }
             }
 
             if (state.collectOrderListItemStateList.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     EmptyOrderPlaceholderCard(
                         onLookupClick = {
-                            if (onSearchEventSent != null) {
-                                onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true))
-                            }
+                            //  if (onSearchEventSent != null) {
+                            //      onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true)) todo: check if this is needed
+                            //   }
                         }
                     )
                 }
@@ -472,9 +482,9 @@ fun OrderFulfilmentScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         selectionConfirmDialogSpec.value = null
-                        if (onSearchEventSent != null) {
-                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed))
-                        }
+//                        if (onSearchEventSent != null) {
+//                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed)) todo: check if this is needed
+//                        }
                         onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
                     }) { Text(selectSpec.confirmLabel) }
                 },
@@ -760,9 +770,9 @@ private fun OrderFulfilmentScreenPreview(
     GPCTheme {
         OrderFulfilmentScreen(
             state = state,
-            searchState = SearchContract.State.empty(),
+            //     searchState = SearchContract.State.empty(),
             onEventSent = {},
-            onSearchEventSent = {},
+            //   onSearchEventSent = {},
             effectFlow = null,
             onOutcome = {},
         )

@@ -62,8 +62,8 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.ToolbarFabContainer
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
@@ -95,7 +95,7 @@ fun OrderListScreen(
     val scope = rememberCoroutineScope()
 
     // Search bar state management
-    val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
+    // val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
 
     val lazyGridState = rememberLazyGridState()
     val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
@@ -165,15 +165,15 @@ fun OrderListScreen(
     }
 
     // Keep search bar animation in sync with SearchViewModel
-    LaunchedEffect(searchState.isSearchActive) {
-        scope.launch {
-            if (searchState.isSearchActive) {
-                searchBarState.animateToExpanded()
-            } else {
-                searchBarState.animateToCollapsed()
-            }
-        }
-    }
+//    LaunchedEffect(searchState.isSearchActive) {
+//        scope.launch {
+//            if (searchState.isSearchActive) {
+//                searchBarState.animateToExpanded()
+//            } else {
+//                searchBarState.animateToCollapsed()
+//            }
+//        }
+//    }
 
     // Dialog state for multi-select confirmation
     val confirmDialogSpec =
@@ -324,94 +324,98 @@ fun OrderListScreen(
                                 animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
                             )
                         ) {
-                            MBoltSearchBar(
-                                query = searchState.searchText,
-                                onQueryChange = { query ->
-                                    onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                                },
-                                searchBarState = searchBarState,
-                                onSearch = { query ->
-                                    onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                                },
-                                onExpandedChange = { isExpanded ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.SearchOnExpandedChange(
-                                            isExpanded
-                                        )
-                                    )
-                                },
-                                onBackPressed = {
-                                    onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
-                                },
-                                onResultClick = { result ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.SearchResultClicked(
-                                            result
-                                        )
-                                    )
-                                },
-                                onClearClick = {
-                                    onSearchEventSent(SearchContract.Event.ClearSearch)
-                                },
-                                recentSearches = emptyList(),
-                                suggestions = searchState.searchSuggestions,
-                                onSuggestionClicked = { s ->
-                                    onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
-                                },
-                                selectedChips = searchState.selectedChips,
-                                typedSuffix = searchState.typedSuffix,
-                                onTypedSuffixChange = { text ->
-                                    onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
-                                },
-                                onRemoveChip = { s ->
-                                    onSearchEventSent(SearchContract.Event.RemoveChip(s))
-                                },
-                                searchOrderItems = searchState.searchOrderItems,
-                                isMultiSelectionEnabled = searchState.selection.isEnabled,
-                                selectedOrderIdList = searchState.selection.selected,
-                                isSelectAllChecked = searchState.selection.isAllSelected,
-                                isRefreshing = state.isRefreshing,
-                                onOpenInvoice = { id ->
-                                    onEventSent(OrderListScreenContract.Event.OpenOrder(id))
-                                },
-                                onCheckedChange = { orderId, checked ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.SetItemChecked(
-                                                id = orderId,
-                                                checked = checked
-                                            )
-                                        )
-                                    )
-                                },
-                                onSelectAllToggle = { checked ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.SelectAll(checked)
-                                        )
-                                    )
-                                },
-                                onCancelSelection = {
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.Cancel
-                                        )
-                                    )
-                                },
-                                onEnterSelectionMode = {
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.ToggleMode(true)
-                                        )
-                                    )
-                                },
-                                onSelectClick = {
-                                    onEventSent(OrderListScreenContract.Event.ConfirmSearchSelection)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
+                            SearchDestination(
                                 collapsedColors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                                 placeholderText = "Search by Order #, Name, Phone"
                             )
+//                            MBoltSearchBar(
+//                                query = searchState.searchText,
+//                                onQueryChange = { query ->
+//                                    onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+//                                },
+//                                searchBarState = searchBarState,
+//                                onSearch = { query ->
+//                                    onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
+//                                },
+//                                onExpandedChange = { isExpanded ->
+//                                    onSearchEventSent(
+//                                        SearchContract.Event.SearchOnExpandedChange(
+//                                            isExpanded
+//                                        )
+//                                    )
+//                                },
+//                                onBackPressed = {
+//                                    onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
+//                                },
+//                                onResultClick = { result ->
+//                                    onSearchEventSent(
+//                                        SearchContract.Event.SearchResultClicked(
+//                                            result
+//                                        )
+//                                    )
+//                                },
+//                                onClearClick = {
+//                                    onSearchEventSent(SearchContract.Event.ClearSearch)
+//                                },
+//                                recentSearches = emptyList(),
+//                                suggestions = searchState.searchSuggestions,
+//                                onSuggestionClicked = { s ->
+//                                    onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
+//                                },
+//                                selectedChips = searchState.selectedChips,
+//                                typedSuffix = searchState.typedSuffix,
+//                                onTypedSuffixChange = { text ->
+//                                    onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
+//                                },
+//                                onRemoveChip = { s ->
+//                                    onSearchEventSent(SearchContract.Event.RemoveChip(s))
+//                                },
+//                                searchOrderItems = searchState.searchOrderItems,
+//                                isMultiSelectionEnabled = searchState.selection.isEnabled,
+//                                selectedOrderIdList = searchState.selection.selected,
+//                                isSelectAllChecked = searchState.selection.isAllSelected,
+//                                isRefreshing = state.isRefreshing,
+//                                onOpenInvoice = { id ->
+//                                    onEventSent(OrderListScreenContract.Event.OpenOrder(id))
+//                                },
+//                                onCheckedChange = { orderId, checked ->
+//                                    onSearchEventSent(
+//                                        SearchContract.Event.Selection(
+//                                            SelectionContract.Event.SetItemChecked(
+//                                                id = orderId,
+//                                                checked = checked
+//                                            )
+//                                        )
+//                                    )
+//                                },
+//                                onSelectAllToggle = { checked ->
+//                                    onSearchEventSent(
+//                                        SearchContract.Event.Selection(
+//                                            SelectionContract.Event.SelectAll(checked)
+//                                        )
+//                                    )
+//                                },
+//                                onCancelSelection = {
+//                                    onSearchEventSent(
+//                                        SearchContract.Event.Selection(
+//                                            SelectionContract.Event.Cancel
+//                                        )
+//                                    )
+//                                },
+//                                onEnterSelectionMode = {
+//                                    onSearchEventSent(
+//                                        SearchContract.Event.Selection(
+//                                            SelectionContract.Event.ToggleMode(true)
+//                                        )
+//                                    )
+//                                },
+//                                onSelectClick = {
+//                                    onEventSent(OrderListScreenContract.Event.ConfirmSearchSelection)
+//                                },
+//                                modifier = Modifier.fillMaxWidth(),
+//                                collapsedColors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+//                                placeholderText = "Search by Order #, Name, Phone"
+//                            )
                         }
                     }
                 }
