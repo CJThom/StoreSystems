@@ -72,6 +72,7 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -81,6 +82,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
 
@@ -95,14 +97,14 @@ fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
     // searchState: SearchContract.State?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    // onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
+    onSearchEventSent: ((event: SearchContract.Event) -> Unit),
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
     soundPlayer: SoundPlayer? = null,
     hapticPerformer: HapticPerformer? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val searchViewModel: SearchViewModel = koinViewModel()
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
         mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null)
@@ -144,13 +146,16 @@ fun OrderFulfilmentScreen(
                     hapticPerformer?.perform(effect.type)
                 }
 
-
                 is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
                     selectionConfirmDialogSpec.value = effect
                 }
 
                 is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
-                    //   onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
+                    onSearchEventSent(SearchContract.Event.CollapseSearchBar)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.ExpandSearchBar -> {
+                    onSearchEventSent(SearchContract.Event.ExpandSearchBar)
                 }
 
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
@@ -320,9 +325,7 @@ fun OrderFulfilmentScreen(
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     EmptyOrderPlaceholderCard(
                         onLookupClick = {
-                            //  if (onSearchEventSent != null) {
-                            //      onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true)) todo: check if this is needed
-                            //   }
+                            onEventSent(OrderFulfilmentScreenContract.Event.ExpandSearchBar)
                         }
                     )
                 }
@@ -772,6 +775,7 @@ private fun OrderFulfilmentScreenPreview(
             state = state,
             //     searchState = SearchContract.State.empty(),
             onEventSent = {},
+            onSearchEventSent = {},
             //   onSearchEventSent = {},
             effectFlow = null,
             onOutcome = {},

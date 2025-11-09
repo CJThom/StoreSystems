@@ -9,8 +9,8 @@ class GetOrderSearchSuggestionListUseCase(
     private val orderLocalRepository: OrderLocalRepository,
 ) {
 
-    suspend operator fun invoke(text: String): List<SearchSuggestion> {
-        return orderLocalRepository.getSearchSuggestions(SuggestionQuery(text = text))
+    suspend operator fun invoke(query: SuggestionQuery): List<SearchSuggestion> {
+        return orderLocalRepository.getSearchSuggestions(query)
     }
 
 }

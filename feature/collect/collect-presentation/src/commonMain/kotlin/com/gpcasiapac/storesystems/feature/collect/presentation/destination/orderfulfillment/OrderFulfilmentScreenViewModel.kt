@@ -345,6 +345,13 @@ class OrderFulfilmentScreenViewModel(
                     )
                 }
             }
+
+            is OrderFulfilmentScreenContract.Event.CollapseSearchBar -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
+            }
+            is  OrderFulfilmentScreenContract.Event.ExpandSearchBar -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ExpandSearchBar }
+            }
         }
     }
 

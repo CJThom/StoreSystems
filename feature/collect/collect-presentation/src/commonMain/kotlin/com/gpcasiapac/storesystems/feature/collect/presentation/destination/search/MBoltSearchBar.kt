@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -22,14 +23,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
@@ -63,8 +71,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,14 +83,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import co.touchlab.kermit.Logger
-import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
-import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
-import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
-import com.gpcasiapac.storesystems.common.scanning.ScanEventsRegistry
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
@@ -90,10 +95,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreen
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenViewModel
 import com.gpcasiapac.storesystems.foundation.component.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
@@ -103,11 +104,9 @@ import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.icon.B2BIcon
 import com.gpcasiapac.storesystems.foundation.component.icon.B2CIcon
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
-import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,10 +114,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SearchDestination(
     searchViewModel: SearchViewModel = koinViewModel(),
     placeholderText: String = "Search by Order #, Name, Phone",
-    collapsedContentPadding: PaddingValues = PaddingValues(
-        horizontal = Dimens.Space.medium,
-        vertical = Dimens.Space.small
-    ),
+    collapsedContentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
     collapsedShape: Shape = MaterialTheme.shapes.small,
     collapsedColors: SearchBarColors = SearchBarDefaults.colors(
         containerColor = MaterialTheme.colorScheme.surface
@@ -167,37 +163,79 @@ fun SearchComponent(
 
     val coroutineScope = rememberCoroutineScope()
     val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
+    val scrollState = rememberScrollState()
 
-    // Keep search bar animation in sync with SearchViewModel
-    LaunchedEffect(state.isSearchActive) {
-        log.d { "isSearchActive = ${state.isSearchActive}" }
-        coroutineScope.launch {
-            if (state.isSearchActive) {
-                searchBarState.animateToExpanded()
-            } else {
-                searchBarState.animateToCollapsed()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val queryState = rememberTextFieldState(state.query)
+    LaunchedEffect(queryState) {
+        snapshotFlow { queryState.text.toString() }.collectLatest {
+            onEventSent(SearchContract.Event.OnQueryChanged(it))
+        }
+    }
+
+    LaunchedEffect(effectFlow) {
+        effectFlow?.collectLatest { effect ->
+            when (effect) {
+                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
+                    //searchConfirmDialogSpec.value = effect
+                }
+
+                is SearchContract.Effect.ExpandSearchBar -> {
+                    coroutineScope.launch {
+                        searchBarState.animateToExpanded()
+                    }
+                }
+
+                is SearchContract.Effect.CollapseSearchBar -> {
+                    coroutineScope.launch {
+                        searchBarState.animateToCollapsed()
+                    }
+                }
+
+                is SearchContract.Effect.ClearQueryField -> {
+                    queryState.clearText()
+                }
+
+                is SearchContract.Effect.SetQueryField -> {
+                    queryState.setTextAndPlaceCursorAtEnd(effect.text)
+                }
+
+                is SearchContract.Effect.FocusQueryField -> {
+                    keyboardController?.show()
+                    // SearchBar manages focus internally; showing keyboard is often enough
+                }
+
+                is SearchContract.Effect.ScrollToEnd -> {
+                    coroutineScope.launch {
+                        log.d { "Scroll to end : ${scrollState.value} to ${scrollState.maxValue}" }
+//                        if (scrollState.maxValue > 0) {
+//                            scrollState.scrollTo(scrollState.maxValue)
+//                        }
+                        scrollState.animateScrollTo(scrollState.maxValue)
+                    }
+                }
             }
         }
+    }
+
+    // Keep search bar animation in sync with SearchViewModel
+    LaunchedEffect(searchBarState.currentValue) {
+        log.d { "searchBarState currentValue = ${searchBarState.currentValue}" }
+        onEventSent(SearchContract.Event.OnExpandedChanged(searchBarState.currentValue == SearchBarValue.Expanded))
     }
 
     // Build the input field (prefix chips + text field)
     val inputField = @Composable {
         SearchBarInputField(
-            totalQuery = state.searchText,
-            typedSuffix = state.typedSuffix,
-            onTypedSuffixChange = { text ->
-                onEventSent(SearchContract.Event.TypedSuffixChanged(text))
-            },
+            textFieldState = queryState,
+            searchBarState = searchBarState,
+            scrollState = scrollState,
             isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
-            onExpandedChange = { isExpanded ->
-                log.d { "onExpandedChange = $isExpanded" }
-                onEventSent(
-                    SearchContract.Event.SearchOnExpandedChange(isExpanded)
-                )
-            },
             placeholderText = placeholderText,
             onSearch = { query ->
-                onEventSent(SearchContract.Event.SearchTextChanged(query))
+                onEventSent(SearchContract.Event.OnSearchClicked)
             },
             onBackPressed = {
                 onEventSent(SearchContract.Event.SearchBarBackPressed)
@@ -205,13 +243,9 @@ fun SearchComponent(
             onClearClick = {
                 onEventSent(SearchContract.Event.ClearSearch)
             },
-            hasChips = state.selectedChips.isNotEmpty(),
-            prefix = {
-                ChipsPrefixRow(
-                    chips = state.selectedChips,
-                    onRemoveChip = { s -> onEventSent(SearchContract.Event.RemoveChip(s)) }
-                )
-            },
+            hasChips = state.selectedSuggestionList.isNotEmpty(),
+            selectedChipList = state.selectedSuggestionList,
+            onRemoveChip = { s -> onEventSent(SearchContract.Event.RemoveChip(s)) }
         )
     }
 
@@ -229,8 +263,7 @@ fun SearchComponent(
             ExpandedSearchSection(
                 searchBarState = searchBarState,
                 collapsedShape = collapsedShape,
-                totalQuery = state.searchText,
-                suggestions = state.searchSuggestions,
+                suggestions = state.searchSuggestionList,
                 onSuggestionClicked = { s ->
                     onEventSent(
                         SearchContract.Event.SearchSuggestionClicked(
@@ -238,7 +271,7 @@ fun SearchComponent(
                         )
                     )
                 },
-                searchOrderItems = state.searchOrderItems,
+                searchOrderItems = state.searchOrderItemList,
                 recentSearches = emptyList(),
                 isMultiSelectionEnabled = state.selection.isEnabled,
                 selectedOrderIdList = state.selection.selected,
@@ -289,9 +322,8 @@ private fun CollapsedSearchBarSection(
     collapsedColors: SearchBarColors,
     collapsedBorder: BorderStroke?,
     searchBarState: SearchBarState,
-    inputField: @Composable () -> Unit,
-
-    ) {
+    inputField: @Composable () -> Unit
+) {
     Surface(
         modifier = modifier.padding(contentPadding),
         shape = collapsedShape,
@@ -313,7 +345,6 @@ private fun CollapsedSearchBarSection(
 private fun ExpandedSearchSection(
     searchBarState: SearchBarState,
     collapsedShape: Shape,
-    totalQuery: String,
     suggestions: List<SearchSuggestion>,
     onSuggestionClicked: (SearchSuggestion) -> Unit,
     searchOrderItems: List<CollectOrderListItemState>,
@@ -482,7 +513,7 @@ private fun ExpandedSearchSection(
                                 )
                             }
                         }
-                    } else if (recentSearches.isEmpty() && totalQuery.isNotEmpty()) {
+                    } else if (recentSearches.isEmpty()) {// TODO: Need to check query text?
                         // Show the empty state inside the grid, spanning full width
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             ListItem(
@@ -508,11 +539,10 @@ private fun ExpandedSearchSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchBarInputField(
-    totalQuery: String,
-    typedSuffix: String,
-    onTypedSuffixChange: (String) -> Unit,
+    textFieldState: TextFieldState,
+    searchBarState: SearchBarState,
+    scrollState: ScrollState,
     isExpanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
     placeholderText: String,
     onSearch: (String) -> Unit,
     onBackPressed: () -> Unit,
@@ -524,39 +554,16 @@ private fun SearchBarInputField(
         unfocusedContainerColor = Color.Transparent,
         disabledContainerColor = Color.Transparent,
     ),
-    prefix: @Composable (() -> Unit)? = null,
+    selectedChipList: List<SearchSuggestion>,
+    onRemoveChip: (SearchSuggestion) -> Unit
 ) {
-    //  val focusManager = LocalFocusManager.current
-    //  val keyboardController = LocalSoftwareKeyboardController.current
-
-    // Keep a local text state for typed suffix so we can use prefix slot
-    val textState = remember { TextFieldState(typedSuffix) }
-
-    // Sync local state when external typedSuffix changes
-    LaunchedEffect(typedSuffix) {
-        val current = textState.text.toString()
-        if (current != typedSuffix) {
-            textState.edit { replace(0, length, typedSuffix) }
-        }
-    }
-
-    // Propagate user edits upstream
-    LaunchedEffect(textState) {
-        snapshotFlow { textState.text.toString() }
-            .collect { newText: String ->
-                if (newText != typedSuffix) onTypedSuffixChange(newText)
-            }
-    }
 
     SearchBarDefaults.InputField(
-        state = textState,
-        onSearch = { _ ->
-            //  keyboardController?.hide()
-            //  focusManager.clearFocus(force = true)
-            onSearch(totalQuery)
+        textFieldState = textFieldState,
+        searchBarState = searchBarState,
+        onSearch = { query ->
+            onSearch(query)
         },
-        expanded = isExpanded,
-        onExpandedChange = onExpandedChange,
         modifier = modifier.height(56.dp),
         placeholder = {
             if (!hasChips) {
@@ -590,7 +597,7 @@ private fun SearchBarInputField(
                 }
             }
         },
-        trailingIcon = if (!isExpanded || (totalQuery.isEmpty() && !hasChips)) null else {
+        trailingIcon = if (!isExpanded || (textFieldState.text.isEmpty() && !hasChips)) null else {
             {
                 IconButton(onClick = { onClearClick() }) {
                     Icon(
@@ -601,8 +608,20 @@ private fun SearchBarInputField(
                 }
             }
         },
-        prefix = prefix,
-        suffix = null,
+        prefix = {
+            // Reserve some space at the end for typing/caret so chips don't consume the entire row
+            BoxWithConstraints() {
+                val reservedForTyping = 72.dp
+                val maxPrefixWidth = (maxWidth - reservedForTyping).coerceAtLeast(0.dp)
+                ChipsPrefixRow(
+                    chips = selectedChipList,
+                    onRemoveChip = { s -> onRemoveChip(s) },
+                    scrollState = scrollState,
+                    modifier = Modifier.widthIn(max = maxPrefixWidth)
+                )
+            }
+        },
+      //  scrollState = scrollState,
         colors = colors,
     )
 }
@@ -612,22 +631,40 @@ private fun SearchBarInputField(
  * Prefix row of removable InputChip(s) with B2B/B2C icons.
  * Used inside SearchBarDefaults.InputField prefix slot in the expanded search dialog.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun ChipsPrefixRow(
     chips: List<SearchSuggestion>,
     onRemoveChip: (SearchSuggestion) -> Unit,
     modifier: Modifier = Modifier,
+    scrollState: ScrollState,
 ) {
+    // Track previous size to detect additions only
+    var previousSize = remember { mutableIntStateOf(chips.size) }
+    val lastChipRequester = remember { BringIntoViewRequester() }
+
+    // When a chip is added, bring the last chip into view
+    LaunchedEffect(chips.size) {
+        val newSize = chips.size
+        if (newSize > previousSize.intValue && newSize > 0) {
+            lastChipRequester.bringIntoView()
+        }
+        previousSize.intValue = newSize
+    }
+
     Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
+        modifier = modifier.horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(
             LocalMinimumInteractiveComponentSize provides Dp.Unspecified
         ) {
-            chips.forEach { chip ->
+            chips.forEachIndexed { index, chip ->
+                val chipModifier = if (index == chips.lastIndex) {
+                    Modifier.bringIntoViewRequester(lastChipRequester)
+                } else Modifier
+
                 InputChip(
                     selected = false,
                     leadingIcon = { ChipIcon(chip) },
@@ -649,7 +686,8 @@ internal fun ChipsPrefixRow(
                                 contentDescription = "Remove"
                             )
                         }
-                    }
+                    },
+                    modifier = chipModifier
                 )
             }
         }
@@ -711,370 +749,530 @@ private fun ChipIcon(s: SearchSuggestion) {
     }
 }
 
+//
+//@Deprecated("MBoltSearchBar is deprecated. Use SearchComponent which directly composes SearchBarInputField, CollapsedSearchBarSection, and ExpandedSearchSection.")
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun MBoltSearchBar(
+//    query: String,
+//    onQueryChange: (String) -> Unit,
+//    searchBarState: SearchBarState,
+//    onSearch: (String) -> Unit,
+//    onExpandedChange: (Boolean) -> Unit,
+//    onBackPressed: () -> Unit,
+//    onResultClick: (InvoiceNumber) -> Unit,
+//    onSuggestionClicked: (SearchSuggestion) -> Unit = {},
+//    onClearClick: () -> Unit,
+//    recentSearches: List<String>,
+//    // Suggestions to render as chips (full typed model)
+//    suggestions: List<SearchSuggestion>,
+//    // Hoisted search UI state
+//    selectedChips: List<SearchSuggestion> = emptyList(),
+//    typedSuffix: String = "",
+//    onTypedSuffixChange: (String) -> Unit = {},
+//    onRemoveChip: (SearchSuggestion) -> Unit = {},
+//    // New: full search results as order items for the expanded grid
+//    searchOrderItems: List<CollectOrderListItemState> = emptyList(),
+//    isMultiSelectionEnabled: Boolean,
+//    selectedOrderIdList: Set<InvoiceNumber>,
+//    isSelectAllChecked: Boolean,
+//    isRefreshing: Boolean,
+//    onOpenInvoice: (InvoiceNumber) -> Unit,
+//    onCheckedChange: (InvoiceNumber, Boolean) -> Unit,
+//    onSelectAllToggle: (Boolean) -> Unit,
+//    onCancelSelection: () -> Unit,
+//    onEnterSelectionMode: () -> Unit,
+//    onSelectClick: () -> Unit,
+//    modifier: Modifier = Modifier,
+//    placeholderText: String = "Search...",
+//    // Style overrides for collapsed bar (optional)
+//    collapsedContentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
+//    collapsedShape: Shape = MaterialTheme.shapes.small,
+//    collapsedColors: SearchBarColors = SearchBarDefaults.colors(),
+//    collapsedBorder: BorderStroke? = null,
+//) {
+//
+//    val inputField = @Composable {
+//        SearchBarInputField(
+//            //totalQuery = query,
+//            typedSuffix = typedSuffix,
+//            onTypedSuffixChange = onTypedSuffixChange,
+//            isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
+//            onExpandedChange = onExpandedChange,
+//            placeholderText = placeholderText,
+//            onSearch = onSearch,
+//            onBackPressed = onBackPressed,
+//            onClearClick = onClearClick,
+//            hasChips = selectedChips.isNotEmpty(),
+//            prefix = {
+//                ChipsPrefixRow(
+//                    chips = selectedChips,
+//                    onRemoveChip = onRemoveChip
+//                )
+//            },
+//        )
+//    }
+//
+//    Box(modifier = Modifier) {
+//        CollapsedSearchBarSection(
+//            modifier = modifier,
+//            contentPadding = collapsedContentPadding,
+//            collapsedShape = collapsedShape,
+//            collapsedColors = collapsedColors,
+//            collapsedBorder = collapsedBorder,
+//            searchBarState = searchBarState,
+//            inputField = inputField
+//        )
+//
+//        if (searchBarState.currentValue == SearchBarValue.Expanded) {
+//            ExpandedSearchSection(
+//                searchBarState = searchBarState,
+//                collapsedShape = collapsedShape,
+//                totalQuery = query,
+//                suggestions = suggestions,
+//                onSuggestionClicked = onSuggestionClicked,
+//                searchOrderItems = searchOrderItems,
+//                recentSearches = recentSearches,
+//                isMultiSelectionEnabled = isMultiSelectionEnabled,
+//                selectedOrderIdList = selectedOrderIdList,
+//                isSelectAllChecked = isSelectAllChecked,
+//                isRefreshing = isRefreshing,
+//                onOpenOrder = onOpenInvoice,
+//                onCheckedChange = onCheckedChange,
+//                onSelectAllToggle = onSelectAllToggle,
+//                onCancelSelection = onCancelSelection,
+//                onEnterSelectionMode = onEnterSelectionMode,
+//                onSelectClick = onSelectClick,
+//                inputField = inputField
+//            )
+//        }
+//    }
+//}
+//
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Collapsed")
+//@Composable
+//fun MBoltSearchBarCollapsedPreview() {
+//    GPCTheme {
+//        MBoltSearchBar(
+//            query = "",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = listOf(
+//                "Order #12345 - John Doe",
+//                "Order #12346 - Jane Smith",
+//                "Order #12347 - Bob Johnson"
+//            ),
+//            suggestions = emptyList(),
+//            searchOrderItems = emptyList(),
+//            isMultiSelectionEnabled = false,
+//            selectedOrderIdList = emptySet(),
+//            isSelectAllChecked = false,
+//            isRefreshing = false,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone",
+//        )
+//    }
+//}
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Expanded with Suggestions")
+//@Composable
+//fun MBoltSearchBarExpandedSuggestionsPreview() {
+//    GPCTheme {
+//        MBoltSearchBar(
+//            query = "John",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = listOf(
+//                "Order #12345 - John Doe",
+//                "Order #12346 - Jane Smith",
+//                "Order #12347 - Bob Johnson",
+//                "Order #12348 - John Williams"
+//            ),
+//            selectedChips = emptyList(),
+//            typedSuffix = "",
+//            onTypedSuffixChange = {},
+//            onRemoveChip = {},
+//            suggestions = listOf(
+//                CustomerNameSuggestion("John Doe", CustomerType.B2C),
+//                InvoiceNumberSuggestion("INV-10001"),
+//                WebOrderNumberSuggestion("WEB-50001")
+//            ),
+//            searchOrderItems = emptyList(),
+//            isMultiSelectionEnabled = false,
+//            selectedOrderIdList = emptySet(),
+//            isSelectAllChecked = false,
+//            isRefreshing = false,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone"
+//        )
+//    }
+//}
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Expanded with Orders Grid")
+//@Composable
+//fun MBoltSearchBarExpandedOrdersPreview() {
+//    GPCTheme {
+//        val items = CollectOrderListItemState.placeholderList(6)
+//        MBoltSearchBar(
+//            query = "Jo",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = emptyList(),
+//            selectedChips = emptyList(),
+//            typedSuffix = "",
+//            onTypedSuffixChange = {},
+//            onRemoveChip = {},
+//            suggestions = emptyList(),
+//            searchOrderItems = items,
+//            isMultiSelectionEnabled = false,
+//            selectedOrderIdList = emptySet(),
+//            isSelectAllChecked = false,
+//            isRefreshing = false,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone"
+//        )
+//    }
+//}
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Expanded Multi-Select")
+//@Composable
+//fun MBoltSearchBarExpandedMultiSelectPreview() {
+//    GPCTheme {
+//        val items = CollectOrderListItemState.placeholderList(8)
+//        val selected = setOf(items[0].invoiceNumber, items[2].invoiceNumber)
+//        MBoltSearchBar(
+//            query = "Order",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = emptyList(),
+//            selectedChips = emptyList(),
+//            typedSuffix = "",
+//            onTypedSuffixChange = {},
+//            onRemoveChip = {},
+//            suggestions = emptyList(),
+//            searchOrderItems = items,
+//            isMultiSelectionEnabled = true,
+//            selectedOrderIdList = selected,
+//            isSelectAllChecked = false,
+//            isRefreshing = false,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone"
+//        )
+//    }
+//}
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Expanded Select All")
+//@Composable
+//fun MBoltSearchBarExpandedSelectAllPreview() {
+//    GPCTheme {
+//        val items = CollectOrderListItemState.placeholderList(5)
+//        val allIds = items.map { it.invoiceNumber }.toSet()
+//        MBoltSearchBar(
+//            query = "",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = emptyList(),
+//            selectedChips = emptyList(),
+//            typedSuffix = "",
+//            onTypedSuffixChange = {},
+//            onRemoveChip = {},
+//            suggestions = emptyList(),
+//            searchOrderItems = items,
+//            isMultiSelectionEnabled = true,
+//            selectedOrderIdList = allIds,
+//            isSelectAllChecked = true,
+//            isRefreshing = false,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone"
+//        )
+//    }
+//}
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Expanded No Results")
+//@Composable
+//fun MBoltSearchBarExpandedNoResultsPreview() {
+//    GPCTheme {
+//        MBoltSearchBar(
+//            query = "xyz",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = emptyList(),
+//            selectedChips = emptyList(),
+//            typedSuffix = "",
+//            onTypedSuffixChange = {},
+//            onRemoveChip = {},
+//            suggestions = emptyList(),
+//            searchOrderItems = emptyList(),
+//            isMultiSelectionEnabled = false,
+//            selectedOrderIdList = emptySet(),
+//            isSelectAllChecked = false,
+//            isRefreshing = false,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone"
+//        )
+//    }
+//}
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Preview(name = "Search Bar - Expanded Refreshing")
+//@Composable
+//fun MBoltSearchBarExpandedRefreshingPreview() {
+//    GPCTheme {
+//        val items = CollectOrderListItemState.placeholderList(4)
+//        MBoltSearchBar(
+//            query = "Smith",
+//            onQueryChange = {},
+//            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
+//            onSearch = {},
+//            onExpandedChange = {},
+//            onBackPressed = {},
+//            onResultClick = {},
+//            onClearClick = {},
+//            recentSearches = emptyList(),
+//            selectedChips = emptyList(),
+//            typedSuffix = "",
+//            onTypedSuffixChange = {},
+//            onRemoveChip = {},
+//            suggestions = emptyList(),
+//            searchOrderItems = items,
+//            isMultiSelectionEnabled = false,
+//            selectedOrderIdList = emptySet(),
+//            isSelectAllChecked = false,
+//            isRefreshing = true,
+//            onOpenInvoice = {},
+//            onCheckedChange = { _, _ -> },
+//            onEnterSelectionMode = {},
+//            onSelectAllToggle = {},
+//            onCancelSelection = {},
+//            onSelectClick = {},
+//            placeholderText = "Search by Order #, Name, Phone"
+//        )
+//    }
+//}
 
-@Deprecated("MBoltSearchBar is deprecated. Use SearchComponent which directly composes SearchBarInputField, CollapsedSearchBarSection, and ExpandedSearchSection.")
-@OptIn(ExperimentalMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MBoltSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    searchBarState: SearchBarState,
+private fun UnifiedSearchBarInputField(
+    textFieldState: androidx.compose.foundation.text.input.TextFieldState,
+    searchBarState: androidx.compose.material3.SearchBarState,
+    scrollState: androidx.compose.foundation.ScrollState,
+    isExpanded: Boolean,
+    placeholderText: String,
     onSearch: (String) -> Unit,
-    onExpandedChange: (Boolean) -> Unit,
     onBackPressed: () -> Unit,
-    onResultClick: (InvoiceNumber) -> Unit,
-    onSuggestionClicked: (SearchSuggestion) -> Unit = {},
     onClearClick: () -> Unit,
-    recentSearches: List<String>,
-    // Suggestions to render as chips (full typed model)
-    suggestions: List<SearchSuggestion>,
-    // Hoisted search UI state
-    selectedChips: List<SearchSuggestion> = emptyList(),
-    typedSuffix: String = "",
-    onTypedSuffixChange: (String) -> Unit = {},
-    onRemoveChip: (SearchSuggestion) -> Unit = {},
-    // New: full search results as order items for the expanded grid
-    searchOrderItems: List<CollectOrderListItemState> = emptyList(),
-    isMultiSelectionEnabled: Boolean,
-    selectedOrderIdList: Set<InvoiceNumber>,
-    isSelectAllChecked: Boolean,
-    isRefreshing: Boolean,
-    onOpenInvoice: (InvoiceNumber) -> Unit,
-    onCheckedChange: (InvoiceNumber, Boolean) -> Unit,
-    onSelectAllToggle: (Boolean) -> Unit,
-    onCancelSelection: () -> Unit,
-    onEnterSelectionMode: () -> Unit,
-    onSelectClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholderText: String = "Search...",
-    // Style overrides for collapsed bar (optional)
-    collapsedContentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
-    collapsedShape: Shape = MaterialTheme.shapes.small,
-    collapsedColors: SearchBarColors = SearchBarDefaults.colors(),
-    collapsedBorder: BorderStroke? = null,
+    colors: androidx.compose.material3.TextFieldColors = androidx.compose.material3.SearchBarDefaults.inputFieldColors(
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
+    ),
+    selectedChipList: List<SearchSuggestion>,
+    onRemoveChip: (SearchSuggestion) -> Unit,
+    reservedForTyping: Dp = 72.dp,
 ) {
+    val hasChips = selectedChipList.isNotEmpty()
 
-    val inputField = @Composable {
-        SearchBarInputField(
-            totalQuery = query,
-            typedSuffix = typedSuffix,
-            onTypedSuffixChange = onTypedSuffixChange,
-            isExpanded = searchBarState.currentValue == SearchBarValue.Expanded,
-            onExpandedChange = onExpandedChange,
-            placeholderText = placeholderText,
-            onSearch = onSearch,
-            onBackPressed = onBackPressed,
-            onClearClick = onClearClick,
-            hasChips = selectedChips.isNotEmpty(),
-            prefix = {
-                ChipsPrefixRow(
-                    chips = selectedChips,
-                    onRemoveChip = onRemoveChip
-                )
-            },
-        )
-    }
+    Surface(
+        color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        modifier = modifier.height(56.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.Space.medium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Leading icon area (fixed)
+            AnimatedContent(
+                targetState = isExpanded,
+                label = "leading-icon"
+            ) { value ->
+                if (value) {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    )
+                }
+            }
 
-    Box(modifier = Modifier) {
-        CollapsedSearchBarSection(
-            modifier = modifier,
-            contentPadding = collapsedContentPadding,
-            collapsedShape = collapsedShape,
-            collapsedColors = collapsedColors,
-            collapsedBorder = collapsedBorder,
-            searchBarState = searchBarState,
-            inputField = inputField
-        )
+            // Scrollable content: chips + text area
+            val lastChipRequester = remember { BringIntoViewRequester() }
+            var previousSize = remember { mutableIntStateOf(selectedChipList.size) }
+            LaunchedEffect(selectedChipList.size) {
+                val newSize = selectedChipList.size
+                if (newSize > previousSize.intValue && newSize > 0) {
+                    lastChipRequester.bringIntoView()
+                }
+                previousSize.intValue = newSize
+            }
 
-        if (searchBarState.currentValue == SearchBarValue.Expanded) {
-            ExpandedSearchSection(
-                searchBarState = searchBarState,
-                collapsedShape = collapsedShape,
-                totalQuery = query,
-                suggestions = suggestions,
-                onSuggestionClicked = onSuggestionClicked,
-                searchOrderItems = searchOrderItems,
-                recentSearches = recentSearches,
-                isMultiSelectionEnabled = isMultiSelectionEnabled,
-                selectedOrderIdList = selectedOrderIdList,
-                isSelectAllChecked = isSelectAllChecked,
-                isRefreshing = isRefreshing,
-                onOpenOrder = onOpenInvoice,
-                onCheckedChange = onCheckedChange,
-                onSelectAllToggle = onSelectAllToggle,
-                onCancelSelection = onCancelSelection,
-                onEnterSelectionMode = onEnterSelectionMode,
-                onSelectClick = onSelectClick,
-                inputField = inputField
-            )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(scrollState),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Space.small),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                    selectedChipList.forEachIndexed { index, chip ->
+                        val chipModifier = if (index == selectedChipList.lastIndex) {
+                            Modifier.bringIntoViewRequester(lastChipRequester)
+                        } else Modifier
+
+                        InputChip(
+                            selected = false,
+                            leadingIcon = { ChipIcon(chip) },
+                            onClick = { /* no-op */ },
+                            label = {
+                                Text(
+                                    text = chip.text,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = { onRemoveChip(chip) },
+                                    modifier = Modifier.size(InputChipDefaults.IconSize)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Remove"
+                                    )
+                                }
+                            },
+                            modifier = chipModifier
+                        )
+                    }
+                }
+
+                // Text input area with a minimum width to keep room for typing
+                Box(modifier = Modifier.widthIn(min = reservedForTyping)) {
+                    if (!hasChips && textFieldState.text.isEmpty()) {
+                        Text(
+                            text = placeholderText,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    // State-based text binding via classic BasicTextField
+                    val textValue = remember(textFieldState) { mutableStateOf(textFieldState.text.toString()) }
+                    LaunchedEffect(textFieldState.text) {
+                        val t = textFieldState.text.toString()
+                        if (t != textValue.value) textValue.value = t
+                    }
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = textValue.value,
+                        onValueChange = { new ->
+                            textValue.value = new
+                            textFieldState.setTextAndPlaceCursorAtEnd(new)
+                        },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                            onSearch = { onSearch(textValue.value) }
+                        )
+                    )
+                }
+            }
+
+            // Trailing icon area (fixed)
+            val showTrailing = isExpanded && !(textFieldState.text.isEmpty() && !hasChips)
+            if (showTrailing) {
+                IconButton(onClick = { onClearClick() }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Collapsed")
-@Composable
-fun MBoltSearchBarCollapsedPreview() {
-    GPCTheme {
-        MBoltSearchBar(
-            query = "",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = listOf(
-                "Order #12345 - John Doe",
-                "Order #12346 - Jane Smith",
-                "Order #12347 - Bob Johnson"
-            ),
-            suggestions = emptyList(),
-            searchOrderItems = emptyList(),
-            isMultiSelectionEnabled = false,
-            selectedOrderIdList = emptySet(),
-            isSelectAllChecked = false,
-            isRefreshing = false,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone",
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Expanded with Suggestions")
-@Composable
-fun MBoltSearchBarExpandedSuggestionsPreview() {
-    GPCTheme {
-        MBoltSearchBar(
-            query = "John",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = listOf(
-                "Order #12345 - John Doe",
-                "Order #12346 - Jane Smith",
-                "Order #12347 - Bob Johnson",
-                "Order #12348 - John Williams"
-            ),
-            selectedChips = emptyList(),
-            typedSuffix = "",
-            onTypedSuffixChange = {},
-            onRemoveChip = {},
-            suggestions = listOf(
-                CustomerNameSuggestion("John Doe", CustomerType.B2C),
-                InvoiceNumberSuggestion("INV-10001"),
-                WebOrderNumberSuggestion("WEB-50001")
-            ),
-            searchOrderItems = emptyList(),
-            isMultiSelectionEnabled = false,
-            selectedOrderIdList = emptySet(),
-            isSelectAllChecked = false,
-            isRefreshing = false,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Expanded with Orders Grid")
-@Composable
-fun MBoltSearchBarExpandedOrdersPreview() {
-    GPCTheme {
-        val items = CollectOrderListItemState.placeholderList(6)
-        MBoltSearchBar(
-            query = "Jo",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = emptyList(),
-            selectedChips = emptyList(),
-            typedSuffix = "",
-            onTypedSuffixChange = {},
-            onRemoveChip = {},
-            suggestions = emptyList(),
-            searchOrderItems = items,
-            isMultiSelectionEnabled = false,
-            selectedOrderIdList = emptySet(),
-            isSelectAllChecked = false,
-            isRefreshing = false,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Expanded Multi-Select")
-@Composable
-fun MBoltSearchBarExpandedMultiSelectPreview() {
-    GPCTheme {
-        val items = CollectOrderListItemState.placeholderList(8)
-        val selected = setOf(items[0].invoiceNumber, items[2].invoiceNumber)
-        MBoltSearchBar(
-            query = "Order",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = emptyList(),
-            selectedChips = emptyList(),
-            typedSuffix = "",
-            onTypedSuffixChange = {},
-            onRemoveChip = {},
-            suggestions = emptyList(),
-            searchOrderItems = items,
-            isMultiSelectionEnabled = true,
-            selectedOrderIdList = selected,
-            isSelectAllChecked = false,
-            isRefreshing = false,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Expanded Select All")
-@Composable
-fun MBoltSearchBarExpandedSelectAllPreview() {
-    GPCTheme {
-        val items = CollectOrderListItemState.placeholderList(5)
-        val allIds = items.map { it.invoiceNumber }.toSet()
-        MBoltSearchBar(
-            query = "",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = emptyList(),
-            selectedChips = emptyList(),
-            typedSuffix = "",
-            onTypedSuffixChange = {},
-            onRemoveChip = {},
-            suggestions = emptyList(),
-            searchOrderItems = items,
-            isMultiSelectionEnabled = true,
-            selectedOrderIdList = allIds,
-            isSelectAllChecked = true,
-            isRefreshing = false,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Expanded No Results")
-@Composable
-fun MBoltSearchBarExpandedNoResultsPreview() {
-    GPCTheme {
-        MBoltSearchBar(
-            query = "xyz",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = emptyList(),
-            selectedChips = emptyList(),
-            typedSuffix = "",
-            onTypedSuffixChange = {},
-            onRemoveChip = {},
-            suggestions = emptyList(),
-            searchOrderItems = emptyList(),
-            isMultiSelectionEnabled = false,
-            selectedOrderIdList = emptySet(),
-            isSelectAllChecked = false,
-            isRefreshing = false,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "Search Bar - Expanded Refreshing")
-@Composable
-fun MBoltSearchBarExpandedRefreshingPreview() {
-    GPCTheme {
-        val items = CollectOrderListItemState.placeholderList(4)
-        MBoltSearchBar(
-            query = "Smith",
-            onQueryChange = {},
-            searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Expanded),
-            onSearch = {},
-            onExpandedChange = {},
-            onBackPressed = {},
-            onResultClick = {},
-            onClearClick = {},
-            recentSearches = emptyList(),
-            selectedChips = emptyList(),
-            typedSuffix = "",
-            onTypedSuffixChange = {},
-            onRemoveChip = {},
-            suggestions = emptyList(),
-            searchOrderItems = items,
-            isMultiSelectionEnabled = false,
-            selectedOrderIdList = emptySet(),
-            isSelectAllChecked = false,
-            isRefreshing = true,
-            onOpenInvoice = {},
-            onCheckedChange = { _, _ -> },
-            onEnterSelectionMode = {},
-            onSelectAllToggle = {},
-            onCancelSelection = {},
-            onSelectClick = {},
-            placeholderText = "Search by Order #, Name, Phone"
-        )
     }
 }

@@ -13,6 +13,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncePreset
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDefaults
@@ -133,6 +134,10 @@ object OrderFulfilmentScreenContract {
 
         // Deselect an order from Fulfilment item actions
         data class DeselectOrder(val invoiceNumber: InvoiceNumber) : Event
+
+        data object ExpandSearchBar : Event
+        data object CollapseSearchBar : Event
+
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -153,8 +158,9 @@ object OrderFulfilmentScreenContract {
 
         // Request the search UI to collapse (triggered by VM on scan)
         data object CollapseSearchBar : Effect
- 
-         sealed interface Outcome : Effect {
+        data object ExpandSearchBar : Effect
+
+        sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
             data class SignatureRequested(val customerName: String): Outcome

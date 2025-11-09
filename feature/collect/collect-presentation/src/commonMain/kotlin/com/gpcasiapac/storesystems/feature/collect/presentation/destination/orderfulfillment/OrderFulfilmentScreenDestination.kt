@@ -37,7 +37,7 @@ fun OrderFulfilmentScreenDestination(
         state = orderFulfilmentScreenViewModel.viewState.collectAsState().value,
       //  searchState = searchViewModel.viewState.collectAsState().value,
         onEventSent = { event -> orderFulfilmentScreenViewModel.setEvent(event) },
-      //  onSearchEventSent = { event -> searchViewModel.setEvent(event) },
+        onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderFulfilmentScreenViewModel.effect,
         onOutcome = onOutcome,
         soundPlayer = soundPlayer,

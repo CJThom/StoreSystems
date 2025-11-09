@@ -210,7 +210,7 @@ fun OrderListScreen(
                 }
 
                 is OrderListScreenContract.Effect.CollapseSearchBar -> {
-                    onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(false))
+                    onSearchEventSent(SearchContract.Event.CollapseSearchBar)
                 }
 
                 is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
@@ -227,19 +227,19 @@ fun OrderListScreen(
         }
     }
 
-    LaunchedEffect(searchEffectFlow) {
-        searchEffectFlow?.collectLatest { effect ->
-            when (effect) {
-                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
-                    searchConfirmDialogSpec.value = effect
-                }
-
-                is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
-                    // handled via searchState.isSearchActive syncing
-                }
-            }
-        }
-    }
+//    LaunchedEffect(searchEffectFlow) {
+//        searchEffectFlow?.collectLatest { effect ->
+//            when (effect) {
+//                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
+//                    searchConfirmDialogSpec.value = effect
+//                }
+//
+//                is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
+//                    // handled via searchState.isSearchActive syncing
+//                }
+//            }
+//        }
+//    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
