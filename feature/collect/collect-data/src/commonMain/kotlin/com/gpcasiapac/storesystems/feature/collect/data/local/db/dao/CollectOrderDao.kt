@@ -34,6 +34,10 @@ interface CollectOrderDao {
     @Query("SELECT COUNT(*) FROM collect_orders")
     fun observeCount(): Flow<Int>
 
+    // Observe count of customer rows to detect suggestion-relevant changes
+    @Query("SELECT COUNT(*) FROM collect_order_customers")
+    fun observeCustomerCount(): Flow<Int>
+
     @Transaction
     @Query("SELECT * FROM collect_orders ORDER BY created_date_time DESC")
     fun getCollectOrderWithCustomerWithLineItemsRelationListFlow(): Flow<List<CollectOrderWithCustomerWithLineItemsRelation>>
@@ -87,6 +91,33 @@ interface CollectOrderDao {
         """
     )
     fun observeOrdersForSearch(q: String): Flow<List<CollectOrderWithCustomerRelation>>
+
+    // Search list with optional text and required invoice scope
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM collect_orders
+        WHERE (:q IS NULL OR (
+          invoice_number LIKE :q ESCAPE '!' COLLATE NOCASE OR
+          (web_order_number IS NOT NULL AND web_order_number LIKE :q ESCAPE '!'
+            COLLATE NOCASE) OR
+          (order_number IS NOT NULL AND order_number LIKE :q ESCAPE '!'
+            COLLATE NOCASE) OR
+          invoice_number IN (
+             SELECT invoice_number FROM collect_order_customers WHERE (
+               (name IS NOT NULL AND name LIKE :q ESCAPE '!' COLLATE NOCASE)
+               OR (phone IS NOT NULL AND phone LIKE :q ESCAPE '!' COLLATE NOCASE)
+             )
+          )
+        ))
+        AND invoice_number IN (:invoiceScope)
+        ORDER BY created_date_time DESC
+        """
+    )
+    fun observeOrdersForSearchScoped(
+        q: String?,
+        invoiceScope: Set<String>,
+    ): Flow<List<CollectOrderWithCustomerRelation>>
 
 
     @Transaction
@@ -160,6 +191,19 @@ interface CollectOrderDao {
         """
     )
     suspend fun getPhoneSuggestionsPrefix(prefix: String, limit: Int): List<String>
+
+    // Map suggestion -> invoice numbers (for chip scoping)
+    @Query("SELECT invoice_number FROM collect_order_customers WHERE name = :name")
+    suspend fun getInvoiceNumbersByCustomerName(name: String): List<String>
+
+    @Query("SELECT invoice_number FROM collect_orders WHERE web_order_number = :web")
+    suspend fun getInvoiceNumbersByWebOrder(web: String): List<String>
+
+    @Query("SELECT invoice_number FROM collect_orders WHERE order_number = :so")
+    suspend fun getInvoiceNumbersByOrderNumber(so: String): List<String>
+
+    @Query("SELECT invoice_number FROM collect_order_customers WHERE phone = :phone")
+    suspend fun getInvoiceNumbersByPhone(phone: String): List<String>
 
     // Lightweight existence check for invoice (case-insensitive)
     @Query("SELECT EXISTS(SELECT 1 FROM collect_orders WHERE invoice_number = :invoiceNumber COLLATE NOCASE)")

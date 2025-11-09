@@ -102,12 +102,16 @@ class SearchViewModel(
         // val textFlow = snapshotFlow { viewState.value.query.text.toString() }
 
         val queryFlow: Flow<SuggestionQuery> = QueryFlow.build(
-            input = viewState.map { viewState ->
-                SuggestionQuery(viewState.query)
+            input = viewState.map { state ->
+                SuggestionQuery(
+                    text = state.query,
+                    selected = state.selectedSuggestionList
+                )
             },
             debounce = SearchDebounce(millis = 150),
             keySelector = { query ->
-                query.text
+                // Include selected chips in key so chip changes trigger a refresh even with blank text
+                query.text + "|" + query.selected.joinToString("|") { it.kind.name + ":" + it.text }
             }
         )
 
@@ -125,12 +129,16 @@ class SearchViewModel(
         //  val textFlow = snapshotFlow { viewState.value.query.text.toString() }
 
         val queryFlow: Flow<SearchQuery> = QueryFlow.build(
-            input = viewState.map { viewState ->
-                SearchQuery(viewState.query)
+            input = viewState.map { state ->
+                SearchQuery(
+                    text = state.query,
+                    selected = state.selectedSuggestionList
+                )
             },
             debounce = SearchDebounce(millis = 150),
             keySelector = { query ->
-                query.text
+                // Include selected chips in key so chip changes trigger results refresh even with blank text
+                query.text + "|" + query.selected.joinToString("|") { it.kind.name + ":" + it.text }
             }
         )
 
