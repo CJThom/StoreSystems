@@ -184,12 +184,14 @@ fun SearchComponent(
 
                 is SearchContract.Effect.ExpandSearchBar -> {
                     coroutineScope.launch {
+                        withFrameNanos { }
                         searchBarState.animateToExpanded()
                     }
                 }
 
                 is SearchContract.Effect.CollapseSearchBar -> {
                     coroutineScope.launch {
+                        withFrameNanos { }
                         searchBarState.animateToCollapsed()
                     }
                 }
@@ -331,7 +333,7 @@ private fun CollapsedSearchBarSection(
         border = collapsedBorder,
     ) {
         SearchBar(
-            modifier = Modifier,
+            modifier = Modifier.fillMaxWidth(),
             state = searchBarState,
             shape = collapsedShape,
             colors = collapsedColors,

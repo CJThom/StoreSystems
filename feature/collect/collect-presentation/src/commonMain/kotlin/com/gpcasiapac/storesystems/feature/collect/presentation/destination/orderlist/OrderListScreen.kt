@@ -99,7 +99,7 @@ fun OrderListScreen(
     )
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
-        canScroll = { !state.selection.isEnabled }
+        canScroll = { !state.selection.isEnabled && !searchState.isSearchActive }
     )
 
     // When entering multi-select, smoothly expand the top app bar so it isn't hidden
