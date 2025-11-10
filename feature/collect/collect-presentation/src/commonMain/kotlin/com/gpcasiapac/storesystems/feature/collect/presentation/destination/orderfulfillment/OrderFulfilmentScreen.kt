@@ -329,7 +329,8 @@ fun OrderFulfilmentScreen(
                     },
                     image = state.signatureBase64,
                     signerName = state.signerName,
-                    signedDateTime = state.signedDateTime
+                    signedDateTime = state.signedDateTime,
+                    enabled = state.isSignEnabled
                 )
             }
 
@@ -388,6 +389,7 @@ fun OrderFulfilmentScreen(
                             onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
                         }
                     },
+                    enabled = state.isSubmitEnabled && !state.isProcessing && !state.isLoading
                 )
             }
         }

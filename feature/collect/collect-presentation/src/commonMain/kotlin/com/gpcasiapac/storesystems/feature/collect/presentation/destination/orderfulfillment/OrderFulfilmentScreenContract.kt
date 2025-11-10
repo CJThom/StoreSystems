@@ -71,6 +71,11 @@ object OrderFulfilmentScreenContract {
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
 
         // Sign button gating
+        // Gating (cohesive)
+        val isCollectionTypeEnabled: Boolean = false,
+        val isSignEnabled: Boolean = false,
+        val isSubmitEnabled: Boolean = false,
+
         val signGating: SignButtonGating? = null,
         val dialog: Dialog?
     ) : ViewState {

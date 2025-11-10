@@ -72,7 +72,8 @@ class OrderFulfilmentScreenViewModel(
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val observeSignButtonGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveSignButtonGatingUseCase
+    private val observeSignButtonGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveSignButtonGatingUseCase,
+    private val observeFulfilmentGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveFulfilmentGatingUseCase
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -187,6 +188,10 @@ class OrderFulfilmentScreenViewModel(
 
         viewModelScope.launch {
             observeSignGating()
+        }
+
+        viewModelScope.launch {
+            observeCohesiveGating()
         }
 
     }
@@ -617,6 +622,38 @@ class OrderFulfilmentScreenViewModel(
             }
     }
 
+    private suspend fun observeCohesiveGating() {
+        val gatingFlow = workOrderIdFlow
+            .flatMapLatest { id -> observeFulfilmentGatingUseCase(id) }
+
+        val idVerificationFlow = viewState
+            .map { state -> state.idVerified }
+            .distinctUntilChanged()
+
+        gatingFlow
+            .combine(idVerificationFlow) { gating, idVerified ->
+                val hasOrders = gating.hasOrders
+                val type = gating.collectingType
+                val isSignEnabled = when (type) {
+                    CollectingType.STANDARD, CollectingType.ACCOUNT -> hasOrders && type != null && idVerified
+                    CollectingType.COURIER -> hasOrders && type != null && !gating.courierName.isNullOrBlank()
+                    null -> false
+                }
+                val isSubmitEnabled = isSignEnabled && gating.hasSignature
+                val isCollectionTypeEnabled = hasOrders
+                Triple(isCollectionTypeEnabled, isSignEnabled, isSubmitEnabled)
+            }
+            .collectLatest { (isCollectionTypeEnabled, isSignEnabled, isSubmitEnabled) ->
+                setState {
+                    copy(
+                        isCollectionTypeEnabled = isCollectionTypeEnabled,
+                        isSignEnabled = isSignEnabled,
+                        isSubmitEnabled = isSubmitEnabled,
+                    )
+                }
+            }
+    }
+
     private fun onCorrespondenceToggled(id: String) {
         setState {
             val updatedOptions = correspondenceOptionList.map {
@@ -689,12 +726,8 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun sign() {
-        val gating = viewState.value.signGating
-        if (gating != null && !gating.isEnabled) {
-            val message = mapSignReasonsToMessage(gating.reasons)
-            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(message) }
-            return
-        }
+        val s = viewState.value
+        if (!s.isSignEnabled) return
         // Open customer name dialog before navigating to signature screen
         setState { copy(isCustomerNameDialogVisible = true) }
     }
@@ -724,46 +757,8 @@ class OrderFulfilmentScreenViewModel(
 
     private fun confirm() {
         val s = viewState.value
+        if (!s.isSubmitEnabled) return
         val workOrderId = sessionState.value.workOrderId.handleNull() ?: return
-        val hasOrders = s.collectOrderListItemStateList.isNotEmpty()
-
-        if (!hasOrders) {
-            setEffect {
-                OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                    "No orders to confirm",
-                    duration = SnackbarDuration.Long
-                )
-            }
-            return
-        }
-        when (s.collectingType) {
-            CollectingType.ACCOUNT -> {
-                if (s.selectedRepresentativeIds.isEmpty()) {
-                    setEffect {
-                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                            "Please select at least one representative",
-                            duration = SnackbarDuration.Long
-                        )
-                    }
-                    return
-                }
-            }
-
-            CollectingType.COURIER -> {
-                if (s.courierName.isBlank()) {
-                    setEffect {
-                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                            "Please enter the courier name",
-                            duration = SnackbarDuration.Long
-                        )
-                    }
-                    return
-                }
-            }
-
-            CollectingType.STANDARD -> Unit
-            else -> Unit
-        }
 
         // Start processing - add orders to sync queue
         viewModelScope.launch {

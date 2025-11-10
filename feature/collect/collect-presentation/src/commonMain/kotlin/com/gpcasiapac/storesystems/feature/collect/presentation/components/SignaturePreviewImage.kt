@@ -41,6 +41,7 @@ import kotlin.time.Instant
 fun SignaturePreviewImage(
     image: String?,
     onSignClick: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier,
     onRetakeClick: () -> Unit = {},
     signerName: String? = null,
@@ -85,6 +86,7 @@ fun SignaturePreviewImage(
                     ) {
                         Button(
                             onClick = onSignClick,
+                            enabled = enabled,
                             contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MinHeight)
                         ) {
                             Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit")

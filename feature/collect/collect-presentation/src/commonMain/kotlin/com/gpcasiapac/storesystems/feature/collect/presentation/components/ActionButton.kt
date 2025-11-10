@@ -26,12 +26,14 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 fun ActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    title: @Composable () -> Unit
+    enabled: Boolean = true,
+    title: @Composable () -> Unit,
 ) {
 
     Button(
-        modifier =modifier,
+        modifier = modifier,
         onClick = onClick,
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.tertiary,
             contentColor = MaterialTheme.colorScheme.onTertiary
