@@ -89,11 +89,11 @@ class CollectFeatureEntryImpl : CollectFeatureEntry {
             ) {
                 OrderListScreenDestination { outcome ->
                     when (outcome) {
-                        is OrderListScreenContract.Effect.Outcome.OrderSelected -> onOutcome(
+                        is OrderListScreenContract.Effect.Outcome.OrderClicked -> onOutcome(
                             CollectOutcome.OrderSelected(outcome.invoiceNumber)
                         )
 
-                        is OrderListScreenContract.Effect.Outcome.OrdersSelected -> {
+                        is OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment -> {
                             onOutcome(CollectOutcome.OpenOrderFulfilment)
                         }
 

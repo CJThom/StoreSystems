@@ -16,6 +16,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrder
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectWorkOrderItem
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerNameSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.InvoiceNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.MainOrderQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.PhoneSuggestion
@@ -30,8 +31,13 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.WorkOrderWithOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.repository.OrderLocalRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 
 /** DB-only implementation backing OrderLocalRepository. */
 class OrderLocalRepositoryImpl(
@@ -76,9 +82,15 @@ class OrderLocalRepositoryImpl(
 
     override fun observeSearchOrders(query: SearchQuery): Flow<List<CollectOrderWithCustomer>> {
         val text = query.text.trim()
-        if (text.isEmpty()) return flowOf(emptyList())
-        val q = "%${escapeForLike(text)}%"
-        return collectOrderDao.observeOrdersForSearch(q).map { it.toDomain() }
+        val like: String? = if (text.isEmpty()) null else "%${escapeForLike(text)}%"
+        return flow {
+            val scope: Set<String> = resolveInvoiceScope(query.selected)
+            when {
+                like == null && scope.isEmpty() -> emit(emptyList())
+                scope.isEmpty() -> emitAll(collectOrderDao.observeOrdersForSearch(like!!).map { it.toDomain() })
+                else -> emitAll(collectOrderDao.observeOrdersForSearchScoped(like, scope).map { it.toDomain() })
+            }
+        }
     }
 
     override fun getWorkOrderSignatureFlow(workOrderId: WorkOrderId): Flow<Signature?> {
@@ -158,55 +170,90 @@ class OrderLocalRepositoryImpl(
     }
 
     override suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion> {
-        val text = query.text
+        val text = query.text.trim()
         val per = query.perKindLimit
         val include = query.includeKinds
+        val selected = query.selected
 
-        val out = mutableListOf<SearchSuggestion>()
+        // Compute invoice scope from selected chips (intersection)
+        val scope: Set<String> = resolveInvoiceScope(selected)
+
+        // Blank text → show default top customers (scoped when chips present)
         if (text.isBlank()) {
-            if (SuggestionKind.CUSTOMER_NAME in include) {
-                collectOrderDao.getAllCustomerNames(limit = query.maxTotal).forEach { row ->
-                    val name = row.name.trim()
-                    if (name.isNotEmpty()) out += CustomerNameSuggestion(
-                        text = name,
-                        customerType = com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C
-                    )
-                }
+            if (SuggestionKind.CUSTOMER_NAME !in include) return emptyList()
+            val rows = if (scope.isEmpty()) {
+                collectOrderDao.getTopCustomers(limit = query.maxTotal)
+            } else {
+                collectOrderDao.getTopCustomersScoped(invoiceScope = scope, limit = query.maxTotal)
             }
-            return out
+            return rows.map { row ->
+                CustomerNameSuggestion(text = row.name.trim(), customerType = row.customerType)
+            }
         }
-        val contains = "%" + escapeForLike(text.trim()) + "%"
+
+        val prefix = "%" + escapeForLike(text) + "%"
+        val out = mutableListOf<SearchSuggestion>()
+
         if (SuggestionKind.CUSTOMER_NAME in include) {
-            collectOrderDao.getCustomerNameSuggestionsPrefix(contains, per).forEach { row ->
-                val name = row.name.trim()
-                if (name.isNotEmpty()) out += CustomerNameSuggestion(
-                    text = name,
-                    customerType = com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType.B2C
-                )
+            if (scope.isEmpty()) {
+                collectOrderDao.getCustomerNameSuggestionsPrefixWithType(prefix, per).forEach { row ->
+                    val name = row.name.trim()
+                    if (name.isNotEmpty()) out += CustomerNameSuggestion(name, row.customerType)
+                }
+            } else {
+                collectOrderDao.getCustomerNameSuggestionsPrefixScoped(prefix, scope, per).forEach { row ->
+                    val name = row.name.trim()
+                    if (name.isNotEmpty()) out += CustomerNameSuggestion(name, row.customerType)
+                }
             }
         }
         if (SuggestionKind.INVOICE_NUMBER in include) {
-            collectOrderDao.getInvoiceSuggestionsPrefix(contains, per).forEach { inv ->
-                out += InvoiceNumberSuggestion(inv)
+            if (scope.isEmpty()) {
+                collectOrderDao.getInvoiceSuggestionsPrefix(prefix, per).forEach { inv ->
+                    out += InvoiceNumberSuggestion(inv)
+                }
+            } else {
+                collectOrderDao.getInvoiceSuggestionsPrefixScoped(prefix, scope, per).forEach { inv ->
+                    out += InvoiceNumberSuggestion(inv)
+                }
             }
         }
         if (SuggestionKind.WEB_ORDER_NUMBER in include) {
-            collectOrderDao.getWebOrderSuggestionsPrefix(contains, per).forEach { web ->
-                out += WebOrderNumberSuggestion(web)
+            if (scope.isEmpty()) {
+                collectOrderDao.getWebOrderSuggestionsPrefix(prefix, per).forEach { web ->
+                    out += WebOrderNumberSuggestion(web)
+                }
+            } else {
+                collectOrderDao.getWebOrderSuggestionsPrefixScoped(prefix, scope, per).forEach { web ->
+                    out += WebOrderNumberSuggestion(web)
+                }
             }
         }
         if (SuggestionKind.SALES_ORDER_NUMBER in include) {
-            collectOrderDao.getSalesOrderSuggestionsPrefix(contains, per).forEach { so ->
-                out += SalesOrderNumberSuggestion(so)
+            if (scope.isEmpty()) {
+                collectOrderDao.getSalesOrderSuggestionsPrefix(prefix, per).forEach { so ->
+                    out += SalesOrderNumberSuggestion(so)
+                }
+            } else {
+                collectOrderDao.getSalesOrderSuggestionsPrefixScoped(prefix, scope, per).forEach { so ->
+                    out += SalesOrderNumberSuggestion(so)
+                }
             }
         }
         if (SuggestionKind.PHONE in include) {
-            collectOrderDao.getPhoneSuggestionsPrefix(contains, per).forEach { phone ->
-                val p = phone.trim()
-                if (p.isNotEmpty()) out += PhoneSuggestion(p)
+            if (scope.isEmpty()) {
+                collectOrderDao.getPhoneSuggestionsPrefix(prefix, per).forEach { phone ->
+                    val p = phone.trim()
+                    if (p.isNotEmpty()) out += PhoneSuggestion(p)
+                }
+            } else {
+                collectOrderDao.getPhoneSuggestionsPrefixScoped(prefix, scope, per).forEach { phone ->
+                    val p = phone.trim()
+                    if (p.isNotEmpty()) out += PhoneSuggestion(p)
+                }
             }
         }
-        val deduped = out.distinctBy { it.kind to it.text.lowercase() }
+
         val rank = mapOf(
             SuggestionKind.CUSTOMER_NAME to 0,
             SuggestionKind.INVOICE_NUMBER to 1,
@@ -214,8 +261,26 @@ class OrderLocalRepositoryImpl(
             SuggestionKind.SALES_ORDER_NUMBER to 3,
             SuggestionKind.PHONE to 4,
         )
-        val sorted = deduped.sortedWith(compareBy({ rank[it.kind] ?: 99 }, { it.text }))
-        return if (sorted.size <= query.maxTotal) sorted else sorted.take(query.maxTotal)
+        return out
+            .filter { it.text.isNotBlank() }
+            .distinctBy { it.kind to it.text.lowercase() }
+            .sortedWith(compareBy({ rank[it.kind] ?: 99 }, { it.text }))
+            .take(query.maxTotal)
+    }
+
+    private suspend fun resolveInvoiceScope(chips: List<SearchSuggestion>): Set<String> {
+        if (chips.isEmpty()) return emptySet()
+        val perChip: List<Set<String>> = chips.map { chip ->
+            when (chip) {
+                is CustomerNameSuggestion -> collectOrderDao.getInvoiceNumbersByCustomerName(chip.text).toSet()
+                is InvoiceNumberSuggestion -> setOf(chip.text)
+                is WebOrderNumberSuggestion -> collectOrderDao.getInvoiceNumbersByWebOrder(chip.text).toSet()
+                is SalesOrderNumberSuggestion -> collectOrderDao.getInvoiceNumbersByOrderNumber(chip.text).toSet()
+                is PhoneSuggestion -> collectOrderDao.getInvoiceNumbersByPhone(chip.text).toSet()
+            }
+        }
+        // Intersect all sets
+        return perChip.reduce { acc, next -> acc.intersect(next) }
     }
 
     private fun escapeForLike(input: String): String {

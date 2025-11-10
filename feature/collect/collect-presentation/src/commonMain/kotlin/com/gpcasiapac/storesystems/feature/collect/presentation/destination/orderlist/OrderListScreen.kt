@@ -22,11 +22,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
-import androidx.compose.material.icons.filled.CloudCircle
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PunchClock
-import androidx.compose.material.icons.filled.SyncLock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FabPosition
@@ -65,8 +62,10 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.ToolbarFabContainer
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchComponent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
@@ -77,20 +76,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OrderListScreen(
     state: OrderListScreenContract.State,
-    searchState: SearchContract.State,
     onEventSent: (event: OrderListScreenContract.Event) -> Unit,
-    onSearchEventSent: (SearchContract.Event) -> Unit,
     effectFlow: Flow<OrderListScreenContract.Effect>?,
     onOutcome: (outcome: OrderListScreenContract.Effect.Outcome) -> Unit,
+    searchState: SearchContract.State,
+    onSearchEventSent: (SearchContract.Event) -> Unit,
+    searchEffectFlow: Flow<SearchContract.Effect>?,
     soundPlayer: SoundPlayer? = null,
     hapticPerformer: HapticPerformer? = null,
-    searchEffectFlow: Flow<SearchContract.Effect>? = null,
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -98,7 +98,7 @@ fun OrderListScreen(
     val scope = rememberCoroutineScope()
 
     // Search bar state management
-    val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
+    // val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
 
     val lazyGridState = rememberLazyGridState()
     val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
@@ -167,27 +167,6 @@ fun OrderListScreen(
         }
     }
 
-    // Keep search bar animation in sync with SearchViewModel
-    LaunchedEffect(searchState.isSearchActive) {
-        scope.launch {
-            if (searchState.isSearchActive) {
-                searchBarState.animateToExpanded()
-            } else {
-                searchBarState.animateToCollapsed()
-            }
-        }
-    }
-
-    // Dialog state for multi-select confirmation
-    val confirmDialogSpec =
-        remember { mutableStateOf<OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog?>(null) }
-    // Parent-driven search confirmation dialog spec
-    val searchConfirmDialogSpec = remember {
-        mutableStateOf<SearchContract.Effect.ShowMultiSelectConfirmDialog?>(
-            null
-        )
-    }
-
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
@@ -201,48 +180,47 @@ fun OrderListScreen(
                 }
 
                 is OrderListScreenContract.Effect.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(
-                        message = effect.message,
-                        actionLabel = effect.actionLabel,
-                        duration = effect.duration
-                    )
-                }
-
-                is OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog -> {
-                    confirmDialogSpec.value = effect
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = effect.message,
+                            actionLabel = effect.actionLabel,
+                            duration = effect.duration
+                        )
+                    }
                 }
 
                 is OrderListScreenContract.Effect.CollapseSearchBar -> {
-                    onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(false))
+                    onSearchEventSent(SearchContract.Event.CollapseSearchBar)
                 }
 
-                is OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog -> {
-                    // Adapt to SearchContract dialog spec for reuse of common dialog UI
-                    searchConfirmDialogSpec.value =
-                        SearchContract.Effect.ShowMultiSelectConfirmDialog(
-                            title = effect.title,
-                            cancelLabel = effect.cancelLabel,
-                            selectOnlyLabel = effect.selectOnlyLabel,
-                            proceedLabel = effect.proceedLabel
-                        )
+                is OrderListScreenContract.Effect.ConfirmSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Confirm))
+                }
+                is OrderListScreenContract.Effect.CancelSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Cancel))
                 }
             }
         }
     }
+
 
     LaunchedEffect(searchEffectFlow) {
         searchEffectFlow?.collectLatest { effect ->
             when (effect) {
-                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
-                    searchConfirmDialogSpec.value = effect
+                is SearchContract.Effect.Outcome.Back -> {}
+                is SearchContract.Effect.Outcome.OrderClicked -> {
+                    onEventSent(OrderListScreenContract.Event.OpenOrder(effect.invoiceNumber))
                 }
 
-                is SearchContract.Effect.ExpandSearchBar, is SearchContract.Effect.CollapseSearchBar -> {
-                    // handled via searchState.isSearchActive syncing
+                is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {
+                    onEventSent(OrderListScreenContract.Event.OnAcceptMultiSelectClicked(true))
                 }
+
+                else -> {}
             }
         }
     }
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
@@ -275,8 +253,7 @@ fun OrderListScreen(
                     onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
                     onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) },
                     expanded = fabExpanded,
-                    modifier = Modifier
-//                    .animateFloatingActionButton(
+//                    modifier = Modifier.animateFloatingActionButton(
 //                        visible = !state.isMultiSelectionEnabled,
 //                        alignment = Alignment.BottomEnd
 //                    )
@@ -328,91 +305,10 @@ fun OrderListScreen(
                                 animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
                             )
                         ) {
-                            MBoltSearchBar(
-                                query = searchState.searchText,
-                                onQueryChange = { query ->
-                                    onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                                },
-                                searchBarState = searchBarState,
-                                onSearch = { query ->
-                                    onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                                },
-                                onExpandedChange = { isExpanded ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.SearchOnExpandedChange(
-                                            isExpanded
-                                        )
-                                    )
-                                },
-                                onBackPressed = {
-                                    onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
-                                },
-                                onResultClick = { result ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.SearchResultClicked(
-                                            result
-                                        )
-                                    )
-                                },
-                                onClearClick = {
-                                    onSearchEventSent(SearchContract.Event.ClearSearch)
-                                },
-                                recentSearches = emptyList(),
-                                suggestions = searchState.searchSuggestions,
-                                onSuggestionClicked = { s ->
-                                    onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
-                                },
-                                selectedChips = searchState.selectedChips,
-                                typedSuffix = searchState.typedSuffix,
-                                onTypedSuffixChange = { text ->
-                                    onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
-                                },
-                                onRemoveChip = { s ->
-                                    onSearchEventSent(SearchContract.Event.RemoveChip(s))
-                                },
-                                searchOrderItems = searchState.searchOrderItems,
-                                isMultiSelectionEnabled = searchState.selection.isEnabled,
-                                selectedOrderIdList = searchState.selection.selected,
-                                isSelectAllChecked = searchState.selection.isAllSelected,
-                                isRefreshing = state.isRefreshing,
-                                onOpenInvoice = { id ->
-                                    onEventSent(OrderListScreenContract.Event.OpenOrder(id))
-                                },
-                                onCheckedChange = { orderId, checked ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.SetItemChecked(
-                                                id = orderId,
-                                                checked = checked
-                                            )
-                                        )
-                                    )
-                                },
-                                onSelectAllToggle = { checked ->
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.SelectAll(checked)
-                                        )
-                                    )
-                                },
-                                onCancelSelection = {
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.Cancel
-                                        )
-                                    )
-                                },
-                                onEnterSelectionMode = {
-                                    onSearchEventSent(
-                                        SearchContract.Event.Selection(
-                                            SelectionContract.Event.ToggleMode(true)
-                                        )
-                                    )
-                                },
-                                onSelectClick = {
-                                    onEventSent(OrderListScreenContract.Event.ConfirmSearchSelection)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
+                            SearchComponent(
+                                state = searchState,
+                                onEventSent = onSearchEventSent,
+                                effectFlow = searchEffectFlow,
                                 collapsedColors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                                 placeholderText = "Search by Order #, Name, Phone"
                             )
@@ -490,11 +386,7 @@ fun OrderListScreen(
                         )
                     },
                     onSelectClick = {
-                        onEventSent(
-                            OrderListScreenContract.Event.Selection(
-                                SelectionContract.Event.Confirm
-                            )
-                        )
+                        onEventSent(OrderListScreenContract.Event.OnAcceptMultiSelectClicked(false))
                     },
                 )
             }
@@ -544,86 +436,31 @@ fun OrderListScreen(
             }
         }
 
-        // Confirmation dialog (main list)
-        val spec = confirmDialogSpec.value
-        if (spec != null) {
+    }
+
+    Dialogs(state.dialog)
+}
+
+@Composable
+private fun Dialogs(dialog: OrderListScreenContract.Dialog?) {
+    when (dialog) {
+        is OrderListScreenContract.Dialog.SearchMultiSelectConfirm -> {
             MultiSelectConfirmDialog(
-                spec = spec,
-                onProceed = {
-                    confirmDialogSpec.value = null
-                    onEventSent(
-                        OrderListScreenContract.Event.Selection(
-                            SelectionContract.Event.ConfirmProceed
-                        )
-                    )
-                },
-                onSelect = {
-                    confirmDialogSpec.value = null
-                    onEventSent(
-                        OrderListScreenContract.Event.Selection(
-                            SelectionContract.Event.ConfirmStay
-                        )
-                    )
-                },
-                onCancel = {
-                    confirmDialogSpec.value = null
-                    onEventSent(
-                        OrderListScreenContract.Event.Selection(
-                            SelectionContract.Event.DismissConfirmDialog
-                        )
-                    )
-                },
-                onDismissRequest = {
-                    confirmDialogSpec.value = null
-                    onEventSent(
-                        OrderListScreenContract.Event.Selection(
-                            SelectionContract.Event.DismissConfirmDialog
-                        )
-                    )
-                }
+                title = dialog.title,
+                cancelLabel = dialog.onCancel.label.value,
+                selectOnlyLabel = dialog.onSelect.label.value,
+                proceedLabel = dialog.onProceed.label.value,
+                onProceed = dialog.onProceed.action,
+                onSelect = dialog.onSelect.action,
+                onCancel = dialog.onCancel.action,
+                onDismissRequest = dialog.onCancel.action
             )
         }
 
-        // Confirmation dialog (search)
-        val searchSpec = searchConfirmDialogSpec.value
-        if (searchSpec != null) {
-            MultiSelectConfirmDialog(
-                spec = OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
-                    title = searchSpec.title,
-                    cancelLabel = searchSpec.cancelLabel,
-                    selectOnlyLabel = searchSpec.selectOnlyLabel,
-                    proceedLabel = searchSpec.proceedLabel
-                ),
-                onProceed = {
-                    searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed))
-                    // Also trigger proceed outcome on main VM to keep behavior
-                    onEventSent(
-                        OrderListScreenContract.Event.Selection(
-                            SelectionContract.Event.ConfirmProceed
-                        )
-                    )
-                },
-                onSelect = {
-                    searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmStay))
-                },
-                onCancel = {
-                    searchConfirmDialogSpec.value = null
-                    onSearchEventSent(
-                        SearchContract.Event.Selection(
-                            SelectionContract.Event.DismissConfirmDialog
-                        )
-                    )
-                },
-                onDismissRequest = {
-                    searchConfirmDialogSpec.value = null
-                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.DismissConfirmDialog))
-                }
-            )
-        }
+        null -> {}
     }
 }
+
 
 @Preview(
     name = "Order list",
@@ -639,11 +476,12 @@ fun OrderListScreenPreview(
     GPCTheme {
         OrderListScreen(
             state = state,
-            searchState = SearchContract.State.empty(),
             onEventSent = {},
-            onSearchEventSent = {},
             effectFlow = null,
             onOutcome = {},
+            searchState = SearchContract.State.empty(),
+            onSearchEventSent = {},
+            searchEffectFlow = null,
         )
     }
 }

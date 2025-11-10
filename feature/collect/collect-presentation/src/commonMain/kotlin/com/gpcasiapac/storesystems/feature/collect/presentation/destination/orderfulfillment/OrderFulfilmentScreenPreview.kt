@@ -2,7 +2,6 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Business
-import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -34,7 +33,7 @@ class OrderFulfilmentScreenStateProvider :
                 error = null,
 
                 featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
-                    isAccountCollectingFeatureEnabled = true,
+                    isAccountRepresentativeSelectionFeatureEnabled = true,
                     isCorrespondenceSectionVisible = true
                 ),
 
@@ -87,6 +86,7 @@ class OrderFulfilmentScreenStateProvider :
                         isEnabled = true
                     )
                 ),
+                dialog = null
             )
 
             val singleB2C = base.copy(
@@ -97,18 +97,8 @@ class OrderFulfilmentScreenStateProvider :
                 isSighted = true
             )
 
-            val singleB2C_IdDL = singleB2C.copy(
-                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE
-            )
-            val singleB2C_IdPassport = singleB2C.copy(
-                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT
-            )
-            val singleB2C_IdOther = singleB2C.copy(
-                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.OTHER
-            )
-            val singleB2C_IdOther_WithText = singleB2C.copy(
-                idVerification = OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
-                idVerificationOtherText = "Temporary visitor pass"
+            val singleB2C_Verified = singleB2C.copy(
+                idVerified = true
             )
 
             val multiB2C = base.copy(
@@ -130,7 +120,7 @@ class OrderFulfilmentScreenStateProvider :
             )
 
             val accountFlowFeatureOff = accountFlow.copy(
-                featureFlags = accountFlow.featureFlags.copy(isAccountCollectingFeatureEnabled = false)
+                featureFlags = accountFlow.featureFlags.copy(isAccountRepresentativeSelectionFeatureEnabled = false)
             )
 
             val courierFlow = base.copy(
@@ -151,9 +141,7 @@ class OrderFulfilmentScreenStateProvider :
             return sequenceOf(
                 singleB2C,
                 singleB2C_Sighted,
-                singleB2C_IdDL,
-                singleB2C_IdPassport,
-                singleB2C_IdOther,
+                singleB2C_Verified,
                 multiB2C,
                 accountFlow,
                 accountFlowFeatureOff,

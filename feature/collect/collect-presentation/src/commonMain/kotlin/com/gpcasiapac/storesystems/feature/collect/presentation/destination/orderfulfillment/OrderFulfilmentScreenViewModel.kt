@@ -1,13 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
 
 import androidx.compose.material.icons.Icons
-import com.gpcasiapac.storesystems.common.kotlin.extension.Components
-import com.gpcasiapac.storesystems.common.kotlin.extension.DateStyle
-import com.gpcasiapac.storesystems.common.kotlin.extension.HourCycle
-import com.gpcasiapac.storesystems.common.kotlin.extension.TimeStyle
-import com.gpcasiapac.storesystems.common.kotlin.extension.formatLocal
 import androidx.compose.material.icons.outlined.Business
-import androidx.compose.material.icons.outlined.BusinessCenter
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.SnackbarDuration
@@ -16,11 +10,15 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
+import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper.Text
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
+import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectionTypeGating
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
@@ -29,6 +27,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetColle
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectionTypeGatingUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
@@ -37,8 +36,13 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetW
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.*
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.Outcome.*
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.Selection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -52,6 +56,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.combine
 
 
 class OrderFulfilmentScreenViewModel(
@@ -60,6 +65,7 @@ class OrderFulfilmentScreenViewModel(
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase,
     private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
+    private val observeCollectionTypeGatingUseCase: ObserveCollectionTypeGatingUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addScannedInputToWorkOrderUseCase: AddScannedInputToWorkOrderUseCase,
@@ -67,7 +73,8 @@ class OrderFulfilmentScreenViewModel(
     private val submitOrderUseCase: SubmitOrderUseCase,
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
-    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
+    private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
+    private val observeSignButtonGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveSignButtonGatingUseCase
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -99,7 +106,7 @@ class OrderFulfilmentScreenViewModel(
             isProcessing = false,
             error = null,
             featureFlags = OrderFulfilmentScreenContract.State.FeatureFlags(
-                isAccountCollectingFeatureEnabled = false,
+                isAccountRepresentativeSelectionFeatureEnabled = false,
                 isCorrespondenceSectionVisible = false,
             ),
             collectingType = null,
@@ -147,7 +154,8 @@ class OrderFulfilmentScreenViewModel(
                     isEnabled = true
                 )
             ),
-            isSighted = false
+            isSighted = false,
+            dialog = null
         )
 
     }
@@ -162,54 +170,28 @@ class OrderFulfilmentScreenViewModel(
     }
 
     override fun onStart() {
-        // Option B: three independent pipelines sharing workOrderIdFlow
-        // Header (Collect Work Order)
+
         viewModelScope.launch {
-            workOrderIdFlow
-                .flatMapLatest { id -> observeCollectWorkOrderUseCase(id) }
-                .collectLatest { wo ->
-                    setState {
-                        copy(
-                            collectingType = wo?.collectingType,
-                            courierName = wo?.courierName ?: "",
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-                }
+            observeWorkOrder()
         }
 
-        // Items
         viewModelScope.launch {
-            workOrderIdFlow
-                .flatMapLatest { id -> observeWorkOrderItemsInScanOrderUseCase(id) }
-                .collectLatest { items ->
-                    setState { copy(collectOrderListItemStateList = items.toListItemState()) }
-                }
+            observeOrders()
         }
 
-        // Signature
         viewModelScope.launch {
-            workOrderIdFlow
-                .flatMapLatest { id -> observeWorkOrderSignatureUseCase(id) }
-                .collectLatest { signature ->
-                    setState {
-                        copy(
-                            signatureBase64 = signature?.signatureBase64,
-                            signerName = signature?.signedByName,
-                            signedDateTime = signature?.signedAt
-                        )
-                    }
-                }
+            observeSignature()
         }
+
+        viewModelScope.launch {
+            observeCollectionTypeGating()
+        }
+
+        viewModelScope.launch {
+            observeSignGating()
+        }
+
     }
-
-//    signedDateTime = signature?.signedAt?.formatLocal(
-//    components = Components.DateTime,
-//    dateStyle = DateStyle.Medium,
-//    timeStyle = TimeStyle.Short,
-//    hourCycle = HourCycle.H12,
-//    )
 
     // TABLE OF CONTENTS - All possible events handled here
     override fun handleEvents(event: OrderFulfilmentScreenContract.Event) {
@@ -281,18 +263,9 @@ class OrderFulfilmentScreenViewModel(
                 setState { copy(isSighted = event.checked) }
             }
 
-            // ID Verification (single-select)
-            is OrderFulfilmentScreenContract.Event.IdVerificationChanged -> {
-                setState {
-                    copy(
-                        idVerification = event.option,
-                        idVerificationOtherText = if (event.option == OrderFulfilmentScreenContract.IdVerificationOption.OTHER) idVerificationOtherText else ""
-                    )
-                }
-            }
-
-            is OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged -> {
-                setState { copy(idVerificationOtherText = event.text) }
+            // ID verification checkbox
+            is OrderFulfilmentScreenContract.Event.IdVerificationChecked -> {
+                setState { copy(idVerified = event.checked) }
             }
 
             is OrderFulfilmentScreenContract.Event.ShowCustomerNameDialog -> {
@@ -310,10 +283,10 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.ConfirmCustomerName -> {
                 val name = viewState.value.customerNameInput.trim()
                 if (name.isEmpty()) {
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please enter customer name") }
+                    setEffect { ShowSnackbar("Please enter customer name") }
                 } else {
                     setState { copy(isCustomerNameDialogVisible = false) }
-                    setEffect { OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested(name) }
+                    setEffect { SignatureRequested(name) }
                 }
             }
 
@@ -332,7 +305,7 @@ class OrderFulfilmentScreenViewModel(
             }
 
             is OrderFulfilmentScreenContract.Event.EditCorrespondence -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Edit ${event.id} not implemented") }
+                setEffect { ShowSnackbar("Edit ${event.id} not implemented") }
             }
 
             // Final action
@@ -342,7 +315,7 @@ class OrderFulfilmentScreenViewModel(
 
             // Search-origin selection confirmation
             is OrderFulfilmentScreenContract.Event.ConfirmSearchSelection -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog() }
+                setEffect { ShowConfirmSelectionDialog() }
             }
 
             is OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed -> {
@@ -355,127 +328,22 @@ class OrderFulfilmentScreenViewModel(
 
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
                 setEffect {
-                    OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
+                    NavigateToOrderDetails(
                         event.invoiceNumber
                     )
                 }
             }
 
             is OrderFulfilmentScreenContract.Event.ScanInvoice -> {
-                val invoice = event.rawInput
                 // Collapse search on scan (handled by UI via effect)
                 setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
                 viewModelScope.launch {
-                    when (val result = validateScannedInvoiceInputUseCase(rawInput = invoice)) {
-                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> {
-                            if (event.autoSelect) {
-                                val session = sessionState.value
-                                when (val res = addScannedInputToWorkOrderUseCase(
-                                    userId = session.userId,
-                                    currentSelectedWorkOrderId = session.workOrderId,
-                                    rawInput = invoice
-                                )) {
-                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.Added -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.Success
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Success
-                                            )
-                                        }
-                                    }
-
-                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.Duplicate -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.SelectionChanged
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Warning
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                                                "Order already added: \"${res.invoiceNumber}\""
-                                            )
-                                        }
-                                    }
-
-                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.NotFound -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                                                "Order not found: \"${res.input}\""
-                                            )
-                                        }
-                                    }
-
-                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.InvalidInput -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                                                "Invalid scan input"
-                                            )
-                                        }
-                                    }
-
-                                    is AddScannedInputToWorkOrderUseCase.UseCaseResult.Error -> {
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlayHaptic(
-                                                HapticEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.PlaySound(
-                                                SoundEffect.Error
-                                            )
-                                        }
-                                        setEffect {
-                                            OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                                                res.message
-                                            )
-                                        }
-                                    }
-                                }
-                            } else {
-                                setEffect {
-                                    OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
-                                        result.invoiceNumber
-                                    )
-                                }
-                            }
-                        }
-
-                        is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
-                            setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                            setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
-                            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
-                        }
-                    }
+                    handleScan(
+                        rawInput = event.rawInput,
+                        isAutoSelectEnabled = event.autoSelect
+                    )
                 }
+
             }
 
             is OrderFulfilmentScreenContract.Event.DeselectOrder -> {
@@ -487,7 +355,268 @@ class OrderFulfilmentScreenViewModel(
                     )
                 }
             }
+
+            is OrderFulfilmentScreenContract.Event.CollapseSearchBar -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
+            }
+
+            is OrderFulfilmentScreenContract.Event.ExpandSearchBar -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.ExpandSearchBar }
+            }
+
+            is OrderFulfilmentScreenContract.Event.OnAcceptMultiSelectClicked -> {
+                setState {
+                    copy(
+                        dialog = OrderFulfilmentScreenContract.Dialog.SearchMultiSelectConfirm(
+                            onProceed = DialogButton(
+                                label = Text("Select"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                    if (event.fromSearch) {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ConfirmSearchSelection }
+                                    } else {
+                                    }
+                                    setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
+                                }
+                            ),
+                            onCancel = DialogButton(
+                                label = Text("Cancel"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                }
+                            )
+                        )
+                    )
+                }
+            }
         }
+    }
+
+    // TODO: Clean up  (too much duplicate effects)
+    private suspend fun handleScan(rawInput: String, isAutoSelectEnabled: Boolean) {
+
+        when (
+            val result = validateScannedInvoiceInputUseCase(rawInput = rawInput)
+        ) {
+            is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> {
+                if (isAutoSelectEnabled) {
+                    val session = sessionState.value
+                    when (
+                        val result = addScannedInputToWorkOrderUseCase(
+                            userId = session.userId,
+                            currentSelectedWorkOrderId = session.workOrderId,
+                            rawInput = rawInput
+                        )
+                    ) {
+                        is AddScannedInputToWorkOrderUseCase.UseCaseResult.Added -> {
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                    HapticEffect.Success
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlaySound(
+                                    SoundEffect.Success
+                                )
+                            }
+                        }
+
+                        is AddScannedInputToWorkOrderUseCase.UseCaseResult.Duplicate -> {
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                    HapticEffect.SelectionChanged
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlaySound(
+                                    SoundEffect.Warning
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                    "Order already added: \"${result.invoiceNumber}\""
+                                )
+                            }
+                        }
+
+                        is AddScannedInputToWorkOrderUseCase.UseCaseResult.NotFound -> {
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                    HapticEffect.Error
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlaySound(
+                                    SoundEffect.Error
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                    "Order not found: \"${result.input}\""
+                                )
+                            }
+                        }
+
+                        is AddScannedInputToWorkOrderUseCase.UseCaseResult.InvalidInput -> {
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                    HapticEffect.Error
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlaySound(
+                                    SoundEffect.Error
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                    "Invalid scan input"
+                                )
+                            }
+                        }
+
+                        is AddScannedInputToWorkOrderUseCase.UseCaseResult.Error -> {
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlayHaptic(
+                                    HapticEffect.Error
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.PlaySound(
+                                    SoundEffect.Error
+                                )
+                            }
+                            setEffect {
+                                OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                                    result.message
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    setEffect {
+                        OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
+                            result.invoiceNumber
+                        )
+                    }
+                }
+            }
+
+            is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
+                setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
+                setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
+                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(result.message) }
+            }
+        }
+    }
+
+
+    // Extracted collectors from onStart()
+    private suspend fun observeWorkOrder() {
+        workOrderIdFlow
+            .flatMapLatest { id -> observeCollectWorkOrderUseCase(id) }
+            .collectLatest { wo ->
+                setState {
+                    copy(
+                        collectingType = wo?.collectingType,
+                        courierName = wo?.courierName ?: "",
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }
+    }
+
+    private suspend fun observeOrders() {
+        workOrderIdFlow
+            .flatMapLatest { id -> observeWorkOrderItemsInScanOrderUseCase(id) }
+            .collectLatest { items ->
+                setState { copy(collectOrderListItemStateList = items.toListItemState()) }
+            }
+    }
+
+    private suspend fun observeSignature() {
+        workOrderIdFlow
+            .flatMapLatest { id -> observeWorkOrderSignatureUseCase(id) }
+            .collectLatest { signature ->
+                setState {
+                    copy(
+                        signatureBase64 = signature?.signatureBase64,
+                        signerName = signature?.signedByName,
+                        signedDateTime = signature?.signedAt
+                    )
+                }
+            }
+    }
+
+    private suspend fun observeCollectionTypeGating() {
+        workOrderIdFlow
+            .flatMapLatest { id -> observeCollectionTypeGatingUseCase(id) }
+            .collectLatest { gating ->
+                val wasSelected = viewState.value.collectingType
+                val newSelection = wasSelected?.takeIf { gating.isEnabled(it) }
+
+                setState {
+                    copy(
+                        collectionTypeOptionList = collectionTypeOptionList.withEnabled(gating),
+                        collectingType = newSelection
+                    )
+                }
+
+                // Notify only when a previously set selection becomes invalid while some option remains enabled
+                if (wasSelected != null && newSelection == null && gating.anyEnabled) {
+                    setEffect {
+                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                            message = "Selection cleared due to order mix change",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
+                }
+            }
+    }
+
+    // Helpers to keep gating logic cohesive and readable
+    private fun CollectionTypeGating.isEnabled(type: CollectingType): Boolean = when (type) {
+        CollectingType.STANDARD -> isStandardEnabled
+        CollectingType.ACCOUNT -> isAccountEnabled
+        CollectingType.COURIER -> isCourierEnabled
+    }
+
+    private val CollectionTypeGating.anyEnabled: Boolean
+        get() = isStandardEnabled || isAccountEnabled || isCourierEnabled
+
+    private fun List<CollectionTypeSectionDisplayState>.withEnabled(gating: CollectionTypeGating): List<CollectionTypeSectionDisplayState> {
+        return map { option ->
+            when (option.collectingType) {
+                CollectingType.STANDARD -> option.copy(enabled = gating.isStandardEnabled)
+                CollectingType.ACCOUNT -> option.copy(enabled = gating.isAccountEnabled)
+                CollectingType.COURIER -> option.copy(enabled = gating.isCourierEnabled)
+            }
+        }
+    }
+
+    private suspend fun observeSignGating() {
+        // Base domain gating that ignores the ID verification requirement (handled in presentation)
+        val baseFlow = workOrderIdFlow
+            .flatMapLatest { id -> observeSignButtonGatingUseCase(id) }
+
+        // Presentation-held ID verification flag
+        val idVerificationFlow = viewState
+            .map { state -> state.idVerified }
+            .distinctUntilChanged()
+
+        baseFlow
+            .combine(idVerificationFlow) { base, hasId ->
+                if (base.isEnabled && !hasId) {
+                    base.copy(
+                        isEnabled = false,
+                        reasons = listOf(SignButtonGating.Reason("no_id_verification"))
+                    )
+                } else base
+            }
+            .collectLatest { gating ->
+                setState { copy(signGating = gating) }
+            }
     }
 
     private fun onCorrespondenceToggled(id: String) {
@@ -562,8 +691,25 @@ class OrderFulfilmentScreenViewModel(
     }
 
     private fun sign() {
+        val gating = viewState.value.signGating
+        if (gating != null && !gating.isEnabled) {
+            val message = mapSignReasonsToMessage(gating.reasons)
+            setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar(message) }
+            return
+        }
         // Open customer name dialog before navigating to signature screen
         setState { copy(isCustomerNameDialogVisible = true) }
+    }
+
+    private fun mapSignReasonsToMessage(reasons: List<SignButtonGating.Reason>): String {
+        val r = reasons.firstOrNull()?.value ?: return "Cannot sign"
+        return when (r) {
+            "no_orders" -> "No orders added"
+            "no_collection_type" -> "Please select who is collecting"
+            "courier_name_missing" -> "Please enter the courier name"
+            "no_id_verification" -> "Please confirm you've verified the customer's ID"
+            else -> "Cannot sign"
+        }
     }
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {
@@ -633,7 +779,12 @@ class OrderFulfilmentScreenViewModel(
             val workOrderId = workOrderIdFlow.firstOrNull()
             if (workOrderId == null) {
                 setState { copy(isProcessing = false) }
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No active work order", duration = SnackbarDuration.Long) }
+                setEffect {
+                    OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                        "No active work order",
+                        duration = SnackbarDuration.Long
+                    )
+                }
                 return@launch
             }
             val result = submitOrderUseCase(workOrderId)

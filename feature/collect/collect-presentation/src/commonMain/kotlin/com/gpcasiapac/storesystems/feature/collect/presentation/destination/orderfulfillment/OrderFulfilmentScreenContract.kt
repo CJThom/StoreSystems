@@ -3,16 +3,20 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectOrderWithCustomer
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Dialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncePreset
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebouncerDefaults
@@ -20,15 +24,13 @@ import kotlin.time.Instant
 
 object OrderFulfilmentScreenContract {
 
-    enum class IdVerificationOption { DRIVERS_LICENSE, PASSPORT, OTHER }
-
     @Immutable
     data class State(
         val collectOrderListItemStateList: List<CollectOrderListItemState>,
 
         // Loading / refreshing
         val isLoading: Boolean,
-        
+
         // Processing confirmation (adding to sync queue)
         val isProcessing: Boolean,
 
@@ -62,17 +64,19 @@ object OrderFulfilmentScreenContract {
         // ID sighted checkbox state
         val isSighted: Boolean = false,
 
-        // ID Verification selection (single-select)
-        val idVerification: IdVerificationOption? = null,
-        // Text input shown when 'Other' is selected
-        val idVerificationOtherText: String = "",
+        // ID verification (single boolean)
+        val idVerified: Boolean = false,
 
         // Correspondence
         val correspondenceOptionList: List<CorrespondenceItemDisplayParam>,
-    ) : ViewState{
+
+        // Sign button gating
+        val signGating: SignButtonGating? = null,
+        val dialog: Dialog?
+    ) : ViewState {
 
         data class FeatureFlags(
-            val isAccountCollectingFeatureEnabled: Boolean,
+            val isAccountRepresentativeSelectionFeatureEnabled: Boolean,
             val isCorrespondenceSectionVisible: Boolean
         )
 
@@ -100,6 +104,7 @@ object OrderFulfilmentScreenContract {
 
         // Signature
         data object Sign : Event
+
         // Customer name dialog flow
         data object ShowCustomerNameDialog : Event
         data object DismissCustomerNameDialog : Event
@@ -115,10 +120,8 @@ object OrderFulfilmentScreenContract {
         // ID sighted
         data class IdSightedChanged(val checked: Boolean) : Event
 
-        // ID Verification (single-select)
-        data class IdVerificationChanged(val option: IdVerificationOption) : Event
-        // ID Verification 'Other' text input change
-        data class IdVerificationOtherChanged(val text: String) : Event
+        // ID verification checkbox
+        data class IdVerificationChecked(val checked: Boolean) : Event
 
         // Final action
         data object Confirm : Event
@@ -136,6 +139,13 @@ object OrderFulfilmentScreenContract {
 
         // Deselect an order from Fulfilment item actions
         data class DeselectOrder(val invoiceNumber: InvoiceNumber) : Event
+
+        data object ExpandSearchBar : Event
+        data object CollapseSearchBar : Event
+
+
+        data class OnAcceptMultiSelectClicked(val fromSearch: Boolean) : Event
+
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -144,8 +154,14 @@ object OrderFulfilmentScreenContract {
             val actionLabel: String? = null,
             val duration: androidx.compose.material3.SnackbarDuration = androidx.compose.material3.SnackbarDuration.Short,
         ) : Effect
-        data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) : Effect
+
+        data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) :
+            Effect
+
         data class PlayHaptic(val type: HapticEffect) : Effect
+
+        data object ConfirmSearchSelection : Effect
+        data object CancelSearchSelection : Effect
 
         // Two-button confirm dialog for selection coming from Search in Fulfilment
         data class ShowConfirmSelectionDialog(
@@ -156,11 +172,12 @@ object OrderFulfilmentScreenContract {
 
         // Request the search UI to collapse (triggered by VM on scan)
         data object CollapseSearchBar : Effect
- 
-         sealed interface Outcome : Effect {
+        data object ExpandSearchBar : Effect
+
+        sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
-            data class SignatureRequested(val customerName: String): Outcome
+            data class SignatureRequested(val customerName: String) : Outcome
             data class NavigateToOrderDetails(val invoiceNumber: InvoiceNumber) : Outcome
         }
     }
@@ -174,9 +191,18 @@ object OrderFulfilmentScreenContract {
             DebounceKey.CollectingType,
             DebouncerDefaults.Interval.Medium
         )
+
         data object CourierName : Debounce(
             DebounceKey.CourierName,
             DebouncerDefaults.Interval.Medium
         )
+    }
+
+    sealed class Dialog {
+        data class SearchMultiSelectConfirm(
+            val title: String = "Confirm selection",
+            val onProceed: DialogButton,
+            val onCancel: DialogButton,
+        ) : Dialog()
     }
 }

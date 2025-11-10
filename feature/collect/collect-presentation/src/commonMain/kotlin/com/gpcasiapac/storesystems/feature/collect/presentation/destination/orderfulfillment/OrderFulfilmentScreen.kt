@@ -55,7 +55,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import coil3.size.Dimension
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
@@ -64,15 +63,19 @@ import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorde
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CollectOrderFulfilmentItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.MBoltSearchBar
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerification
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerificationSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchComponent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -82,6 +85,7 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
 
@@ -94,39 +98,22 @@ import storesystems.feature.collect.collect_presentation.generated.resources.who
 @Composable
 fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
-    searchState: SearchContract.State?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    onSearchEventSent: ((event: SearchContract.Event) -> Unit)?,
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
+    searchState: SearchContract.State,
+    onSearchEventSent: (SearchContract.Event) -> Unit,
+    searchEffectFlow: Flow<SearchContract.Effect>?,
     soundPlayer: SoundPlayer? = null,
     hapticPerformer: HapticPerformer? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    !windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
 
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
         mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null)
     }
 
-    // Search bar state management for the expanded overlay
-    val searchBarState = rememberSearchBarState(
-        initialValue = SearchBarValue.Collapsed
-    )
-
-    // Keep search bar animation in sync with SearchViewModel
-    if (searchState != null) {
-        LaunchedEffect(searchState.isSearchActive) {
-            if (searchState.isSearchActive) {
-                searchBarState.animateToExpanded()
-            } else {
-                searchBarState.animateToCollapsed()
-            }
-        }
-    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -148,19 +135,48 @@ fun OrderFulfilmentScreen(
                     hapticPerformer?.perform(effect.type)
                 }
 
-
                 is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
                     selectionConfirmDialogSpec.value = effect
                 }
 
                 is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
-                    onSearchEventSent?.invoke(SearchContract.Event.SearchOnExpandedChange(false))
+                    onSearchEventSent(SearchContract.Event.CollapseSearchBar)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.ExpandSearchBar -> {
+                    onSearchEventSent(SearchContract.Event.ExpandSearchBar)
                 }
 
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+
+                is OrderFulfilmentScreenContract.Effect.ConfirmSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Confirm))
+                }
+
+                is OrderFulfilmentScreenContract.Effect.CancelSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Cancel))
+                }
             }
         }
     }
+
+    LaunchedEffect(searchEffectFlow) {
+        searchEffectFlow?.collectLatest { effect ->
+            when (effect) {
+                is SearchContract.Effect.Outcome.Back -> {}
+                is SearchContract.Effect.Outcome.OrderClicked -> {
+                    //  onEventSent(OrderFulfilmentScreenContract.Event.OpenOrder(effect.invoiceNumber)) todo
+                }
+
+                is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {
+                    onEventSent(OrderFulfilmentScreenContract.Event.OnAcceptMultiSelectClicked(true))
+                }
+
+                else -> {}
+            }
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -200,120 +216,36 @@ fun OrderFulfilmentScreen(
                 )
             }
 
-            // Search bar (full span)
-            // Required hacky hiding to simulate 'Lookup' button expansion
-            if ((searchState != null && onSearchEventSent != null)) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    MBoltSearchBar(
-                        query = searchState.searchText,
-                        onQueryChange = { query ->
-                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                        },
-                        searchBarState = searchBarState,
-                        onSearch = { query ->
-                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-                        },
-                        onExpandedChange = { isExpanded ->
-                            onSearchEventSent(
-                                SearchContract.Event.SearchOnExpandedChange(
-                                    isExpanded
-                                )
-                            )
-                        },
-                        onBackPressed = {
-                            onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
-                        },
-                        onResultClick = { result ->
-                            onSearchEventSent(
-                                SearchContract.Event.SearchResultClicked(result)
-                            )
-                        },
-                        onClearClick = {
-                            onSearchEventSent(SearchContract.Event.ClearSearch)
-                        },
-                        recentSearches = emptyList(),
-                        suggestions = searchState.searchSuggestions,
-                        onSuggestionClicked = { s ->
-                            onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
-                        },
-                        selectedChips = searchState.selectedChips,
-                        typedSuffix = searchState.typedSuffix,
-                        onTypedSuffixChange = { text ->
-                            onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
-                        },
-                        onRemoveChip = { s ->
-                            onSearchEventSent(SearchContract.Event.RemoveChip(s))
-                        },
-                        searchOrderItems = searchState.searchOrderItems,
-                        isMultiSelectionEnabled = searchState.selection.isEnabled,
-                        selectedOrderIdList = searchState.selection.selected,
-                        isSelectAllChecked = searchState.selection.isAllSelected,
-                        isRefreshing = state.isLoading,
-                        onOpenInvoice = { id ->
-                            onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
-                        },
-                        onCheckedChange = { orderId, checked ->
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.SetItemChecked(orderId, checked)
-                                )
-                            )
-                        },
-                        onSelectAllToggle = { checked ->
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.SelectAll(checked)
-                                )
-                            )
-                        },
-                        onCancelSelection = {
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.Cancel
-                                )
-                            )
-                        },
-                        onEnterSelectionMode = {
-                            onSearchEventSent(
-                                SearchContract.Event.Selection(
-                                    SelectionContract.Event.ToggleMode(true)
-                                )
-                            )
-                        },
-                        onSelectClick = {
-                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(
-                                if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
-                            ),
-                        placeholderText = "Search by Order #, Name, Phone",
-                        collapsedContentPadding = PaddingValues(
-                            horizontal = Dimens.Space.medium,
-                            vertical = Dimens.Space.small
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SearchComponent(
+                    state = searchState,
+                    onEventSent = onSearchEventSent,
+                    effectFlow = searchEffectFlow,
+                    collapsedColors = SearchBarDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        inputFieldColors = SearchBarDefaults.inputFieldColors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
+                    ),
+                    collapsedShape = CircleShape,
+                    placeholderText = "Search by Order #, Name, Phone",
+                    collapsedBorder = MaterialTheme.borderStroke(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
                         ),
-                        collapsedShape = CircleShape,
-                        collapsedColors = SearchBarDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            inputFieldColors = SearchBarDefaults.inputFieldColors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ),
-                        collapsedBorder = MaterialTheme.borderStroke()
-                    )
-                }
+                )
+
             }
 
             if (state.collectOrderListItemStateList.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     EmptyOrderPlaceholderCard(
                         onLookupClick = {
-                            if (onSearchEventSent != null) {
-                                onSearchEventSent(SearchContract.Event.SearchOnExpandedChange(true))
-                            }
+                            onEventSent(OrderFulfilmentScreenContract.Event.ExpandSearchBar)
                         }
                     )
                 }
@@ -461,32 +393,32 @@ fun OrderFulfilmentScreen(
         }
 
 
-        // Search selection confirmation dialog (parent-driven, 2-button)
-        val selectSpec = selectionConfirmDialogSpec.value
-        if (selectSpec != null) {
-            AlertDialog(
-                onDismissRequest = {
-                    selectionConfirmDialogSpec.value = null
-                    onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-                },
-                title = { Text(selectSpec.title) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        selectionConfirmDialogSpec.value = null
-                        if (onSearchEventSent != null) {
-                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed))
-                        }
-                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
-                    }) { Text(selectSpec.confirmLabel) }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        selectionConfirmDialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-                    }) { Text(selectSpec.cancelLabel) }
-                }
-            )
-        }
+//        // Search selection confirmation dialog (parent-driven, 2-button)
+//        val selectSpec = selectionConfirmDialogSpec.value
+//        if (selectSpec != null) {
+//            AlertDialog(
+//                onDismissRequest = {
+//                    selectionConfirmDialogSpec.value = null
+//                    onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+//                },
+//                title = { Text(selectSpec.title) },
+//                confirmButton = {
+//                    TextButton(onClick = {
+//                        selectionConfirmDialogSpec.value = null
+////                        if (onSearchEventSent != null) {
+////                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed)) todo: check if this is needed
+////                        }
+//                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
+//                    }) { Text(selectSpec.confirmLabel) }
+//                },
+//                dismissButton = {
+//                    TextButton(onClick = {
+//                        selectionConfirmDialogSpec.value = null
+//                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+//                    }) { Text(selectSpec.cancelLabel) }
+//                }
+//            )
+//        }
     }
     //  }
 
@@ -530,7 +462,41 @@ fun OrderFulfilmentScreen(
             }
         )
     }
+    Dialogs(state.dialog)
 }
+
+@Composable
+private fun Dialogs(dialog: OrderFulfilmentScreenContract.Dialog?) {
+    when (dialog) {
+        is OrderFulfilmentScreenContract.Dialog.SearchMultiSelectConfirm -> {
+            AlertDialog(
+                onDismissRequest = dialog.onCancel.action,
+                title = { Text(dialog.title) },
+                confirmButton = {
+                    TextButton(onClick = dialog.onProceed.action) {
+                        Text(dialog.onProceed.label.value)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = dialog.onCancel.action) {
+                        Text(dialog.onCancel.label.value)
+                    }
+                }
+            )
+//            MultiSelectConfirmDialog(
+//                title = dialog.title,
+//                cancelLabel = dialog.onCancel.label.value,
+//                proceedLabel = dialog.onProceed.label.value,
+//                onProceed = dialog.onProceed.action,
+//                onCancel = dialog.onCancel.action,
+//                onDismissRequest = dialog.onCancel.action
+//            )
+        }
+
+        null -> {}
+    }
+}
+
 
 @Composable
 private fun CollectorSection(
@@ -548,6 +514,7 @@ private fun CollectorSection(
             )
             .fillMaxWidth()
     ) {
+
         CollectionTypeSection(
             title = stringResource(Res.string.who_is_collecting),
             value = state.collectingType,
@@ -559,32 +526,48 @@ private fun CollectorSection(
                     )
                 )
             },
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-            )
-        ) { selectedType ->
-            CollectionTypeContent(
-                state = state,
-                selectedType = selectedType,
-                onEventSent = onEventSent
-            )
-        }
-
-        IdVerificationSection(
-            selected = state.idVerification,
-            onSelected = { option ->
-                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChanged(option))
+            // Hoisted params (no ViewModel dependency inside the section)
+            isAccountRepresentativeSelectionEnabled = state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled,
+            representativeSearchQuery = state.representativeSearchQuery,
+            onRepresentativeSearchQueryChange = { query ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(query)
+                )
             },
-            otherText = state.idVerificationOtherText,
-            onOtherTextChange = { text ->
-                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationOtherChanged(text))
+            representatives = state.representativeList,
+            selectedRepresentativeIds = state.selectedRepresentativeIds,
+            onRepresentativeSelected = { id, isSelected ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.RepresentativeSelected(id, isSelected)
+                )
             },
+            idVerified = state.idVerified,
+            onIdVerifiedChange = { checked ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked)
+                )
+            },
+            courierName = state.courierName,
+            onCourierNameChange = { name ->
+                onEventSent(OrderFulfilmentScreenContract.Event.CourierNameChanged(name))
+            },
+            isLoading = state.isLoading,
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
                 end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
             )
         )
+
+//        IdVerification(
+//            checked = state.idVerified,
+//            onCheckedChange = { checked ->
+//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
+//            },
+//            contentPadding = PaddingValues(
+//                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+//                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+//            )
+//        )
 
     }
 }
@@ -593,34 +576,58 @@ private fun CollectorSection(
 private fun CollectionTypeContent(
     state: OrderFulfilmentScreenContract.State,
     selectedType: CollectingType?,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
 
     when (selectedType) {
         CollectingType.ACCOUNT -> {
-            if (state.featureFlags.isAccountCollectingFeatureEnabled) {
-                AccountCollectionContent(
-                    searchQuery = state.representativeSearchQuery,
-                    onSearchQueryChange = { query ->
+            Column {
+
+                if (state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled) {
+                    AccountCollectionContent(
+                        searchQuery = state.representativeSearchQuery,
+                        onSearchQueryChange = { query ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(
+                                    query
+                                )
+                            )
+                        },
+                        representatives = state.representativeList,
+                        selectedRepresentativeIds = state.selectedRepresentativeIds,
+                        onRepresentativeSelected = { id, isSelected ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.RepresentativeSelected(
+                                    id,
+                                    isSelected
+                                )
+                            )
+                        },
+                        isLoading = state.isLoading
+                    )
+                }
+
+                IdVerification(
+                    checked = state.idVerified,
+                    onCheckedChange = { checked ->
                         onEventSent(
-                            OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(
-                                query
+                            OrderFulfilmentScreenContract.Event.IdVerificationChecked(
+                                checked
                             )
                         )
                     },
-                    representatives = state.representativeList,
-                    selectedRepresentativeIds = state.selectedRepresentativeIds,
-                    onRepresentativeSelected = { id, isSelected ->
-                        onEventSent(
-                            OrderFulfilmentScreenContract.Event.RepresentativeSelected(
-                                id,
-                                isSelected
-                            )
-                        )
-                    },
-                    isLoading = state.isLoading
+                    contentPadding = PaddingValues(vertical = Dimens.Space.medium)
+//                    contentPadding = PaddingValues(
+//                     Dimens.Space.medium,
+//                    )
+//                    contentPadding = PaddingValues(
+//                        start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+//                        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+//                    )
                 )
             }
+
         }
 
         CollectingType.COURIER -> {
@@ -631,11 +638,23 @@ private fun CollectionTypeContent(
                 },
                 isLoading = state.isLoading,
                 modifier = Modifier,
-                contentPadding = PaddingValues(bottom = Dimens.Space.medium)
+                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
             )
         }
 
         else -> {
+            IdVerification(
+                checked = state.idVerified,
+                onCheckedChange = { checked ->
+                    onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
+                },
+                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
+                // contentPadding = PaddingValues()
+//                contentPadding = PaddingValues(
+//                    start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+//                    end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+//                )
+            )
             // No additional UI for STANDARD
         }
     }
@@ -708,10 +727,11 @@ private fun OrderFulfilmentScreenPreview(
     GPCTheme {
         OrderFulfilmentScreen(
             state = state,
-            searchState = SearchContract.State.empty(),
             onEventSent = {},
-            onSearchEventSent = {},
             effectFlow = null,
+            searchState = SearchContract.State.empty(),
+            onSearchEventSent = {},
+            searchEffectFlow = null,
             onOutcome = {},
         )
     }

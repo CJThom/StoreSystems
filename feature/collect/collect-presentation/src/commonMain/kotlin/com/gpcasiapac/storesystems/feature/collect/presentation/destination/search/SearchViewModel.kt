@@ -1,6 +1,12 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.search
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.viewModelScope
+import co.touchlab.kermit.Logger
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
+import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper.Text
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -10,26 +16,31 @@ import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectSessionIds
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.domain.model.SuggestionQuery
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrderSearchSuggestionListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.Selection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
+    private val logger: Logger,
     private val observeSearchOrdersUseCase: ObserveSearchOrdersUseCase,
     private val getOrderSearchSuggestionListUseCase: GetOrderSearchSuggestionListUseCase,
     // Selection persistence dependencies
@@ -45,6 +56,8 @@ class SearchViewModel(
         sessionFlow = collectSessionIdsFlowUseCase()
     ),
     SelectionHandlerDelegate<InvoiceNumber> by SelectionHandler() {
+
+    val log = logger.withTag("SearchViewModel")
 
     override fun setInitialState(): SearchContract.State = SearchContract.State.empty()
 
@@ -70,90 +83,87 @@ class SearchViewModel(
 
     override fun handleEvents(event: SearchContract.Event) {
         when (event) {
-            is SearchContract.Event.SearchTextChanged -> handleSearchTextChanged(event.text)
-            is SearchContract.Event.SearchOnExpandedChange -> handleSearchOnExpandedChange(event.expand)
-            SearchContract.Event.ClearSearch -> handleClearSearch()
-            SearchContract.Event.SearchBarBackPressed -> handleSearchOnExpandedChange(false)
+            is SearchContract.Event.OnQueryChanged -> handleQueryChanged(event.query)
+            is SearchContract.Event.OnExpandedChanged -> handleSearchOnExpandedChange(event.expand)
+            is SearchContract.Event.ClearSearch -> handleClearSearch()
+            is SearchContract.Event.SearchBarBackPressed -> handleCollapseSearchBar()
             is SearchContract.Event.SearchResultClicked -> handleSearchResultClicked(event.result)
             is SearchContract.Event.SearchSuggestionClicked -> handleSearchSuggestionClicked(event.suggestion)
-            is SearchContract.Event.TypedSuffixChanged -> handleTypedSuffixChanged(event.text)
-            is SearchContract.Event.RemoveChip -> handleRemoveChip(event.suggestion)
-
+            is SearchContract.Event.RemoveChip -> handleRemoveSuggestion(event.suggestion)
             is SearchContract.Event.Selection -> handleSelection(event.event)
+            is SearchContract.Event.ExpandSearchBar -> handleExpandSearchBar()
+            is SearchContract.Event.CollapseSearchBar -> handleCollapseSearchBar()
+            is SearchContract.Event.OnSearchClicked -> handleSearchClicked()
+            is SearchContract.Event.OnAcceptMultiSelectClicked -> {
+                setEffect { SearchContract.Effect.Outcome.RequestConfirmationDialog }
+            }
         }
     }
 
+    private fun handleQueryChanged(query: String) {
+        setState { copy(query = query) }
+    }
 
     // Suggestions pipeline: immediate defaults on blank when active, debounced for non-blank
     private suspend fun observeSearchSuggestions() {
-        viewState
-            .map { it.searchText to it.isSearchActive }
-            .flatMapLatest { (text, active) ->
-                when {
-                    !active -> flowOf(emptyList())
-                    else -> {
-                        QueryFlow.build(
-                            input = flowOf(text),
-                            debounce = SearchDebounce(millis = 100),
-                            keySelector = { it }
-                        ).mapLatest { q -> getOrderSearchSuggestionListUseCase(q) }
-                    }
-                }
+        // val textFlow = snapshotFlow { viewState.value.query.text.toString() }
+
+        val queryFlow: Flow<SuggestionQuery> = QueryFlow.build(
+            input = viewState.map { state ->
+                SuggestionQuery(
+                    text = state.query,
+                    selected = state.selectedSuggestionList
+                )
+            },
+            debounce = SearchDebounce(millis = 150),
+            keySelector = { query ->
+                // Include selected chips in key so chip changes trigger a refresh even with blank text
+                query.text + "|" + query.selected.joinToString("|") { it.kind.name + ":" + it.text }
             }
-            .collectLatest { suggestions ->
-                setState { copy(searchSuggestions = suggestions) }
-            }
+        )
+
+        queryFlow.flatMapLatest { query ->
+            flowOf(getOrderSearchSuggestionListUseCase(query))
+        }.collectLatest { suggestions ->
+            setState { copy(searchSuggestionList = suggestions) }
+        }
+
     }
 
     // Search results pipeline: immediate reset on blank, debounced for non-blank
     private suspend fun observeSearchResults() {
 
+        //  val textFlow = snapshotFlow { viewState.value.query.text.toString() }
+
         val queryFlow: Flow<SearchQuery> = QueryFlow.build(
-            input = viewState.map { viewState ->
-                SearchQuery(viewState.searchText)
+            input = viewState.map { state ->
+                SearchQuery(
+                    text = state.query,
+                    selected = state.selectedSuggestionList
+                )
             },
             debounce = SearchDebounce(millis = 150),
             keySelector = { query ->
-                query.text
+                // Include selected chips in key so chip changes trigger results refresh even with blank text
+                query.text + "|" + query.selected.joinToString("|") { it.kind.name + ":" + it.text }
             }
         )
 
         queryFlow.flatMapLatest { query ->
             observeSearchOrdersUseCase(query)
         }.collectLatest { results ->
-
-            setState { copy(searchOrderItems = results.toListItemState()) }
+            setState { copy(searchOrderItemList = results.toListItemState()) }
         }
 
-
-//        viewState
-//            .map { it.searchText to it.isSearchActive }
-//            .flatMapLatest { (text, active) ->
-//                when {
-//                    !active -> flowOf(emptyList())
-//                    text.isBlank() -> flowOf(emptyList()) // immediate clearing without debounce
-//                    else -> {
-//                        // Debounce only when non-blank to avoid stale UI on backspace-to-blank
-//                        QueryFlow.build(
-//                            input = flowOf(text),
-//                            debounce = SearchDebounce(millis = 150),
-//                            keySelector = { it }
-//                        ).flatMapLatest { q -> observeSearchOrdersUseCase(q) }
-//                    }
-//                }
-//            }
-//            .map { list -> list.toListItemState() }
-//            .collectLatest { results ->
-//                setState { copy(searchOrderItems = results) }
-//            }
     }
-
 
     private fun bindSelectionHandler() {
         // Bind shared selection controller to visible ids and mirror into state
         bindSelection(
             scope = viewModelScope,
-            visibleIds = viewState.map { s -> s.searchOrderItems.map { it.invoiceNumber }.toSet() },
+            visibleIds = viewState.map { s ->
+                s.searchOrderItemList.map { it.invoiceNumber }.toSet()
+            },
             setSelection = { selection ->
                 setState { copy(selection = selection) }
             },
@@ -177,84 +187,70 @@ class SearchViewModel(
                     is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
-            onRequestConfirmDialog = { setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() } },
-            onConfirmProceed = null
+            // onRequestConfirmDialog = { setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() } },
+            // onConfirmProceed = null
         )
 
     }
 
-    private fun handleSearchTextChanged(text: String) {
-        // Update the query; reactive pipelines handle clearing and default suggestions.
-        setState { copy(searchText = text) }
+    private fun handleSearchClicked() {
+
+
     }
 
     private fun handleSearchOnExpandedChange(expand: Boolean) {
-        if (!expand) {
-            // On collapse, clear chips and typed suffix for a clean slate
-            setState {
-                copy(
-                    isSearchActive = false,
-                    selectedChips = emptyList(),
-                    typedSuffix = "",
-                    searchText = "",
-                )
-            }
-            setEffect { SearchContract.Effect.CollapseSearchBar }
-        } else {
-            setState { copy(isSearchActive = true) }
-            setEffect { SearchContract.Effect.ExpandSearchBar }
-        }
+        setState { copy(isSearchActive = expand) }
+    }
+
+    private fun handleExpandSearchBar() {
+        setEffect { SearchContract.Effect.ExpandSearchBar }
+    }
+
+    private fun handleCollapseSearchBar() {
+        setState { copy(selectedSuggestionList = emptyList()) }
+        setEffect { SearchContract.Effect.ClearQueryField }
+        setEffect { SearchContract.Effect.CollapseSearchBar }
     }
 
     private fun handleClearSearch() {
-        setState { copy(searchText = "", selectedChips = emptyList(), typedSuffix = "") }
+        setState {
+            copy(
+
+                //  query = query.apply { setTextAndPlaceCursorAtEnd("") },
+                selectedSuggestionList = emptyList(),
+            )
+        }
+        setEffect { SearchContract.Effect.ClearQueryField }
     }
 
     private fun handleSearchSuggestionClicked(suggestion: SearchSuggestion) {
-        setState {
-            val exists = selectedChips.any { it == suggestion }
-            val newChips = if (exists) selectedChips else selectedChips + suggestion
-            copy(
-                selectedChips = newChips,
-                typedSuffix = "",
-                searchText = buildCombinedQuery(newChips, "")
-            )
+        viewModelScope.launch {
+            setState {
+                val exists = selectedSuggestionList.any { it == suggestion }
+                val newChips =
+                    if (exists) selectedSuggestionList else selectedSuggestionList + suggestion
+                copy(selectedSuggestionList = newChips)
+            }
+            // Clear query field after selecting a suggestion
+            setEffect { SearchContract.Effect.ClearQueryField }
         }
     }
 
     private fun handleSearchResultClicked(result: InvoiceNumber) {
-        setState { copy(searchText = result.value, isSearchActive = false) }
-        setEffect { SearchContract.Effect.CollapseSearchBar }
+        setEffect { SearchContract.Effect.SetQueryField(result.value) }
     }
 
     // ---------------- Selection handling ----------------
-    private fun handleConfirmSelection() {
-        // Show dialog; actual commit happens based on user choice
-        setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() }
-    }
+//    private fun handleConfirmSelection() {
+//        // Show dialog; actual commit happens based on user choice
+//        setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() }
+//    }
 
-    // --- Hoisted search UI handlers ---
-    private fun handleTypedSuffixChanged(text: String) {
+
+    private fun handleRemoveSuggestion(suggestion: SearchSuggestion) {
         setState {
-            val combined = buildCombinedQuery(selectedChips, text)
-            copy(typedSuffix = text, searchText = combined)
-        }
-    }
-
-    private fun handleRemoveChip(suggestion: SearchSuggestion) {
-        setState {
-            val newChips = selectedChips.filterNot { it == suggestion }
-            val combined = buildCombinedQuery(newChips, typedSuffix)
-            copy(selectedChips = newChips, searchText = combined)
-        }
-    }
-
-    private fun buildCombinedQuery(chips: List<SearchSuggestion>, typed: String): String {
-        val base = chips.joinToString(" ") { it.text }.trim()
-        return when {
-            base.isNotEmpty() && typed.isNotBlank() -> "$base ${typed.trim()}"
-            base.isNotEmpty() -> base
-            else -> typed
+            val newChips = selectedSuggestionList.filterNot { it == suggestion }
+            copy(selectedSuggestionList = newChips)
         }
     }
 

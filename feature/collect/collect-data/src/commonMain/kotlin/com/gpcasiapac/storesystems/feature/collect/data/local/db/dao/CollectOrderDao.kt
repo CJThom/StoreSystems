@@ -12,7 +12,6 @@ import com.gpcasiapac.storesystems.feature.collect.data.local.db.entity.CollectO
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.CollectOrderWithCustomerWithLineItemsRelation
 import com.gpcasiapac.storesystems.feature.collect.data.local.db.relation.WorkOrderWithOrderWithCustomersWithLineItemsRelation
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CustomerType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
 import kotlinx.coroutines.flow.Flow
 
@@ -29,14 +28,7 @@ interface CollectOrderDao {
     suspend fun insertOrReplaceCollectOrderLineItemEntityList(collectOrderLineItemEntityList: List<CollectOrderLineItemEntity>)
 
     @Query("SELECT COUNT(*) FROM collect_orders")
-    suspend fun getCount(): Int
-
-    @Query("SELECT COUNT(*) FROM collect_orders")
     fun observeCount(): Flow<Int>
-
-    @Transaction
-    @Query("SELECT * FROM collect_orders ORDER BY created_date_time DESC")
-    fun getCollectOrderWithCustomerWithLineItemsRelationListFlow(): Flow<List<CollectOrderWithCustomerWithLineItemsRelation>>
 
     @Transaction
     @Query("SELECT * FROM collect_orders ORDER BY created_date_time DESC")
@@ -88,15 +80,37 @@ interface CollectOrderDao {
     )
     fun observeOrdersForSearch(q: String): Flow<List<CollectOrderWithCustomerRelation>>
 
+    // Search list with optional text and required invoice scope
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM collect_orders
+        WHERE (:q IS NULL OR (
+          invoice_number LIKE :q ESCAPE '!' COLLATE NOCASE OR
+          (web_order_number IS NOT NULL AND web_order_number LIKE :q ESCAPE '!'
+            COLLATE NOCASE) OR
+          (order_number IS NOT NULL AND order_number LIKE :q ESCAPE '!'
+            COLLATE NOCASE) OR
+          invoice_number IN (
+             SELECT invoice_number FROM collect_order_customers WHERE (
+               (name IS NOT NULL AND name LIKE :q ESCAPE '!' COLLATE NOCASE)
+               OR (phone IS NOT NULL AND phone LIKE :q ESCAPE '!' COLLATE NOCASE)
+             )
+          )
+        ))
+        AND invoice_number IN (:invoiceScope)
+        ORDER BY created_date_time DESC
+        """
+    )
+    fun observeOrdersForSearchScoped(
+        q: String?,
+        invoiceScope: Set<String>,
+    ): Flow<List<CollectOrderWithCustomerRelation>>
+
 
     @Transaction
     @Query("SELECT * FROM collect_orders where invoice_number = :invoiceNumber")
     fun getCollectOrderWithCustomerWithLineItemsRelationFlow(invoiceNumber: InvoiceNumber): Flow<CollectOrderWithCustomerWithLineItemsRelation>
-
-    @Transaction
-    @Query("SELECT * FROM work_orders where work_order_id = :workOrderId")
-    fun getWorkOrderWithOrderWithCustomersWithLineItemsRelationFlow(workOrderId: WorkOrderId): Flow<WorkOrderWithOrderWithCustomersWithLineItemsRelation?>
-
 
     // ---- Suggestions (prefix) ----
     @Query(
@@ -128,16 +142,6 @@ interface CollectOrderDao {
     )
     suspend fun getSalesOrderSuggestionsPrefix(prefix: String, limit: Int): List<String>
 
-    @Query(
-        """
-        SELECT DISTINCT name AS name
-        FROM collect_order_customers
-        WHERE name IS NOT NULL AND name LIKE :prefix ESCAPE '!' COLLATE NOCASE
-        LIMIT :limit
-        """
-    )
-    suspend fun getCustomerNameSuggestionsPrefix(prefix: String, limit: Int): List<CustomerNameRow>
-
     // New: fetch all distinct customer names (for initial expanded state with empty query)
     @Query(
         """
@@ -150,8 +154,6 @@ interface CollectOrderDao {
     )
     suspend fun getAllCustomerNames(limit: Int): List<CustomerNameRow>
 
-    data class CustomerNameRow(val name: String)
-
     @Query(
         """
         SELECT DISTINCT phone FROM collect_order_customers
@@ -161,7 +163,135 @@ interface CollectOrderDao {
     )
     suspend fun getPhoneSuggestionsPrefix(prefix: String, limit: Int): List<String>
 
+    @Query(
+        """
+        SELECT DISTINCT name AS name, customer_type AS customerType
+        FROM collect_order_customers
+        WHERE name IS NOT NULL AND name LIKE :prefix ESCAPE '!' COLLATE NOCASE
+        ORDER BY name COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    suspend fun getCustomerNameSuggestionsPrefixWithType(
+        prefix: String,
+        limit: Int,
+    ): List<CustomerNameRowWithType>
+
+    @Query(
+        """
+        SELECT DISTINCT name AS name, customer_type AS customerType
+        FROM collect_order_customers
+        WHERE name IS NOT NULL AND name LIKE :prefix ESCAPE '!' COLLATE NOCASE
+          AND invoice_number IN (:invoiceScope)
+        ORDER BY name COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    suspend fun getCustomerNameSuggestionsPrefixScoped(
+        prefix: String,
+        invoiceScope: Set<String>,
+        limit: Int,
+    ): List<CustomerNameRowWithType>
+
+    @Query(
+        """
+        SELECT invoice_number FROM collect_orders
+        WHERE invoice_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
+          AND invoice_number IN (:invoiceScope)
+        LIMIT :limit
+        """
+    )
+    suspend fun getInvoiceSuggestionsPrefixScoped(
+        prefix: String,
+        invoiceScope: Set<String>,
+        limit: Int,
+    ): List<String>
+
+    @Query(
+        """
+        SELECT web_order_number FROM collect_orders
+        WHERE web_order_number IS NOT NULL AND web_order_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
+          AND invoice_number IN (:invoiceScope)
+        LIMIT :limit
+        """
+    )
+    suspend fun getWebOrderSuggestionsPrefixScoped(
+        prefix: String,
+        invoiceScope: Set<String>,
+        limit: Int,
+    ): List<String>
+
+    @Query(
+        """
+        SELECT order_number FROM collect_orders
+        WHERE order_number IS NOT NULL AND order_number LIKE :prefix ESCAPE '!' COLLATE NOCASE
+          AND invoice_number IN (:invoiceScope)
+        LIMIT :limit
+        """
+    )
+    suspend fun getSalesOrderSuggestionsPrefixScoped(
+        prefix: String,
+        invoiceScope: Set<String>,
+        limit: Int,
+    ): List<String>
+
+    @Query(
+        """
+        SELECT DISTINCT phone FROM collect_order_customers
+        WHERE phone IS NOT NULL AND phone LIKE :prefix ESCAPE '!'
+          AND invoice_number IN (:invoiceScope)
+        LIMIT :limit
+        """
+    )
+    suspend fun getPhoneSuggestionsPrefixScoped(
+        prefix: String,
+        invoiceScope: Set<String>,
+        limit: Int,
+    ): List<String>
+
+    @Query(
+        """
+        SELECT name AS name, customer_type AS customerType, COUNT(*) as c
+        FROM collect_order_customers
+        WHERE name IS NOT NULL AND TRIM(name) <> ''
+        GROUP BY name, customer_type
+        ORDER BY c DESC, name COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getTopCustomers(limit: Int): List<CustomerWithCountRow>
+
+    @Query(
+        """
+        SELECT name AS name, customer_type AS customerType, COUNT(*) as c
+        FROM collect_order_customers
+        WHERE name IS NOT NULL AND TRIM(name) <> ''
+          AND invoice_number IN (:invoiceScope)
+        GROUP BY name, customer_type
+        ORDER BY c DESC, name COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getTopCustomersScoped(
+        invoiceScope: Set<String>,
+        limit: Int,
+    ): List<CustomerWithCountRow>
+
+    // Map suggestion -> invoice numbers (for chip scoping)
+    @Query("SELECT invoice_number FROM collect_order_customers WHERE name = :name")
+    suspend fun getInvoiceNumbersByCustomerName(name: String): List<String>
+
+    @Query("SELECT invoice_number FROM collect_orders WHERE web_order_number = :web")
+    suspend fun getInvoiceNumbersByWebOrder(web: String): List<String>
+
+    @Query("SELECT invoice_number FROM collect_orders WHERE order_number = :so")
+    suspend fun getInvoiceNumbersByOrderNumber(so: String): List<String>
+
+    @Query("SELECT invoice_number FROM collect_order_customers WHERE phone = :phone")
+    suspend fun getInvoiceNumbersByPhone(phone: String): List<String>
+
     // Lightweight existence check for invoice (case-insensitive)
     @Query("SELECT EXISTS(SELECT 1 FROM collect_orders WHERE invoice_number = :invoiceNumber COLLATE NOCASE)")
     suspend fun existsInvoice(invoiceNumber: String): Boolean
 }
+

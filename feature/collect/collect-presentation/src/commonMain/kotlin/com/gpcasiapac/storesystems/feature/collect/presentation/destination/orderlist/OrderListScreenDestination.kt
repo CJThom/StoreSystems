@@ -33,13 +33,13 @@ fun OrderListScreenDestination(
 
     OrderListScreen(
         state = orderListScreenViewModel.viewState.collectAsState().value,
-        searchState = searchViewModel.viewState.collectAsState().value,
         onEventSent = { event -> orderListScreenViewModel.setEvent(event) },
-        onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderListScreenViewModel.effect,
         onOutcome = onOutcome,
+        searchState = searchViewModel.viewState.collectAsState().value,
+        onSearchEventSent = { event -> searchViewModel.setEvent(event) },
+        searchEffectFlow = searchViewModel.effect,
         soundPlayer = soundPlayer,
         hapticPerformer = hapticPerformer,
-        searchEffectFlow = searchViewModel.effect,
     )
 }

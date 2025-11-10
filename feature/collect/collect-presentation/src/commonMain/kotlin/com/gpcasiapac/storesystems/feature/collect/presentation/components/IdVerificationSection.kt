@@ -12,108 +12,76 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderRole
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract
 import com.gpcasiapac.storesystems.foundation.component.HeaderSmall
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 
 @Composable
-fun IdVerificationSection(
-    selected: OrderFulfilmentScreenContract.IdVerificationOption?,
-    onSelected: (OrderFulfilmentScreenContract.IdVerificationOption) -> Unit,
-    otherText: String,
-    onOtherTextChange: (String) -> Unit,
+fun IdVerification(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
 ) {
     Column(modifier = modifier) {
         HeaderSmall(
             text = "ID Verification",
-            //contentPadding = contentPadding
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+                bottom = Dimens.Space.medium
+            )
         )
-
         Column(
             modifier = Modifier
-                .selectableGroup()
                 .padding(
                     start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
                     end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
                 ),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)
         ) {
-            IdOptionRow(
-                selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE,
-                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE) },
-                label = { Text("Driver's license", style = MaterialTheme.typography.bodyLarge) }
+            CheckboxRow(
+                checked = checked,
+                onCheckedChange = { onCheckedChange(!checked) },
+                text = "I have verified customer's ID"
             )
-            IdOptionRow(
-                selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT,
-                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT) },
-                label = { Text("Passport", style = MaterialTheme.typography.bodyLarge) }
-            )
-            IdOptionRow(
-                selected = selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
-                onClick = { onSelected(OrderFulfilmentScreenContract.IdVerificationOption.OTHER) },
-                label = { Text("Other", style = MaterialTheme.typography.bodyLarge) }
-            )
-
-            AnimatedVisibility(
-                visible = selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                OutlinedTextField(
-                    value = otherText,
-                    onValueChange = onOtherTextChange,
-                    singleLine = true,
-                    label = { Text("Specify ID") },
-                    modifier = Modifier                        .fillMaxWidth()
-                )
-            }
         }
     }
 }
 
+
 @Composable
-fun IdOptionRow(
-    selected: Boolean,
-    onClick: () -> Unit,
+fun CheckboxRow(
+    text: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
-    label: @Composable () -> Unit,
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.RadioButton
+                selected = checked,
+                onClick = { onCheckedChange(!checked) },
+                role = Role.Checkbox
             ),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        color = if (checked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.medium,
-        border = MaterialTheme.borderStroke(role = if (selected) BorderRole.Selected else BorderRole.Variant),
+        border = MaterialTheme.borderStroke(role = if (checked) BorderRole.Selected else BorderRole.Variant),
         tonalElevation = 0.dp
     ) {
         Row(
@@ -122,42 +90,38 @@ fun IdOptionRow(
                 .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RadioButton(
-                selected = selected,
-                onClick = null // null for accessibility; row handles clicks
+            Checkbox(
+                checked = checked,
+                onCheckedChange = null // null for accessibility; row handles clicks
             )
             Spacer(modifier = Modifier.width(Dimens.Space.medium))
-            label()
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }
 
 // ---- Previews ----
-private data class IdVerificationPreviewData(
-    val selected: OrderFulfilmentScreenContract.IdVerificationOption?,
-    val otherText: String = ""
-)
-
-private class IdVerificationPreviewProvider : PreviewParameterProvider<IdVerificationPreviewData> {
-    override val values: Sequence<IdVerificationPreviewData> = sequenceOf(
-        IdVerificationPreviewData(null),
-        IdVerificationPreviewData(OrderFulfilmentScreenContract.IdVerificationOption.DRIVERS_LICENSE),
-        IdVerificationPreviewData(OrderFulfilmentScreenContract.IdVerificationOption.PASSPORT),
-        IdVerificationPreviewData(OrderFulfilmentScreenContract.IdVerificationOption.OTHER),
-    )
+@Preview(showBackground = true)
+@Composable
+private fun IdVerificationPreviewChecked() {
+    GPCTheme {
+        IdVerification(
+            checked = true,
+            onCheckedChange = {}
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun IdVerificationSectionPreview(
-    @PreviewParameter(IdVerificationPreviewProvider::class) data: IdVerificationPreviewData
-) {
+private fun IdVerificationPreviewUnchecked() {
     GPCTheme {
-        IdVerificationSection(
-            selected = data.selected,
-            onSelected = {},
-            otherText = if (data.selected == OrderFulfilmentScreenContract.IdVerificationOption.OTHER) "Some ID" else "",
-            onOtherTextChange = {}
+        IdVerification(
+            checked = false,
+            onCheckedChange = {}
         )
     }
 }

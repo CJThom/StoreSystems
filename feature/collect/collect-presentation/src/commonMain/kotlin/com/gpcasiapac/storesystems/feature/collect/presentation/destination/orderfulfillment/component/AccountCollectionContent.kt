@@ -2,7 +2,9 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -30,9 +32,14 @@ internal fun AccountCollectionContent(
     representatives: List<Representative>,
     selectedRepresentativeIds: Set<String>,
     onRepresentativeSelected: (id: String, isSelected: Boolean) -> Unit,
-    isLoading: Boolean = false
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)) {
+    Column(
+        modifier = modifier.padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+    ) {
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
@@ -52,7 +59,12 @@ internal fun AccountCollectionContent(
             CheckboxCard(
                 isCheckable = true,
                 isChecked = selectedRepresentativeIds.contains(representative.id),
-                onClick = { onRepresentativeSelected(representative.id, !selectedRepresentativeIds.contains(representative.id)) },
+                onClick = {
+                    onRepresentativeSelected(
+                        representative.id,
+                        !selectedRepresentativeIds.contains(representative.id)
+                    )
+                },
                 onCheckedChange = { isChecked ->
                     onRepresentativeSelected(representative.id, isChecked)
                 }
@@ -84,7 +96,12 @@ private fun AccountCollectionContentPreview() {
             AccountCollectionContent(
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
-                representatives = sampleRepresentatives.filter { it.name.contains(searchQuery, ignoreCase = true) },
+                representatives = sampleRepresentatives.filter {
+                    it.name.contains(
+                        searchQuery,
+                        ignoreCase = true
+                    )
+                },
                 selectedRepresentativeIds = selectedIds,
                 onRepresentativeSelected = { id, isSelected ->
                     selectedIds = if (isSelected) {
