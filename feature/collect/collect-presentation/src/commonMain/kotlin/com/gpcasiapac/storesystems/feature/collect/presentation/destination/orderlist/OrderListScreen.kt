@@ -32,12 +32,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,8 +62,6 @@ import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orde
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.ToolbarFabContainer
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchComponent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.GPCLogoTitle
@@ -76,7 +72,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.koin.compose.viewmodel.koinViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -96,9 +91,6 @@ fun OrderListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
-
-    // Search bar state management
-    // val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
 
     val lazyGridState = rememberLazyGridState()
     val stickyHeaderScrollBehavior = StickyBarDefaults.liftOnScrollBehavior(
@@ -203,7 +195,6 @@ fun OrderListScreen(
         }
     }
 
-
     LaunchedEffect(searchEffectFlow) {
         searchEffectFlow?.collectLatest { effect ->
             when (effect) {
@@ -220,7 +211,6 @@ fun OrderListScreen(
             }
         }
     }
-
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,

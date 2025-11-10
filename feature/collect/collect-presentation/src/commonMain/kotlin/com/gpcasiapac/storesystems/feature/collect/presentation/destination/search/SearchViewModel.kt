@@ -1,12 +1,7 @@
 package com.gpcasiapac.storesystems.feature.collect.presentation.destination.search
 
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
-import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper.Text
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -23,11 +18,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrde
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.Selection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
 import kotlinx.coroutines.delay
@@ -97,6 +89,15 @@ class SearchViewModel(
             is SearchContract.Event.OnAcceptMultiSelectClicked -> {
                 setEffect { SearchContract.Effect.Outcome.RequestConfirmationDialog }
             }
+
+            is SearchContract.Event.OnOrderClicked -> {
+                viewModelScope.launch {
+                    handleClearSearch()
+                    setEffect { SearchContract.Effect.CollapseSearchBar }
+                    delay(250) // TODO: use common timer
+                    setEffect { SearchContract.Effect.Outcome.OrderClicked(event.invoiceNumber) }
+                }
+            }
         }
     }
 
@@ -132,8 +133,6 @@ class SearchViewModel(
 
     // Search results pipeline: immediate reset on blank, debounced for non-blank
     private suspend fun observeSearchResults() {
-
-        //  val textFlow = snapshotFlow { viewState.value.query.text.toString() }
 
         val queryFlow: Flow<SearchQuery> = QueryFlow.build(
             input = viewState.map { state ->
@@ -187,14 +186,11 @@ class SearchViewModel(
                     is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
-            // onRequestConfirmDialog = { setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() } },
-            // onConfirmProceed = null
         )
 
     }
 
     private fun handleSearchClicked() {
-
 
     }
 
@@ -215,8 +211,6 @@ class SearchViewModel(
     private fun handleClearSearch() {
         setState {
             copy(
-
-                //  query = query.apply { setTextAndPlaceCursorAtEnd("") },
                 selectedSuggestionList = emptyList(),
             )
         }
@@ -239,13 +233,6 @@ class SearchViewModel(
     private fun handleSearchResultClicked(result: InvoiceNumber) {
         setEffect { SearchContract.Effect.SetQueryField(result.value) }
     }
-
-    // ---------------- Selection handling ----------------
-//    private fun handleConfirmSelection() {
-//        // Show dialog; actual commit happens based on user choice
-//        setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() }
-//    }
-
 
     private fun handleRemoveSuggestion(suggestion: SearchSuggestion) {
         setState {

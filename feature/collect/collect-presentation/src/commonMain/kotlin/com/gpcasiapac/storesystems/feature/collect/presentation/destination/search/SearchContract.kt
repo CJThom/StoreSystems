@@ -55,6 +55,8 @@ object SearchContract {
 
         data object OnAcceptMultiSelectClicked : Event
 
+        data class OnOrderClicked(val invoiceNumber: InvoiceNumber) : Event
+
         // Shared selection wrapper (replaces per-screen selection events)
         data class Selection(val event: SelectionContract.Event<InvoiceNumber>) : Event
     }
@@ -71,13 +73,5 @@ object SearchContract {
             data object RequestConfirmationDialog : Outcome
             data object Back : Outcome
         }
-
-        // Multi-select confirmation dialog trigger for search
-//        data class ShowMultiSelectConfirmDialog(
-//            val title: String = "Confirm selection",
-//            val cancelLabel: String = "Cancel",
-//            val selectOnlyLabel: String = "Select only",
-//            val proceedLabel: String = "Select and proceed",
-//        ) : Effect
     }
 }

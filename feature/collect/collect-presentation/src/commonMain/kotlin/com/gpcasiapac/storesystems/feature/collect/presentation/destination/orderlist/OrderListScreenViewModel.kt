@@ -23,7 +23,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetColle
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
-
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderClicked
@@ -247,7 +246,6 @@ class OrderListScreenViewModel(
         }
     }
 
-
     private suspend fun handleDraftBarDeleteClicked() {
         val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return
         deleteWorkOrderUseCase(workOrderId = workOrderId)
@@ -346,46 +344,8 @@ class OrderListScreenViewModel(
                     is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
-
-//            onRequestConfirmDialog = {
-//                setState {
-//                    copy(
-//                        dialog = OrderListScreenContract.Dialog.SearchMultiSelectConfirm(
-//                            onProceed = DialogButton(
-//                                label = StringWrapper.Text("Select and proceed"),
-//                                action = {
-//                                    setEvent(
-//                                        OrderListScreenContract.Event.Selection(
-//                                            SelectionContract.Event.ConfirmProceed
-//                                        )
-//                                    )
-//                                }
-//                            ),
-//                            onSelect = DialogButton(
-//                                label = StringWrapper.Text("Select only"),
-//                                action = {
-//                                    setEvent(
-//                                        OrderListScreenContract.Event.Selection(
-//                                            SelectionContract.Event.ConfirmStay
-//                                        )
-//                                    )
-//                                }
-//                            ),
-//                            onCancel = DialogButton(
-//                                label = StringWrapper.Text("Cancel"),
-//                                action = { setState { copy(dialog = null) } }
-//                            )
-//                        )
-//                    )
-//                }
-//                //  setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
-//            },
-//            onConfirmProceed = {
-//                setEffect { OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment }
-//            }
         )
     }
-
 
     private fun handleToggleCustomerType(type: CustomerType, checked: Boolean) {
         setState {

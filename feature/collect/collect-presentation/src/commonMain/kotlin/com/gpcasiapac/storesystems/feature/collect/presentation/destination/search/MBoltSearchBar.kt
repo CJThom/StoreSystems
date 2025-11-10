@@ -275,7 +275,9 @@ fun SearchComponent(
                 selectedOrderIdList = state.selection.selected,
                 isSelectAllChecked = state.selection.isAllSelected,
                 isRefreshing = false, // TODO
-                onOpenOrder = { /* onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(it)) */ },
+                onOpenOrder = {
+                    onEventSent(SearchContract.Event.OnOrderClicked(it))
+                },
                 onCheckedChange = { orderId, checked ->
                     onEventSent(
                         SearchContract.Event.Selection(
