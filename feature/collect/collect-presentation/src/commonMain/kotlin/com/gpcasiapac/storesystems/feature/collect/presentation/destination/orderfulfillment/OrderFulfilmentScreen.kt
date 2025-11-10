@@ -54,6 +54,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.window.core.layout.WindowSizeClass
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
@@ -109,11 +114,19 @@ fun OrderFulfilmentScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Requesters to bring the CONFIRM button into view and optionally request focus
+    val confirmBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val confirmFocusRequester = remember { FocusRequester() }
+
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
         mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null)
     }
 
+    // Notify ViewModel that the screen is visible so it can flush one-shot effects
+    LaunchedEffect(Unit) {
+        onEventSent(OrderFulfilmentScreenContract.Event.ScreenVisible)
+    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -133,6 +146,12 @@ fun OrderFulfilmentScreen(
 
                 is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
                     hapticPerformer?.perform(effect.type)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.RevealConfirmCta -> {
+                    // When VM asks to reveal the CONFIRM CTA, scroll it into view and try focus
+                    confirmBringIntoViewRequester.bringIntoView()
+                    confirmFocusRequester.requestFocus()
                 }
 
                 is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
@@ -365,7 +384,10 @@ fun OrderFulfilmentScreen(
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
                 ActionButton(
-                    modifier = Modifier.padding(Dimens.Space.medium),
+                    modifier = Modifier
+                        .bringIntoViewRequester(confirmBringIntoViewRequester)
+                        .focusRequester(confirmFocusRequester)
+                        .padding(Dimens.Space.medium),
                     title = {
                         if (state.isProcessing) {
                             androidx.compose.material3.CircularProgressIndicator(

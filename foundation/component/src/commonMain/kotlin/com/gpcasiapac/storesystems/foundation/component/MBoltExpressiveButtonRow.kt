@@ -30,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -57,6 +59,8 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltExpressiveButtonRow(
     selectionMapper: (T) -> R,
     equals: (T, R?) -> Boolean = { a, b -> a == b },
 ) {
+    val haptics = LocalHapticFeedback.current
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
@@ -66,6 +70,7 @@ fun <T : MBoltSegmentedRowOptionDisplayParam, R> MBoltExpressiveButtonRow(
                 checked = equals(option, selected),
                 onCheckedChange = { checked ->
                     if (checked) {
+                        haptics.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         val selectedOption = selectionMapper(option)
                         onValueChange(selectedOption)
                     }

@@ -86,6 +86,10 @@ class OrderFulfilmentScreenViewModel(
     // Shared keyed debouncer for persisting user edits
     private val debouncer = Debouncer(viewModelScope)
 
+    // Visibility gate for one-shot effects
+    private var isScreenVisible: Boolean = false
+    private var pendingRevealConfirmCta: Boolean = false
+
     // Shared WorkOrderId flow to drive all downstream observations (Option B)
     private val workOrderIdFlow by lazy {
         sessionState
@@ -204,6 +208,15 @@ class OrderFulfilmentScreenViewModel(
 
             is OrderFulfilmentScreenContract.Event.Back -> {
                 setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Back }
+            }
+
+            // Lifecycle/visibility
+            is OrderFulfilmentScreenContract.Event.ScreenVisible -> {
+                isScreenVisible = true
+                if (pendingRevealConfirmCta && viewState.value.signatureBase64 != null) {
+                    pendingRevealConfirmCta = false
+                    setEffect { OrderFulfilmentScreenContract.Effect.RevealConfirmCta }
+                }
             }
 
             // Collecting selector
@@ -534,12 +547,22 @@ class OrderFulfilmentScreenViewModel(
         workOrderIdFlow
             .flatMapLatest { id -> observeWorkOrderSignatureUseCase(id) }
             .collectLatest { signature ->
+                val hadSignature = viewState.value.signatureBase64 != null
+                val newSignatureBase64 = signature?.signatureBase64
                 setState {
                     copy(
-                        signatureBase64 = signature?.signatureBase64,
+                        signatureBase64 = newSignatureBase64,
                         signerName = signature?.signedByName,
                         signedDateTime = signature?.signedAt
                     )
+                }
+                val hasSignatureNow = newSignatureBase64 != null
+                if (!hadSignature && hasSignatureNow) {
+                    if (isScreenVisible) {
+                        setEffect { OrderFulfilmentScreenContract.Effect.RevealConfirmCta }
+                    } else {
+                        pendingRevealConfirmCta = true
+                    }
                 }
             }
     }
@@ -695,7 +718,9 @@ class OrderFulfilmentScreenViewModel(
 
     private fun onSignatureSaved(strokes: List<List<Offset>>) {
         setState { copy(signatureStrokes = strokes) }
+        // Show a confirmation toast/snackbar
         setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Signature saved") }
+        // Do not emit RevealConfirmCta here; we will emit it from observeSignature()
     }
 
     private fun clearSignature() {

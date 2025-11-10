@@ -107,6 +107,9 @@ object OrderFulfilmentScreenContract {
 
         // Signature
         data object Sign : Event
+        
+        // Lifecycle/visibility signals
+        data object ScreenVisible : Event
 
         // Customer name dialog flow
         data object ShowCustomerNameDialog : Event
@@ -162,6 +165,9 @@ object OrderFulfilmentScreenContract {
             Effect
 
         data class PlayHaptic(val type: HapticEffect) : Effect
+
+        // One-shot to reveal the CONFIRM CTA (scroll/focus) when returning from signature
+        data object RevealConfirmCta : Effect
 
         data object ConfirmSearchSelection : Effect
         data object CancelSearchSelection : Effect
