@@ -11,15 +11,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.PauseCircleOutline
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.NearbyError
 import androidx.compose.material.icons.outlined.SystemSecurityUpdateWarning
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -31,71 +40,38 @@ import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import com.gpcasiapac.storesystems.foundation.design_system.extendedColorScheme
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HistoryStatusIcon(
     status: HistoryStatus,
     modifier: Modifier = Modifier,
-    isOutline: Boolean = false
 ) {
     val backgroundColor = when (status) {
         HistoryStatus.PENDING -> MaterialTheme.colorScheme.tertiary
         HistoryStatus.IN_PROGRESS -> MaterialTheme.colorScheme.primary
-        HistoryStatus.COMPLETED -> Color(0XFF097969)//MaterialTheme.extendedColorScheme.success //(06/11/25) Success uses territory need to update?.
+        HistoryStatus.COMPLETED -> MaterialTheme.extendedColorScheme.success
         HistoryStatus.FAILED -> MaterialTheme.colorScheme.onErrorContainer
         HistoryStatus.RETRYING -> MaterialTheme.colorScheme.secondary
         HistoryStatus.REQUIRES_ACTION -> MaterialTheme.colorScheme.error
     }
 
     val icon = when (status) {
-        HistoryStatus.PENDING -> Icons.Default.HourglassEmpty
+        HistoryStatus.PENDING -> Icons.Default.PauseCircleOutline
         HistoryStatus.IN_PROGRESS -> Icons.Default.Refresh
-        HistoryStatus.COMPLETED -> Icons.Default.Check
-        HistoryStatus.FAILED -> Icons.Default.Close
+        HistoryStatus.COMPLETED -> Icons.Default.CheckCircleOutline
+        HistoryStatus.FAILED -> Icons.Outlined.Cancel
         HistoryStatus.RETRYING -> Icons.Default.Refresh
-        HistoryStatus.REQUIRES_ACTION -> Icons.Outlined.Error
+        HistoryStatus.REQUIRES_ACTION -> Icons.Default.ErrorOutline
 
     }
-    Box(
-        modifier = modifier
-            .size(Dimens.Size.iconMedium)
-            .let {
-                if (isOutline) it.border(Dimens.Stroke.normal, backgroundColor, CircleShape)
-                else it.background(backgroundColor, CircleShape)
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = status.name,
-            tint = if(isOutline) backgroundColor else MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(Dimens.Size.iconSmall)
-        )
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-private fun HistoryStatusIconColoredPreviewAll() {
-    GPCTheme {
-        Surface {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HistoryStatusIcon(status = HistoryStatus.PENDING, isOutline = true)
-                HistoryStatusIcon(status = HistoryStatus.IN_PROGRESS, isOutline = true)
-                HistoryStatusIcon(status = HistoryStatus.COMPLETED, isOutline = true)
-                HistoryStatusIcon(status = HistoryStatus.FAILED, isOutline = true)
-                HistoryStatusIcon(status = HistoryStatus.RETRYING, isOutline = true)
-                HistoryStatusIcon(status = HistoryStatus.REQUIRES_ACTION, isOutline = true)
-            }
-        }
-    }
+    Icon(
+        modifier = modifier,
+        imageVector = icon,
+        contentDescription = status.name,
+        tint = backgroundColor
+    )
 }
 
 

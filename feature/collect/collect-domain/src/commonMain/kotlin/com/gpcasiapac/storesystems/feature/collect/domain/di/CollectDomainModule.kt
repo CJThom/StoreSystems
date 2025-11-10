@@ -92,7 +92,7 @@ val collectDomainModule = module {
 
     factoryOf(::GetWorkOrderItemsSnapshotUseCase)
     // Register Collect feature's SyncHandler(s)
-    factory<SyncHandler> { SubmitOrderSyncHandler(get()) }
+    factory<SyncHandler> { SubmitOrderSyncHandler(get(), get()) }
 }
 
 object CollectDomainModuleProvider : ModuleProvider {

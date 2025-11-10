@@ -27,6 +27,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.Validate
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
@@ -64,6 +65,7 @@ class OrderFulfilmentScreenViewModel(
     private val addScannedInputToWorkOrderUseCase: AddScannedInputToWorkOrderUseCase,
     private val validateScannedInvoiceInputUseCase: ValidateScannedInvoiceInputUseCase,
     private val submitOrderUseCase: SubmitOrderUseCase,
+    private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase
 ) : MVIViewModel<
@@ -634,15 +636,13 @@ class OrderFulfilmentScreenViewModel(
                 setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("No active work order", duration = SnackbarDuration.Long) }
                 return@launch
             }
-
             val result = submitOrderUseCase(workOrderId)
 
             setState { copy(isProcessing = false) }
 
             result.fold(
                 onSuccess = {
-                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Success) }
-                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Success) }
+                    //deleteWorkOrderUseCase(workOrderId)
                     setEffect {
                         OrderFulfilmentScreenContract.Effect.ShowSnackbar(
                             "Successfully queued ${viewState.value.collectOrderListItemStateList.size} order(s) for sync",
@@ -652,8 +652,6 @@ class OrderFulfilmentScreenViewModel(
                     setEffect { OrderFulfilmentScreenContract.Effect.Outcome.Confirmed }
                 },
                 onFailure = { e ->
-                    setEffect { OrderFulfilmentScreenContract.Effect.PlayHaptic(HapticEffect.Error) }
-                    setEffect { OrderFulfilmentScreenContract.Effect.PlaySound(SoundEffect.Error) }
                     setEffect {
                         OrderFulfilmentScreenContract.Effect.ShowSnackbar(
                             e.message ?: "Failed to queue orders",

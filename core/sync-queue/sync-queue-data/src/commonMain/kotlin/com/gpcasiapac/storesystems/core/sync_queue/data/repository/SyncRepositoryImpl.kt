@@ -9,10 +9,8 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.CollectTaskMetadataDao
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.SyncTaskDao
 import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
-import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toApiModel
-import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toApiModels
-import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toEntity
 import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toDomain
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toEntity
 import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,15 +25,21 @@ class SyncRepositoryImpl(
     private val collectTaskMetadataDao: CollectTaskMetadataDao
 ) : SyncRepository {
 
-    override suspend fun addTask(taskType: TaskType, taskId: String, priority: Int): Result<String> = runCatching {
+    override suspend fun addTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int
+    ): Result<String> = runCatching {
         val syncTaskId = UUID.randomUUID().toString()
         val now = Clock.System.now()
-        
+
         val task = SyncTaskEntity(
             id = syncTaskId,
             taskType = taskType.name,
             status = TaskStatus.PENDING.name,
             taskId = taskId,
+            submittedBy = "",
+            requestId = taskId,
             noOfAttempts = 0,
             maxAttempts = 3,
             priority = priority,
@@ -44,13 +48,18 @@ class SyncRepositoryImpl(
             lastAttemptTime = null,
             errorAttempts = null
         )
-        
+
         syncTaskDao.insertTask(task)
         syncTaskId
     }
 
-    override suspend fun getTasksByType(taskType: TaskType, status: TaskStatus, limit: Int): List<SyncTask> {
-        return syncTaskDao.getTasksByTypeAndStatus(taskType.name, status.name, limit).map { it.toDomain() }
+    override suspend fun getTasksByType(
+        taskType: TaskType,
+        status: TaskStatus,
+        limit: Int
+    ): List<SyncTask> {
+        return syncTaskDao.getTasksByTypeAndStatus(taskType.name, status.name, limit)
+            .map { it.toDomain() }
     }
 
     override suspend fun getNextPendingTask(): SyncTask? {
@@ -72,7 +81,7 @@ class SyncRepositoryImpl(
     ): Result<Unit> = runCatching {
         val now = Clock.System.now()
         val currentTask = syncTaskDao.getTaskById(taskId)
-        
+
         if (currentTask != null) {
             val newErrorAttemptsJson = if (errorAttempt != null) {
                 val currentErrors = parseErrorAttemptsFromJson(currentTask.errorAttempts)
@@ -81,30 +90,32 @@ class SyncRepositoryImpl(
             } else {
                 currentTask.errorAttempts
             }
-            
+
             val updatedTask = currentTask.copy(
                 status = status.name,
                 updatedTime = now,
                 errorAttempts = newErrorAttemptsJson
             )
-            
+
             syncTaskDao.updateTask(updatedTask)
         }
     }
-    
+
     private fun parseErrorAttemptsFromJson(json: String?): List<SyncTaskAttemptError> {
         if (json.isNullOrEmpty() || json == "[]") return emptyList()
-        
+
         return try {
             val items = mutableListOf<SyncTaskAttemptError>()
             val jsonArray = json.trim().removeSurrounding("[", "]")
-            
+
             if (jsonArray.isEmpty()) return emptyList()
-            
-            val itemRegex = """"attemptNumber":(\d+),"timestamp":(\d+),"errorMessage":"((?:[^"\\]|\\.)*)"""".toRegex()
+
+            val itemRegex =
+                """"attemptNumber":(\d+),"timestamp":(\d+),"errorMessage":"((?:[^"\\]|\\.)*)"""".toRegex()
             itemRegex.findAll(jsonArray).forEach { match ->
                 val attemptNumber = match.groupValues[1].toInt()
-                val timestamp = kotlin.time.Instant.fromEpochMilliseconds(match.groupValues[2].toLong())
+                val timestamp =
+                    kotlin.time.Instant.fromEpochMilliseconds(match.groupValues[2].toLong())
                 val errorMessage = match.groupValues[3].replace("\\\"", "\"")
                 items.add(SyncTaskAttemptError(attemptNumber, timestamp, errorMessage))
             }
@@ -113,12 +124,17 @@ class SyncRepositoryImpl(
             emptyList()
         }
     }
-    
+
     private fun convertErrorAttemptsToJson(errors: List<SyncTaskAttemptError>): String {
         if (errors.isEmpty()) return "[]"
-        
+
         val jsonItems = errors.joinToString(",") { error ->
-            """{"attemptNumber":${error.attemptNumber},"timestamp":${error.timestamp.toEpochMilliseconds()},"errorMessage":"${error.errorMessage.replace("\"", "\\\"")}"}"""
+            """{"attemptNumber":${error.attemptNumber},"timestamp":${error.timestamp.toEpochMilliseconds()},"errorMessage":"${
+                error.errorMessage.replace(
+                    "\"",
+                    "\\\""
+                )
+            }"}"""
         }
         return "[$jsonItems]"
     }
@@ -156,29 +172,40 @@ class SyncRepositoryImpl(
     override suspend fun getTasksByEntityId(entityId: String): List<SyncTask> {
         return syncTaskDao.getTasksByEntityId(entityId).map { it.toDomain() }
     }
-    
+
     override fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>> {
         return syncTaskDao.observeAllTasksWithCollectMetadata()
-            .map { entities -> entities.toApiModels() }
+            .map { entities -> entities.toDomain() }
     }
-    
-    override suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?> = runCatching {
-        syncTaskDao.getTaskWithCollectMetadata(taskId)?.toApiModel()
-    }
-    
+
+    override suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?> =
+        runCatching {
+            syncTaskDao.getTaskWithCollectMetadata(taskId)?.toDomain()
+        }
+
     override suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata> {
-        return syncTaskDao.getTasksWithCollectMetadataByEntityId(entityId).toApiModels()
+        return syncTaskDao.getTasksWithCollectMetadataByEntityId(entityId).toDomain()
     }
-    
+
+    override suspend fun observeTasksWithCollectMetadataByTaskIdFlow(entityId: String): Flow<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.observeTasksWithCollectMetadataByTaskIdFlow(entityId).map {
+            it.toDomain()
+        }
+    }
+
     override suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata> {
-        return syncTaskDao.getTasksByInvoiceNumber(invoiceNumber).toApiModels()
+        return syncTaskDao.getTasksByInvoiceNumber(invoiceNumber).toDomain()
     }
-    
+
     override suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata> {
-        return syncTaskDao.getTasksByCustomerNumber(customerNumber).toApiModels()
+        return syncTaskDao.getTasksByCustomerNumber(customerNumber).toDomain()
     }
-    
-    override suspend fun resetTaskForRetry(taskId: String, resetAttempts: Boolean, bumpMaxAttemptsBy: Int): Result<Unit> = runCatching {
+
+    override suspend fun resetTaskForRetry(
+        taskId: String,
+        resetAttempts: Boolean,
+        bumpMaxAttemptsBy: Int
+    ): Result<Unit> = runCatching {
         val now = Clock.System.now()
         val current = syncTaskDao.getTaskById(taskId) ?: return@runCatching
 
@@ -208,7 +235,7 @@ class SyncRepositoryImpl(
         }
         syncTaskDao.updateTask(updated)
     }
-    
+
     override suspend fun enqueueCollectTask(
         taskType: TaskType,
         taskId: String,
@@ -220,13 +247,15 @@ class SyncRepositoryImpl(
         require(metadata.isNotEmpty()) { "metadata cannot be empty" }
         val syncTaskId = UUID.randomUUID().toString()
         val now = Clock.System.now()
-        
+
         // Create sync task
         val task = SyncTaskEntity(
             id = syncTaskId,
             taskType = taskType.name,
             status = TaskStatus.PENDING.name,
             taskId = taskId,
+            submittedBy = submittedBy ?: "",
+            requestId = taskId,
             noOfAttempts = 0,
             maxAttempts = maxAttempts,
             priority = priority,
@@ -235,14 +264,14 @@ class SyncRepositoryImpl(
             lastAttemptTime = null,
             errorAttempts = null
         )
-        
+
         // Insert task
         syncTaskDao.insertTask(task)
-        
+
         // Insert all metadata rows with reference to task
         val metadataEntities = metadata.map { it.copy(syncTaskId = syncTaskId).toEntity() }
         collectTaskMetadataDao.insertAll(metadataEntities)
-        
+
         syncTaskId
     }
 }

@@ -83,6 +83,7 @@ class HistoryFeatureEntryImpl : HistoryFeatureEntry {
             }
 
             entry<HistoryFeatureDestination.HistoryDetails> { details ->
+                println("HistoryFeatureEntryImpl.registerEntries: details = $details")
                 HistoryDetailsScreenDestination(
                     type = details.type,
                     id = details.id,

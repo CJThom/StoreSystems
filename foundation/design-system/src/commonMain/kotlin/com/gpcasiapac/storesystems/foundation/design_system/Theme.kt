@@ -52,10 +52,10 @@ fun GPCTheme(
         )
 
         val extendedScheme = GpcExtendedColorScheme(
-            success = MaterialTheme.colorScheme.tertiary,
-            onSuccess = MaterialTheme.colorScheme.onTertiary,
-            successContainer = MaterialTheme.colorScheme.tertiaryContainer,
-            onSuccessContainer = MaterialTheme.colorScheme.onTertiaryContainer,
+            success = GpcSuccess,
+            onSuccess = GpcOnSuccess,
+            successContainer = GpcSuccessContainer,
+            onSuccessContainer = GpcOnSuccessContainer,
             info = MaterialTheme.colorScheme.secondary,
             onInfo = MaterialTheme.colorScheme.onSecondary,
             infoContainer = MaterialTheme.colorScheme.secondaryContainer,

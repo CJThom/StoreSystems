@@ -37,18 +37,18 @@ data class CollectTaskMetadataEntity(
     // Order fields
     @ColumnInfo(name = "invoice_number")
     val invoiceNumber: String,
-    
-    @ColumnInfo(name = "sales_order_number")
-    val salesOrderNumber: String,
-    
+
+    @ColumnInfo(name = "order_number")
+    val orderNumber: String,
+
     @ColumnInfo(name = "web_order_number")
     val webOrderNumber: String?,
     
     @ColumnInfo(name = "order_created_at")
-    val orderCreatedAt: Instant,
+    val createdDateTime: Instant,
     
     @ColumnInfo(name = "order_picked_at")
-    val orderPickedAt: Instant,
+    val invoiceDateTime: Instant,
     
     // Customer fields
     @ColumnInfo(name = "customer_number")
@@ -57,15 +57,9 @@ data class CollectTaskMetadataEntity(
     @ColumnInfo(name = "customer_type")
     val customerType: String, // "B2B" or "B2C"
     
-    @ColumnInfo(name = "account_name")
-    val accountName: String?,
-    
-    @ColumnInfo(name = "first_name")
-    val firstName: String?,
-    
-    @ColumnInfo(name = "last_name")
-    val lastName: String?,
-    
+    @ColumnInfo(name = "name")
+    val name: String,
+
     @ColumnInfo(name = "phone")
-    val phone: String?
+    val phone: String
 )

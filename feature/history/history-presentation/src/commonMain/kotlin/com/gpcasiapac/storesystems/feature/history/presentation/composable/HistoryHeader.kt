@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -32,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.kotlin.extension.toTimeAgoString
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.BorderRole
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
@@ -93,17 +96,18 @@ fun HistoryHeader(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     disabledContentColor = Color.Gray
                 ),
-                border = BorderStroke(
-                    Dimens.Stroke.normal,
-                    if (enabledRetry) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
+                border = MaterialTheme.borderStroke(
+                    role = BorderRole.Outline,
                 ),
-                shape = CircleShape,
+                modifier = Modifier.size(
+                    IconButtonDefaults.extraSmallContainerSize()
+                ),
                 onClick = onRetryClick
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "Retry",
-                    modifier = Modifier.size(Dimens.Size.iconSmall)
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
                 )
             }
         }

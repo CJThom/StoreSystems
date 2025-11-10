@@ -1,6 +1,7 @@
 package com.gpcasiapac.storesystems.feature.history.presentation.composable
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
@@ -39,6 +40,7 @@ fun CollectMetadataRowCardSkeleton(
         contentPadding = PaddingValues()
     ) {
         CollectOrderDetailsContent(
+            modifier = Modifier.fillMaxWidth(),
             customerName = "",
             customerType = CustomerTypeParam.B2C,
             invoiceNumber = "",

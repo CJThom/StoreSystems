@@ -4,7 +4,10 @@ import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
 import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
+import com.gpcasiapac.storesystems.feature.collect.domain.repository.CollectUserPrefsRepository
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.GetWorkOrderItemsSnapshotUseCase
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.lastOrNull
 import java.util.UUID
 
 /**
@@ -14,6 +17,8 @@ import java.util.UUID
 class SubmitOrderUseCase(
     private val syncQueueService: SyncQueueService,
     private val getWorkOrderItemsSnapshotUseCase: GetWorkOrderItemsSnapshotUseCase,
+    private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase
+
 ) {
     /**
      * Batch submit all items belonging to the Work Order.
@@ -33,22 +38,23 @@ class SubmitOrderUseCase(
 
                 // Order fields
                 invoiceNumber = order.invoiceNumber.value,
-                salesOrderNumber = order.orderNumber,
+                orderNumber = order.orderNumber,
                 webOrderNumber = order.webOrderNumber,
-                orderCreatedAt = order.createdDateTime,
-                orderPickedAt = order.invoiceDateTime,
+                createdDateTime = order.createdDateTime,
+                invoiceDateTime = order.invoiceDateTime,
 
                 // Customer fields
                 customerNumber = customer.number,
                 customerType = customer.customerType.name,
-                accountName = customer.name,
-                firstName = customer.name, //TODO Remove firstnmae and lastname.
-                lastName = "",
-                phone = customer.phone
+                name = customer.name,
+                phone = customer.phone.orEmpty()
             )
         }
-
-        val submittedBy = "Staff ID" //TODO Need to supply workday id.
+        val workOrderSnapshot =
+            observeCollectWorkOrderUseCase(workOrderId).firstOrNull() ?: return Result.failure(
+                IllegalStateException("Work order not found: $workOrderId")
+            )
+        val submittedBy = workOrderSnapshot.userId.value
 
         return syncQueueService.enqueueCollectTask(
             taskType = TaskType.COLLECT_SUBMIT_ORDER,

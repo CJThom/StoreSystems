@@ -6,16 +6,16 @@ import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTask
 /**
  * Map entity join result to API model.
  */
-fun SyncTaskWithCollectMetadataEntity.toApiModel(): SyncTaskWithCollectMetadata {
+fun SyncTaskWithCollectMetadataEntity.toDomain(): SyncTaskWithCollectMetadata {
     return SyncTaskWithCollectMetadata(
         task = task.toDomain(),
-        collectMetadata = metadata.map { it.toApiModel() }
+        collectMetadata = metadata.map { it.toDomain() }
     )
 }
 
 /**
  * Map list of entity joins to API models.
  */
-fun List<SyncTaskWithCollectMetadataEntity>.toApiModels(): List<SyncTaskWithCollectMetadata> {
-    return map { it.toApiModel() }
+fun List<SyncTaskWithCollectMetadataEntity>.toDomain(): List<SyncTaskWithCollectMetadata> {
+    return map { it.toDomain() }
 }

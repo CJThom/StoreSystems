@@ -62,7 +62,7 @@ private fun CollectHistoryItemCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val metadata = item.metadata.maxByOrNull { it.orderPickedAt } ?: item.metadata.firstOrNull()
+    val metadata = item.metadata.maxByOrNull { it.invoiceDateTime } ?: item.metadata.firstOrNull()
     if (metadata == null) return
 
     ListItemScaffold(

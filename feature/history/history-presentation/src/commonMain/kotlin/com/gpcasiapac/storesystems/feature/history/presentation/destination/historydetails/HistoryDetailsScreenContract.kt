@@ -21,6 +21,7 @@ object HistoryDetailsScreenContract {
     sealed interface Event : ViewEvent {
         data class Initialize(val type: HistoryType, val id: String) : Event
         data object Refresh : Event
+        data object Retry : Event
         data object Back : Event
     }
 

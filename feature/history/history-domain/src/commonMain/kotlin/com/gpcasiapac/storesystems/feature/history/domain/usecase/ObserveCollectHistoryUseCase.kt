@@ -23,15 +23,13 @@ class ObserveCollectHistoryUseCase(
                     val metadata = t.collectMetadata.map { cm ->
                         HistoryMetadata.CollectMetadata(
                             invoiceNumber = cm.invoiceNumber,
-                            salesOrderNumber = cm.salesOrderNumber,
+                            orderNumber = cm.orderNumber,
                             webOrderNumber = cm.webOrderNumber,
-                            orderCreatedAt = cm.orderCreatedAt,
-                            orderPickedAt = cm.orderPickedAt,
+                            createdDateTime = cm.createdDateTime,
+                            invoiceDateTime = cm.invoiceDateTime,
                             customerNumber = cm.customerNumber,
                             customerType = cm.customerType,
-                            accountName = cm.accountName,
-                            firstName = cm.firstName,
-                            lastName = cm.lastName,
+                            name = cm.name,
                             phone = cm.phone
                         )
                     }
@@ -43,6 +41,8 @@ class ObserveCollectHistoryUseCase(
                         attempts = t.task.noOfAttempts,
                         lastError = t.task.errorAttempts.lastOrNull()?.errorMessage,
                         priority = t.task.priority,
+                        submittedBy = t.task.submittedBy,
+                        requestId = t.task.requestId,
                         metadata = metadata
                     )
                 }

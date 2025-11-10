@@ -1,7 +1,7 @@
 package com.gpcasiapac.storesystems.feature.history.domain.model
 
-import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 /**
  * Sealed history item hierarchy. Each subtype represents a concrete history kind
@@ -22,7 +22,7 @@ sealed interface HistoryItem {
  * Collect-only history item. Enforces list of CollectMetadata.
  */
 @OptIn(ExperimentalTime::class)
-data class CollectHistoryItem(
+ data class CollectHistoryItem(
     override val id: String,
     override val entityId: String,
     override val status: HistoryStatus,
@@ -30,5 +30,7 @@ data class CollectHistoryItem(
     override val attempts: Int,
     override val lastError: String?,
     override val priority: Int,
+    val submittedBy: String?,
+    val requestId: String,
     val metadata: List<HistoryMetadata.CollectMetadata>
 ) : HistoryItem

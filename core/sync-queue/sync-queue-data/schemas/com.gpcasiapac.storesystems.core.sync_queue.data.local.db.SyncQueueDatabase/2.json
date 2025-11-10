@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "6a226da291d9c215e9c3da168f91b313",
+    "identityHash": "ae3c75018bad31706a5cd9e6dbe09ba9",
     "entities": [
       {
         "tableName": "sync_tasks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `task_type` TEXT NOT NULL, `status` TEXT NOT NULL, `task_id` TEXT NOT NULL, `no_of_attempts` INTEGER NOT NULL, `max_attempts` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `added_time` INTEGER NOT NULL, `updated_time` INTEGER NOT NULL, `last_attempt_time` INTEGER, `error_attempts` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `task_type` TEXT NOT NULL, `status` TEXT NOT NULL, `task_id` TEXT NOT NULL, `submitted_by` TEXT NOT NULL, `request_id` TEXT NOT NULL, `no_of_attempts` INTEGER NOT NULL, `max_attempts` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `added_time` INTEGER NOT NULL, `updated_time` INTEGER NOT NULL, `last_attempt_time` INTEGER, `error_attempts` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -29,6 +29,18 @@
           {
             "fieldPath": "taskId",
             "columnName": "task_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "submittedBy",
+            "columnName": "submitted_by",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requestId",
+            "columnName": "request_id",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -82,7 +94,7 @@
       },
       {
         "tableName": "collect_task_metadata",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sync_task_id` TEXT NOT NULL, `invoice_number` TEXT NOT NULL, `sales_order_number` TEXT NOT NULL, `web_order_number` TEXT, `order_created_at` INTEGER NOT NULL, `order_picked_at` INTEGER NOT NULL, `customer_number` TEXT NOT NULL, `customer_type` TEXT NOT NULL, `account_name` TEXT, `first_name` TEXT, `last_name` TEXT, `phone` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`sync_task_id`) REFERENCES `sync_tasks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sync_task_id` TEXT NOT NULL, `invoice_number` TEXT NOT NULL, `order_number` TEXT NOT NULL, `web_order_number` TEXT, `order_created_at` INTEGER NOT NULL, `order_picked_at` INTEGER NOT NULL, `customer_number` TEXT NOT NULL, `customer_type` TEXT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sync_task_id`) REFERENCES `sync_tasks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -103,8 +115,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "salesOrderNumber",
-            "columnName": "sales_order_number",
+            "fieldPath": "orderNumber",
+            "columnName": "order_number",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -114,13 +126,13 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "orderCreatedAt",
+            "fieldPath": "createdDateTime",
             "columnName": "order_created_at",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "orderPickedAt",
+            "fieldPath": "invoiceDateTime",
             "columnName": "order_picked_at",
             "affinity": "INTEGER",
             "notNull": true
@@ -138,24 +150,16 @@
             "notNull": true
           },
           {
-            "fieldPath": "accountName",
-            "columnName": "account_name",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "firstName",
-            "columnName": "first_name",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "lastName",
-            "columnName": "last_name",
-            "affinity": "TEXT"
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "phone",
             "columnName": "phone",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -192,7 +196,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6a226da291d9c215e9c3da168f91b313')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ae3c75018bad31706a5cd9e6dbe09ba9')"
     ]
   }
 }
