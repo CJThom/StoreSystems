@@ -212,10 +212,6 @@ fun OrderListScreen(
                     onEventSent(OrderListScreenContract.Event.OpenOrder(effect.invoiceNumber))
                 }
 
-                is SearchContract.Effect.Outcome.RequestNavigateToFulfillment -> {
-                    onEventSent(OrderListScreenContract.Event.NavigateToFulfilment)
-                }
-
                 is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {
                     onEventSent(OrderListScreenContract.Event.OnAcceptMultiSelectClicked(true))
                 }

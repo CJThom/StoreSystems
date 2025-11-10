@@ -69,7 +69,6 @@ object SearchContract {
         sealed interface Outcome : Effect {
             data class OrderClicked(val invoiceNumber: InvoiceNumber) : Outcome
             data object RequestConfirmationDialog : Outcome
-            data object RequestNavigateToFulfillment : Outcome
             data object Back : Outcome
         }
 

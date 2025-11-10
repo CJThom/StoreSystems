@@ -22,7 +22,8 @@ fun OrderFulfilmentScreenDestination(
 ) {
     // Collect scanner results: on scan, either auto-select into work order or navigate to details
     LaunchedEffect(Unit) {
-        Logger.withTag("OrderFulfilmentScreenDestination").i { "Starting scan collection for Fulfilment screen (autoSelect=$autoSelectOnScan)" }
+        Logger.withTag("OrderFulfilmentScreenDestination")
+            .i { "Starting scan collection for Fulfilment screen (autoSelect=$autoSelectOnScan)" }
         ScanEventsRegistry.provider?.invoke()?.collectLatest { scan ->
             orderFulfilmentScreenViewModel.setEvent(
                 OrderFulfilmentScreenContract.Event.ScanInvoice(scan.text, autoSelectOnScan)
@@ -35,11 +36,12 @@ fun OrderFulfilmentScreenDestination(
 
     OrderFulfilmentScreen(
         state = orderFulfilmentScreenViewModel.viewState.collectAsState().value,
-      //  searchState = searchViewModel.viewState.collectAsState().value,
         onEventSent = { event -> orderFulfilmentScreenViewModel.setEvent(event) },
-        onSearchEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = orderFulfilmentScreenViewModel.effect,
         onOutcome = onOutcome,
+        searchState = searchViewModel.viewState.collectAsState().value,
+        onSearchEventSent = { event -> searchViewModel.setEvent(event) },
+        searchEffectFlow = searchViewModel.effect,
         soundPlayer = soundPlayer,
         hapticPerformer = hapticPerformer,
     )

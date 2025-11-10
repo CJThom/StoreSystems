@@ -215,7 +215,6 @@ fun SearchComponent(
 
                 }
 
-                is SearchContract.Effect.Outcome.RequestNavigateToFulfillment -> {}
                 is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {}
             }
         }

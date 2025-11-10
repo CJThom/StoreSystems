@@ -86,6 +86,7 @@ class OrderFulfilmentScreenStateProvider :
                         isEnabled = true
                     )
                 ),
+                dialog = null
             )
 
             val singleB2C = base.copy(

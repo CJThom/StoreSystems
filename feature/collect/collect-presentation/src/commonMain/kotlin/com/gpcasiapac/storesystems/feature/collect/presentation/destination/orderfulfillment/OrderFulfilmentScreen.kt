@@ -70,6 +70,9 @@ import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchComponent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
@@ -95,36 +98,22 @@ import storesystems.feature.collect.collect_presentation.generated.resources.who
 @Composable
 fun OrderFulfilmentScreen(
     state: OrderFulfilmentScreenContract.State,
-    // searchState: SearchContract.State?,
     onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    onSearchEventSent: ((event: SearchContract.Event) -> Unit),
     effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
     onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
+    searchState: SearchContract.State,
+    onSearchEventSent: (SearchContract.Event) -> Unit,
+    searchEffectFlow: Flow<SearchContract.Effect>?,
     soundPlayer: SoundPlayer? = null,
     hapticPerformer: HapticPerformer? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val searchViewModel: SearchViewModel = koinViewModel()
+
     // Parent-driven confirm dialog for search selection (2-button)
     val selectionConfirmDialogSpec = remember {
         mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null)
     }
 
-    // Search bar state management for the expanded overlay
-//    val searchBarState = rememberSearchBarState(
-//        initialValue = SearchBarValue.Collapsed
-//    )
-
-    // Keep search bar animation in sync with SearchViewModel
-//    if (searchState != null) {
-//        LaunchedEffect(searchState.isSearchActive) {
-//            if (searchState.isSearchActive) {
-//                searchBarState.animateToExpanded()
-//            } else {
-//                searchBarState.animateToCollapsed()
-//            }
-//        }
-//    }
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -159,9 +148,35 @@ fun OrderFulfilmentScreen(
                 }
 
                 is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+
+                is OrderFulfilmentScreenContract.Effect.ConfirmSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Confirm))
+                }
+
+                is OrderFulfilmentScreenContract.Effect.CancelSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Cancel))
+                }
             }
         }
     }
+
+    LaunchedEffect(searchEffectFlow) {
+        searchEffectFlow?.collectLatest { effect ->
+            when (effect) {
+                is SearchContract.Effect.Outcome.Back -> {}
+                is SearchContract.Effect.Outcome.OrderClicked -> {
+                    //  onEventSent(OrderFulfilmentScreenContract.Event.OpenOrder(effect.invoiceNumber)) todo
+                }
+
+                is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {
+                    onEventSent(OrderFulfilmentScreenContract.Event.OnAcceptMultiSelectClicked(true))
+                }
+
+                else -> {}
+            }
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -201,13 +216,11 @@ fun OrderFulfilmentScreen(
                 )
             }
 
-            // Search bar (full span)
-            // Required hacky hiding to simulate 'Lookup' button expansion
-            //  if ((searchState != null && onSearchEventSent != null)) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                SearchDestination(
-                    placeholderText = "Search by Order #, Name, Phone",
-                    collapsedShape = CircleShape,
+                SearchComponent(
+                    state = searchState,
+                    onEventSent = onSearchEventSent,
+                    effectFlow = searchEffectFlow,
                     collapsedColors = SearchBarDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         inputFieldColors = SearchBarDefaults.inputFieldColors(
@@ -216,6 +229,8 @@ fun OrderFulfilmentScreen(
                             disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
                         )
                     ),
+                    collapsedShape = CircleShape,
+                    placeholderText = "Search by Order #, Name, Phone",
                     collapsedBorder = MaterialTheme.borderStroke(),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -378,32 +393,32 @@ fun OrderFulfilmentScreen(
         }
 
 
-        // Search selection confirmation dialog (parent-driven, 2-button)
-        val selectSpec = selectionConfirmDialogSpec.value
-        if (selectSpec != null) {
-            AlertDialog(
-                onDismissRequest = {
-                    selectionConfirmDialogSpec.value = null
-                    onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-                },
-                title = { Text(selectSpec.title) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        selectionConfirmDialogSpec.value = null
-//                        if (onSearchEventSent != null) {
-//                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed)) todo: check if this is needed
-//                        }
-                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
-                    }) { Text(selectSpec.confirmLabel) }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        selectionConfirmDialogSpec.value = null
-                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-                    }) { Text(selectSpec.cancelLabel) }
-                }
-            )
-        }
+//        // Search selection confirmation dialog (parent-driven, 2-button)
+//        val selectSpec = selectionConfirmDialogSpec.value
+//        if (selectSpec != null) {
+//            AlertDialog(
+//                onDismissRequest = {
+//                    selectionConfirmDialogSpec.value = null
+//                    onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+//                },
+//                title = { Text(selectSpec.title) },
+//                confirmButton = {
+//                    TextButton(onClick = {
+//                        selectionConfirmDialogSpec.value = null
+////                        if (onSearchEventSent != null) {
+////                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed)) todo: check if this is needed
+////                        }
+//                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
+//                    }) { Text(selectSpec.confirmLabel) }
+//                },
+//                dismissButton = {
+//                    TextButton(onClick = {
+//                        selectionConfirmDialogSpec.value = null
+//                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
+//                    }) { Text(selectSpec.cancelLabel) }
+//                }
+//            )
+//        }
     }
     //  }
 
@@ -447,7 +462,41 @@ fun OrderFulfilmentScreen(
             }
         )
     }
+    Dialogs(state.dialog)
 }
+
+@Composable
+private fun Dialogs(dialog: OrderFulfilmentScreenContract.Dialog?) {
+    when (dialog) {
+        is OrderFulfilmentScreenContract.Dialog.SearchMultiSelectConfirm -> {
+            AlertDialog(
+                onDismissRequest = dialog.onCancel.action,
+                title = { Text(dialog.title) },
+                confirmButton = {
+                    TextButton(onClick = dialog.onProceed.action) {
+                        Text(dialog.onProceed.label.value)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = dialog.onCancel.action) {
+                        Text(dialog.onCancel.label.value)
+                    }
+                }
+            )
+//            MultiSelectConfirmDialog(
+//                title = dialog.title,
+//                cancelLabel = dialog.onCancel.label.value,
+//                proceedLabel = dialog.onProceed.label.value,
+//                onProceed = dialog.onProceed.action,
+//                onCancel = dialog.onCancel.action,
+//                onDismissRequest = dialog.onCancel.action
+//            )
+        }
+
+        null -> {}
+    }
+}
+
 
 @Composable
 private fun CollectorSection(
@@ -678,11 +727,11 @@ private fun OrderFulfilmentScreenPreview(
     GPCTheme {
         OrderFulfilmentScreen(
             state = state,
-            //     searchState = SearchContract.State.empty(),
             onEventSent = {},
-            onSearchEventSent = {},
-            //   onSearchEventSent = {},
             effectFlow = null,
+            searchState = SearchContract.State.empty(),
+            onSearchEventSent = {},
+            searchEffectFlow = null,
             onOutcome = {},
         )
     }

@@ -3,6 +3,7 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
@@ -12,6 +13,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Dialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.DebounceKey
@@ -27,7 +30,7 @@ object OrderFulfilmentScreenContract {
 
         // Loading / refreshing
         val isLoading: Boolean,
-        
+
         // Processing confirmation (adding to sync queue)
         val isProcessing: Boolean,
 
@@ -69,7 +72,8 @@ object OrderFulfilmentScreenContract {
 
         // Sign button gating
         val signGating: SignButtonGating? = null,
-    ) : ViewState{
+        val dialog: Dialog?
+    ) : ViewState {
 
         data class FeatureFlags(
             val isAccountRepresentativeSelectionFeatureEnabled: Boolean,
@@ -100,6 +104,7 @@ object OrderFulfilmentScreenContract {
 
         // Signature
         data object Sign : Event
+
         // Customer name dialog flow
         data object ShowCustomerNameDialog : Event
         data object DismissCustomerNameDialog : Event
@@ -138,6 +143,9 @@ object OrderFulfilmentScreenContract {
         data object ExpandSearchBar : Event
         data object CollapseSearchBar : Event
 
+
+        data class OnAcceptMultiSelectClicked(val fromSearch: Boolean) : Event
+
     }
 
     sealed interface Effect : ViewSideEffect {
@@ -146,8 +154,14 @@ object OrderFulfilmentScreenContract {
             val actionLabel: String? = null,
             val duration: androidx.compose.material3.SnackbarDuration = androidx.compose.material3.SnackbarDuration.Short,
         ) : Effect
-        data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) : Effect
+
+        data class PlaySound(val soundEffect: com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect) :
+            Effect
+
         data class PlayHaptic(val type: HapticEffect) : Effect
+
+        data object ConfirmSearchSelection : Effect
+        data object CancelSearchSelection : Effect
 
         // Two-button confirm dialog for selection coming from Search in Fulfilment
         data class ShowConfirmSelectionDialog(
@@ -163,7 +177,7 @@ object OrderFulfilmentScreenContract {
         sealed interface Outcome : Effect {
             data object Back : Outcome
             data object Confirmed : Outcome
-            data class SignatureRequested(val customerName: String): Outcome
+            data class SignatureRequested(val customerName: String) : Outcome
             data class NavigateToOrderDetails(val invoiceNumber: InvoiceNumber) : Outcome
         }
     }
@@ -177,9 +191,18 @@ object OrderFulfilmentScreenContract {
             DebounceKey.CollectingType,
             DebouncerDefaults.Interval.Medium
         )
+
         data object CourierName : Debounce(
             DebounceKey.CourierName,
             DebouncerDefaults.Interval.Medium
         )
+    }
+
+    sealed class Dialog {
+        data class SearchMultiSelectConfirm(
+            val title: String = "Confirm selection",
+            val onProceed: DialogButton,
+            val onCancel: DialogButton,
+        ) : Dialog()
     }
 }

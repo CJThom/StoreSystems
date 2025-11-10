@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
+import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper.Text
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
@@ -33,8 +35,13 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetW
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.*
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.Outcome.*
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.Selection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -145,7 +152,8 @@ class OrderFulfilmentScreenViewModel(
                     isEnabled = true
                 )
             ),
-            isSighted = false
+            isSighted = false,
+            dialog = null
         )
 
     }
@@ -273,10 +281,10 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.ConfirmCustomerName -> {
                 val name = viewState.value.customerNameInput.trim()
                 if (name.isEmpty()) {
-                    setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Please enter customer name") }
+                    setEffect { ShowSnackbar("Please enter customer name") }
                 } else {
                     setState { copy(isCustomerNameDialogVisible = false) }
-                    setEffect { OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested(name) }
+                    setEffect { SignatureRequested(name) }
                 }
             }
 
@@ -295,7 +303,7 @@ class OrderFulfilmentScreenViewModel(
             }
 
             is OrderFulfilmentScreenContract.Event.EditCorrespondence -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowSnackbar("Edit ${event.id} not implemented") }
+                setEffect { ShowSnackbar("Edit ${event.id} not implemented") }
             }
 
             // Final action
@@ -305,7 +313,7 @@ class OrderFulfilmentScreenViewModel(
 
             // Search-origin selection confirmation
             is OrderFulfilmentScreenContract.Event.ConfirmSearchSelection -> {
-                setEffect { OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog() }
+                setEffect { ShowConfirmSelectionDialog() }
             }
 
             is OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed -> {
@@ -318,7 +326,7 @@ class OrderFulfilmentScreenViewModel(
 
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
                 setEffect {
-                    OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails(
+                    NavigateToOrderDetails(
                         event.invoiceNumber
                     )
                 }
@@ -349,8 +357,35 @@ class OrderFulfilmentScreenViewModel(
             is OrderFulfilmentScreenContract.Event.CollapseSearchBar -> {
                 setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
             }
-            is  OrderFulfilmentScreenContract.Event.ExpandSearchBar -> {
+
+            is OrderFulfilmentScreenContract.Event.ExpandSearchBar -> {
                 setEffect { OrderFulfilmentScreenContract.Effect.ExpandSearchBar }
+            }
+
+            is OrderFulfilmentScreenContract.Event.OnAcceptMultiSelectClicked -> {
+                setState {
+                    copy(
+                        dialog = OrderFulfilmentScreenContract.Dialog.SearchMultiSelectConfirm(
+                            onProceed = DialogButton(
+                                label = Text("Select"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                    if (event.fromSearch) {
+                                        setEffect { OrderFulfilmentScreenContract.Effect.ConfirmSearchSelection }
+                                    } else {
+                                    }
+                                    setEffect { OrderFulfilmentScreenContract.Effect.CollapseSearchBar }
+                                }
+                            ),
+                            onCancel = DialogButton(
+                                label = Text("Cancel"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                }
+                            )
+                        )
+                    )
+                }
             }
         }
     }
@@ -571,7 +606,10 @@ class OrderFulfilmentScreenViewModel(
         baseFlow
             .combine(idVerificationFlow) { base, hasId ->
                 if (base.isEnabled && !hasId) {
-                    base.copy(isEnabled = false, reasons = listOf(SignButtonGating.Reason("no_id_verification")))
+                    base.copy(
+                        isEnabled = false,
+                        reasons = listOf(SignButtonGating.Reason("no_id_verification"))
+                    )
                 } else base
             }
             .collectLatest { gating ->
