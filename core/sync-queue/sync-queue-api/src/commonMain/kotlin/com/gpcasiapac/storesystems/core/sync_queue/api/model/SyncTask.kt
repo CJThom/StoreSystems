@@ -17,6 +17,8 @@ data class SyncTask(
     val updatedTime: Instant,
     val lastAttemptTime: Instant?,
     val errorAttempts: List<SyncTaskAttemptError> = emptyList(),
-    // Optional human-readable submitter for convenience in UIs/search
-    val submittedBy: String? = null
+    // Human-readable submitter for UIs/search
+    val submittedBy: String? = null,
+    // Client-side request identifier associated with this task
+    val requestId: String
 )

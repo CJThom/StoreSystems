@@ -421,7 +421,7 @@ val strokeDefault = 0.75 // From Stroke/Default (Variable) Theme: Repco
 
 }
 
-object Mode1 {
+object Bolt {
 val staticBrandDefault = Color(0xFF011EC1) // From static/brand/default (Variable) Theme: Mode 1 
 
 val feedbackErrorDefault = Color(0xFFBC2F13) // From feedback/error/default (Variable) Theme: Mode 1 

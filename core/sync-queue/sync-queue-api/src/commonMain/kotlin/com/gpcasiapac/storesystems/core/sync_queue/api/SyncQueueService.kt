@@ -70,7 +70,10 @@ interface SyncQueueService {
      * Get tasks by entity ID with collect metadata.
      */
     suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata>
-    
+
+    suspend fun observeTasksWithCollectMetadataByTaskIdFlow(entityId: String): Flow<SyncTaskWithCollectMetadata>
+
+
     /**
      * Get tasks by invoice number.
      */

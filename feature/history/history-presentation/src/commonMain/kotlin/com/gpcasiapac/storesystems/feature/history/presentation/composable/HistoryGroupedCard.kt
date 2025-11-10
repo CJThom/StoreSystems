@@ -24,6 +24,7 @@ import kotlin.time.Instant
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HistoryGroupedCard(
+    submittedBy: String,
     customerName: String,
     invoiceNumbers: List<String>,
     time: Instant?,
@@ -36,7 +37,7 @@ fun HistoryGroupedCard(
             HistoryHeader(
                 modifier = Modifier
                     .placeholder(isLoading, shape = RoundedCornerShape(4.dp)),
-                username = "65895231",
+                username = submittedBy,
                 time = time,
                 enabledRetry = when (status) {
                     HistoryStatus.FAILED, HistoryStatus.REQUIRES_ACTION -> true
@@ -69,6 +70,7 @@ fun HistoryGroupedCard(
 private fun HistoryGroupedCardLoadingPreview() {
     GPCTheme {
         HistoryGroupedCard(
+            submittedBy = "",
             customerName = "",
             invoiceNumbers = emptyList(),
             time = Instant.fromEpochMilliseconds(1762423975),
@@ -84,6 +86,7 @@ private fun HistoryGroupedCardLoadingPreview() {
 private fun HistoryGroupedCardSuccessPreview() {
     GPCTheme {
         HistoryGroupedCard(
+            submittedBy = "Emily Staff",
             customerName = "Jane Customer",
             invoiceNumbers = listOf("INV-10001", "INV-10002"),
             time = Instant.fromEpochMilliseconds(1762423975),
@@ -99,6 +102,7 @@ private fun HistoryGroupedCardSuccessPreview() {
 private fun HistoryGroupedCardInProgressPreview() {
     GPCTheme {
         HistoryGroupedCard(
+            submittedBy = "Priya Staff",
             customerName = "John Shopper",
             invoiceNumbers = listOf("INV-12345"),
             time = Instant.fromEpochMilliseconds(1762423975),
@@ -114,6 +118,7 @@ private fun HistoryGroupedCardInProgressPreview() {
 private fun HistoryGroupedCardFailedPreview() {
     GPCTheme {
         HistoryGroupedCard(
+            submittedBy = "Sam Staff",
             customerName = "Alex Customer",
             invoiceNumbers = listOf("INV-99999"),
             time = Instant.fromEpochMilliseconds(1762423975),

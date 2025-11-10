@@ -21,7 +21,9 @@ fun SyncTaskEntity.toDomain(): SyncTask {
         addedTime = addedTime,
         updatedTime = updatedTime,
         lastAttemptTime = lastAttemptTime,
-        errorAttempts = parseErrorAttempts(errorAttempts)
+        errorAttempts = parseErrorAttempts(errorAttempts),
+        submittedBy = submittedBy,
+        requestId = requestId
     )
 }
 

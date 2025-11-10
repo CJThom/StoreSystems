@@ -20,7 +20,7 @@ internal class SyncQueueServiceImpl(
     private val syncRepository: SyncRepository,
     private val syncTriggerCoordinator: com.gpcasiapac.storesystems.core.sync_queue.api.coordinator.SyncTriggerCoordinator
 ) : SyncQueueService {
-    
+
     override suspend fun addTaskAndTriggerSync(
         taskType: TaskType,
         entityId: String,
@@ -32,23 +32,23 @@ internal class SyncQueueServiceImpl(
             priority = priority
         )
     }
-    
+
     override fun observePendingTasksCount(taskType: TaskType): Flow<Int> {
         return syncRepository.observePendingTasksCount(taskType)
     }
-    
+
     override fun observePendingTasks(): Flow<List<SyncTask>> {
         return syncRepository.observePendingTasks()
     }
-    
+
     override fun observeAllTasks(): Flow<List<SyncTask>> {
         return syncRepository.observeAllTasks()
     }
-    
+
     override suspend fun deleteTask(taskId: String): Result<Unit> {
         return syncRepository.deleteTask(taskId)
     }
-    
+
     override suspend fun retryFailedTasks(taskType: TaskType?): Result<Int> {
         return syncRepository.resetFailedTasks(taskType)
     }
@@ -56,37 +56,45 @@ internal class SyncQueueServiceImpl(
     override suspend fun retryTask(taskId: String): Result<Unit> {
         // Reset a single task back to PENDING so the worker can pick it up again
         // Preserve attempts and bump maxAttempts if at cap so it becomes eligible
-        return syncRepository.resetTaskForRetry(taskId, resetAttempts = false, bumpMaxAttemptsBy = 1)
+        return syncRepository.resetTaskForRetry(
+            taskId,
+            resetAttempts = false,
+            bumpMaxAttemptsBy = 1
+        )
             .onSuccess {
                 // Trigger a sync run so the retried task is processed promptly
                 syncTriggerCoordinator.triggerSync()
             }
     }
-    
+
     override suspend fun getTasksByEntityId(entityId: String): List<SyncTask> {
         return syncRepository.getTasksByEntityId(entityId)
     }
-    
+
     override fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>> {
         return syncRepository.observeAllTasksWithCollectMetadata()
     }
-    
+
     override suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?> {
         return syncRepository.getTaskWithCollectMetadata(taskId)
     }
-    
+
     override suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata> {
         return syncRepository.getTasksWithCollectMetadataByEntityId(entityId)
     }
-    
+
+    override suspend fun observeTasksWithCollectMetadataByTaskIdFlow(entityId: String): Flow<SyncTaskWithCollectMetadata> {
+        return syncRepository.observeTasksWithCollectMetadataByTaskIdFlow(entityId)
+    }
+
     override suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata> {
         return syncRepository.getTasksByInvoiceNumber(invoiceNumber)
     }
-    
+
     override suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata> {
         return syncRepository.getTasksByCustomerNumber(customerNumber)
     }
-    
+
     override suspend fun enqueueCollectTask(
         taskType: TaskType,
         taskId: String,

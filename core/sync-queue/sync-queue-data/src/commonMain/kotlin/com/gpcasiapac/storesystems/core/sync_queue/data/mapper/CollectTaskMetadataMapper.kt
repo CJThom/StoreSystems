@@ -6,20 +6,18 @@ import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.CollectT
 /**
  * Map CollectTaskMetadataEntity to API model.
  */
-fun CollectTaskMetadataEntity.toApiModel(): CollectTaskMetadata {
+fun CollectTaskMetadataEntity.toDomain(): CollectTaskMetadata {
     return CollectTaskMetadata(
         id = id,
         syncTaskId = syncTaskId,
         invoiceNumber = invoiceNumber,
-        salesOrderNumber = salesOrderNumber,
+        orderNumber = orderNumber,
         webOrderNumber = webOrderNumber,
-        orderCreatedAt = orderCreatedAt,
-        orderPickedAt = orderPickedAt,
+        createdDateTime = createdDateTime,
+        invoiceDateTime = invoiceDateTime,
         customerNumber = customerNumber,
         customerType = customerType,
-        accountName = accountName,
-        firstName = firstName,
-        lastName = lastName,
+        name = name,
         phone = phone
     )
 }
@@ -32,15 +30,13 @@ fun CollectTaskMetadata.toEntity(): CollectTaskMetadataEntity {
         id = id,
         syncTaskId = syncTaskId,
         invoiceNumber = invoiceNumber,
-        salesOrderNumber = salesOrderNumber,
+        orderNumber = orderNumber,
         webOrderNumber = webOrderNumber,
-        orderCreatedAt = orderCreatedAt,
-        orderPickedAt = orderPickedAt,
+        createdDateTime = createdDateTime,
+        invoiceDateTime = invoiceDateTime,
         customerNumber = customerNumber,
         customerType = customerType,
-        accountName = accountName,
-        firstName = firstName,
-        lastName = lastName,
+        name = name,
         phone = phone
     )
 }

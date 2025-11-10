@@ -124,6 +124,7 @@ private fun Content(
                 val submittedTime = if (!isLoading && item != null) item.submittedAt else Clock.System.now()
                 val customerName = if (!isLoading && item != null) item.customerName else ""
                 val status = if (!isLoading && item != null) item.status else HistoryStatus.PENDING
+                val submittedBy = if (!isLoading && item != null) item.submittedBy else ""
 
                 OutlineCard(
                     modifier = Modifier
@@ -140,9 +141,10 @@ private fun Content(
                     }
                 ) {
                     HistoryGroupedCard(
+                        submittedBy = submittedBy,
+                        customerName = customerName,
                         invoiceNumbers = invoiceNumbers,
                         time = submittedTime,
-                        customerName = customerName,
                         isLoading = isLoading,
                         status = status,
                         onRetry = if (!isLoading && item?.canRetry == true) {

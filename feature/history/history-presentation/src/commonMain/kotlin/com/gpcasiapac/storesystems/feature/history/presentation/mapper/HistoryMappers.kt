@@ -14,7 +14,7 @@ fun CollectHistoryItem.toHistoryListItemState(): HistoryListItemState {
     val first = metadata.firstOrNull()
     val invoiceNumbers = metadata.map { m -> m.webOrderNumber ?: m.invoiceNumber }
     val customerName = first?.getCustomerDisplayName().orEmpty()
-    val submittedAt = first?.orderCreatedAt
+    val submittedAt = first?.createdDateTime
     val status = this.status
     val canRetry = status == HistoryStatus.FAILED || status == HistoryStatus.REQUIRES_ACTION
 
@@ -26,6 +26,7 @@ fun CollectHistoryItem.toHistoryListItemState(): HistoryListItemState {
         status = status,
         submittedAt = submittedAt,
         canRetry = canRetry,
+        submittedBy = this.submittedBy.orEmpty(),
     )
 }
 

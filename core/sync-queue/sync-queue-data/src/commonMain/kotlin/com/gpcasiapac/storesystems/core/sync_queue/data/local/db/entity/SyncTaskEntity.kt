@@ -23,6 +23,12 @@ data class SyncTaskEntity(
     @ColumnInfo(name = "task_id")
     val taskId: String,
 
+    @ColumnInfo(name = "submitted_by")
+    val submittedBy: String,
+
+    @ColumnInfo(name = "request_id")
+    val requestId: String,
+
     @ColumnInfo(name = "no_of_attempts")
     val noOfAttempts: Int,
 

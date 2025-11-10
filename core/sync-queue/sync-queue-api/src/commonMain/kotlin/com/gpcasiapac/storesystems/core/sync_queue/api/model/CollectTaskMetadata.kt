@@ -9,22 +9,20 @@ import kotlin.time.Instant
  * API model for collect task metadata.
  * Contains order and customer information for collect tasks.
  */
-data class CollectTaskMetadata(
+ data class CollectTaskMetadata(
     val id: String,
     val syncTaskId: String,
-    
+
     // Order information
     val invoiceNumber: String,
-    val salesOrderNumber: String,
+    val orderNumber: String,
     val webOrderNumber: String?,
-    val orderCreatedAt: Instant,
-    val orderPickedAt: Instant,
-    
+    val createdDateTime: Instant,
+    val invoiceDateTime: Instant,
+
     // Customer information
     val customerNumber: String,
     val customerType: String, // "B2B" or "B2C"
-    val accountName: String?,
-    val firstName: String?,
-    val lastName: String?,
-    val phone: String?
+    val name: String,
+    val phone: String,
 )

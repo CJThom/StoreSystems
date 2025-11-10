@@ -84,12 +84,10 @@ class GetHistoryUseCase(
                     item.entityId.lowercase().contains(query) ||
                         item.metadata.any { md ->
                             md.invoiceNumber.lowercase().contains(query) ||
-                                md.salesOrderNumber.lowercase().contains(query) ||
+                                md.orderNumber.lowercase().contains(query) ||
                                 md.webOrderNumber?.lowercase()?.contains(query) == true ||
                                 md.customerNumber.lowercase().contains(query) ||
-                                md.accountName?.lowercase()?.contains(query) == true ||
-                                md.firstName?.lowercase()?.contains(query) == true ||
-                                md.lastName?.lowercase()?.contains(query) == true ||
+                                md.name.lowercase().contains(query) ||
                                 md.getCustomerDisplayName().lowercase().contains(query)
                         }
             }

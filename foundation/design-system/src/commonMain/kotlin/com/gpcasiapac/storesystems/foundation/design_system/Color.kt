@@ -46,3 +46,8 @@ val GpcSurfaceContainerLow: Color = DesignTokens.GPC.schemesSurfaceContainerLow
 val GpcSurfaceContainer: Color = DesignTokens.GPC.schemesSurfaceContainer
 val GpcSurfaceContainerHigh: Color = DesignTokens.GPC.schemesSurfaceContainerHigh
 val GpcSurfaceContainerHighest: Color = DesignTokens.GPC.schemesSurfaceContainerHighest
+
+val GpcSuccess: Color = DesignTokens.Bolt.feedbackSuccessDefault
+val GpcOnSuccess: Color = DesignTokens.GPC.schemesOnPrimary
+val GpcSuccessContainer: Color = DesignTokens.Bolt.feedbackSuccessWeaker
+val GpcOnSuccessContainer: Color = DesignTokens.Bolt.feedbackSuccessDefault

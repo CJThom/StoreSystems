@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryStatus
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import com.gpcasiapac.storesystems.foundation.design_system.extendedColorScheme
 
 @Composable
 fun HistoryStatusText(
@@ -24,7 +25,7 @@ fun HistoryStatusText(
     val backgroundColor = when (status) {
         HistoryStatus.PENDING -> MaterialTheme.colorScheme.tertiary
         HistoryStatus.IN_PROGRESS -> MaterialTheme.colorScheme.primary
-        HistoryStatus.COMPLETED -> Color(0xFF097969) // same success color
+        HistoryStatus.COMPLETED -> MaterialTheme.extendedColorScheme.success
         HistoryStatus.FAILED -> MaterialTheme.colorScheme.onErrorContainer
         HistoryStatus.RETRYING -> MaterialTheme.colorScheme.secondary
         HistoryStatus.REQUIRES_ACTION -> MaterialTheme.colorScheme.error
@@ -38,9 +39,6 @@ fun HistoryStatusText(
         HistoryStatus.REQUIRES_ACTION -> "Action Needed"
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        HistoryStatusIcon(
-            status = status
-        )
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
