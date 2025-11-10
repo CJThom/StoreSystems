@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "ae3c75018bad31706a5cd9e6dbe09ba9",
+    "identityHash": "0c63a4089fbeae2115748db0439fe763",
     "entities": [
       {
         "tableName": "sync_tasks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `task_type` TEXT NOT NULL, `status` TEXT NOT NULL, `task_id` TEXT NOT NULL, `submitted_by` TEXT NOT NULL, `request_id` TEXT NOT NULL, `no_of_attempts` INTEGER NOT NULL, `max_attempts` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `added_time` INTEGER NOT NULL, `updated_time` INTEGER NOT NULL, `last_attempt_time` INTEGER, `error_attempts` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `task_type` TEXT NOT NULL, `status` TEXT NOT NULL, `task_id` TEXT NOT NULL, `submitted_by` TEXT NOT NULL, `request_id` TEXT NOT NULL, `no_of_attempts` INTEGER NOT NULL, `max_attempts` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `added_time` INTEGER NOT NULL, `updated_time` INTEGER NOT NULL, `last_attempt_time` INTEGER, `last_error` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -80,8 +80,8 @@
             "affinity": "INTEGER"
           },
           {
-            "fieldPath": "errorAttempts",
-            "columnName": "error_attempts",
+            "fieldPath": "lastError",
+            "columnName": "last_error",
             "affinity": "TEXT"
           }
         ],
@@ -196,7 +196,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ae3c75018bad31706a5cd9e6dbe09ba9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c63a4089fbeae2115748db0439fe763')"
     ]
   }
 }

@@ -69,11 +69,7 @@ class SyncWorker(
                 repo.updateTaskStatus(
                     taskId = task.id,
                     status = TaskStatus.REQUIRES_ACTION,
-                    errorAttempt = SyncTaskAttemptError(
-                        attemptNumber = task.noOfAttempts + 1,
-                        timestamp = Clock.System.now(),
-                        errorMessage = "No handler for ${task.taskType}"
-                    )
+                    lastErrorMessage = "No handler for ${task.taskType}"
                 )
                 processed++; continue
             }
@@ -86,7 +82,7 @@ class SyncWorker(
 
             val r = handler.handle(task)
             if (r.isSuccess) {
-                repo.updateTaskStatus(task.id, TaskStatus.COMPLETED)
+                repo.updateTaskStatus(task.id, TaskStatus.COMPLETED, lastErrorMessage = null)
             } else {
                 handleFailure(task, r.exceptionOrNull(), attemptNumber)
             }
@@ -100,16 +96,16 @@ class SyncWorker(
         when (e) {
             is PermanentFailureException -> {
                 repo.updateTaskStatus(
-                    task.id, TaskStatus.REQUIRES_ACTION,
-                    SyncTaskAttemptError(attempt, now, e.message ?: e.code)
+                    taskId = task.id, status = TaskStatus.REQUIRES_ACTION,
+                    lastErrorMessage = e.message ?: e.code
                 )
             }
 
             is RetryAfterException -> {
                 if (attempt >= maxAttempts) {
                     repo.updateTaskStatus(
-                        task.id, TaskStatus.REQUIRES_ACTION,
-                        SyncTaskAttemptError(attempt, now, e.reason ?: "retry limit reached")
+                        taskId = task.id, status = TaskStatus.REQUIRES_ACTION,
+                        lastErrorMessage = "retry limit reached"
                     )
                 } else {
                     // Mark as retryable; schedule next run with a precise delay if provided
@@ -120,7 +116,7 @@ class SyncWorker(
                     }
                     repo.updateTaskStatus(
                         task.id, TaskStatus.FAILED,
-                        SyncTaskAttemptError(attempt, now, e.reason ?: "retry")
+                        e.reason ?: "retry"
                     )
                 }
             }
@@ -128,15 +124,15 @@ class SyncWorker(
             else -> {
                 if (attempt >= maxAttempts) {
                     repo.updateTaskStatus(
-                        task.id, TaskStatus.REQUIRES_ACTION,
-                        SyncTaskAttemptError(attempt, now, e?.message ?: "retry limit reached")
+                        taskId = task.id, status = TaskStatus.REQUIRES_ACTION,
+                        lastErrorMessage = e?.message ?: "retry limit reached"
                     )
                 } else {
                     // Generic failure: mark to retry via WorkManager backoff
                     shouldRetryLater = true
                     repo.updateTaskStatus(
-                        task.id, TaskStatus.FAILED,
-                        SyncTaskAttemptError(attempt, now, e?.message ?: "retry")
+                        taskId = task.id, status = TaskStatus.FAILED,
+                        lastErrorMessage = e?.message ?: "retry"
                     )
                 }
             }

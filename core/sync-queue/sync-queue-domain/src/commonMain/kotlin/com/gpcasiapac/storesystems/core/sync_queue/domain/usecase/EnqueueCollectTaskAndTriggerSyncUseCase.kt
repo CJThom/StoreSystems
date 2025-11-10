@@ -20,7 +20,7 @@ class EnqueueCollectTaskAndTriggerSyncUseCase(
         priority: Int = 10,
         maxAttempts: Int = 3,
         metadata: List<CollectTaskMetadata>,
-        submittedBy: String? = null,
+        submittedBy: String,
     ): Result<String> {
         // submittedBy is currently not persisted at repository level; reserved for future persistence.
         return syncRepository.enqueueCollectTask(

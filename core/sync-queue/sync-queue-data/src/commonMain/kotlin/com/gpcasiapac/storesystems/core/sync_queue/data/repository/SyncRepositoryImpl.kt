@@ -46,7 +46,7 @@ class SyncRepositoryImpl(
             addedTime = now,
             updatedTime = now,
             lastAttemptTime = null,
-            errorAttempts = null
+            lastError = null
         )
 
         syncTaskDao.insertTask(task)
@@ -77,66 +77,20 @@ class SyncRepositoryImpl(
     override suspend fun updateTaskStatus(
         taskId: String,
         status: TaskStatus,
-        errorAttempt: SyncTaskAttemptError?
+        lastErrorMessage: String?
     ): Result<Unit> = runCatching {
         val now = Clock.System.now()
         val currentTask = syncTaskDao.getTaskById(taskId)
 
         if (currentTask != null) {
-            val newErrorAttemptsJson = if (errorAttempt != null) {
-                val currentErrors = parseErrorAttemptsFromJson(currentTask.errorAttempts)
-                val updatedErrors = currentErrors + errorAttempt
-                convertErrorAttemptsToJson(updatedErrors)
-            } else {
-                currentTask.errorAttempts
-            }
-
             val updatedTask = currentTask.copy(
                 status = status.name,
                 updatedTime = now,
-                errorAttempts = newErrorAttemptsJson
+                lastError = lastErrorMessage
             )
 
             syncTaskDao.updateTask(updatedTask)
         }
-    }
-
-    private fun parseErrorAttemptsFromJson(json: String?): List<SyncTaskAttemptError> {
-        if (json.isNullOrEmpty() || json == "[]") return emptyList()
-
-        return try {
-            val items = mutableListOf<SyncTaskAttemptError>()
-            val jsonArray = json.trim().removeSurrounding("[", "]")
-
-            if (jsonArray.isEmpty()) return emptyList()
-
-            val itemRegex =
-                """"attemptNumber":(\d+),"timestamp":(\d+),"errorMessage":"((?:[^"\\]|\\.)*)"""".toRegex()
-            itemRegex.findAll(jsonArray).forEach { match ->
-                val attemptNumber = match.groupValues[1].toInt()
-                val timestamp =
-                    kotlin.time.Instant.fromEpochMilliseconds(match.groupValues[2].toLong())
-                val errorMessage = match.groupValues[3].replace("\\\"", "\"")
-                items.add(SyncTaskAttemptError(attemptNumber, timestamp, errorMessage))
-            }
-            items
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    private fun convertErrorAttemptsToJson(errors: List<SyncTaskAttemptError>): String {
-        if (errors.isEmpty()) return "[]"
-
-        val jsonItems = errors.joinToString(",") { error ->
-            """{"attemptNumber":${error.attemptNumber},"timestamp":${error.timestamp.toEpochMilliseconds()},"errorMessage":"${
-                error.errorMessage.replace(
-                    "\"",
-                    "\\\""
-                )
-            }"}"""
-        }
-        return "[$jsonItems]"
     }
 
     override suspend fun incrementTaskAttempt(taskId: String): Result<Unit> = runCatching {
@@ -221,7 +175,7 @@ class SyncRepositoryImpl(
             current.copy(
                 status = TaskStatus.PENDING.name,
                 noOfAttempts = 0,
-                errorAttempts = null,
+                lastError = null,
                 updatedTime = now,
                 lastAttemptTime = null,
                 maxAttempts = current.maxAttempts + bump
@@ -242,9 +196,9 @@ class SyncRepositoryImpl(
         priority: Int,
         maxAttempts: Int,
         metadata: List<CollectTaskMetadata>,
-        submittedBy: String?
+        submittedBy: String
     ): Result<String> = runCatching {
-        require(metadata.isNotEmpty()) { "metadata cannot be empty" }
+
         val syncTaskId = UUID.randomUUID().toString()
         val now = Clock.System.now()
 
@@ -254,7 +208,7 @@ class SyncRepositoryImpl(
             taskType = taskType.name,
             status = TaskStatus.PENDING.name,
             taskId = taskId,
-            submittedBy = submittedBy ?: "",
+            submittedBy = submittedBy,
             requestId = taskId,
             noOfAttempts = 0,
             maxAttempts = maxAttempts,
@@ -262,15 +216,17 @@ class SyncRepositoryImpl(
             addedTime = now,
             updatedTime = now,
             lastAttemptTime = null,
-            errorAttempts = null
+            lastError = null
         )
 
         // Insert task
         syncTaskDao.insertTask(task)
 
-        // Insert all metadata rows with reference to task
-        val metadataEntities = metadata.map { it.copy(syncTaskId = syncTaskId).toEntity() }
-        collectTaskMetadataDao.insertAll(metadataEntities)
+        if(metadata.isNotEmpty()) {
+            // Insert all metadata rows with reference to task
+            val metadataEntities = metadata.map { it.copy(syncTaskId = syncTaskId).toEntity() }
+            collectTaskMetadataDao.insertAll(metadataEntities)
+        }
 
         syncTaskId
     }

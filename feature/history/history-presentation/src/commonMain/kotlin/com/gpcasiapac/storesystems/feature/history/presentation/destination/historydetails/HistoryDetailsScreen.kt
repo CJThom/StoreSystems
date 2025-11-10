@@ -6,10 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,14 +21,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.PunchClock
-import androidx.compose.material.icons.outlined.SafetyCheck
-import androidx.compose.material.icons.outlined.SupervisedUserCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +31,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -53,9 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gpcasiapac.storesystems.common.kotlin.extension.toLocalDateTimeString
-import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.foundation.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
-import com.gpcasiapac.storesystems.feature.history.api.HistoryFeatureDestination
 import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
@@ -65,20 +54,13 @@ import com.gpcasiapac.storesystems.feature.history.presentation.composable.Colle
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.ErrorInfo
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryStatusIcon
 import com.gpcasiapac.storesystems.feature.history.presentation.composable.HistoryStatusText
-import com.gpcasiapac.storesystems.feature.history.presentation.composable.InfoPanel
-import com.gpcasiapac.storesystems.feature.history.presentation.composable.SummarySection
-import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
 import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
 import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
-import com.gpcasiapac.storesystems.foundation.design_system.extendedColorScheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)
