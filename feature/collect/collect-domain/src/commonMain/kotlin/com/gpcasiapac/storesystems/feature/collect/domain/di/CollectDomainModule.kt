@@ -16,7 +16,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Obse
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectionTypeGatingUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveSignButtonGatingUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveFulfilmentGatingUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderCourierNameUseCase
@@ -62,7 +61,6 @@ val collectDomainModule = module {
     factoryOf(::ObserveWorkOrderWithOrderWithCustomersUseCase)
     factoryOf(::ObserveWorkOrderItemsInScanOrderUseCase)
     factoryOf(::ObserveCollectionTypeGatingUseCase)
-    factoryOf(::ObserveSignButtonGatingUseCase)
     factoryOf(::ObserveFulfilmentGatingUseCase)
    // factoryOf(::ObserveCollectOrderWithCustomerWithLineItemsUseCase)
     factoryOf(::SetWorkOrderCollectingTypeUseCase)

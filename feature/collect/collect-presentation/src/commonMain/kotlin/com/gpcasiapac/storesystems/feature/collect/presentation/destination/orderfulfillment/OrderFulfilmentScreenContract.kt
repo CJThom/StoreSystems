@@ -10,7 +10,6 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
-import com.gpcasiapac.storesystems.feature.collect.domain.model.SignButtonGating
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
@@ -76,7 +75,6 @@ object OrderFulfilmentScreenContract {
         val isSignEnabled: Boolean = false,
         val isSubmitEnabled: Boolean = false,
 
-        val signGating: SignButtonGating? = null,
         val dialog: Dialog?
     ) : ViewState {
 
