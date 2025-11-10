@@ -22,7 +22,10 @@ import com.gpcasiapac.storesystems.foundation.design_system.Dimens
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiSelectConfirmDialog(
-    spec: OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog,
+    title: String,
+    cancelLabel: String,
+    selectOnlyLabel: String,
+    proceedLabel: String,
     onProceed: () -> Unit,
     onSelect: () -> Unit,
     onCancel: () -> Unit,
@@ -40,7 +43,7 @@ fun MultiSelectConfirmDialog(
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
             ) {
                 // Title
-                Text(text = spec.title, style = MaterialTheme.typography.headlineSmall)
+                Text(text = title, style = MaterialTheme.typography.headlineSmall)
 
                 // Actions
                 HorizontalDivider()
@@ -52,17 +55,17 @@ fun MultiSelectConfirmDialog(
                     TextButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onProceed
-                    ) { Text(spec.proceedLabel) }
+                    ) { Text(proceedLabel) }
 
                     TextButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onSelect
-                    ) { Text(spec.selectOnlyLabel) }
+                    ) { Text(selectOnlyLabel) }
 
                     TextButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onCancel
-                    ) { Text(spec.cancelLabel) }
+                    ) { Text(cancelLabel) }
                 }
             }
         }
@@ -74,12 +77,10 @@ fun MultiSelectConfirmDialog(
 @Composable
 private fun MultiSelectConfirmDialogPreview() {
     MultiSelectConfirmDialog(
-        spec = OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
-            title = "Confirm selection",
-            cancelLabel = "Cancel",
-            selectOnlyLabel = "Select only",
-            proceedLabel = "Select and proceed"
-        ),
+        title = "Confirm selection",
+        cancelLabel = "Cancel",
+        selectOnlyLabel = "Select only",
+        proceedLabel = "Select and proceed",
         onProceed = {},
         onSelect = {},
         onCancel = {},
@@ -92,12 +93,10 @@ private fun MultiSelectConfirmDialogPreview() {
 @Composable
 private fun MultiSelectConfirmDialogEmptySummaryPreview() {
     MultiSelectConfirmDialog(
-        spec = OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog(
-            title = "Confirm selection",
-            cancelLabel = "Cancel",
-            selectOnlyLabel = "Select only",
-            proceedLabel = "Select and proceed"
-        ),
+        title = "Confirm selection",
+        cancelLabel = "Cancel",
+        selectOnlyLabel = "Select only",
+        proceedLabel = "Select and proceed",
         onProceed = {},
         onSelect = {},
         onCancel = {},

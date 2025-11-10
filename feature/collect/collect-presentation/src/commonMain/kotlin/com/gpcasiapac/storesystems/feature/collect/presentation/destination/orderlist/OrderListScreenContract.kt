@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Immutable
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewEvent
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
@@ -45,6 +46,7 @@ object OrderListScreenContract {
 
         // Error
         val error: String?,
+        val dialog: Dialog?
     ) : ViewState {
         @Immutable
         data class Filters(
@@ -61,6 +63,8 @@ object OrderListScreenContract {
 
         // Navigation / Scanning
         data class OpenOrder(val invoiceNumber: InvoiceNumber) : Event
+
+        data object NavigateToFulfilment : Event
         data class ScanInvoice(val rawInput: String) : Event
         data object Back : Event
         data object Logout : Event
@@ -73,7 +77,9 @@ object OrderListScreenContract {
         data class ToggleCustomerType(val type: CustomerType, val checked: Boolean) : Event
         data object OpenFilterSheet : Event
         data object CloseFilterSheet : Event
-        data class ApplyFilters(val filterChipList: List<FilterChip>) : Event // add chip from search suggestion?
+        data class ApplyFilters(val filterChipList: List<FilterChip>) :
+            Event // add chip from search suggestion?
+
         data class RemoveFilterChip(val filterChipList: FilterChip) : Event
         data object ResetFilters : Event
         data class SortChanged(val sortOption: SortOption) : Event
@@ -82,7 +88,7 @@ object OrderListScreenContract {
         data class Selection(val event: SelectionContract.Event<InvoiceNumber>) : Event
 
         // Search-origin selection confirm
-        data object ConfirmSearchSelection : Event
+        data class OnAcceptMultiSelectClicked(val fromSearch: Boolean) : Event
 
         // Draft bottom bar actions
         data object DraftBarDeleteClicked : Event
@@ -102,34 +108,39 @@ object OrderListScreenContract {
             val actionLabel: String? = null,
             val duration: SnackbarDuration = SnackbarDuration.Short,
         ) : Effect
+
         data class PlaySound(val soundEffect: SoundEffect) : Effect
         data class PlayHaptic(val hapticEffect: HapticEffect) : Effect
 
-        // Multi-select confirmation dialog trigger
-        data class ShowMultiSelectConfirmDialog(
-            val title: String = "Confirm selection",
-            val cancelLabel: String = "Cancel",
-            val selectOnlyLabel: String = "Select only",
-            val proceedLabel: String = "Select and proceed",
-        ) : Effect
-
-        // Search-origin multi-select confirmation dialog trigger
-        data class ShowSearchMultiSelectConfirmDialog(
-            val title: String = "Confirm selection",
-            val cancelLabel: String = "Cancel",
-            val selectOnlyLabel: String = "Select only",
-            val proceedLabel: String = "Select and proceed",
-        ) : Effect
-
         // Request the search UI to collapse (triggered by VM on scan)
         data object CollapseSearchBar : Effect
- 
-         sealed interface Outcome : Effect {
-            data class OrderSelected(val invoiceNumber: InvoiceNumber) : Outcome
-            data object OrdersSelected : Outcome
+
+        data object ConfirmSearchSelection : Effect
+        data object CancelSearchSelection : Effect
+
+        sealed interface Outcome : Effect {
+            data class OrderClicked(val invoiceNumber: InvoiceNumber) : Outcome
+            data object RequestNavigateToFulfillment : Outcome
             data object Back : Outcome
             data object Logout : Outcome
             data object OpenHistory : Outcome
         }
+    }
+
+    sealed class Dialog {
+
+        data class SearchMultiSelectConfirm(
+            val title: String = "Confirm selection",
+            val onProceed: DialogButton,
+            val onSelect: DialogButton,
+            val onCancel: DialogButton,
+        ) : Dialog()
+
+//        data class NoGSEMatch(
+//            val title: StringWrapper = StringWrapper.Text("Confirm selection"),
+//            val onConfirm: DialogButton = DialogButton(),
+//            val onDismiss: () -> Unit
+//        ) : Dialog()
+
     }
 }

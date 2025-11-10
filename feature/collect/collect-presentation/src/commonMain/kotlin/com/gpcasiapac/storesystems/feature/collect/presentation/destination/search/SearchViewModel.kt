@@ -5,6 +5,8 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
+import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper.Text
 import com.gpcasiapac.storesystems.common.presentation.flow.QueryFlow
 import com.gpcasiapac.storesystems.common.presentation.flow.SearchDebounce
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
@@ -21,8 +23,11 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.GetOrde
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.search.ObserveSearchOrdersUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.Selection
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
 import kotlinx.coroutines.delay
@@ -89,7 +94,9 @@ class SearchViewModel(
             is SearchContract.Event.ExpandSearchBar -> handleExpandSearchBar()
             is SearchContract.Event.CollapseSearchBar -> handleCollapseSearchBar()
             is SearchContract.Event.OnSearchClicked -> handleSearchClicked()
-
+            is SearchContract.Event.OnAcceptMultiSelectClicked -> {
+                setEffect { SearchContract.Effect.Outcome.RequestConfirmationDialog }
+            }
         }
     }
 
@@ -180,8 +187,8 @@ class SearchViewModel(
                     is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
-            onRequestConfirmDialog = { setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() } },
-            onConfirmProceed = null
+            // onRequestConfirmDialog = { setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() } },
+            // onConfirmProceed = null
         )
 
     }
@@ -220,12 +227,12 @@ class SearchViewModel(
         viewModelScope.launch {
             setState {
                 val exists = selectedSuggestionList.any { it == suggestion }
-                val newChips = if (exists) selectedSuggestionList else selectedSuggestionList + suggestion
+                val newChips =
+                    if (exists) selectedSuggestionList else selectedSuggestionList + suggestion
                 copy(selectedSuggestionList = newChips)
             }
             // Clear query field after selecting a suggestion
             setEffect { SearchContract.Effect.ClearQueryField }
-            // Compose-only concern will auto-scroll the chips into view (Option A)
         }
     }
 
@@ -234,25 +241,16 @@ class SearchViewModel(
     }
 
     // ---------------- Selection handling ----------------
-    private fun handleConfirmSelection() {
-        // Show dialog; actual commit happens based on user choice
-        setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() }
-    }
+//    private fun handleConfirmSelection() {
+//        // Show dialog; actual commit happens based on user choice
+//        setEffect { SearchContract.Effect.ShowMultiSelectConfirmDialog() }
+//    }
 
 
     private fun handleRemoveSuggestion(suggestion: SearchSuggestion) {
         setState {
             val newChips = selectedSuggestionList.filterNot { it == suggestion }
             copy(selectedSuggestionList = newChips)
-        }
-    }
-
-    private fun buildCombinedQuery(suggestionList: List<SearchSuggestion>, typed: String): String {
-        val base = suggestionList.joinToString(" ") { it.text }.trim()
-        return when {
-            base.isNotEmpty() && typed.isNotBlank() -> "$base ${typed.trim()}"
-            base.isNotEmpty() -> base
-            else -> typed
         }
     }
 

@@ -14,9 +14,9 @@ object SelectionContract {
         data object Cancel : Event<Nothing>
         // Optional dialog triggers/actions
         data object Confirm : Event<Nothing>
-        data object ConfirmStay : Event<Nothing>
-        data object ConfirmProceed : Event<Nothing>
-        data object DismissConfirmDialog : Event<Nothing>
+       // data object ConfirmStay : Event<Nothing>
+       // data object ConfirmProceed : Event<Nothing>
+      //  data object DismissConfirmDialog : Event<Nothing>
     }
 
     // If needed later, shared effects can be added here

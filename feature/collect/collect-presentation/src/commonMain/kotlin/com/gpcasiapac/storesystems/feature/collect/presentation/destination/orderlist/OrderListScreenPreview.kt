@@ -29,6 +29,7 @@ class OrderListScreenStateProvider : PreviewParameterProvider<OrderListScreenCon
                 isSubmitting = false,
                 submittedCollectOrder = null,
                 error = null,
+                dialog = null
             )
 
             val withFilters = base.copy(

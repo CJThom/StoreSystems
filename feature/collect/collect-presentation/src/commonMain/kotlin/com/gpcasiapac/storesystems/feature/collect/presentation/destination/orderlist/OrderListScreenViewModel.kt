@@ -3,6 +3,9 @@ package com.gpcasiapac.storesystems.feature.collect.presentation.destination.ord
 import androidx.lifecycle.viewModelScope
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticEffect
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundEffect
+import com.gpcasiapac.storesystems.common.presentation.compose.DialogButton
+import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper
+import com.gpcasiapac.storesystems.common.presentation.compose.StringWrapper.*
 import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandler
 import com.gpcasiapac.storesystems.common.presentation.session.SessionHandlerDelegate
@@ -20,13 +23,16 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetColle
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.EnsureAndApplyOrderSelectionDeltaUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveOrderSelectionUseCase
+
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Back
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.Logout
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderSelected
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Effect.Outcome.OrderClicked
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.*
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.FilterChip
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionCommitResult
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandler
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionHandlerDelegate
 import kotlinx.coroutines.delay
@@ -38,6 +44,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+
 
 class OrderListScreenViewModel(
     private val observeMainOrdersUseCase: ObserveMainOrdersUseCase,
@@ -77,6 +84,7 @@ class OrderListScreenViewModel(
             isSubmitting = false,
             submittedCollectOrder = null,
             error = null,
+            dialog = null
         )
     }
 
@@ -121,7 +129,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OpenOrder -> {
-                setEffect { OrderSelected(event.invoiceNumber) }
+                setEffect { OrderClicked(event.invoiceNumber) }
             }
 
             is OrderListScreenContract.Event.ScanInvoice -> {
@@ -129,7 +137,7 @@ class OrderListScreenViewModel(
                 viewModelScope.launch {
                     when (val result = validateScannedInvoiceInputUseCase(event.rawInput)) {
                         is ValidateScannedInvoiceInputUseCase.UseCaseResult.Exists -> setEffect {
-                            OrderSelected(result.invoiceNumber)
+                            OrderClicked(result.invoiceNumber)
                         }
 
                         is ValidateScannedInvoiceInputUseCase.UseCaseResult.Error -> {
@@ -169,7 +177,7 @@ class OrderListScreenViewModel(
             }
 
             is OrderListScreenContract.Event.OpenFilterSheet -> setState { copy(isFilterSheetOpen = true) }
-            is OrderListScreenContract.Event.SubmitOrder -> setEffect { OrderSelected(event.invoiceNumber) }
+            is OrderListScreenContract.Event.SubmitOrder -> setEffect { OrderClicked(event.invoiceNumber) }
             is OrderListScreenContract.Event.StartNewWorkOrderClicked -> handleStartNewWorkOrderClick()
             is OrderListScreenContract.Event.DraftBarDeleteClicked -> {
                 viewModelScope.launch { handleDraftBarDeleteClicked() }
@@ -177,11 +185,64 @@ class OrderListScreenViewModel(
 
             is OrderListScreenContract.Event.DraftBarViewClicked -> {
                 val ids = viewState.value.selection.existing.toList()
-                if (ids.isNotEmpty()) setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
+                if (ids.isNotEmpty()) setEffect { OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment }
             }
 
-            is OrderListScreenContract.Event.ConfirmSearchSelection -> {
-                setEffect { OrderListScreenContract.Effect.ShowSearchMultiSelectConfirmDialog() }
+            is OrderListScreenContract.Event.OnAcceptMultiSelectClicked -> {
+                setState {
+                    copy(
+                        dialog = OrderListScreenContract.Dialog.SearchMultiSelectConfirm(
+                            onProceed = DialogButton(
+                                label = Text("Select and proceed"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                    if (event.fromSearch) {
+                                        setEffect { OrderListScreenContract.Effect.ConfirmSearchSelection }
+                                    } else {
+                                        setEvent(
+                                            Selection(
+                                                SelectionContract.Event.Confirm
+                                            )
+                                        )
+                                    }
+
+                                    setEffect { OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment }
+                                }
+                            ),
+                            onSelect = DialogButton(
+                                label = Text("Select only"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                    if (event.fromSearch) {
+                                        setEffect { OrderListScreenContract.Effect.CancelSearchSelection }
+                                    } else {
+                                        setEvent(
+                                            Selection(
+                                                SelectionContract.Event.Confirm
+                                            )
+                                        )
+                                    }
+
+                                }
+                            ),
+                            onCancel = DialogButton(
+                                label = Text("Cancel"),
+                                action = {
+                                    setState { copy(dialog = null) }
+                                    setEvent(
+                                        Selection(
+                                            SelectionContract.Event.Cancel
+                                        )
+                                    )
+                                }
+                            )
+                        )
+                    )
+                }
+            }
+
+            OrderListScreenContract.Event.NavigateToFulfilment -> {
+                setEffect { OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment }
             }
         }
     }
@@ -285,12 +346,43 @@ class OrderListScreenViewModel(
                     is EnsureAndApplyOrderSelectionDeltaUseCase.UseCaseResult.Summary -> SelectionCommitResult.Success
                 }
             },
-            onRequestConfirmDialog = {
-                setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
-            },
-            onConfirmProceed = {
-                setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
-            }
+
+//            onRequestConfirmDialog = {
+//                setState {
+//                    copy(
+//                        dialog = OrderListScreenContract.Dialog.SearchMultiSelectConfirm(
+//                            onProceed = DialogButton(
+//                                label = StringWrapper.Text("Select and proceed"),
+//                                action = {
+//                                    setEvent(
+//                                        OrderListScreenContract.Event.Selection(
+//                                            SelectionContract.Event.ConfirmProceed
+//                                        )
+//                                    )
+//                                }
+//                            ),
+//                            onSelect = DialogButton(
+//                                label = StringWrapper.Text("Select only"),
+//                                action = {
+//                                    setEvent(
+//                                        OrderListScreenContract.Event.Selection(
+//                                            SelectionContract.Event.ConfirmStay
+//                                        )
+//                                    )
+//                                }
+//                            ),
+//                            onCancel = DialogButton(
+//                                label = StringWrapper.Text("Cancel"),
+//                                action = { setState { copy(dialog = null) } }
+//                            )
+//                        )
+//                    )
+//                }
+//                //  setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
+//            },
+//            onConfirmProceed = {
+//                setEffect { OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment }
+//            }
         )
     }
 
@@ -319,15 +411,10 @@ class OrderListScreenViewModel(
         setState { copy(isFilterSheetOpen = false) }
     }
 
-    private fun handleConfirmSelection() {
-        setEffect { OrderListScreenContract.Effect.ShowMultiSelectConfirmDialog() }
-    }
-
-
     private fun handleStartNewWorkOrderClick() {
         // No DB work is required here; navigating to the fulfilment/details screen
         // will handle creation/ensure when the user actually adds something.
-        setEffect { OrderListScreenContract.Effect.Outcome.OrdersSelected }
+        setEffect { OrderListScreenContract.Effect.Outcome.RequestNavigateToFulfillment }
     }
     // endregion
 

@@ -216,109 +216,14 @@ fun OrderFulfilmentScreen(
                             disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
                         )
                     ),
-                    collapsedBorder = MaterialTheme.borderStroke()
+                    collapsedBorder = MaterialTheme.borderStroke(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
+                        ),
                 )
-//                    MBoltSearchBar(
-//                        query = searchState.searchText,
-//                        onQueryChange = { query ->
-//                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-//                        },
-//                        searchBarState = searchBarState,
-//                        onSearch = { query ->
-//                            onSearchEventSent(SearchContract.Event.SearchTextChanged(query))
-//                        },
-//                        onExpandedChange = { isExpanded ->
-//                            onSearchEventSent(
-//                                SearchContract.Event.SearchOnExpandedChange(
-//                                    isExpanded
-//                                )
-//                            )
-//                        },
-//                        onBackPressed = {
-//                            onSearchEventSent(SearchContract.Event.SearchBarBackPressed)
-//                        },
-//                        onResultClick = { result ->
-//                            onSearchEventSent(
-//                                SearchContract.Event.SearchResultClicked(result)
-//                            )
-//                        },
-//                        onClearClick = {
-//                            onSearchEventSent(SearchContract.Event.ClearSearch)
-//                        },
-//                        recentSearches = emptyList(),
-//                        suggestions = searchState.searchSuggestions,
-//                        onSuggestionClicked = { s ->
-//                            onSearchEventSent(SearchContract.Event.SearchSuggestionClicked(s))
-//                        },
-//                        selectedChips = searchState.selectedChips,
-//                        typedSuffix = searchState.typedSuffix,
-//                        onTypedSuffixChange = { text ->
-//                            onSearchEventSent(SearchContract.Event.TypedSuffixChanged(text))
-//                        },
-//                        onRemoveChip = { s ->
-//                            onSearchEventSent(SearchContract.Event.RemoveChip(s))
-//                        },
-//                        searchOrderItems = searchState.searchOrderItems,
-//                        isMultiSelectionEnabled = searchState.selection.isEnabled,
-//                        selectedOrderIdList = searchState.selection.selected,
-//                        isSelectAllChecked = searchState.selection.isAllSelected,
-//                        isRefreshing = state.isLoading,
-//                        onOpenInvoice = { id ->
-//                            onEventSent(OrderFulfilmentScreenContract.Event.OrderClicked(id))
-//                        },
-//                        onCheckedChange = { orderId, checked ->
-//                            onSearchEventSent(
-//                                SearchContract.Event.Selection(
-//                                    SelectionContract.Event.SetItemChecked(orderId, checked)
-//                                )
-//                            )
-//                        },
-//                        onSelectAllToggle = { checked ->
-//                            onSearchEventSent(
-//                                SearchContract.Event.Selection(
-//                                    SelectionContract.Event.SelectAll(checked)
-//                                )
-//                            )
-//                        },
-//                        onCancelSelection = {
-//                            onSearchEventSent(
-//                                SearchContract.Event.Selection(
-//                                    SelectionContract.Event.Cancel
-//                                )
-//                            )
-//                        },
-//                        onEnterSelectionMode = {
-//                            onSearchEventSent(
-//                                SearchContract.Event.Selection(
-//                                    SelectionContract.Event.ToggleMode(true)
-//                                )
-//                            )
-//                        },
-//                        onSelectClick = {
-//                            onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
-//                        },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .then(
-//                                if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
-//                            ),
-//                        placeholderText = "Search by Order #, Name, Phone",
-//                        collapsedContentPadding = PaddingValues(
-//                            horizontal = Dimens.Space.medium,
-//                            vertical = Dimens.Space.small
-//                        ),
-//                        collapsedShape = CircleShape,
-//                        collapsedColors = SearchBarDefaults.colors(
-//                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-//                            inputFieldColors = SearchBarDefaults.inputFieldColors(
-//                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-//                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-//                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-//                            )
-//                        ),
-//                        collapsedBorder = MaterialTheme.borderStroke()
-//                    )
-                //  }
+
             }
 
             if (state.collectOrderListItemStateList.isEmpty()) {

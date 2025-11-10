@@ -170,7 +170,7 @@ class OrderLocalRepositoryImpl(
     }
 
     override suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion> {
-        val text = query.text
+        val text = query.text.trim()
         val per = query.perKindLimit
         val include = query.includeKinds
         val selected = query.selected
@@ -178,75 +178,82 @@ class OrderLocalRepositoryImpl(
         // Compute invoice scope from selected chips (intersection)
         val scope: Set<String> = resolveInvoiceScope(selected)
 
-        val out = mutableListOf<SearchSuggestion>()
+        // Blank text → show default top customers (scoped when chips present)
         if (text.isBlank()) {
-            // Default suggestions: show customers; if chips are selected, constrain to scope
-            if (SuggestionKind.CUSTOMER_NAME in include) {
-                val seedLimit = if (scope.isEmpty()) query.maxTotal else query.maxTotal * 5
-                val rows = collectOrderDao.getAllCustomerNames(limit = seedLimit)
-                if (scope.isEmpty()) {
-                    rows.forEach { row ->
-                        val name = row.name.trim()
-                        if (name.isNotEmpty()) out += CustomerNameSuggestion(
-                            text = name,
-                            customerType = CustomerType.B2C // TODO: get CustomerType from DAO
-                        )
-                    }
-                } else {
-                    // Filter names to only those within scope
-                    for (row in rows) {
-                        val name = row.name.trim()
-                        if (name.isEmpty()) continue
-                        val invoices = collectOrderDao.getInvoiceNumbersByCustomerName(name)
-                        if (invoices.any { it in scope }) {
-                            out += CustomerNameSuggestion(
-                                text = name,
-                                customerType = CustomerType.B2C // TODO: DAO provide type
-                            )
-                            if (out.size >= query.maxTotal) break
-                        }
-                    }
-                }
+            if (SuggestionKind.CUSTOMER_NAME !in include) return emptyList()
+            val rows = if (scope.isEmpty()) {
+                collectOrderDao.getTopCustomers(limit = query.maxTotal)
+            } else {
+                collectOrderDao.getTopCustomersScoped(invoiceScope = scope, limit = query.maxTotal)
             }
-            return out
+            return rows.map { row ->
+                CustomerNameSuggestion(text = row.name.trim(), customerType = row.customerType)
+            }
         }
-        val contains = "%" + escapeForLike(text.trim()) + "%"
+
+        val prefix = "%" + escapeForLike(text) + "%"
+        val out = mutableListOf<SearchSuggestion>()
+
         if (SuggestionKind.CUSTOMER_NAME in include) {
-            collectOrderDao.getCustomerNameSuggestionsPrefix(contains, per).forEach { row ->
-                val name = row.name.trim()
-                if (name.isNotEmpty()) out += CustomerNameSuggestion(
-                    text = name,
-                    customerType = CustomerType.B2C // TODO: get CustomerType from DAO
-                )
+            if (scope.isEmpty()) {
+                collectOrderDao.getCustomerNameSuggestionsPrefixWithType(prefix, per).forEach { row ->
+                    val name = row.name.trim()
+                    if (name.isNotEmpty()) out += CustomerNameSuggestion(name, row.customerType)
+                }
+            } else {
+                collectOrderDao.getCustomerNameSuggestionsPrefixScoped(prefix, scope, per).forEach { row ->
+                    val name = row.name.trim()
+                    if (name.isNotEmpty()) out += CustomerNameSuggestion(name, row.customerType)
+                }
             }
         }
         if (SuggestionKind.INVOICE_NUMBER in include) {
-            collectOrderDao.getInvoiceSuggestionsPrefix(contains, per).forEach { inv ->
-                out += InvoiceNumberSuggestion(inv)
+            if (scope.isEmpty()) {
+                collectOrderDao.getInvoiceSuggestionsPrefix(prefix, per).forEach { inv ->
+                    out += InvoiceNumberSuggestion(inv)
+                }
+            } else {
+                collectOrderDao.getInvoiceSuggestionsPrefixScoped(prefix, scope, per).forEach { inv ->
+                    out += InvoiceNumberSuggestion(inv)
+                }
             }
         }
         if (SuggestionKind.WEB_ORDER_NUMBER in include) {
-            collectOrderDao.getWebOrderSuggestionsPrefix(contains, per).forEach { web ->
-                out += WebOrderNumberSuggestion(web)
+            if (scope.isEmpty()) {
+                collectOrderDao.getWebOrderSuggestionsPrefix(prefix, per).forEach { web ->
+                    out += WebOrderNumberSuggestion(web)
+                }
+            } else {
+                collectOrderDao.getWebOrderSuggestionsPrefixScoped(prefix, scope, per).forEach { web ->
+                    out += WebOrderNumberSuggestion(web)
+                }
             }
         }
         if (SuggestionKind.SALES_ORDER_NUMBER in include) {
-            collectOrderDao.getSalesOrderSuggestionsPrefix(contains, per).forEach { so ->
-                out += SalesOrderNumberSuggestion(so)
+            if (scope.isEmpty()) {
+                collectOrderDao.getSalesOrderSuggestionsPrefix(prefix, per).forEach { so ->
+                    out += SalesOrderNumberSuggestion(so)
+                }
+            } else {
+                collectOrderDao.getSalesOrderSuggestionsPrefixScoped(prefix, scope, per).forEach { so ->
+                    out += SalesOrderNumberSuggestion(so)
+                }
             }
         }
         if (SuggestionKind.PHONE in include) {
-            collectOrderDao.getPhoneSuggestionsPrefix(contains, per).forEach { phone ->
-                val p = phone.trim()
-                if (p.isNotEmpty()) out += PhoneSuggestion(p)
+            if (scope.isEmpty()) {
+                collectOrderDao.getPhoneSuggestionsPrefix(prefix, per).forEach { phone ->
+                    val p = phone.trim()
+                    if (p.isNotEmpty()) out += PhoneSuggestion(p)
+                }
+            } else {
+                collectOrderDao.getPhoneSuggestionsPrefixScoped(prefix, scope, per).forEach { phone ->
+                    val p = phone.trim()
+                    if (p.isNotEmpty()) out += PhoneSuggestion(p)
+                }
             }
         }
-        // De-dup
-        val deduped = out.distinctBy { it.kind to it.text.lowercase() }
-        // Apply chip scope if present
-        val filtered = if (scope.isEmpty()) deduped else deduped.filter { suggestion ->
-            suggestionIntersectsScope(suggestion, scope)
-        }
+
         val rank = mapOf(
             SuggestionKind.CUSTOMER_NAME to 0,
             SuggestionKind.INVOICE_NUMBER to 1,
@@ -254,8 +261,11 @@ class OrderLocalRepositoryImpl(
             SuggestionKind.SALES_ORDER_NUMBER to 3,
             SuggestionKind.PHONE to 4,
         )
-        val sorted = filtered.sortedWith(compareBy({ rank[it.kind] ?: 99 }, { it.text }))
-        return if (sorted.size <= query.maxTotal) sorted else sorted.take(query.maxTotal)
+        return out
+            .filter { it.text.isNotBlank() }
+            .distinctBy { it.kind to it.text.lowercase() }
+            .sortedWith(compareBy({ rank[it.kind] ?: 99 }, { it.text }))
+            .take(query.maxTotal)
     }
 
     private suspend fun resolveInvoiceScope(chips: List<SearchSuggestion>): Set<String> {
@@ -271,24 +281,6 @@ class OrderLocalRepositoryImpl(
         }
         // Intersect all sets
         return perChip.reduce { acc, next -> acc.intersect(next) }
-    }
-
-    private suspend fun suggestionIntersectsScope(s: SearchSuggestion, scope: Set<String>): Boolean {
-        return when (s) {
-            is CustomerNameSuggestion -> collectOrderDao.getInvoiceNumbersByCustomerName(s.text).any { it in scope }
-            is InvoiceNumberSuggestion -> s.text in scope
-            is WebOrderNumberSuggestion -> collectOrderDao.getInvoiceNumbersByWebOrder(s.text).any { it in scope }
-            is SalesOrderNumberSuggestion -> collectOrderDao.getInvoiceNumbersByOrderNumber(s.text).any { it in scope }
-            is PhoneSuggestion -> collectOrderDao.getInvoiceNumbersByPhone(s.text).any { it in scope }
-        }
-    }
-
-    override fun observeSearchSuggestions(query: SuggestionQuery): Flow<List<SearchSuggestion>> {
-        // Recompute suggestions whenever orders or customer/customer fields change.
-        // Observe the relation list to react to any DB updates that affect suggestions.
-        return collectOrderDao.getCollectOrderWithCustomerRelationListFlow()
-            .mapLatest { getSearchSuggestions(query) }
-            .distinctUntilChanged()
     }
 
     private fun escapeForLike(input: String): String {

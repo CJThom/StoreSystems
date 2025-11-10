@@ -18,8 +18,8 @@ interface SelectionHandlerDelegate<T> {
         setSelection: (SelectionUiState<T>) -> Unit,
         loadPersisted: suspend () -> Set<T>,
         commit: suspend (toAdd: Set<T>, toRemove: Set<T>) -> SelectionCommitResult,
-        onRequestConfirmDialog: (() -> Unit)? = null,
-        onConfirmProceed: (() -> Unit)? = null,
+        //   onRequestConfirmDialog: (() -> Unit)? = null,
+       // onConfirm: (() -> Unit)? = null,
     )
 
     /** Unified entry point to handle shared selection events. */
@@ -30,6 +30,7 @@ interface SelectionHandlerDelegate<T> {
     fun setItemChecked(id: T, checked: Boolean)
     fun selectAll(checked: Boolean)
     fun cancel()
-    fun confirmStay()
-    fun confirmProceed()
+
+    // fun confirmStay()
+    fun confirm()
 }

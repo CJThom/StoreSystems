@@ -96,6 +96,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.SalesOrderNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
 import com.gpcasiapac.storesystems.feature.collect.domain.model.WebOrderNumberSuggestion
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.StickyBarDefaults
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
 import com.gpcasiapac.storesystems.foundation.component.HeaderSmall
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.CollectOrderItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.OrderListToolbar
@@ -113,6 +114,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchDestination(
+    modifier: Modifier = Modifier,
     searchViewModel: SearchViewModel = koinViewModel(),
     placeholderText: String = "Search by Order #, Name, Phone",
     collapsedContentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
@@ -120,7 +122,7 @@ fun SearchDestination(
     collapsedColors: SearchBarColors = SearchBarDefaults.colors(
         containerColor = MaterialTheme.colorScheme.surface
     ),
-    collapsedBorder: BorderStroke? = null,
+    collapsedBorder: BorderStroke? = null
 ) {
 
     val log = Logger.withTag("SearchDestination")
@@ -129,7 +131,7 @@ fun SearchDestination(
         state = searchViewModel.viewState.collectAsState().value,
         onEventSent = { event -> searchViewModel.setEvent(event) },
         effectFlow = searchViewModel.effect,
-        // onOutcome = onOutcome,
+        modifier = modifier,
         placeholderText = placeholderText,
         collapsedContentPadding = collapsedContentPadding,
         collapsedShape = collapsedShape,
@@ -179,9 +181,6 @@ fun SearchComponent(
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
             when (effect) {
-                is SearchContract.Effect.ShowMultiSelectConfirmDialog -> {
-                    //searchConfirmDialogSpec.value = effect
-                }
 
                 is SearchContract.Effect.ExpandSearchBar -> {
                     coroutineScope.launch {
@@ -208,15 +207,16 @@ fun SearchComponent(
                     // SearchBar manages focus internally; showing keyboard is often enough
                 }
 
-                is SearchContract.Effect.ScrollToEnd -> {
-                    coroutineScope.launch {
-                        log.d { "Scroll to end : ${scrollState.value} to ${scrollState.maxValue}" }
-//                        if (scrollState.maxValue > 0) {
-//                            scrollState.scrollTo(scrollState.maxValue)
-//                        }
-                        scrollState.animateScrollTo(scrollState.maxValue)
-                    }
+                is SearchContract.Effect.Outcome.Back -> {
+
                 }
+
+                is SearchContract.Effect.Outcome.OrderClicked -> {
+
+                }
+
+                is SearchContract.Effect.Outcome.RequestNavigateToFulfillment -> {}
+                is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {}
             }
         }
     }
@@ -265,11 +265,9 @@ fun SearchComponent(
                 searchBarState = searchBarState,
                 collapsedShape = collapsedShape,
                 suggestions = state.searchSuggestionList,
-                onSuggestionClicked = { s ->
+                onSuggestionClicked = { suggestion ->
                     onEventSent(
-                        SearchContract.Event.SearchSuggestionClicked(
-                            s
-                        )
+                        SearchContract.Event.SearchSuggestionClicked(suggestion)
                     )
                 },
                 searchOrderItems = state.searchOrderItemList,
@@ -303,8 +301,8 @@ fun SearchComponent(
                         SearchContract.Event.Selection(SelectionContract.Event.ToggleMode(true))
                     )
                 },
-                onSelectClick = {
-                    // onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelection)
+                onAcceptMultiSelectClick = {
+                    onEventSent(SearchContract.Event.OnAcceptMultiSelectClicked)
                 },
                 inputField = inputField
             )
@@ -359,7 +357,7 @@ private fun ExpandedSearchSection(
     onSelectAllToggle: (Boolean) -> Unit,
     onCancelSelection: () -> Unit,
     onEnterSelectionMode: () -> Unit,
-    onSelectClick: () -> Unit,
+    onAcceptMultiSelectClick: () -> Unit,
     inputField: @Composable () -> Unit,
 ) {
     Surface {
@@ -407,7 +405,7 @@ private fun ExpandedSearchSection(
                         isSelectAllChecked = isSelectAllChecked,
                         onSelectAllToggle = onSelectAllToggle,
                         onCancelClick = onCancelSelection,
-                        onSelectClick = onSelectClick,
+                        onSelectClick = onAcceptMultiSelectClick,
                         isLoading = isRefreshing,
                         scrollBehavior = stickyHeaderScrollBehavior,
                     )
@@ -622,7 +620,7 @@ private fun SearchBarInputField(
                 )
             }
         },
-      //  scrollState = scrollState,
+        //  scrollState = scrollState,
         colors = colors,
     )
 }

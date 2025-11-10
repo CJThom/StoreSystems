@@ -73,9 +73,6 @@ interface OrderLocalRepository {
 
     suspend fun getSearchSuggestions(query: SuggestionQuery): List<SearchSuggestion>
 
-    /** Live suggestions that update when underlying DB tables change. */
-    fun observeSearchSuggestions(query: SuggestionQuery): Flow<List<SearchSuggestion>>
-
     // New: existence check for work order
     suspend fun workOrderExists(workOrderId: WorkOrderId): Boolean
 

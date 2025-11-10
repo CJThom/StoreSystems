@@ -7,6 +7,7 @@ import com.gpcasiapac.storesystems.common.presentation.mvi.ViewSideEffect
 import com.gpcasiapac.storesystems.common.presentation.mvi.ViewState
 import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
 import com.gpcasiapac.storesystems.feature.collect.domain.model.SearchSuggestion
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionUiState
@@ -52,6 +53,8 @@ object SearchContract {
         // Hoisted search UI interactions
         data class RemoveChip(val suggestion: SearchSuggestion) : Event
 
+        data object OnAcceptMultiSelectClicked : Event
+
         // Shared selection wrapper (replaces per-screen selection events)
         data class Selection(val event: SelectionContract.Event<InvoiceNumber>) : Event
     }
@@ -62,14 +65,20 @@ object SearchContract {
         data object ClearQueryField : Effect
         data class SetQueryField(val text: String, val moveCursorToEnd: Boolean = true) : Effect
         data object FocusQueryField : Effect
-        data object ScrollToEnd : Effect
+
+        sealed interface Outcome : Effect {
+            data class OrderClicked(val invoiceNumber: InvoiceNumber) : Outcome
+            data object RequestConfirmationDialog : Outcome
+            data object RequestNavigateToFulfillment : Outcome
+            data object Back : Outcome
+        }
 
         // Multi-select confirmation dialog trigger for search
-        data class ShowMultiSelectConfirmDialog(
-            val title: String = "Confirm selection",
-            val cancelLabel: String = "Cancel",
-            val selectOnlyLabel: String = "Select only",
-            val proceedLabel: String = "Select and proceed",
-        ) : Effect
+//        data class ShowMultiSelectConfirmDialog(
+//            val title: String = "Confirm selection",
+//            val cancelLabel: String = "Cancel",
+//            val selectOnlyLabel: String = "Select only",
+//            val proceedLabel: String = "Select and proceed",
+//        ) : Effect
     }
 }

@@ -17,8 +17,7 @@ object SelectionBinding {
         fun checkOne(id: T, checked: Boolean) = delegate.setItemChecked(id, checked)
         fun selectAll(checked: Boolean) = delegate.selectAll(checked)
         fun cancel() = delegate.cancel()
-        fun confirmStay() = delegate.confirmStay()
-        fun confirmProceed() = delegate.confirmProceed()
+       // fun confirmProceed() = delegate.confirmProceed()
     }
 
     /**
