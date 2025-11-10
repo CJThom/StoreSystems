@@ -25,7 +25,6 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrd
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectWorkOrderUseCase
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveCollectionTypeGatingUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderItemsInScanOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveWorkOrderSignatureUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
@@ -63,7 +62,6 @@ class OrderFulfilmentScreenViewModel(
     private val removeOrderSelectionUseCase: RemoveOrderSelectionUseCase,
     private val observeCollectWorkOrderUseCase: ObserveCollectWorkOrderUseCase,
     private val observeWorkOrderItemsInScanOrderUseCase: ObserveWorkOrderItemsInScanOrderUseCase,
-    private val observeCollectionTypeGatingUseCase: ObserveCollectionTypeGatingUseCase,
     private val setWorkOrderCollectingTypeUseCase: SetWorkOrderCollectingTypeUseCase,
     private val setWorkOrderCourierNameUseCase: SetWorkOrderCourierNameUseCase,
     private val addScannedInputToWorkOrderUseCase: AddScannedInputToWorkOrderUseCase,
@@ -180,9 +178,6 @@ class OrderFulfilmentScreenViewModel(
             observeSignature()
         }
 
-        viewModelScope.launch {
-            observeCollectionTypeGating()
-        }
 
 
         viewModelScope.launch {
@@ -547,31 +542,6 @@ class OrderFulfilmentScreenViewModel(
             }
     }
 
-    private suspend fun observeCollectionTypeGating() {
-        workOrderIdFlow
-            .flatMapLatest { id -> observeCollectionTypeGatingUseCase(id) }
-            .collectLatest { gating ->
-                val wasSelected = viewState.value.collectingType
-                val newSelection = wasSelected?.takeIf { gating.isEnabled(it) }
-
-                setState {
-                    copy(
-                        collectionTypeOptionList = collectionTypeOptionList.withEnabled(gating),
-                        collectingType = newSelection
-                    )
-                }
-
-                // Notify only when a previously set selection becomes invalid while some option remains enabled
-                if (wasSelected != null && newSelection == null && gating.anyEnabled) {
-                    setEffect {
-                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
-                            message = "Selection cleared due to order mix change",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                }
-            }
-    }
 
     // Helpers to keep gating logic cohesive and readable
     private fun CollectionTypeGating.isEnabled(type: CollectingType): Boolean = when (type) {
@@ -613,15 +583,31 @@ class OrderFulfilmentScreenViewModel(
                 }
                 val isSubmitEnabled = isSignEnabled && gating.hasSignature
                 val isCollectionTypeEnabled = hasOrders
-                Triple(isCollectionTypeEnabled, isSignEnabled, isSubmitEnabled)
+                Pair(gating, Triple(isCollectionTypeEnabled, isSignEnabled, isSubmitEnabled))
             }
-            .collectLatest { (isCollectionTypeEnabled, isSignEnabled, isSubmitEnabled) ->
+            .collectLatest { (gating, triple) ->
+                val (isCollectionTypeEnabled, isSignEnabled, isSubmitEnabled) = triple
+                val wasSelected = viewState.value.collectingType
+                val newSelection = wasSelected?.takeIf { gating.collectionTypeGating.isEnabled(it) }
+
                 setState {
                     copy(
                         isCollectionTypeEnabled = isCollectionTypeEnabled,
                         isSignEnabled = isSignEnabled,
                         isSubmitEnabled = isSubmitEnabled,
+                        collectionTypeOptionList = collectionTypeOptionList.withEnabled(gating.collectionTypeGating),
+                        collectingType = newSelection
                     )
+                }
+
+                // Notify only when a previously set selection becomes invalid while some option remains enabled
+                if (wasSelected != null && newSelection == null && gating.collectionTypeGating.anyEnabled) {
+                    setEffect {
+                        OrderFulfilmentScreenContract.Effect.ShowSnackbar(
+                            message = "Selection cleared due to order mix change",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
                 }
             }
     }

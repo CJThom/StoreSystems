@@ -7,12 +7,13 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderI
  * This model intentionally stays close to domain facts and avoids presentation-only flags
  * like "idVerified" which belong to the UI layer.
  */
-data class FulfilmentGating(
-    val workOrderId: WorkOrderId,
-    val hasOrders: Boolean,
-    val collectingType: CollectingType?,
-    val courierName: String?,
-    val hasSignature: Boolean,
-) {
-    val hasCollectingType: Boolean get() = collectingType != null
-}
+ data class FulfilmentGating(
+     val workOrderId: WorkOrderId,
+     val hasOrders: Boolean,
+     val collectingType: CollectingType?,
+     val courierName: String?,
+     val hasSignature: Boolean,
+     val collectionTypeGating: CollectionTypeGating,
+ ) {
+     val hasCollectingType: Boolean get() = collectingType != null
+ }

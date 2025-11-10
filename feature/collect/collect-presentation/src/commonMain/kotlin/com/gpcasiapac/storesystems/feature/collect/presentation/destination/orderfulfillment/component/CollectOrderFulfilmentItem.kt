@@ -65,7 +65,8 @@ fun CollectOrderFulfilmentItem(
             customerType = customerType.toParam(),
             invoiceNumber = invoiceNumber.value,
             webOrderNumber = webOrderNumber,
-            isLoading = isLoading
+            isLoading = isLoading,
+            contentPadding = PaddingValues(bottom = Dimens.Space.small)
         )
     }
 }
