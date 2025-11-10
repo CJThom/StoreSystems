@@ -37,7 +37,7 @@ class GetCollectHistoryItemByIdUseCase(
                 status = HistoryStatus.fromTaskStatusName(t.task.status.name),
                 timestamp = t.task.updatedTime,
                 attempts = t.task.noOfAttempts,
-                lastError = t.task.errorAttempts.lastOrNull()?.errorMessage,
+                lastError = t.task.lastError,
                 priority = t.task.priority,
                 submittedBy = t.task.submittedBy,
                 requestId = t.task.requestId,

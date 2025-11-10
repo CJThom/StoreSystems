@@ -1,7 +1,6 @@
 package com.gpcasiapac.storesystems.feature.history.domain.usecase
 
 import com.gpcasiapac.storesystems.core.sync_queue.api.SyncQueueService
-import com.gpcasiapac.storesystems.feature.history.api.HistoryType
 import com.gpcasiapac.storesystems.feature.history.domain.model.CollectHistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryItem
 import com.gpcasiapac.storesystems.feature.history.domain.model.HistoryMetadata
@@ -43,7 +42,7 @@ class ObserveCollectHistoryItemByIdUseCase(
                         status = HistoryStatus.fromTaskStatusName(t.task.status.name),
                         timestamp = t.task.updatedTime,
                         attempts = t.task.noOfAttempts,
-                        lastError = t.task.errorAttempts.lastOrNull()?.errorMessage,
+                        lastError = t.task.lastError,
                         priority = t.task.priority,
                         submittedBy = t.task.submittedBy,
                         requestId = t.task.requestId,

@@ -49,7 +49,7 @@ class SubmitOrderSyncHandler(
         val invoices =
             snapshot.collectOrderWithCustomerList.map { it.order.invoiceNumber.value }.distinct()
         val signerName = first.customer.name
-        val submitter = task.submittedBy.orEmpty()
+        val submitter = task.submittedBy
 
         val request = SubmitWorkOrderRequest(
             id = task.requestId,

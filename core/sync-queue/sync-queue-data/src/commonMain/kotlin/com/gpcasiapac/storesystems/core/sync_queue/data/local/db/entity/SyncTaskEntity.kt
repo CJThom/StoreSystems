@@ -47,6 +47,6 @@ data class SyncTaskEntity(
     @ColumnInfo(name = "last_attempt_time")
     val lastAttemptTime: Instant?,
 
-    @ColumnInfo(name = "error_attempts")
-    val errorAttempts: String? // Store as JSON string
+    @ColumnInfo(name = "last_error")
+    val lastError: String?
 )
