@@ -1,0 +1,618 @@
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import co.touchlab.kermit.Logger
+import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
+import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
+import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
+import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorder
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CollectOrderFulfilmentItem
+import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
+import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchComponent
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
+import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
+import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
+import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
+import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import storesystems.feature.collect.collect_presentation.generated.resources.Res
+import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.revealAndFocus
+
+
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
+@Composable
+fun OrderFulfilmentScreen(
+    state: OrderFulfilmentScreenContract.State,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    effectFlow: Flow<OrderFulfilmentScreenContract.Effect>?,
+    onOutcome: (outcome: OrderFulfilmentScreenContract.Effect.Outcome) -> Unit,
+    searchState: SearchContract.State,
+    onSearchEventSent: (SearchContract.Event) -> Unit,
+    searchEffectFlow: Flow<SearchContract.Effect>?,
+    soundPlayer: SoundPlayer? = null,
+    hapticPerformer: HapticPerformer? = null,
+) {
+
+    val log = koinInject<Logger>().withTag("OrderFulfilmentScreen")
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Requesters to bring the CONFIRM button into view and optionally request focus
+    val confirmBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val confirmFocusRequester = remember { FocusRequester() }
+
+    // Grid state so we can explicitly scroll to the CONFIRM CTA in LazyVerticalGrid
+    val lazyGridState = rememberLazyGridState()
+
+    // Notify ViewModel that the screen is visible so it can flush one-shot effects
+    LaunchedEffect(Unit) {
+        log.d { "screen is visible" }
+        onEventSent(OrderFulfilmentScreenContract.Event.ScreenVisible)
+    }
+
+
+    LaunchedEffect(effectFlow) {
+        effectFlow?.collectLatest { effect ->
+            when (effect) {
+
+                is OrderFulfilmentScreenContract.Effect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel,
+                        duration = effect.duration
+                    )
+                }
+
+                is OrderFulfilmentScreenContract.Effect.PlaySound -> {
+                    soundPlayer?.play(effect.soundEffect)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.PlayHaptic -> {
+                    hapticPerformer?.perform(effect.type)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.RevealConfirmCta -> {
+                    log.d { "Revealing CONFIRM CTA" }
+                    lazyGridState.revealAndFocus(
+                        bringIntoViewRequester = confirmBringIntoViewRequester,
+                        focusRequester = confirmFocusRequester,
+                    )
+                }
+
+                is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
+                    onSearchEventSent(SearchContract.Event.CollapseSearchBar)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.ExpandSearchBar -> {
+                    onSearchEventSent(SearchContract.Event.ExpandSearchBar)
+                }
+
+                is OrderFulfilmentScreenContract.Effect.Outcome -> onOutcome(effect)
+
+                is OrderFulfilmentScreenContract.Effect.ConfirmSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Confirm))
+                }
+
+                is OrderFulfilmentScreenContract.Effect.CancelSearchSelection -> {
+                    onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Cancel))
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(searchEffectFlow) {
+        searchEffectFlow?.collectLatest { effect ->
+            when (effect) {
+                is SearchContract.Effect.Outcome.Back -> {}
+                is SearchContract.Effect.Outcome.OrderClicked -> {
+                    //  onEventSent(OrderFulfilmentScreenContract.Event.OpenOrder(effect.invoiceNumber)) todo
+                }
+
+                is SearchContract.Effect.Outcome.RequestConfirmationDialog -> {
+                    onEventSent(OrderFulfilmentScreenContract.Event.OnAcceptMultiSelectClicked(true))
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+
+    Scaffold(
+        topBar = {
+            MBoltAppBar(
+                title = { TopBarTitle("Order Confirmation") },
+                navigationIcon = {
+                    IconButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.Back) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(minSize = 320.dp),
+            modifier = Modifier.fillMaxSize(),
+            state = lazyGridState,
+            contentPadding = padding,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
+        ) {
+
+            item { Box(Modifier.size(Dimens.Space.medium)) }
+
+            // Header
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HeaderMedium(
+                    text = "Order List",
+                    isLoading = state.isLoading,
+                    contentPadding = PaddingValues(
+                        horizontal = Dimens.Space.medium,
+                        vertical = Dimens.Space.small
+                    )
+                )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SearchComponent(
+                    state = searchState,
+                    onEventSent = onSearchEventSent,
+                    effectFlow = searchEffectFlow,
+                    collapsedColors = SearchBarDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        inputFieldColors = SearchBarDefaults.inputFieldColors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
+                    ),
+                    collapsedShape = CircleShape,
+                    placeholderText = "Search by Order #, Name, Phone",
+                    collapsedBorder = MaterialTheme.borderStroke(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (state.collectOrderListItemStateList.isEmpty()) Modifier.size(0.dp) else Modifier
+                        ),
+                )
+
+            }
+
+            if (state.collectOrderListItemStateList.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    EmptyOrderPlaceholderCard(
+                        onLookupClick = {
+                            onEventSent(OrderFulfilmentScreenContract.Event.ExpandSearchBar)
+                        }
+                    )
+                }
+            } else {
+                // Orders grid
+                items(
+                    items = state.collectOrderListItemStateList,
+                    key = { it.invoiceNumber.value },
+                ) { collectOrderState ->
+                    CheckboxCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = Dimens.Space.medium,
+                                vertical = Dimens.Space.small
+                            ).animateItem(),
+                        isChecked = false,
+                        isCheckable = false,
+                        onCheckedChange = {},
+                        onClick = {
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.OrderClicked(
+                                    collectOrderState.invoiceNumber
+                                )
+                            )
+                        }
+                    ) {
+                        CollectOrderFulfilmentItem(
+                            customerName = collectOrderState.customerName,
+                            customerType = collectOrderState.customerType,
+                            invoiceNumber = collectOrderState.invoiceNumber,
+                            webOrderNumber = collectOrderState.webOrderNumber,
+                            pickedAt = collectOrderState.pickedAt,
+                            isLoading = state.isLoading,
+                            onDelete = {
+                                onEventSent(
+                                    OrderFulfilmentScreenContract.Event.DeselectOrder(
+                                        collectOrderState.invoiceNumber
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (state.collectOrderListItemStateList.isNotEmpty()) {
+                item { Box(Modifier.size(Dimens.Space.medium)) }
+            }
+
+            // Divider and actions (full span)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                CollectorSection(
+                    state = state,
+                    onEventSent = onEventSent
+                )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SignaturePreviewImage(
+                    onSignClick = {
+                        onEventSent(OrderFulfilmentScreenContract.Event.Sign)
+                    },
+                    onRetakeClick = {
+                        onEventSent(OrderFulfilmentScreenContract.Event.ClearSignature)
+                    },
+                    image = state.signatureBase64,
+                    signerName = state.signerName,
+                    signedDateTime = state.signedDateTime,
+                    enabled = state.isSignEnabled
+                )
+            }
+
+            if (state.featureFlags.isCorrespondenceSectionVisible) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(
+                            vertical = Dimens.Space.medium
+                        )
+                    )
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    CorrespondenceSection(
+                        correspondenceOptionList = state.correspondenceOptionList,
+                        onCheckedChange = { id ->
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.ToggleCorrespondence(
+                                    id = id
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        vertical = Dimens.Space.medium
+                    )
+                )
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                ActionButton(
+                    modifier = Modifier
+                        .bringIntoViewRequester(confirmBringIntoViewRequester)
+                        .focusRequester(confirmFocusRequester)
+                        .padding(Dimens.Space.medium),
+                    title = {
+                        if (state.isProcessing) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(ButtonDefaults.IconSize),
+                                color = MaterialTheme.colorScheme.onTertiary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
+                            Text(
+                                text = "PROCESSING...",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        } else {
+                            Icon(imageVector = Icons.Outlined.DoneAll, contentDescription = "Done")
+                            Spacer(Modifier.size(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
+                            Text(text = "CONFIRM", style = MaterialTheme.typography.labelLarge)
+                        }
+                    },
+                    onClick = {
+                        if (!state.isProcessing && !state.isLoading) {
+                            onEventSent(OrderFulfilmentScreenContract.Event.Confirm)
+                        }
+                    },
+                    enabled = state.isSubmitEnabled && !state.isProcessing && !state.isLoading
+                )
+            }
+        }
+
+    }
+
+    // Customer name dialog
+    if (state.isCustomerNameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog)
+            },
+            title = { Text("Enter Customer Name") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space.small)) {
+                    Text("This name will be saved with the signature.")
+                    OutlinedTextField(
+                        value = state.customerNameInput,
+                        onValueChange = {
+                            onEventSent(
+                                OrderFulfilmentScreenContract.Event.CustomerNameChanged(
+                                    it
+                                )
+                            )
+                        },
+                        singleLine = true,
+                        label = { Text("Customer Name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = state.customerNameInput.trim().isNotEmpty(),
+                    onClick = { onEventSent(OrderFulfilmentScreenContract.Event.ConfirmCustomerName) }
+                ) { Text("Confirm") }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEventSent(OrderFulfilmentScreenContract.Event.DismissCustomerNameDialog) }) {
+                    Text(
+                        "Cancel"
+                    )
+                }
+            }
+        )
+    }
+    Dialogs(state.dialog)
+}
+
+@Composable
+private fun Dialogs(dialog: OrderFulfilmentScreenContract.Dialog?) {
+    when (dialog) {
+        is OrderFulfilmentScreenContract.Dialog.SearchMultiSelectConfirm -> {
+            AlertDialog(
+                onDismissRequest = dialog.onCancel.action,
+                title = { Text(dialog.title) },
+                confirmButton = {
+                    TextButton(onClick = dialog.onProceed.action) {
+                        Text(dialog.onProceed.label.value)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = dialog.onCancel.action) {
+                        Text(dialog.onCancel.label.value)
+                    }
+                }
+            )
+        }
+
+        null -> {}
+    }
+}
+
+
+@Composable
+private fun CollectorSection(
+    state: OrderFulfilmentScreenContract.State,
+    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
+) {
+
+    Column(
+        modifier = modifier
+            .padding(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+            )
+            .fillMaxWidth()
+    ) {
+
+        CollectionTypeSection(
+            title = stringResource(Res.string.who_is_collecting),
+            value = state.collectingType,
+            optionList = state.collectionTypeOptionList,
+            onValueChange = { collectionType ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.CollectingChanged(
+                        collectionType
+                    )
+                )
+            },
+            isAccountRepresentativeSelectionEnabled = state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled,
+            representativeSearchQuery = state.representativeSearchQuery,
+            onRepresentativeSearchQueryChange = { query ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(query)
+                )
+            },
+            representatives = state.representativeList,
+            selectedRepresentativeIds = state.selectedRepresentativeIds,
+            onRepresentativeSelected = { id, isSelected ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.RepresentativeSelected(id, isSelected)
+                )
+            },
+            idVerified = state.idVerified,
+            onIdVerifiedChange = { checked ->
+                onEventSent(
+                    OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked)
+                )
+            },
+            courierName = state.courierName,
+            onCourierNameChange = { name ->
+                onEventSent(OrderFulfilmentScreenContract.Event.CourierNameChanged(name))
+            },
+            isLoading = state.isLoading,
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+            )
+        )
+
+    }
+}
+
+// Placeholder card shown when there are no orders
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun EmptyOrderPlaceholderCard(
+    onLookupClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium),
+    isLoading: Boolean = false,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(contentPadding)
+            .heightIn(min = 110.dp)
+            .dashedBorder(shape = MaterialTheme.shapes.medium),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.PhoneAndroid, contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(ButtonDefaults.ExtraSmallContainerHeight))
+                )
+                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(ButtonDefaults.ExtraSmallContainerHeight)))
+                Text(text = "Scan")
+            }
+            Text(
+                text = "or",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(
+                onClick = onLookupClick,
+                modifier = Modifier
+                    .placeholder(isLoading)
+                    .height(ButtonDefaults.ExtraSmallContainerHeight),
+                contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.ExtraSmallContainerHeight)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = "Lookup",
+                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(ButtonDefaults.ExtraSmallContainerHeight))
+                )
+                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(ButtonDefaults.ExtraSmallContainerHeight)))
+                Text("Lookup")
+            }
+        }
+    }
+}
+
+
+@Preview(
+    name = "Order Fulfilment",
+    showBackground = true,
+    backgroundColor = 0xFFF5F5F5L,
+    widthDp = 360,
+    heightDp = 720
+)
+@Composable
+private fun OrderFulfilmentScreenPreview(
+    @PreviewParameter(OrderFulfilmentScreenStateProvider::class) state: OrderFulfilmentScreenContract.State
+) {
+    GPCTheme {
+        OrderFulfilmentScreen(
+            state = state,
+            onEventSent = {},
+            effectFlow = null,
+            searchState = SearchContract.State.empty(),
+            onSearchEventSent = {},
+            searchEffectFlow = null,
+            onOutcome = {},
+        )
+    }
+}
+
+

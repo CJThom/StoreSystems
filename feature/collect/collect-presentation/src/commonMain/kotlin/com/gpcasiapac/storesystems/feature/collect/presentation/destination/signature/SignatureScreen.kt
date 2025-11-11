@@ -1,0 +1,193 @@
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
+import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignHereCanvas
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.signature.component.SignatureOrderSummary
+import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
+import com.gpcasiapac.storesystems.foundation.component.TopBarTitle
+import com.gpcasiapac.storesystems.foundation.design_system.Dimens
+import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SignatureScreen(
+    state: SignatureScreenContract.State,
+    onEventSent: (event: SignatureScreenContract.Event) -> Unit,
+    effectFlow: Flow<SignatureScreenContract.Effect>,
+    onOutcome: (outcome: SignatureScreenContract.Effect.Outcome) -> Unit,
+) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(effectFlow) {
+        effectFlow.collectLatest { effect ->
+            when (effect) {
+                is SignatureScreenContract.Effect.ShowToast ->
+                    snackbarHostState.showSnackbar(
+                        effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+
+                is SignatureScreenContract.Effect.ShowError ->
+                    snackbarHostState.showSnackbar(effect.error, duration = SnackbarDuration.Long)
+
+                is SignatureScreenContract.Effect.Outcome -> onOutcome(effect)
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            MBoltAppBar(
+                title = {
+                    TopBarTitle("Signature")
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        onEventSent(SignatureScreenContract.Event.Back)
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+
+            Column {
+                SignatureOrderSummary(
+                    summary = state.summary,
+                    modifier = Modifier
+                )
+                OutlinedButton(
+                    onClick = { onEventSent(SignatureScreenContract.Event.ViewDetailsClicked) },
+                    modifier = Modifier
+                        .padding(horizontal = Dimens.Space.medium)
+                        .fillMaxWidth()
+                        .height(ButtonDefaults.ExtraSmallContainerHeight)
+                ) {
+                    Text(
+                        text = "VIEW DETAILS",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Spacer(Modifier.size(Dimens.Space.medium))
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.Space.medium))
+
+            Column {
+                Spacer(Modifier.size(Dimens.Space.medium))
+
+                SignHereCanvas(
+                    onComplete = { image ->
+                        onEventSent(SignatureScreenContract.Event.SignatureCompleted(image))
+                    },
+                    modifier = Modifier
+                        .padding(Dimens.Space.medium)
+                        .height(260.dp)
+                        .fillMaxWidth(),
+                    strokes = state.signatureStrokes,
+                    onStrokesChange = { strokes ->
+                        onEventSent(SignatureScreenContract.Event.StrokesChanged(strokes))
+                    },
+                    strokeColor = MaterialTheme.colorScheme.onSurface,
+                    customerName = state.customerName,
+                    onClearClick = { onEventSent(SignatureScreenContract.Event.ClearSignature) },
+                )
+
+                Spacer(Modifier.weight(1F))
+
+                Button(
+                    onClick = {
+                        if (state.signatureBitmap != null) {
+                            onEventSent(SignatureScreenContract.Event.StartCapture)
+                        }
+                    },
+                    enabled = !state.isLoading && state.signatureBitmap != null,
+                    modifier = Modifier
+                        .padding(Dimens.Space.medium)
+                        .fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(
+                            text = "SAVE SIGNATURE",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+
+@Preview(
+    name = "Signature",
+    showBackground = true,
+    backgroundColor = 0xFFF5F5F5L,
+    widthDp = 360,
+    heightDp = 720,
+)
+@Composable
+private fun SignatureScreenPreview(
+    @PreviewParameter(SignatureScreenStateProvider::class) state: SignatureScreenContract.State
+) {
+    GPCTheme {
+        SignatureScreen(
+            state = state,
+            onEventSent = {},
+            effectFlow = emptyFlow(),
+            onOutcome = {}
+        )
+    }
+}

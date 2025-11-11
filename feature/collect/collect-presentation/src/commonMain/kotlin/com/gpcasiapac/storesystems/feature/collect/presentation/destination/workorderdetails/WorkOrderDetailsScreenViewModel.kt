@@ -1,0 +1,88 @@
+package com.gpcasiapac.storesystems.feature.collect.presentation.destination.workorderdetails
+
+import androidx.lifecycle.viewModelScope
+import com.gpcasiapac.storesystems.common.presentation.mvi.MVIViewModel
+import com.gpcasiapac.storesystems.feature.collect.api.model.InvoiceNumber
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ObserveCollectOrderWithCustomerWithLineItemsUseCase
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toState
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
+class WorkOrderDetailsScreenViewModel(
+    private val fetchOrderListUseCase: FetchOrderListUseCase,
+    private val observeCollectOrderWithCustomerWithLineItemsUseCase: ObserveCollectOrderWithCustomerWithLineItemsUseCase,
+    private val invoiceNumber: InvoiceNumber
+) : MVIViewModel<
+        WorkOrderDetailsScreenContract.Event,
+        WorkOrderDetailsScreenContract.State,
+        WorkOrderDetailsScreenContract.Effect>() {
+
+    override fun setInitialState(): WorkOrderDetailsScreenContract.State {
+        return WorkOrderDetailsScreenContract.State(
+            order = null,
+            isLoading = true,
+            error = null
+        )
+    }
+
+    override fun onStart() {
+        viewModelScope.launch {
+            loadOrderDetails(invoiceNumber = invoiceNumber)
+        }
+    }
+
+    override fun handleEvents(event: WorkOrderDetailsScreenContract.Event) {
+        when (event) {
+            is WorkOrderDetailsScreenContract.Event.Refresh -> {
+                viewModelScope.launch {
+                    fetchOrders(successToast = "Orders refreshed")
+                }
+            }
+
+            is WorkOrderDetailsScreenContract.Event.Back -> {
+                setEffect { WorkOrderDetailsScreenContract.Effect.Outcome.Back }
+            }
+        }
+    }
+
+    private suspend fun loadOrderDetails(invoiceNumber: InvoiceNumber) {
+
+        observeCollectOrderWithCustomerWithLineItemsUseCase(invoiceNumber).collectLatest { order ->
+            if (order != null) {
+                setState {
+                    copy(
+                        order = order.toState(),
+                        isLoading = false
+                    )
+                }
+            } else {
+                val errorMessage = "Order not found"
+                setState { copy(isLoading = false, error = errorMessage) }
+                setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(errorMessage) }
+            }
+        }
+
+    }
+
+    private suspend fun fetchOrders(successToast: String) {
+        setState {
+            copy(
+                isLoading = true,
+                error = null
+            )
+        }
+        when (val result = fetchOrderListUseCase()) {
+            is FetchOrderListUseCase.UseCaseResult.Success -> {
+                setState { copy(isLoading = false) }
+            }
+            is FetchOrderListUseCase.UseCaseResult.Error -> {
+                val msg = result.message
+                setState { copy(isLoading = false, error = msg) }
+                setEffect { WorkOrderDetailsScreenContract.Effect.ShowError(msg) }
+            }
+        }
+    }
+
+
+}

@@ -1,0 +1,233 @@
+package com.gpcasiapac.storesystems.core.sync_queue.data.repository
+
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.CollectTaskMetadata
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTask
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskAttemptError
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.SyncTaskWithCollectMetadata
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskStatus
+import com.gpcasiapac.storesystems.core.sync_queue.api.model.TaskType
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.CollectTaskMetadataDao
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.dao.SyncTaskDao
+import com.gpcasiapac.storesystems.core.sync_queue.data.local.db.entity.SyncTaskEntity
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toDomain
+import com.gpcasiapac.storesystems.core.sync_queue.data.mapper.toEntity
+import com.gpcasiapac.storesystems.core.sync_queue.domain.repository.SyncRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
+import java.util.UUID
+
+@OptIn(ExperimentalTime::class)
+class SyncRepositoryImpl(
+    private val syncTaskDao: SyncTaskDao,
+    private val collectTaskMetadataDao: CollectTaskMetadataDao
+) : SyncRepository {
+
+    override suspend fun addTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int
+    ): Result<String> = runCatching {
+        val syncTaskId = UUID.randomUUID().toString()
+        val now = Clock.System.now()
+
+        val task = SyncTaskEntity(
+            id = syncTaskId,
+            taskType = taskType.name,
+            status = TaskStatus.PENDING.name,
+            taskId = taskId,
+            submittedBy = "",
+            requestId = taskId,
+            noOfAttempts = 0,
+            maxAttempts = 3,
+            priority = priority,
+            addedTime = now,
+            updatedTime = now,
+            lastAttemptTime = null,
+            lastError = null
+        )
+
+        syncTaskDao.insertTask(task)
+        syncTaskId
+    }
+
+    override suspend fun getTasksByType(
+        taskType: TaskType,
+        status: TaskStatus,
+        limit: Int
+    ): List<SyncTask> {
+        return syncTaskDao.getTasksByTypeAndStatus(taskType.name, status.name, limit)
+            .map { it.toDomain() }
+    }
+
+    override suspend fun getNextPendingTask(): SyncTask? {
+        return syncTaskDao.getNextPendingTask()?.toDomain()
+    }
+
+    override suspend fun startAttempt(taskId: String): Int? = runCatching {
+        val now = Clock.System.now()
+        val rows = syncTaskDao.startAttempt(taskId, now)
+        if (rows == 1) {
+            syncTaskDao.getTaskById(taskId)?.noOfAttempts
+        } else null
+    }.getOrElse { null }
+
+    override suspend fun updateTaskStatus(
+        taskId: String,
+        status: TaskStatus,
+        lastErrorMessage: String?
+    ): Result<Unit> = runCatching {
+        val now = Clock.System.now()
+        val currentTask = syncTaskDao.getTaskById(taskId)
+
+        if (currentTask != null) {
+            val updatedTask = currentTask.copy(
+                status = status.name,
+                updatedTime = now,
+                lastError = lastErrorMessage
+            )
+
+            syncTaskDao.updateTask(updatedTask)
+        }
+    }
+
+    override suspend fun incrementTaskAttempt(taskId: String): Result<Unit> = runCatching {
+        val now = Clock.System.now()
+        syncTaskDao.incrementAttempt(taskId, now, now)
+    }
+
+    override suspend fun cleanupOldTasks(olderThanDays: Int): Result<Int> = runCatching {
+        val cutoffTime = Clock.System.now() - olderThanDays.days
+        syncTaskDao.deleteOldTasks(cutoffTime)
+    }
+
+    override fun observePendingTasksCount(taskType: TaskType): Flow<Int> {
+        return syncTaskDao.observePendingTasksCount(taskType.name)
+    }
+
+    override fun observePendingTasks(): Flow<List<SyncTask>> {
+        return syncTaskDao.observePendingTasks().map { entities -> entities.map { it.toDomain() } }
+    }
+
+    override fun observeAllTasks(): Flow<List<SyncTask>> {
+        return syncTaskDao.observeAllTasks().map { entities -> entities.map { it.toDomain() } }
+    }
+
+    override suspend fun deleteTask(taskId: String): Result<Unit> = runCatching {
+        syncTaskDao.deleteTask(taskId)
+    }
+
+    override suspend fun resetFailedTasks(taskType: TaskType?): Result<Int> = runCatching {
+        syncTaskDao.resetFailedTasks(taskType?.name, Clock.System.now())
+    }
+
+    override suspend fun getTasksByEntityId(entityId: String): List<SyncTask> {
+        return syncTaskDao.getTasksByEntityId(entityId).map { it.toDomain() }
+    }
+
+    override fun observeAllTasksWithCollectMetadata(): Flow<List<SyncTaskWithCollectMetadata>> {
+        return syncTaskDao.observeAllTasksWithCollectMetadata()
+            .map { entities -> entities.toDomain() }
+    }
+
+    override suspend fun getTaskWithCollectMetadata(taskId: String): Result<SyncTaskWithCollectMetadata?> =
+        runCatching {
+            syncTaskDao.getTaskWithCollectMetadata(taskId)?.toDomain()
+        }
+
+    override suspend fun getTasksWithCollectMetadataByEntityId(entityId: String): List<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.getTasksWithCollectMetadataByEntityId(entityId).toDomain()
+    }
+
+    override suspend fun observeTasksWithCollectMetadataByTaskIdFlow(entityId: String): Flow<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.observeTasksWithCollectMetadataByTaskIdFlow(entityId).map {
+            it.toDomain()
+        }
+    }
+
+    override suspend fun getTasksByInvoiceNumber(invoiceNumber: String): List<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.getTasksByInvoiceNumber(invoiceNumber).toDomain()
+    }
+
+    override suspend fun getTasksByCustomerNumber(customerNumber: String): List<SyncTaskWithCollectMetadata> {
+        return syncTaskDao.getTasksByCustomerNumber(customerNumber).toDomain()
+    }
+
+    override suspend fun resetTaskForRetry(
+        taskId: String,
+        resetAttempts: Boolean,
+        bumpMaxAttemptsBy: Int
+    ): Result<Unit> = runCatching {
+        val now = Clock.System.now()
+        val current = syncTaskDao.getTaskById(taskId) ?: return@runCatching
+
+        // Avoid resurrecting completed/in-progress unexpectedly; allow FAILED/REQUIRES_ACTION/PENDING
+        if (current.status == TaskStatus.COMPLETED.name || current.status == TaskStatus.IN_PROGRESS.name) {
+            return@runCatching
+        }
+
+        val needsBump = !resetAttempts && current.noOfAttempts >= current.maxAttempts
+        val bump = if (needsBump) maxOf(1, bumpMaxAttemptsBy) else bumpMaxAttemptsBy
+
+        val updated = if (resetAttempts) {
+            current.copy(
+                status = TaskStatus.PENDING.name,
+                noOfAttempts = 0,
+                lastError = null,
+                updatedTime = now,
+                lastAttemptTime = null,
+                maxAttempts = current.maxAttempts + bump
+            )
+        } else {
+            current.copy(
+                status = TaskStatus.PENDING.name,
+                updatedTime = now,
+                maxAttempts = current.maxAttempts + bump
+            )
+        }
+        syncTaskDao.updateTask(updated)
+    }
+
+    override suspend fun enqueueCollectTask(
+        taskType: TaskType,
+        taskId: String,
+        priority: Int,
+        maxAttempts: Int,
+        metadata: List<CollectTaskMetadata>,
+        submittedBy: String
+    ): Result<String> = runCatching {
+
+        val syncTaskId = UUID.randomUUID().toString()
+        val now = Clock.System.now()
+
+        // Create sync task
+        val task = SyncTaskEntity(
+            id = syncTaskId,
+            taskType = taskType.name,
+            status = TaskStatus.PENDING.name,
+            taskId = taskId,
+            submittedBy = submittedBy,
+            requestId = taskId,
+            noOfAttempts = 0,
+            maxAttempts = maxAttempts,
+            priority = priority,
+            addedTime = now,
+            updatedTime = now,
+            lastAttemptTime = null,
+            lastError = null
+        )
+
+        // Insert task
+        syncTaskDao.insertTask(task)
+
+        if(metadata.isNotEmpty()) {
+            // Insert all metadata rows with reference to task
+            val metadataEntities = metadata.map { it.copy(syncTaskId = syncTaskId).toEntity() }
+            collectTaskMetadataDao.insertAll(metadataEntities)
+        }
+
+        syncTaskId
+    }
+}
