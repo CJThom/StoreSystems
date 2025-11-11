@@ -33,6 +33,10 @@ data class CollectWorkOrderEntity(
 
     // New: persisted courier name for COURIER collecting type
     @ColumnInfo(name = "courier_name")
-    val courierName: String?
+    val courierName: String?,
+
+    // New: ID verification persisted as a boolean flag
+    @ColumnInfo(name = "id_verified")
+    val idVerified: Boolean,
 
 )

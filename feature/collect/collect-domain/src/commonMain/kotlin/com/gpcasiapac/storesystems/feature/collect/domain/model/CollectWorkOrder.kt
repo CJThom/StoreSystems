@@ -12,4 +12,5 @@ data class CollectWorkOrder(
     val createdAt: Instant,
     val collectingType: CollectingType?,
     val courierName: String?,
+    val idVerified: Boolean,
 )

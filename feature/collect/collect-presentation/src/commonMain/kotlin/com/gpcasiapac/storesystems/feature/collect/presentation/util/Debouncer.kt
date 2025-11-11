@@ -28,10 +28,12 @@ class Debouncer(private val scope: CoroutineScope) {
     }
 }
 
+// TODO: move to ViewModel
 /** Enum keys for debouncing. */
 enum class DebounceKey {
     CollectingType,
     CourierName,
+    IdVerified,
 }
 
 /** Common debounce durations. */

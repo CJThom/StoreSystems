@@ -149,6 +149,10 @@ class OrderLocalRepositoryImpl(
         workOrderDao.setCourierName(workOrderId, name)
     }
 
+    override suspend fun setIdVerified(workOrderId: WorkOrderId, checked: Boolean) {
+        workOrderDao.setIdVerified(workOrderId, checked)
+    }
+
     override suspend fun existsInvoice(invoiceNumber: String): Boolean {
         return collectOrderDao.existsInvoice(invoiceNumber)
     }

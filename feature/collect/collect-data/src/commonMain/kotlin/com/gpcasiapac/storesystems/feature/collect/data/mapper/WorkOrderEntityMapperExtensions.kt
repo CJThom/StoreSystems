@@ -10,5 +10,6 @@ fun CollectWorkOrderEntity.toDomain(): CollectWorkOrder {
         createdAt = createdAt,
         collectingType = collectingType,
         courierName = courierName,
+        idVerified = idVerified,
     )
 }

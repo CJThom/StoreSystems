@@ -21,7 +21,8 @@ class CreateWorkOrderUseCase(
             userId = userId,
             createdAt = now,
             collectingType = null,
-            courierName = null
+            courierName = null,
+            idVerified = false,
         )
 
         orderLocalRepository.insertOrReplaceWorkOrder(newWorkOrder)

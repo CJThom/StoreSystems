@@ -39,6 +39,9 @@ interface WorkOrderDao {
     @Query("UPDATE work_orders SET courier_name = :name WHERE work_order_id = :workOrderId")
     suspend fun setCourierName(workOrderId: WorkOrderId, name: String)
 
+    @Query("UPDATE work_orders SET id_verified = :checked WHERE work_order_id = :workOrderId")
+    suspend fun setIdVerified(workOrderId: WorkOrderId, checked: Boolean)
+
     @Transaction
     @Query("SELECT * FROM work_orders WHERE work_order_id = :workOrderId")
     suspend fun getWorkOrder(workOrderId: WorkOrderId): WorkOrderWithOrderWithCustomersRelation?

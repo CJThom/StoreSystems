@@ -187,6 +187,11 @@ object OrderFulfilmentScreenContract {
             DebounceKey.CourierName,
             DebouncerDefaults.Interval.Medium
         )
+
+        data object IdVerified : Debounce(
+            DebounceKey.IdVerified,
+            DebouncerDefaults.Interval.Short
+        )
     }
 
     sealed class Dialog {

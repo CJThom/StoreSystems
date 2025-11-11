@@ -61,6 +61,8 @@ interface OrderLocalRepository {
 
     suspend fun setCourierName(workOrderId: WorkOrderId, name: String)
 
+    suspend fun setIdVerified(workOrderId: WorkOrderId, checked: Boolean)
+
     suspend fun existsInvoice(invoiceNumber: String): Boolean
 
     suspend fun insertOrReplaceWorkOrder(collectWorkOrder: CollectWorkOrder)

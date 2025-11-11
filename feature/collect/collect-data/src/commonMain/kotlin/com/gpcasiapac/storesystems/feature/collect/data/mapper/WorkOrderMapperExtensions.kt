@@ -10,5 +10,6 @@ fun CollectWorkOrder.toEntity(): CollectWorkOrderEntity {
         createdAt = createdAt,
         collectingType = collectingType,
         courierName = courierName,
+        idVerified = idVerified,
     )
 }

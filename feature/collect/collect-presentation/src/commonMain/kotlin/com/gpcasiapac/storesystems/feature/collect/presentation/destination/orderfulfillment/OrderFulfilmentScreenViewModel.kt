@@ -31,6 +31,7 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.Obse
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.RemoveOrderSelectionUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderCollectingTypeUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderCourierNameUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetWorkOrderIdVerifiedUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
@@ -71,7 +72,8 @@ class OrderFulfilmentScreenViewModel(
     private val deleteWorkOrderUseCase: DeleteWorkOrderUseCase,
     private val observeWorkOrderSignatureUseCase: ObserveWorkOrderSignatureUseCase,
     private val collectSessionIdsFlowUseCase: GetCollectSessionIdsFlowUseCase,
-    private val observeFulfilmentGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveFulfilmentGatingUseCase
+    private val observeFulfilmentGatingUseCase: com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.ObserveFulfilmentGatingUseCase,
+    private val setWorkOrderIdVerifiedUseCase: SetWorkOrderIdVerifiedUseCase
 ) : MVIViewModel<
         OrderFulfilmentScreenContract.Event,
         OrderFulfilmentScreenContract.State,
@@ -274,7 +276,13 @@ class OrderFulfilmentScreenViewModel(
 
             // ID verification checkbox
             is OrderFulfilmentScreenContract.Event.IdVerificationChecked -> {
+                // Optimistic UI update
                 setState { copy(idVerified = event.checked) }
+                // Debounced persistence
+                debouncer.submit(OrderFulfilmentScreenContract.Debounce.IdVerified) {
+                    val workOrderId: WorkOrderId = sessionState.value.workOrderId.handleNull() ?: return@submit
+                    setWorkOrderIdVerifiedUseCase(workOrderId = workOrderId, checked = viewState.value.idVerified)
+                }
             }
 
             is OrderFulfilmentScreenContract.Event.ShowCustomerNameDialog -> {
@@ -516,6 +524,7 @@ class OrderFulfilmentScreenViewModel(
                     copy(
                         collectingType = wo?.collectingType,
                         courierName = wo?.courierName ?: "",
+                        idVerified = wo?.idVerified ?: false,
                         isLoading = false,
                         error = null
                     )
