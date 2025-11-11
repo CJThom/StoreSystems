@@ -36,6 +36,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -137,6 +139,7 @@ fun OrderListScreen(
             previous = current
         }
     }
+
     // Ensure FAB expands again when scrolling stops (idle state), but wait briefly to avoid flicker
     LaunchedEffect(lazyGridState) {
         snapshotFlow { lazyGridState.isScrollInProgress }
@@ -147,16 +150,6 @@ fun OrderListScreen(
                     fabExpanded = true
                 }
             }
-    }
-
-    // Auto-scroll to prevent sticky header overlap when it appears
-    LaunchedEffect(state.orders.isNotEmpty()) {
-        if (state.orders.isNotEmpty()) {
-            if (lazyGridState.firstVisibleItemIndex == 0 && lazyGridState.firstVisibleItemScrollOffset == 0) {
-                // Scroll so that the sticky header sits at the top and doesn't cover content
-                lazyGridState.animateScrollToItem(1)
-            }
-        }
     }
 
     LaunchedEffect(effectFlow) {
@@ -188,6 +181,7 @@ fun OrderListScreen(
                 is OrderListScreenContract.Effect.ConfirmSearchSelection -> {
                     onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Confirm))
                 }
+
                 is OrderListScreenContract.Effect.CancelSearchSelection -> {
                     onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.Cancel))
                 }
@@ -221,34 +215,18 @@ fun OrderListScreen(
         floatingActionButton = {
             val hasDraft = state.isDraftBarVisible && state.selection.existing.isNotEmpty()
 
-            AnimatedVisibility(
-                visible = !state.selection.isEnabled,
-                enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
-                        scaleIn(
-                            initialScale = 0.2f,
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                            transformOrigin = TransformOrigin(1f, 1f)
-                        ),
-                exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
-                        scaleOut(
-                            targetScale = 0.2f,
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                            transformOrigin = TransformOrigin(1f, 1f)
-                        )
-            ) {
-                ToolbarFabContainer(
-                    hasDraft = hasDraft,
-                    count = state.selection.existing.size,
-                    onNewTask = { onEventSent(OrderListScreenContract.Event.StartNewWorkOrderClicked) },
-                    onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
-                    onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) },
-                    expanded = fabExpanded,
-//                    modifier = Modifier.animateFloatingActionButton(
-//                        visible = !state.isMultiSelectionEnabled,
-//                        alignment = Alignment.BottomEnd
-//                    )
+            ToolbarFabContainer(
+                hasDraft = hasDraft,
+                count = state.selection.existing.size,
+                onNewTask = { onEventSent(OrderListScreenContract.Event.StartNewWorkOrderClicked) },
+                onDelete = { onEventSent(OrderListScreenContract.Event.DraftBarDeleteClicked) },
+                onView = { onEventSent(OrderListScreenContract.Event.DraftBarViewClicked) },
+                expanded = fabExpanded,
+                modifier = Modifier.animateFloatingActionButton(
+                    visible = !state.selection.isEnabled,
+                    alignment = Alignment.BottomEnd
                 )
-            }
+            )
         },
         topBar = {
             MBoltAppBar(
