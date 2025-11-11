@@ -60,9 +60,6 @@ object OrderFulfilmentScreenContract {
         val isCustomerNameDialogVisible: Boolean = false,
         val customerNameInput: String = "",
 
-        // ID sighted checkbox state
-        val isSighted: Boolean = false,
-
         // ID verification (single boolean)
         val idVerified: Boolean = false,
 
@@ -122,9 +119,6 @@ object OrderFulfilmentScreenContract {
         // Correspondence
         data class ToggleCorrespondence(val id: String) : Event
         data class EditCorrespondence(val id: String) : Event
-
-        // ID sighted
-        data class IdSightedChanged(val checked: Boolean) : Event
 
         // ID verification checkbox
         data class IdVerificationChecked(val checked: Boolean) : Event

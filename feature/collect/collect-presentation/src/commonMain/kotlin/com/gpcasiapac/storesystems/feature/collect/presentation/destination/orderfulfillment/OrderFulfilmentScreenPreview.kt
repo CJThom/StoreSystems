@@ -93,10 +93,6 @@ class OrderFulfilmentScreenStateProvider :
                 collectOrderListItemStateList = orders.take(1)
             )
 
-            val singleB2C_Sighted = singleB2C.copy(
-                isSighted = true
-            )
-
             val singleB2C_Verified = singleB2C.copy(
                 idVerified = true
             )
@@ -140,7 +136,6 @@ class OrderFulfilmentScreenStateProvider :
 
             return sequenceOf(
                 singleB2C,
-                singleB2C_Sighted,
                 singleB2C_Verified,
                 multiB2C,
                 accountFlow,

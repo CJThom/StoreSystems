@@ -154,7 +154,6 @@ class OrderFulfilmentScreenViewModel(
                     isEnabled = true
                 )
             ),
-            isSighted = false,
             dialog = null
         )
 
@@ -271,11 +270,6 @@ class OrderFulfilmentScreenViewModel(
             // Signature
             is OrderFulfilmentScreenContract.Event.Sign -> {
                 sign()
-            }
-
-            // ID sighted
-            is OrderFulfilmentScreenContract.Event.IdSightedChanged -> {
-                setState { copy(isSighted = event.checked) }
             }
 
             // ID verification checkbox
