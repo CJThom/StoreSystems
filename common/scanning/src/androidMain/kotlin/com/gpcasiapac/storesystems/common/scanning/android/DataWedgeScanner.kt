@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.scanning.ScanResult
 import com.gpcasiapac.storesystems.common.scanning.Scanner
@@ -88,7 +89,17 @@ class DataWedgeScanner(
                     addAction(intentAction)
                     addCategory(Intent.CATEGORY_DEFAULT)
                 }
-                appContext.registerReceiver(resultsReceiver, filter)
+                // Android 13+ requires explicit exported flag for non-system broadcasts
+                if (Build.VERSION.SDK_INT >= 33) {
+                    appContext.registerReceiver(
+                        resultsReceiver,
+                        filter,
+                        Context.RECEIVER_EXPORTED
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    appContext.registerReceiver(resultsReceiver, filter)
+                }
                 resultsReceiverRegistered = true
                 log.i { "Registered scan results receiver for action='$intentAction'" }
             }.onFailure { t -> log.e(t) { "Failed to register scan results receiver" } }
