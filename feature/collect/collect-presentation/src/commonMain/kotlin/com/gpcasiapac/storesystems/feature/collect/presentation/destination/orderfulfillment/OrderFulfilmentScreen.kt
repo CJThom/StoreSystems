@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,17 +37,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,29 +55,20 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.window.core.layout.WindowSizeClass
+import co.touchlab.kermit.Logger
 import com.gpcasiapac.storesystems.common.feedback.haptic.HapticPerformer
 import com.gpcasiapac.storesystems.common.feedback.sound.SoundPlayer
 import com.gpcasiapac.storesystems.common.presentation.compose.placeholder.material3.placeholder
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.borderStroke
 import com.gpcasiapac.storesystems.common.presentation.compose.theme.dashedBorder
-import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CollectOrderFulfilmentItem
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSection
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.ActionButton
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceSection
-import com.gpcasiapac.storesystems.feature.collect.presentation.components.IdVerification
 import com.gpcasiapac.storesystems.foundation.component.HeaderMedium
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.SignaturePreviewImage
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.AccountCollectionContent
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.component.CourierCollectionContent
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.component.MultiSelectConfirmDialog
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchComponent
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchDestination
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.search.SearchViewModel
 import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.foundation.component.CheckboxCard
 import com.gpcasiapac.storesystems.foundation.component.MBoltAppBar
@@ -90,9 +78,10 @@ import com.gpcasiapac.storesystems.foundation.design_system.GPCTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
 import storesystems.feature.collect.collect_presentation.generated.resources.Res
 import storesystems.feature.collect.collect_presentation.generated.resources.who_is_collecting
+import com.gpcasiapac.storesystems.feature.collect.presentation.util.revealAndFocus
 
 
 @OptIn(
@@ -112,21 +101,23 @@ fun OrderFulfilmentScreen(
     soundPlayer: SoundPlayer? = null,
     hapticPerformer: HapticPerformer? = null,
 ) {
+
+    val log = koinInject<Logger>().withTag("OrderFulfilmentScreen")
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Requesters to bring the CONFIRM button into view and optionally request focus
     val confirmBringIntoViewRequester = remember { BringIntoViewRequester() }
     val confirmFocusRequester = remember { FocusRequester() }
 
-    // Parent-driven confirm dialog for search selection (2-button)
-    val selectionConfirmDialogSpec = remember {
-        mutableStateOf<OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog?>(null)
-    }
+    // Grid state so we can explicitly scroll to the CONFIRM CTA in LazyVerticalGrid
+    val lazyGridState = rememberLazyGridState()
 
     // Notify ViewModel that the screen is visible so it can flush one-shot effects
     LaunchedEffect(Unit) {
+        log.d { "screen is visible" }
         onEventSent(OrderFulfilmentScreenContract.Event.ScreenVisible)
     }
+
 
     LaunchedEffect(effectFlow) {
         effectFlow?.collectLatest { effect ->
@@ -149,13 +140,11 @@ fun OrderFulfilmentScreen(
                 }
 
                 is OrderFulfilmentScreenContract.Effect.RevealConfirmCta -> {
-                    // When VM asks to reveal the CONFIRM CTA, scroll it into view and try focus
-                    confirmBringIntoViewRequester.bringIntoView()
-                    confirmFocusRequester.requestFocus()
-                }
-
-                is OrderFulfilmentScreenContract.Effect.ShowConfirmSelectionDialog -> {
-                    selectionConfirmDialogSpec.value = effect
+                    log.d { "Revealing CONFIRM CTA" }
+                    lazyGridState.revealAndFocus(
+                        bringIntoViewRequester = confirmBringIntoViewRequester,
+                        focusRequester = confirmFocusRequester,
+                    )
                 }
 
                 is OrderFulfilmentScreenContract.Effect.CollapseSearchBar -> {
@@ -217,6 +206,7 @@ fun OrderFulfilmentScreen(
         LazyVerticalGrid(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(minSize = 320.dp),
             modifier = Modifier.fillMaxSize(),
+            state = lazyGridState,
             contentPadding = padding,
             horizontalArrangement = Arrangement.spacedBy(Dimens.Space.medium)
         ) {
@@ -416,35 +406,7 @@ fun OrderFulfilmentScreen(
             }
         }
 
-
-//        // Search selection confirmation dialog (parent-driven, 2-button)
-//        val selectSpec = selectionConfirmDialogSpec.value
-//        if (selectSpec != null) {
-//            AlertDialog(
-//                onDismissRequest = {
-//                    selectionConfirmDialogSpec.value = null
-//                    onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-//                },
-//                title = { Text(selectSpec.title) },
-//                confirmButton = {
-//                    TextButton(onClick = {
-//                        selectionConfirmDialogSpec.value = null
-////                        if (onSearchEventSent != null) {
-////                            onSearchEventSent(SearchContract.Event.Selection(SelectionContract.Event.ConfirmProceed)) todo: check if this is needed
-////                        }
-//                        onEventSent(OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed)
-//                    }) { Text(selectSpec.confirmLabel) }
-//                },
-//                dismissButton = {
-//                    TextButton(onClick = {
-//                        selectionConfirmDialogSpec.value = null
-//                        onEventSent(OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog)
-//                    }) { Text(selectSpec.cancelLabel) }
-//                }
-//            )
-//        }
     }
-    //  }
 
     // Customer name dialog
     if (state.isCustomerNameDialogVisible) {
@@ -507,14 +469,6 @@ private fun Dialogs(dialog: OrderFulfilmentScreenContract.Dialog?) {
                     }
                 }
             )
-//            MultiSelectConfirmDialog(
-//                title = dialog.title,
-//                cancelLabel = dialog.onCancel.label.value,
-//                proceedLabel = dialog.onProceed.label.value,
-//                onProceed = dialog.onProceed.action,
-//                onCancel = dialog.onCancel.action,
-//                onDismissRequest = dialog.onCancel.action
-//            )
         }
 
         null -> {}
@@ -550,7 +504,6 @@ private fun CollectorSection(
                     )
                 )
             },
-            // Hoisted params (no ViewModel dependency inside the section)
             isAccountRepresentativeSelectionEnabled = state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled,
             representativeSearchQuery = state.representativeSearchQuery,
             onRepresentativeSearchQueryChange = { query ->
@@ -582,105 +535,6 @@ private fun CollectorSection(
             )
         )
 
-//        IdVerification(
-//            checked = state.idVerified,
-//            onCheckedChange = { checked ->
-//                onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
-//            },
-//            contentPadding = PaddingValues(
-//                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-//                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-//            )
-//        )
-
-    }
-}
-
-@Composable
-private fun CollectionTypeContent(
-    state: OrderFulfilmentScreenContract.State,
-    selectedType: CollectingType?,
-    onEventSent: (event: OrderFulfilmentScreenContract.Event) -> Unit,
-    contentPadding: PaddingValues = PaddingValues(Dimens.Space.medium)
-) {
-
-    when (selectedType) {
-        CollectingType.ACCOUNT -> {
-            Column {
-
-                if (state.featureFlags.isAccountRepresentativeSelectionFeatureEnabled) {
-                    AccountCollectionContent(
-                        searchQuery = state.representativeSearchQuery,
-                        onSearchQueryChange = { query ->
-                            onEventSent(
-                                OrderFulfilmentScreenContract.Event.RepresentativeSearchQueryChanged(
-                                    query
-                                )
-                            )
-                        },
-                        representatives = state.representativeList,
-                        selectedRepresentativeIds = state.selectedRepresentativeIds,
-                        onRepresentativeSelected = { id, isSelected ->
-                            onEventSent(
-                                OrderFulfilmentScreenContract.Event.RepresentativeSelected(
-                                    id,
-                                    isSelected
-                                )
-                            )
-                        },
-                        isLoading = state.isLoading
-                    )
-                }
-
-                IdVerification(
-                    checked = state.idVerified,
-                    onCheckedChange = { checked ->
-                        onEventSent(
-                            OrderFulfilmentScreenContract.Event.IdVerificationChecked(
-                                checked
-                            )
-                        )
-                    },
-                    contentPadding = PaddingValues(vertical = Dimens.Space.medium)
-//                    contentPadding = PaddingValues(
-//                     Dimens.Space.medium,
-//                    )
-//                    contentPadding = PaddingValues(
-//                        start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-//                        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-//                    )
-                )
-            }
-
-        }
-
-        CollectingType.COURIER -> {
-            CourierCollectionContent(
-                courierName = state.courierName,
-                onCourierNameChange = { name ->
-                    onEventSent(OrderFulfilmentScreenContract.Event.CourierNameChanged(name))
-                },
-                isLoading = state.isLoading,
-                modifier = Modifier,
-                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
-            )
-        }
-
-        else -> {
-            IdVerification(
-                checked = state.idVerified,
-                onCheckedChange = { checked ->
-                    onEventSent(OrderFulfilmentScreenContract.Event.IdVerificationChecked(checked))
-                },
-                contentPadding = PaddingValues(vertical = Dimens.Space.medium)
-                // contentPadding = PaddingValues()
-//                contentPadding = PaddingValues(
-//                    start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-//                    end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-//                )
-            )
-            // No additional UI for STANDARD
-        }
     }
 }
 

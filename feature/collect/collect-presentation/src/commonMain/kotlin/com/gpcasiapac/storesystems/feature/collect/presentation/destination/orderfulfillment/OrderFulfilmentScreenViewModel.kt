@@ -20,8 +20,8 @@ import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectingType
 import com.gpcasiapac.storesystems.feature.collect.domain.model.CollectionTypeGating
 import com.gpcasiapac.storesystems.feature.collect.domain.model.Representative
 import com.gpcasiapac.storesystems.feature.collect.domain.model.value.WorkOrderId
-import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.FetchOrderListUseCase
+import com.gpcasiapac.storesystems.feature.collect.domain.usecase.order.ValidateScannedInvoiceInputUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.prefs.GetCollectSessionIdsFlowUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.AddScannedInputToWorkOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.DeleteWorkOrderUseCase
@@ -34,29 +34,29 @@ import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SetW
 import com.gpcasiapac.storesystems.feature.collect.domain.usecase.workorder.SubmitOrderUseCase
 import com.gpcasiapac.storesystems.feature.collect.presentation.component.CollectionTypeSectionDisplayState
 import com.gpcasiapac.storesystems.feature.collect.presentation.components.CorrespondenceItemDisplayParam
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.*
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.Outcome.*
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract
-import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.OrderListScreenContract.Event.Selection
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.Outcome.NavigateToOrderDetails
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.Outcome.SignatureRequested
+import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderfulfillment.OrderFulfilmentScreenContract.Effect.ShowSnackbar
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.mapper.toListItemState
 import com.gpcasiapac.storesystems.feature.collect.presentation.destination.orderlist.model.CollectOrderListItemState
-import com.gpcasiapac.storesystems.feature.collect.presentation.selection.SelectionContract
 import com.gpcasiapac.storesystems.feature.collect.presentation.util.Debouncer
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
+import kotlin.concurrent.atomics.AtomicBoolean
 
 
+@OptIn(kotlin.concurrent.atomics.ExperimentalAtomicApi::class)
 class OrderFulfilmentScreenViewModel(
     logger: Logger,
     private val fetchOrderListUseCase: FetchOrderListUseCase,
@@ -86,9 +86,8 @@ class OrderFulfilmentScreenViewModel(
     // Shared keyed debouncer for persisting user edits
     private val debouncer = Debouncer(viewModelScope)
 
-    // Visibility gate for one-shot effects
-    private var isScreenVisible: Boolean = false
-    private var pendingRevealConfirmCta: Boolean = false
+    // One-shot latch for revealing the CONFIRM CTA on return from Signature
+    private val revealConfirmOnReturn = AtomicBoolean(false)
 
     // Shared WorkOrderId flow to drive all downstream observations (Option B)
     private val workOrderIdFlow by lazy {
@@ -212,10 +211,18 @@ class OrderFulfilmentScreenViewModel(
 
             // Lifecycle/visibility
             is OrderFulfilmentScreenContract.Event.ScreenVisible -> {
-                isScreenVisible = true
-                if (pendingRevealConfirmCta && viewState.value.signatureBase64 != null) {
-                    pendingRevealConfirmCta = false
-                    setEffect { OrderFulfilmentScreenContract.Effect.RevealConfirmCta }
+                viewModelScope.launch {
+                    log.d("onEvent - ScreenVisible")
+                    // Flush the one-shot if it was armed while we were away
+                    if (revealConfirmOnReturn.compareAndSet(
+                            true,
+                            false
+                        ) && viewState.value.signatureBase64 != null
+                    ) {
+                        delay(500)
+                        log.d("onEvent - ScreenVisible - flushing one-shot revealConfirmOnReturn")
+                        setEffect { OrderFulfilmentScreenContract.Effect.RevealConfirmCta }
+                    }
                 }
             }
 
@@ -319,19 +326,6 @@ class OrderFulfilmentScreenViewModel(
             // Final action
             is OrderFulfilmentScreenContract.Event.Confirm -> {
                 confirm()
-            }
-
-            // Search-origin selection confirmation
-            is OrderFulfilmentScreenContract.Event.ConfirmSearchSelection -> {
-                setEffect { ShowConfirmSelectionDialog() }
-            }
-
-            is OrderFulfilmentScreenContract.Event.ConfirmSearchSelectionProceed -> {
-                // No-op; SearchViewModel will handle persistence and collapse
-            }
-
-            is OrderFulfilmentScreenContract.Event.DismissConfirmSearchSelectionDialog -> {
-                // No-op; UI dismisses dialog
             }
 
             is OrderFulfilmentScreenContract.Event.OrderClicked -> {
@@ -558,11 +552,9 @@ class OrderFulfilmentScreenViewModel(
                 }
                 val hasSignatureNow = newSignatureBase64 != null
                 if (!hadSignature && hasSignatureNow) {
-                    if (isScreenVisible) {
-                        setEffect { OrderFulfilmentScreenContract.Effect.RevealConfirmCta }
-                    } else {
-                        pendingRevealConfirmCta = true
-                    }
+                    log.d("onEvent - SignatureChanged - armed one-shot revealConfirmOnReturn")
+                    // Arm the one-shot latch; the screen will flush it when visible again
+                    revealConfirmOnReturn.compareAndSet(false, true)
                 }
             }
     }
